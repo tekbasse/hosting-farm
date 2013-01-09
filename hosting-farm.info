@@ -20,6 +20,8 @@
         <package_instance_name>hosting farm</package_instance_name>
 
         <provides url="hosting-farm" version="0.1d"/>
+        <requires url="accounts-receivables" version="0.1d"/>
+        <requires url="accounts-ledger" version="0.1d"/>
 
         <callbacks>
         </callbacks>
