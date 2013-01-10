@@ -137,14 +137,18 @@ CREATE TABLE hf_monitor_status_statistics (
     -- p_number is sequential count of points reported
     -- where current is p0, ie hf_monitor_status.report_id - p_report_id
     -- report_id range
+    sample_p_count integer,
     range_min integer,
     range_max integer,
-    range_sum_y numeric,
-    range_seconds numeric,
+    -- x is really t for time..
     health_max integer,
     health_min integer,
     health_average numeric,
-    health_median numeric
+    health_median numeric,
+    sum_x numeric,
+    sum_xx numeric,
+    delta_x_seconds numeric,
+    sum_xy numeric,
 ); 
 
 CREATE TABLE hf_monitor_extended_config (
