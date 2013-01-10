@@ -9,6 +9,9 @@
 CREATE SEQUENCE hf_id start 10000;
 SELECT nextval ('hf_id');
 
+-- for vm_to_configure, see accounts-receivables shopping-basket
+
+
 -- these roles come from ams.
 -- a user can have more than one role
 -- and different roles on different customer accounts
@@ -64,20 +67,93 @@ CREATE TABLE hf_assets (
     -- such as pricing, period length, etc
     -- null is same as company_summary.is_exempt=true
     qal_product_id  integer,
+    qal_customer_id integer,
     label 	    varchar(30),
     description     varchar(80),
     time_start 	    timestamptz,
     time_stop 	    timestamptz,
+  -- status aka vm_to_configure, on,off etc.
+  -- use with qal_product_id for vm_to_configure.plan_id
+  -- and qal_customer_id for vm_to_configure.company_id
+    op_status       varchar(20),
+    -- for use with monitoring.
     trashed_p 	    varchar(1),
     trashed_by 	    integer,
     -- mainly for promoting clients by linking to their website
     -- was table.advert_link
-    publish_asset_p varchar(1),
-    -- latest report from monitoring
-    monitor_reports text
-    monitor_updated timestamptz
+    publish_p varchar(1),
+    monitor_p varchar(1),
  );
 
+CREATE TABLE hf_monitor_log (
+    monitor_id integer not null,
+    asset_id  integer not null,
+    -- increases by 1 for each monitor_id's report of asset_id
+    report_id integer not null,
+    -- reported_by provides means to identify/verify reporting source
+    reported_by varchar(120),
+    report_time timestamptz,
+    -- 0 dead, down, not normal
+    -- 10000 nominal, allows for variable performance issues
+    -- health = numeric summary indicator determined by hf_procs
+    health integer,
+    -- latest report from monitoring
+    report text
+);
+
+CREATE TABLE hf_monitor_status (
+    monitor_id integer unique not null,
+    asset_id integer,
+    expected_health integer,
+    -- most recent report_id:
+    report_id integer,
+    health_p0 integer,
+    -- for calculating differential, p1 is always 1
+    health_p1 integer,
+    -- status statistics are reported here instead of in hf_monitor_status_statistics
+    -- if number of points < hf_monitor_extended_config.p_count
+    -- http://en.wikipedia.org/wiki/Ordinary_least_squares
+    sample_p_count integer,
+    range_min integer,
+    range_max integer,
+    -- x is really t for time..
+    health_max integer,
+    health_min integer,
+    health_average numeric,
+    health_median numeric,
+    sum_x numeric,
+    sum_xx numeric,
+    delta_x_seconds numeric,
+    sum_xy numeric,
+    -- The further away a point is, the less 
+    -- frequently its reference needs updating.
+    -- For example p10 might go from 500ct ago to 511ct ago over 12 status updates.
+    -- To lessen burden on updating the calcs.
+);
+
+CREATE TABLE hf_monitor_status_statistics (
+    monitor_id integer not null,
+    analysis_id integer not null,
+    -- p_number is sequential count of points reported
+    -- where current is p0, ie hf_monitor_status.report_id - p_report_id
+    -- report_id range
+    range_min integer,
+    range_max integer,
+    range_sum_y numeric,
+    range_seconds numeric,
+    health_max integer,
+    health_min integer,
+    health_average numeric,
+    health_median numeric
+); 
+
+CREATE TABLE hf_monitor_extended_config (
+    monitor_id integer not null,
+    p_interval integer,
+    -- number of reports between summaries
+    p_count
+    -- number of points reported
+); 
 
 CREATE TABLE hf_data_centers (
     dc_id       integer,
@@ -121,7 +197,7 @@ CREATE TABLE hf_vm_quota_map (
   -- was vm_group (0 to 3) means?
   max_domain integer,
   private_vps varchar(1),
-  -- high_end is ambiguous and isn't differentiated from private_vps, so ignoring.
+  -- plan.high_end is ambiguous and isn't differentiated from private_vps, so ignoring.
  );
 
 -- vh might be a domain resolving to ni
