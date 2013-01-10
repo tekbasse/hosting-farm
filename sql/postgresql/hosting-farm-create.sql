@@ -100,6 +100,30 @@ CREATE TABLE hf_virtual_machines (
     details text
 );
 
+CREATE TABLE hf_vm_quota_map (
+  plan_id integer not null,
+  description varchar(40) not null,
+  base_storage integer not null,
+  base_traffic integer not null,
+  base_memory integer,
+  base_sku varchar(40) not null,
+  over_storage_sku varchar(40) not null,
+  over_traffic_sku varchar(40) not null,
+  over_memory_sku varchar(40),
+  -- unit is amount per quantity of one sku
+  storage_unit integer not null,
+  traffic_unit integer not null,
+  memory_unit integer,
+  qemu_memory integer 
+  status_id integer,
+  -- shows as 1 or 2 (means?)
+  vm_type integer,
+  -- was vm_group (0 to 3) means?
+  max_domain integer,
+  private_vps varchar(1),
+  -- high_end is ambiguous and isn't differentiated from private_vps, so ignoring.
+ );
+
 -- vh might be a domain resolving to ni
 CREATE TABLE hf_vhosts (
     vh_id integer,
