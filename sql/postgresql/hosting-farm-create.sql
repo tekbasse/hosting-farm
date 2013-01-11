@@ -96,6 +96,9 @@ CREATE TABLE hf_data_centers (
 
 CREATE TABLE hf_hardware (
     hw_id       integer,
+    -- following aka backup_config.server_name backup_server
+    system_name varchar(200),
+    backup_sys  varchar(200),
     description varchar(200),
     details     text
 );
