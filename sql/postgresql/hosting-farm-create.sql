@@ -52,6 +52,7 @@ CREATE TABLE hf_user_roles (
     role_id 	    integer
 );
 
+-- part of database_list
 CREATE TABLE hf_assets (
     package_id      integer,
     id 	            integer,
@@ -72,6 +73,7 @@ CREATE TABLE hf_assets (
     description     varchar(80),
     time_start 	    timestamptz,
     time_stop 	    timestamptz,
+    ua_id 	    integer,
   -- status aka vm_to_configure, on,off etc.
   -- use with qal_product_id for vm_to_configure.plan_id
   -- and qal_customer_id for vm_to_configure.company_id
@@ -90,6 +92,8 @@ CREATE TABLE hf_assets (
 
 CREATE TABLE hf_data_centers (
     dc_id       integer,
+    -- was datacenter.short_code
+    affix       varchar(20),
     description varchar(80),
     details     text
 );
@@ -109,6 +113,8 @@ CREATE TABLE hf_virtual_machines (
     domain_name varchar(200),
     ipv4_addr    varchar(15),
     ipv6_addr    varchar(39), 
+    -- from database_server.type_id
+    type_id      integer,
     details text
 );
 
@@ -144,22 +150,42 @@ CREATE TABLE hf_vhosts (
     details text
 );
 
-
+-- part of database_auth and database_list
 CREATE TABLE hf_services (
+  -- was database_id
     hs_id integer,
+  -- was database_user_id
     ua_id integer,
+    -- from database_server.type_id 
+    -- type can be: db, protocol, generic daemon etc.    port integer,
     hs_type varchar(12),
-    -- type can be: db, protocol, generic daemon etc.
-    port integer,
+    -- see database_server.db_type (pgsql, mysql etc.)    
+    hs_subtype varchar(12),
+    -- see dbs.database_type_id
+    hs_undersubtype varchar(12),
+    -- if needed in future: 
+    hs_ultrasubtype varchar(12),
+    server_name varchar(40),
+    service_name varchar(300),
+    daemon_ref varchar(40),
+    protocol   varchar(40),
+    port       varchar(40),
     config_uri varchar(300),
+    -- following from database_memory_detail
+    memory_bytes bigint,
+    --runtime is part of hf_assets start or monitor_log
+
+    
     details text
 );
 
 
 CREATE TABLE hf_ua (
-    ua_id integer,
+    ua_id              integer,
     -- bruger kontonavn
-    details text
+    details            text
+    -- following was database_auth.secure_authentication bool
+    connection_type varcar(12)
 );
 
 CREATE TABLE hf_up (
@@ -186,12 +212,13 @@ CREATE TABLE hf_vm_vh_map (
     vh_id integer
 );
 
-CREATE TABLE hf_vh_hs_map (
+CREATE TABLE hf_vh_map (
     package_id integer,
     vh_id integer,
     hs_id integer
 );
 
+-- was database_auth
 CREATE TABLE hf_ua_up_map (
     package_id integer,
     ua_id integer,
@@ -267,6 +294,7 @@ CREATE TABLE hf_monitor_statistics (
 -- http://en.wikipedia.org/wiki/Permille
 -- curve resolution is count of points
 -- This model keeps old curves, to help with long-term performance insights
+-- see accounts-finance  qaf_discrete_dist_report {
 CREATE TABLE hf_monitor_freq_dist_curves (
     monitor_id integer not null,
     analysis_id integer not null,
