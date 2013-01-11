@@ -52,6 +52,17 @@ CREATE TABLE hf_user_roles (
     role_id 	    integer
 );
 
+CREATE TABLE hf_asset_type_features (
+    -- see feature table
+    id integer,
+    asset_type varchar(12),
+    feature_type varchar(12),
+    publish_p  varchar(1),
+    label varchar(40),
+    one_line_description varchar(85),
+    descritpion text
+);
+
 -- part of database_list
 CREATE TABLE hf_assets (
     package_id      integer,
@@ -95,11 +106,13 @@ CREATE TABLE hf_data_centers (
     -- was datacenter.short_code
     affix       varchar(20),
     description varchar(80),
+    ni_id       integer,
     details     text
 );
 
 CREATE TABLE hf_hardware (
-    hw_id       integer,
+    hw_id       integer unique not null,
+    ni_id       integer,
     -- following aka backup_config.server_name backup_server
     system_name varchar(200),
     backup_sys  varchar(200),
@@ -107,15 +120,32 @@ CREATE TABLE hf_hardware (
     details     text
 );
 
--- vm might be a network interface (ni)
+
 CREATE TABLE hf_virtual_machines (
-    vm_id       integer,
-    domain_name varchar(200),
-    ipv4_addr    varchar(15),
-    ipv6_addr    varchar(39), 
+    vm_id       integer unique not null,
+    domain_name varchar(300),
+    ip_id       integer,
+    ni_id       integer,
     -- from database_server.type_id
     type_id      integer,
     details text
+);
+
+CREATE TABLE hf_network_interfaces (
+  -- see interfaces table
+    ni_id integer unique not null,
+    -- see interfaces.assigned_interface
+    os_dev_ref varchar(20),
+    ipv4_addr_range    varchar(20),
+    ipv6_addr_range    varchar(50), 
+);
+
+CREATE TABLE hf_ip_addresses (
+    ip_id        integer,
+    ipv4_addr    varchar(15),
+    ipv4_status  integer,
+    ipv6_addr    varchar(39), 
+    ipv6_status  integer
 );
 
 CREATE TABLE hf_vm_quota_map (
