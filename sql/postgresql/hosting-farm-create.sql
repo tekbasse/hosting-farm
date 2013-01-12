@@ -5,8 +5,12 @@
 -- @license GNU GENERAL PUBLIC LICENSE, Version 3
 --
 
--- ignoring memory_detail,memory_summary for now..
-
+-- following tables get munged into monitoring system via 
+-- tcl api: memory_detail,memory_summary for now..
+--            database_memory_*, storage_detail
+--	      system_loads,
+--            traffic_raw,  traffic_detail, traffic_hourly
+--            vm_monitor, vm_status
 
 --- replace this with stanard nextval object_id
 CREATE SEQUENCE hf_id start 10000;
@@ -56,7 +60,7 @@ CREATE TABLE hf_user_roles (
 );
 
 CREATE TABLE hf_asset_type_features (
-    -- see feature table
+    -- see feature table 
     id integer,
     asset_type varchar(12),
     feature_type varchar(12),
@@ -85,6 +89,10 @@ CREATE TABLE hf_assets (
     qal_customer_id integer,
     label 	    varchar(30),
     description     varchar(80),
+    -- see server.templated
+    templated       varchar(1),
+    -- replacing vm_template with more general asset templating
+    template_p      varchar(1),
     time_start 	    timestamptz,
     time_stop 	    timestamptz,
     ua_id 	    integer,
@@ -127,13 +135,25 @@ CREATE TABLE hf_hardware (
 
 
 CREATE TABLE hf_virtual_machines (
-    vm_id       integer unique not null,
-    domain_name varchar(300),
-    ip_id       integer,
-    ni_id       integer,
+    vm_id        integer unique not null,
+    domain_name  varchar(300),
+    ip_id        integer,
+    ni_id        integer,
     -- from database_server.type_id
-    type_id      integer,
+    --      server.server_type
+    type_id       integer,
+    -- was vm_template.path
+    resource_path varchar(300),
+    -- was vm_template.mount_union
+    mount_union   varchar(1),
+    -- vm_feature table goes here if casual, or see hf_asset_feature_map
     details text
+);
+
+CREATE TABLE hf_asset_feature_map (
+    asset_id integer,
+    -- from hf_asset_type_features
+    feature_id integer
 );
 
 CREATE TABLE hf_network_interfaces (
@@ -155,6 +175,7 @@ CREATE TABLE hf_ip_addresses (
 
 CREATE TABLE hf_operating_systems (
     os_id integer,
+    -- server.fsys
     label varchar(20),
     brand varchar(80),
     version varchar(300),
@@ -200,6 +221,11 @@ CREATE TABLE hf_vhosts (
 CREATE TABLE hf_services (
   -- was database_id
     hs_id integer,
+    server_name varchar(40),
+    service_name varchar(300),
+    daemon_ref varchar(40),
+    protocol   varchar(40),
+    port       varchar(40),
   -- was database_user_id
     ua_id integer,
     -- from database_server.type_id 
@@ -211,17 +237,10 @@ CREATE TABLE hf_services (
     hs_undersubtype varchar(12),
     -- if needed in future: 
     hs_ultrasubtype varchar(12),
-    server_name varchar(40),
-    service_name varchar(300),
-    daemon_ref varchar(40),
-    protocol   varchar(40),
-    port       varchar(40),
     config_uri varchar(300),
     -- following from database_memory_detail
     memory_bytes bigint,
     --runtime is part of hf_assets start or monitor_log
-
-    
     details text
 );
 
