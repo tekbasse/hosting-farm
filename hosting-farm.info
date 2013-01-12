@@ -22,6 +22,7 @@
         <provides url="hosting-farm" version="0.1d"/>
         <requires url="accounts-receivables" version="0.1d"/>
         <requires url="accounts-ledger" version="0.1d"/>
+        <requires url="accounts-finance" version="0.1d"/>
 
         <callbacks>
         </callbacks>
