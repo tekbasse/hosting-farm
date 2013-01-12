@@ -5,6 +5,9 @@
 -- @license GNU GENERAL PUBLIC LICENSE, Version 3
 --
 
+-- ignoring memory_detail,memory_summary for now..
+
+
 --- replace this with stanard nextval object_id
 CREATE SEQUENCE hf_id start 10000;
 SELECT nextval ('hf_id');
@@ -101,6 +104,7 @@ CREATE TABLE hf_assets (
  );
 
 
+ 
 CREATE TABLE hf_data_centers (
     dc_id       integer,
     -- was datacenter.short_code
@@ -112,10 +116,11 @@ CREATE TABLE hf_data_centers (
 
 CREATE TABLE hf_hardware (
     hw_id       integer unique not null,
-    ni_id       integer,
     -- following aka backup_config.server_name backup_server
     system_name varchar(200),
     backup_sys  varchar(200),
+    ni_id       integer,
+    os_id       integer,
     description varchar(200),
     details     text
 );
@@ -146,6 +151,17 @@ CREATE TABLE hf_ip_addresses (
     ipv4_status  integer,
     ipv6_addr    varchar(39), 
     ipv6_status  integer
+);
+
+CREATE TABLE hf_operating_systems (
+    os_id integer,
+    label varchar(20),
+    brand varchar(80),
+    version varchar(300),
+    kernel varchar(300),
+    orphaned_p varchar(1),
+    requires_upgrade_p varchar(1),
+    description text
 );
 
 CREATE TABLE hf_vm_quota_map (
