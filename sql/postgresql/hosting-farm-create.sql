@@ -1,7 +1,7 @@
 -- hosting-farm-create.sql
 --
--- @author Dekka Corp.
--- @ported from Hub.org Hosting ams v2
+-- @author Benjamin Brink
+-- @ported from Hub.org Hosting's Account Management System (AMS) v2
 -- @license GNU GENERAL PUBLIC LICENSE, Version 3
 --
 
@@ -12,90 +12,61 @@
 --            traffic_raw,  traffic_detail, traffic_hourly
 --            vm_monitor, vm_status
 
---- replace this with stanard nextval object_id
-CREATE SEQUENCE hf_id start 10000;
-SELECT nextval ('hf_id');
+-- assets use object_id for permissions purposes: db_nextval acs_object_id_seq
+-- asset parts use this id_seq
+CREATE SEQUENCE hf_id_seq start 10000;
+SELECT nextval ('hf_id_seq');
 
 -- for vm_to_configure, see accounts-receivables shopping-basket
 
 
--- these roles come from ams.
--- a user can have more than one role
--- and different roles on different customer accounts
--- A role assigns permissions on hf object types.
--- A  role places additional limits
--- on the scope of OpenACS user permissions.
--- A role limits a user_id that is a member of the qal_customer_id set
---   to read, create, and/or write a customer object type
---  Object types (and mapped permissions) include:
---     customer_contracts and billing info  (must be billing, primary, or site_developer via contracts/select, main/select)
---     view detail/create/edit assets (must be technical_contact via main/select)
---     view/edit the contact info of the user roles (support/select)
---     view/create/edit support tickets with categories based on role (support/select)
--- Lots of *_contact specificity in ams
---     view/create/edit services with technical roles
---     view/create/edit service contracts billing/primary/admin roles
-CREATE TABLE hf_roles (
-    package_id  integer,
-    id 		integer,   
---     access_rights.technical_contact
---     access_rights.technical_staff
---     access_rights.billing_contact
---     access_rights.billing_staff
---     access_rights.primary_contact
---     access_rights.site_developer
-    label 	varchar(40),
-    allow 	varchar(7),
-    -- allow can be read, create, or write
-    object_type varchar(12),
-    -- per types of other hf tables
-    description text
+CREATE TABLE hf_asset_type (
+   instance_id             integer,
+    -- virtual_machine
+    -- virtual_host
+    -- xref with hf_assets.asset_type
+   id                      varchar(24),
+   -- aka feature.short_name
+   label                   varchar(40),
+   one_line_description    varchar(85),
+   descritpion             text
 );
 
-CREATE TABLE hf_user_roles (
-    package_id      integer,
-    user_id 	    integer,
-    qal_customer_id integer,
-    role_id 	    integer
-);
-
-CREATE TABLE hf_asset_type_features (
-    -- see feature table 
-    id integer,
-    asset_type varchar(12),
-    feature_type varchar(12),
-    publish_p  varchar(1),
-    label varchar(40),
-    one_line_description varchar(85),
-    descritpion text
-);
+create index hf_asset_type_instance_id_key on hf_asset_type (instance_id);
+create index hf_asset_type_id_key on hf_asset_type (id);
+create index hf_asset_type_label_key on hf_asset_type (label);
 
 -- part of database_list
 CREATE TABLE hf_assets (
-    package_id      integer,
-    id 	            integer,
- -- one of dc data center
- --        hw hardware
- --        vm virtual machine
- --	   vh virtual host
- -- 	   hs hosted service etc.
- --        ss saas/sw as a service
- --        ot other
-    asset_type      varchar(12),
-    -- for mapping to ledger and sales attributes 
+    instance_id     integer,
+    -- asset_id
+    id 	            integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+    -- one of dc data center
+    --        hw hardware
+    --        vm virtual machine
+    --	   vh virtual host
+    -- 	   hs hosted service etc.
+    --        ss saas/sw as a service
+    --        ot other
+    asset_type_id   varchar(24),
+    -- for mapping to ledger and sales attributes, and role-based permissions 
     -- such as pricing, period length, etc
     -- null is same as company_summary.is_exempt=true
     qal_product_id  integer,
     qal_customer_id integer,
-    label 	    varchar(30),
+    label 	        varchar(30),
     description     varchar(80),
+
     -- see server.templated
+    -- set to one if this asset is derived from a template
     templated       varchar(1),
+
     -- replacing vm_template with more general asset templating
+    -- template means this is an archetype asset. copy it to create new asset of same type
     template_p      varchar(1),
     time_start 	    timestamptz,
     time_stop 	    timestamptz,
-    ua_id 	    integer,
+    ua_id 	        integer,
   -- status aka vm_to_configure, on,off etc.
   -- use with qal_product_id for vm_to_configure.plan_id
   -- and qal_customer_id for vm_to_configure.company_id
@@ -105,25 +76,60 @@ CREATE TABLE hf_assets (
     trashed_by 	    integer,
     -- mainly for promoting clients by linking to their website
     -- was table.advert_link
-    publish_p varchar(1),
-    monitor_p varchar(1),
+    publish_p       varchar(1),
+    monitor_p       varchar(1),
     -- when monitoring, higher value is higher priority
     triage_priority integer
  );
 
+create index hf_assets_instance_id_key on hf_assets (instance_id);
+create index hf_assets_id_key on hf_assets (id);
+create index hf_assets_asset_type_id_key on hf_assets (asset_type_id);
+create index hf_assets_qal_product_id_key on hf_assets (qal_product_id);
+create index hf_assets_qal_customer_id_key on hf_assets (qal_customer_id);
+create index hf_assets_label_key on hf_assets (label);
 
- 
+
+CREATE TABLE hf_asset_type_features (
+    instance_id     integer,
+    -- feature.id
+    id                   integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+    -- hf_asset_type.id
+    asset_type_id        varchar(24),
+    -- null
+    -- s
+    label                varchar(40),
+    -- aka feature.short_name
+    feature_type         varchar(12),
+    publish_p            varchar(1),
+    -- aka feature.name
+    one_line_description varchar(85),
+    descritpion          text
+);
+
+create index hf_asset_type_features_instance_id_key on hf_asset_type_features (instance_id);
+create index hf_asset_type_features_id_key on hf_asset_type_features (id);
+create index hf_asset_type_features_asset_type_id_key on hf_asset_type_features (asset_type_id);
+create index hf_asset_type_features_label_key on hf_asset_type_features (label);
+
+
 CREATE TABLE hf_data_centers (
-    dc_id       integer,
+    instance_id     integer,
+    dc_id       integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- was datacenter.short_code
     affix       varchar(20),
     description varchar(80),
-    ni_id       integer,
     details     text
 );
 
+create index hf_data_centers_instance_id_key on hf_data_centers (instance_id);
+create index hf_data_centers_dc_id_key on hf_data_centers (dc_id);
+create index hf_data_centers_affix_key on hf_data_centers (affix);
+
+
 CREATE TABLE hf_hardware (
-    hw_id       integer unique not null,
+    instance_id     integer,
+    hw_id       integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- following aka backup_config.server_name backup_server
     system_name varchar(200),
     backup_sys  varchar(200),
@@ -133,12 +139,15 @@ CREATE TABLE hf_hardware (
     details     text
 );
 
+create index hf_hardware_instance_id_key on hf_wardware (instance_id);
+create index hf_hardware_hw_id_key on hf_hardware (hw_id);
+
 
 CREATE TABLE hf_virtual_machines (
-    vm_id        integer unique not null,
-    domain_name  varchar(300),
-    ip_id        integer,
-    ni_id        integer,
+    vm_id         integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+    domain_name   varchar(300),
+    ip_id         integer,
+    ni_id         integer,
     -- from database_server.type_id
     --      server.server_type
     type_id       integer,
@@ -147,211 +156,317 @@ CREATE TABLE hf_virtual_machines (
     -- was vm_template.mount_union
     mount_union   varchar(1),
     -- vm_feature table goes here if casual, or see hf_asset_feature_map
-    details text
+    details       text
 );
 
-CREATE TABLE hf_asset_feature_map (
-    asset_id integer,
-    -- from hf_asset_type_features
-    feature_id integer
-);
+create index hf_virtual_machines_vm_id_key on hf_virtual_machines (vm_id);
+create index hf_virutal_machines_domain_name_key on hf_virtual_machines (domain_name);
+create index hf_virtual_machines_ip_id_key on hf_virtual_machines (ip_id);
+create index hf_virtual_machines_ni_id_key on hf_virtual_machines (ni_id);
+create index hf_virtual_machines_type_id_key on hf_virtual_machines (type_id);
 
 CREATE TABLE hf_network_interfaces (
+    instance_id        integer,
   -- see interfaces table
-    ni_id integer unique not null,
+    ni_id              integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- see interfaces.assigned_interface
-    os_dev_ref varchar(20),
+    os_dev_ref         varchar(20),
     ipv4_addr_range    varchar(20),
     ipv6_addr_range    varchar(50), 
 );
 
+create index hf_netowrk_interfaces_instance_id_key on nf_network_interfaces (instance_id);
+create index hf_network_interfaces_ni_id_key on hf_network_interfaces (ni_id);
+
 CREATE TABLE hf_ip_addresses (
-    ip_id        integer,
+    instance_id  integer,
+    ip_id        integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     ipv4_addr    varchar(15),
     ipv4_status  integer,
     ipv6_addr    varchar(39), 
     ipv6_status  integer
 );
 
+create index hf_ip_addresses_instance_id_key on hf_ip_addressses (instance_id);
+create index hf_ip_addresses_ip_id_key on hf_ip_addresses (ip_id);
+create index hf_ip_addresses_ipv4_addr_key on hf_ip_addresses (ipv4_addr);
+create index hf_ip_addresses_ipv6_addr_key on hf_ip_addresses (ipv6_addr);
+
 CREATE TABLE hf_operating_systems (
-    os_id integer,
+    os_id               integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- server.fsys
-    label varchar(20),
-    brand varchar(80),
-    version varchar(300),
-    kernel varchar(300),
-    orphaned_p varchar(1),
-    requires_upgrade_p varchar(1),
-    description text
+    label               varchar(20),
+    brand               varchar(80),
+    version             varchar(300),
+    kernel              varchar(300),
+    orphaned_p          varchar(1),
+    requires_upgrade_p  varchar(1),
+    description         text
 );
 
+create index hf_operating_systems_os_id_key on hf_operating_systems (os_id);
+create index hf_operating_systems_requires_upgrade_p_key on hf_operating_systems (requires_upgrade_p);
+
+CREATE TABLE hf_asset_feature_map (
+    instance_id     integer,
+    asset_id        integer,
+    -- from hf_asset_type_features
+    feature_id      integer
+);
+
+create index hf_asset_feature_map_instance_id_key on hf_asset_feature_map (instance_id);
+create index hf_asset_feature_map_asset_id_key on hf_asset_feature_map (asset_id);
+create index hf_asset_feature_map_feature_id_key on hf_asset_feature_map (feature_id);
+
+CREATE TABLE hf_dc_ni_map (
+    instance_id     integer,
+    dc_id           integer,
+    ni_id           integer
+);
+
+create index hf_dc_ni_map_instance_id_key on hf_dc_ni_map (instance_id);
+create index hf_dc_ni_map_dc_id_key on hf_dc_ni_map (dc_id);
+create index hf_dc_ni_map_ni_id_key on hf_dc_ni_map (ni_id);
+
 CREATE TABLE hf_vm_quota_map (
-  plan_id integer not null,
-  description varchar(40) not null,
-  base_storage integer not null,
-  base_traffic integer not null,
-  base_memory integer,
-  base_sku varchar(40) not null,
-  over_storage_sku varchar(40) not null,
-  over_traffic_sku varchar(40) not null,
-  over_memory_sku varchar(40),
+  instance_id        integer,
+  plan_id            integer not null,
+  description        varchar(40) not null,
+  base_storage       integer not null,
+  base_traffic       integer not null,
+  base_memory        integer,
+  base_sku           varchar(40) not null,
+  over_storage_sku   varchar(40) not null,
+  over_traffic_sku   varchar(40) not null,
+  over_memory_sku    varchar(40),
   -- unit is amount per quantity of one sku
-  storage_unit integer not null,
-  traffic_unit integer not null,
-  memory_unit integer,
-  qemu_memory integer 
-  status_id integer,
+  storage_unit      integer not null,
+  traffic_unit      integer not null,
+  memory_unit       integer,
+  qemu_memory       integer,
+  status_id         integer,
   -- shows as 1 or 2 (means?)
-  vm_type integer,
+  vm_type           integer,
   -- was vm_group (0 to 3) means?
-  max_domain integer,
-  private_vps varchar(1),
+  max_domain        integer,
+  private_vps       varchar(1)
   -- plan.high_end is ambiguous and isn't differentiated from private_vps, so ignoring.
  );
 
+create index hf_vm_quote_map_instance_id_key on hf_vm_quota_map (instance_id);
+create index hf_vm_quota_map_plan_id_key on hf_vm_quota_map (plan_id);
+create index hf_vm_quota_map_vm_type_key on hf_vm_quota_map (vm_type);
+create index hf_vm_quota_map_private_vps_key on hf_vm_quota_map (private_vps);
+
 -- vh might be a domain resolving to ni
 CREATE TABLE hf_vhosts (
-    vh_id integer,
-    ua_id integer,
+    instance_id integer,
+    vh_id       integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+    ua_id       integer,
     domain_name varchar(200),
-    details text
+    details     text
 );
+
+create index hf_vhosts_instance_id_key on hf_vhosts (instance_id); 
+create index hf_vhosts_vh_id_key on hf_vhosts (vh_id);
+create index hf_vhosts_ua_id_key on hf_vhosts (ua_id);
+create index hf_vhosts_domain_name_key on hf_vhosts (domain_name);
 
 -- part of database_auth and database_list
 CREATE TABLE hf_services (
+    instance_id     integer,
   -- was database_id
-    hs_id integer,
-    server_name varchar(40),
-    service_name varchar(300),
-    daemon_ref varchar(40),
-    protocol   varchar(40),
-    port       varchar(40),
+    hs_id           integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+    server_name     varchar(40),
+    service_name    varchar(300),
+    daemon_ref      varchar(40),
+    protocol        varchar(40),
+    port            varchar(40),
   -- was database_user_id
-    ua_id integer,
+    ua_id           integer,
     -- from database_server.type_id 
     -- type can be: db, protocol, generic daemon etc.    port integer,
-    hs_type varchar(12),
+    hs_type         varchar(24),
     -- see database_server.db_type (pgsql, mysql etc.)    
-    hs_subtype varchar(12),
+    hs_subtype      varchar(24),
     -- see dbs.database_type_id
-    hs_undersubtype varchar(12),
+    hs_undersubtype varchar(24),
     -- if needed in future: 
-    hs_ultrasubtype varchar(12),
-    config_uri varchar(300),
+    hs_ultrasubtype varchar(24),
+    config_uri      varchar(300),
     -- following from database_memory_detail
-    memory_bytes bigint,
+    memory_bytes    bigint,
     --runtime is part of hf_assets start or monitor_log
-    details text
+    details         text
 );
 
+create index hf_services_instance_id_key on hf_services (instance_id);
+create index hf_services_hs_id_key on hf_services (hs_id);
+create index hf_services_server_name_key on hf_services (server_name);
+create index hf_services_daemon_ref_key on hf_services (daemon_ref);
+create index hf_services_protocol_key on hf_services (protocol);
+create index hf_services_port_key on hf_services (port);
+create index hf_services_ua_id_key on hf_services (ua_id);
 
 CREATE TABLE hf_ua (
-    ua_id              integer,
+    instance_id     integer,
+    ua_id           integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- bruger kontonavn
-    details            text
+    details         text
     -- following was database_auth.secure_authentication bool
-    connection_type varcar(12)
+    connection_type varchar(24)
 );
+
+create index hf_ua_instance_id_key on hf_ua (instance_id);
+create index hf_ua_ua_id_key on hf_ua (ua_id);
 
 CREATE TABLE hf_up (
-    up_id integer,
+    instance_id     integer,
+    up_id           integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     --ie. adgangs kode
-    details text
+    details         text
 );
+
+create index hf_up_instance_id on hf_up (instance_id);
+create index hf_up_up_id_key on hf_up (up_id);
 
 CREATE TABLE hf_dc_hw_map (
-    package_id integer,
-    dc_id integer,
-    hw_id integer
+    instance_id     integer,
+    dc_id           integer,
+    hw_id           integer
 );
+
+create index hf_dc_hw_map_instance_id_key on hf_dc_hw_map (instance_id);
+create index hf_dc_hw_map_dc_id_key on hf_dc_hw_map (dc_id);
+create index hf_dc_hw_map_hw_id_key on hf_dc_hw_map (hw_id);
 
 CREATE TABLE hf_hw_vm_map (
-    package_id integer,
-    hw_id integer,
-    vm_id integer
+    instance_id     integer,
+    hw_id           integer,
+    vm_id           integer
 );
+
+create index hf_hw_vm_map_instance_id_key on hf_hw_vm_map (instance_id);
+create index hf_hw_vm_map_hw_id_key on hf_hw_vm_map (hw_id);
+create index hf_hw_vm_map_vnm_id on hf_hw_vm_map (vm_id);
 
 CREATE TABLE hf_vm_vh_map (
-    package_id integer,
-    vm_id integer,
-    vh_id integer
+    instance_id     integer,
+    vm_id           integer,
+    vh_id           integer
 );
 
+create index hf_vm_vh_map_instance_id_key on hf_vm_vh_map (instance_id);
+create index hf_vm_vh_map_vm_id_key on hf_vm_vh_map (vm_id);
+create index hf_vm_vh_map_vh_id_key on hf_vm_vh_map (vh_id);
+
 CREATE TABLE hf_vh_map (
-    package_id integer,
-    vh_id integer,
-    hs_id integer
+    instance_id     integer,
+    vh_id           integer,
+    hs_id           integer
 );
+
+create index hf_vh_map_instance_id_key on hf_vh_map (instance_id);
+create index hf_vh_map_vh_id_key on hf_vh_map (vh_id);
+create index hf_vh_map_hs_id_key on hf_vh_map (hs_id);
 
 -- was database_auth
 CREATE TABLE hf_ua_up_map (
-    package_id integer,
-    ua_id integer,
-    up_id integer
+    instance_id     integer,
+    ua_id           integer,
+    up_id           integer
 );
 
+create index hf_ua_up_map_instance_map_key on hf_ua_up_map (instance_id);
+create index hf_ua_up_map_ua_id_key on hf_ua_up_map (ua_id);
+create index hf_ua_up_map_up_id_key on hf_ua_up_map (up_id);
+
 CREATE TABLE hf_monitor_config_n_control (
-    monitor_id integer not null,
-    asset_id integer not null,
-    label varchar(200) not null,
-    active_p varchar(1) not null,
+    instance_id               integer,
+    monitor_id                integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+    asset_id                  integer not null,
+    label                     varchar(200) not null,
+    active_p                  varchar(1) not null,
     -- number of portions to use in frequency distribution curve
-    portions_count integer not null,
+    portions_count            integer not null,
     -- allow some control over how the distribution curves are represented:
-    calculation_switches varchar(20)
+    calculation_switches      varchar(20)
     -- Following 2 are used to suggest hf_monitor_status.expected_health:
     -- the percentile rank that triggers an alarm
     -- 0% rarely triggers, 100% triggers on most everything.
     health_percentile_trigger numeric,
     -- the health_value matching health_percentile_trigger
-    health_threshold integer
+    health_threshold          integer
 );
 
+create index hf_monitor_config_n_control_instance_id_key on hf_monitor_config_n_control (instance_id);
+create index hf_monitor_config_n_control_monitor_id_key on hf_monitor_config_n_control (monitor_id);
+create index hf_monitor_config_n_control_asset_id_key on hf_monitor_config_n_control (asset_id);
+create index hf_monitor_config_n_control_active_p_key on hf_monitor_config_n_control (active_p);
+
 CREATE TABLE hf_monitor_log (
-    monitor_id integer not null,
-    asset_id  integer not null,
+    instance_id          integer,
+    monitor_id           integer not null,
+    asset_id             integer not null,
     -- increases by 1 for each monitor_id's report of asset_id
-    report_id integer not null,
+    report_id            integer not null,
     -- reported_by provides means to identify/verify reporting source
-    reported_by varchar(120),
-    report_time timestamptz,
+    reported_by          varchar(120),
+    report_time          timestamptz,
     -- 0 dead, down, not normal
     -- 10000 nominal, allows for variable performance issues
     -- health = numeric summary indicator determined by hf_procs
-    health integer,
+    health               integer,
     -- latest report from monitoring
     report text
     -- sysadmins can log significant changes to asset, such as sw updates
     -- with health=null and/or:
-    significant_change varchar(1),
+    significant_change   varchar(1)
     -- Changes mark boundaries for data samples
 );
 
+create index hf_monitor_log_instance_id_key on hf_monitor_log (instance_id);
+create index hf_monitor_log_monitor_id_key on hf_monitor_log (monitor_id);
+create index hf_monitor_log_asset_id_key on hf_monitor_log (asset_id);
+create index hf_monitor_log_report_id_key on hf_monitor_log (report_id);
+create index hf_monitor_log_sig_change_id_key on hf_monitor_log (significant_change);
+
 CREATE TABLE hf_monitor_status (
-    monitor_id integer unique not null,
-    asset_id integer,
+    instance_id                integer,
+    monitor_id                 integer unique not null,
+    asset_id                   integer,
     -- most recent report_id:
-    report_id integer,
-    health_p0 integer,
-    -- for calculating differential, p1 is always 1
-    health_p1 integer,
-    expected_health integer,
+    report_id                  integer,
+    health_p0                  integer,
+    -- for calculating differential, p1 is always 1, just as p0 is 0
+    health_p1                  integer,
+    expected_health            integer
 );
 
+create index hf_monitor_status_instance_id_key on hf_monitor_status (instance_id);
+create index hf_monitor_status_monitor_id_key on hf_monitor_status (monitor_id);
+create index hf_monitor_status_asset_id_key on hf_monitor_status (asset_id);
+create index hf_monitor_status_report_id_key on hf_monitor_status (report_id);
+
 CREATE TABLE hf_monitor_statistics (
+    instance_id     integer,
     -- only most recent status statistics are reported here 
     -- A hf_monitor_log.significant_change flags boundary
-    monitor_id integer not null,
-    analysis_id integer not null,
-    sample_count integer,
+    monitor_id      integer not null,
+    analysis_id     integer not null,
+    sample_count    integer,
     -- range_min is minimum value of report_id
-    range_min integer,
-    range_max integer,
-    health_max integer,
-    health_min integer,
-    health_average numeric,
-    health_median numeric,
+    range_min       integer,
+    range_max       integer,
+    health_max      integer,
+    health_min      integer,
+    health_average  numeric,
+    health_median   numeric
 ); 
+
+create index hf_monitor_statistics_instance_id_key on hf_monitor_statistics (instance_id);
+create index hf_monitor_statistics_monitor_id_key on hf_monitor_statistics (monitor_id);
+create index hf_monitor_statistics_analysis_id_key on hf_monitor_statistics (analysis_id);
 
 -- Curves are normalized to 1.0
 -- Percents are represented decimally 0.01 is one percent
@@ -361,16 +476,22 @@ CREATE TABLE hf_monitor_statistics (
 -- This model keeps old curves, to help with long-term performance insights
 -- see accounts-finance  qaf_discrete_dist_report {
 CREATE TABLE hf_monitor_freq_dist_curves (
-    monitor_id integer not null,
-    analysis_id integer not null,
+    instance_id      integer,
+    monitor_id       integer not null,
+    analysis_id      integer not null,
     -- position x is a sequential position below curve
     -- median is where cumulative_pct = 0.50 
     -- x_pos may not be evenly distributed
-    x_pos integer not null,
+    x_pos            integer not null,
     -- cumulative_pct increases to 1.0 (from 0 to 100 percentile)
-    cumulative_pct not null,
+    cumulative_pct   numeric not null,
     -- sum of the delta_x equals 1.0
     -- delta_x values might be equal, or not,
     -- depending on how distribution is calculated/represented
-    delta_x_pct not null
+    delta_x_pct      numeric not null
 );
+
+create index hf_monitor_freq_dist_curves_instance_id_key on hf_monitor_freq_dist_curves (instance_id);
+create index hf_monitor_freq_dist_curves_monitor_id_key on hf_monitor_freq_dist_curves (monitor_id);
+create index hf_monitor_freq_dist_curves_analysis_id_key on hf_monitor_freq_dist_curves (analysis_id);
+
