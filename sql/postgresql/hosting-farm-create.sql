@@ -32,9 +32,9 @@ CREATE TABLE hf_asset_type (
    descritpion             text
 );
 
-create index hf_asset_type_instance_id_key on hf_asset_type (instance_id);
-create index hf_asset_type_id_key on hf_asset_type (id);
-create index hf_asset_type_label_key on hf_asset_type (label);
+create index hf_asset_type_instance_id_idx on hf_asset_type (instance_id);
+create index hf_asset_type_id_idx on hf_asset_type (id);
+create index hf_asset_type_label_idx on hf_asset_type (label);
 
 -- part of database_list
 CREATE TABLE hf_assets (
@@ -54,7 +54,7 @@ CREATE TABLE hf_assets (
     -- null is same as company_summary.is_exempt=true
     qal_product_id  integer,
     qal_customer_id integer,
-    label 	        varchar(30),
+    label 	    varchar(30),
     description     varchar(80),
 
     -- see server.templated
@@ -66,7 +66,7 @@ CREATE TABLE hf_assets (
     template_p      varchar(1),
     time_start 	    timestamptz,
     time_stop 	    timestamptz,
-    ua_id 	        integer,
+    ua_id 	    integer,
   -- status aka vm_to_configure, on,off etc.
   -- use with qal_product_id for vm_to_configure.plan_id
   -- and qal_customer_id for vm_to_configure.company_id
@@ -82,16 +82,16 @@ CREATE TABLE hf_assets (
     triage_priority integer
  );
 
-create index hf_assets_instance_id_key on hf_assets (instance_id);
-create index hf_assets_id_key on hf_assets (id);
-create index hf_assets_asset_type_id_key on hf_assets (asset_type_id);
-create index hf_assets_qal_product_id_key on hf_assets (qal_product_id);
-create index hf_assets_qal_customer_id_key on hf_assets (qal_customer_id);
-create index hf_assets_label_key on hf_assets (label);
+create index hf_assets_instance_id_idx on hf_assets (instance_id);
+create index hf_assets_id_idx on hf_assets (id);
+create index hf_assets_asset_type_id_idx on hf_assets (asset_type_id);
+create index hf_assets_qal_product_id_idx on hf_assets (qal_product_id);
+create index hf_assets_qal_customer_id_idx on hf_assets (qal_customer_id);
+create index hf_assets_label_idx on hf_assets (label);
 
 
 CREATE TABLE hf_asset_type_features (
-    instance_id     integer,
+    instance_id          integer,
     -- feature.id
     id                   integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- hf_asset_type.id
@@ -107,14 +107,14 @@ CREATE TABLE hf_asset_type_features (
     descritpion          text
 );
 
-create index hf_asset_type_features_instance_id_key on hf_asset_type_features (instance_id);
-create index hf_asset_type_features_id_key on hf_asset_type_features (id);
-create index hf_asset_type_features_asset_type_id_key on hf_asset_type_features (asset_type_id);
-create index hf_asset_type_features_label_key on hf_asset_type_features (label);
+create index hf_asset_type_features_instance_id_idx on hf_asset_type_features (instance_id);
+create index hf_asset_type_features_id_idx on hf_asset_type_features (id);
+create index hf_asset_type_features_asset_type_id_idx on hf_asset_type_features (asset_type_id);
+create index hf_asset_type_features_label_idx on hf_asset_type_features (label);
 
 
 CREATE TABLE hf_data_centers (
-    instance_id     integer,
+    instance_id integer,
     dc_id       integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- was datacenter.short_code
     affix       varchar(20),
@@ -122,13 +122,13 @@ CREATE TABLE hf_data_centers (
     details     text
 );
 
-create index hf_data_centers_instance_id_key on hf_data_centers (instance_id);
-create index hf_data_centers_dc_id_key on hf_data_centers (dc_id);
-create index hf_data_centers_affix_key on hf_data_centers (affix);
+create index hf_data_centers_instance_id_idx on hf_data_centers (instance_id);
+create index hf_data_centers_dc_id_idx on hf_data_centers (dc_id);
+create index hf_data_centers_affix_idx on hf_data_centers (affix);
 
 
 CREATE TABLE hf_hardware (
-    instance_id     integer,
+    instance_id integer,
     hw_id       integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- following aka backup_config.server_name backup_server
     system_name varchar(200),
@@ -139,8 +139,8 @@ CREATE TABLE hf_hardware (
     details     text
 );
 
-create index hf_hardware_instance_id_key on hf_wardware (instance_id);
-create index hf_hardware_hw_id_key on hf_hardware (hw_id);
+create index hf_hardware_instance_id_idx on hf_hardware (instance_id);
+create index hf_hardware_hw_id_idx on hf_hardware (hw_id);
 
 
 CREATE TABLE hf_virtual_machines (
@@ -159,11 +159,11 @@ CREATE TABLE hf_virtual_machines (
     details       text
 );
 
-create index hf_virtual_machines_vm_id_key on hf_virtual_machines (vm_id);
-create index hf_virutal_machines_domain_name_key on hf_virtual_machines (domain_name);
-create index hf_virtual_machines_ip_id_key on hf_virtual_machines (ip_id);
-create index hf_virtual_machines_ni_id_key on hf_virtual_machines (ni_id);
-create index hf_virtual_machines_type_id_key on hf_virtual_machines (type_id);
+create index hf_virtual_machines_vm_id_idx on hf_virtual_machines (vm_id);
+create index hf_virutal_machines_domain_name_idx on hf_virtual_machines (domain_name);
+create index hf_virtual_machines_ip_id_idx on hf_virtual_machines (ip_id);
+create index hf_virtual_machines_ni_id_idx on hf_virtual_machines (ni_id);
+create index hf_virtual_machines_type_id_idx on hf_virtual_machines (type_id);
 
 CREATE TABLE hf_network_interfaces (
     instance_id        integer,
@@ -172,11 +172,11 @@ CREATE TABLE hf_network_interfaces (
     -- see interfaces.assigned_interface
     os_dev_ref         varchar(20),
     ipv4_addr_range    varchar(20),
-    ipv6_addr_range    varchar(50), 
+    ipv6_addr_range    varchar(50)
 );
 
-create index hf_netowrk_interfaces_instance_id_key on nf_network_interfaces (instance_id);
-create index hf_network_interfaces_ni_id_key on hf_network_interfaces (ni_id);
+create index hf_netowrk_interfaces_instance_id_idx on hf_network_interfaces (instance_id);
+create index hf_network_interfaces_ni_id_idx on hf_network_interfaces (ni_id);
 
 CREATE TABLE hf_ip_addresses (
     instance_id  integer,
@@ -187,10 +187,10 @@ CREATE TABLE hf_ip_addresses (
     ipv6_status  integer
 );
 
-create index hf_ip_addresses_instance_id_key on hf_ip_addressses (instance_id);
-create index hf_ip_addresses_ip_id_key on hf_ip_addresses (ip_id);
-create index hf_ip_addresses_ipv4_addr_key on hf_ip_addresses (ipv4_addr);
-create index hf_ip_addresses_ipv6_addr_key on hf_ip_addresses (ipv6_addr);
+create index hf_ip_addresses_instance_id_idx on hf_ip_addresses (instance_id);
+create index hf_ip_addresses_ip_id_idx on hf_ip_addresses (ip_id);
+create index hf_ip_addresses_ipv4_addr_idx on hf_ip_addresses (ipv4_addr);
+create index hf_ip_addresses_ipv6_addr_idx on hf_ip_addresses (ipv6_addr);
 
 CREATE TABLE hf_operating_systems (
     os_id               integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
@@ -204,8 +204,8 @@ CREATE TABLE hf_operating_systems (
     description         text
 );
 
-create index hf_operating_systems_os_id_key on hf_operating_systems (os_id);
-create index hf_operating_systems_requires_upgrade_p_key on hf_operating_systems (requires_upgrade_p);
+create index hf_operating_systems_os_id_idx on hf_operating_systems (os_id);
+create index hf_operating_systems_requires_upgrade_p_idx on hf_operating_systems (requires_upgrade_p);
 
 CREATE TABLE hf_asset_feature_map (
     instance_id     integer,
@@ -214,9 +214,9 @@ CREATE TABLE hf_asset_feature_map (
     feature_id      integer
 );
 
-create index hf_asset_feature_map_instance_id_key on hf_asset_feature_map (instance_id);
-create index hf_asset_feature_map_asset_id_key on hf_asset_feature_map (asset_id);
-create index hf_asset_feature_map_feature_id_key on hf_asset_feature_map (feature_id);
+create index hf_asset_feature_map_instance_id_idx on hf_asset_feature_map (instance_id);
+create index hf_asset_feature_map_asset_id_idx on hf_asset_feature_map (asset_id);
+create index hf_asset_feature_map_feature_id_idx on hf_asset_feature_map (feature_id);
 
 CREATE TABLE hf_dc_ni_map (
     instance_id     integer,
@@ -224,9 +224,9 @@ CREATE TABLE hf_dc_ni_map (
     ni_id           integer
 );
 
-create index hf_dc_ni_map_instance_id_key on hf_dc_ni_map (instance_id);
-create index hf_dc_ni_map_dc_id_key on hf_dc_ni_map (dc_id);
-create index hf_dc_ni_map_ni_id_key on hf_dc_ni_map (ni_id);
+create index hf_dc_ni_map_instance_id_idx on hf_dc_ni_map (instance_id);
+create index hf_dc_ni_map_dc_id_idx on hf_dc_ni_map (dc_id);
+create index hf_dc_ni_map_ni_id_idx on hf_dc_ni_map (ni_id);
 
 CREATE TABLE hf_vm_quota_map (
   instance_id        integer,
@@ -240,23 +240,23 @@ CREATE TABLE hf_vm_quota_map (
   over_traffic_sku   varchar(40) not null,
   over_memory_sku    varchar(40),
   -- unit is amount per quantity of one sku
-  storage_unit      integer not null,
-  traffic_unit      integer not null,
-  memory_unit       integer,
-  qemu_memory       integer,
-  status_id         integer,
+  storage_unit       integer not null,
+  traffic_unit       integer not null,
+  memory_unit        integer,
+  qemu_memory        integer,
+  status_id          integer,
   -- shows as 1 or 2 (means?)
-  vm_type           integer,
+  vm_type            integer,
   -- was vm_group (0 to 3) means?
-  max_domain        integer,
-  private_vps       varchar(1)
+  max_domain         integer,
+  private_vps        varchar(1)
   -- plan.high_end is ambiguous and isn't differentiated from private_vps, so ignoring.
  );
 
-create index hf_vm_quote_map_instance_id_key on hf_vm_quota_map (instance_id);
-create index hf_vm_quota_map_plan_id_key on hf_vm_quota_map (plan_id);
-create index hf_vm_quota_map_vm_type_key on hf_vm_quota_map (vm_type);
-create index hf_vm_quota_map_private_vps_key on hf_vm_quota_map (private_vps);
+create index hf_vm_quote_map_instance_id_idx on hf_vm_quota_map (instance_id);
+create index hf_vm_quota_map_plan_id_idx on hf_vm_quota_map (plan_id);
+create index hf_vm_quota_map_vm_type_idx on hf_vm_quota_map (vm_type);
+create index hf_vm_quota_map_private_vps_idx on hf_vm_quota_map (private_vps);
 
 -- vh might be a domain resolving to ni
 CREATE TABLE hf_vhosts (
@@ -267,10 +267,10 @@ CREATE TABLE hf_vhosts (
     details     text
 );
 
-create index hf_vhosts_instance_id_key on hf_vhosts (instance_id); 
-create index hf_vhosts_vh_id_key on hf_vhosts (vh_id);
-create index hf_vhosts_ua_id_key on hf_vhosts (ua_id);
-create index hf_vhosts_domain_name_key on hf_vhosts (domain_name);
+create index hf_vhosts_instance_id_idx on hf_vhosts (instance_id); 
+create index hf_vhosts_vh_id_idx on hf_vhosts (vh_id);
+create index hf_vhosts_ua_id_idx on hf_vhosts (ua_id);
+create index hf_vhosts_domain_name_idx on hf_vhosts (domain_name);
 
 -- part of database_auth and database_list
 CREATE TABLE hf_services (
@@ -300,25 +300,25 @@ CREATE TABLE hf_services (
     details         text
 );
 
-create index hf_services_instance_id_key on hf_services (instance_id);
-create index hf_services_hs_id_key on hf_services (hs_id);
-create index hf_services_server_name_key on hf_services (server_name);
-create index hf_services_daemon_ref_key on hf_services (daemon_ref);
-create index hf_services_protocol_key on hf_services (protocol);
-create index hf_services_port_key on hf_services (port);
-create index hf_services_ua_id_key on hf_services (ua_id);
+create index hf_services_instance_id_idx on hf_services (instance_id);
+create index hf_services_hs_id_idx on hf_services (hs_id);
+create index hf_services_server_name_idx on hf_services (server_name);
+create index hf_services_daemon_ref_idx on hf_services (daemon_ref);
+create index hf_services_protocol_idx on hf_services (protocol);
+create index hf_services_port_idx on hf_services (port);
+create index hf_services_ua_id_idx on hf_services (ua_id);
 
 CREATE TABLE hf_ua (
     instance_id     integer,
     ua_id           integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- bruger kontonavn
-    details         text
+    details         text,
     -- following was database_auth.secure_authentication bool
     connection_type varchar(24)
 );
 
-create index hf_ua_instance_id_key on hf_ua (instance_id);
-create index hf_ua_ua_id_key on hf_ua (ua_id);
+create index hf_ua_instance_id_idx on hf_ua (instance_id);
+create index hf_ua_ua_id_idx on hf_ua (ua_id);
 
 CREATE TABLE hf_up (
     instance_id     integer,
@@ -328,7 +328,7 @@ CREATE TABLE hf_up (
 );
 
 create index hf_up_instance_id on hf_up (instance_id);
-create index hf_up_up_id_key on hf_up (up_id);
+create index hf_up_up_id_idx on hf_up (up_id);
 
 CREATE TABLE hf_dc_hw_map (
     instance_id     integer,
@@ -336,9 +336,9 @@ CREATE TABLE hf_dc_hw_map (
     hw_id           integer
 );
 
-create index hf_dc_hw_map_instance_id_key on hf_dc_hw_map (instance_id);
-create index hf_dc_hw_map_dc_id_key on hf_dc_hw_map (dc_id);
-create index hf_dc_hw_map_hw_id_key on hf_dc_hw_map (hw_id);
+create index hf_dc_hw_map_instance_id_idx on hf_dc_hw_map (instance_id);
+create index hf_dc_hw_map_dc_id_idx on hf_dc_hw_map (dc_id);
+create index hf_dc_hw_map_hw_id_idx on hf_dc_hw_map (hw_id);
 
 CREATE TABLE hf_hw_vm_map (
     instance_id     integer,
@@ -346,8 +346,8 @@ CREATE TABLE hf_hw_vm_map (
     vm_id           integer
 );
 
-create index hf_hw_vm_map_instance_id_key on hf_hw_vm_map (instance_id);
-create index hf_hw_vm_map_hw_id_key on hf_hw_vm_map (hw_id);
+create index hf_hw_vm_map_instance_id_idx on hf_hw_vm_map (instance_id);
+create index hf_hw_vm_map_hw_id_idx on hf_hw_vm_map (hw_id);
 create index hf_hw_vm_map_vnm_id on hf_hw_vm_map (vm_id);
 
 CREATE TABLE hf_vm_vh_map (
@@ -356,9 +356,9 @@ CREATE TABLE hf_vm_vh_map (
     vh_id           integer
 );
 
-create index hf_vm_vh_map_instance_id_key on hf_vm_vh_map (instance_id);
-create index hf_vm_vh_map_vm_id_key on hf_vm_vh_map (vm_id);
-create index hf_vm_vh_map_vh_id_key on hf_vm_vh_map (vh_id);
+create index hf_vm_vh_map_instance_id_idx on hf_vm_vh_map (instance_id);
+create index hf_vm_vh_map_vm_id_idx on hf_vm_vh_map (vm_id);
+create index hf_vm_vh_map_vh_id_idx on hf_vm_vh_map (vh_id);
 
 CREATE TABLE hf_vh_map (
     instance_id     integer,
@@ -366,9 +366,9 @@ CREATE TABLE hf_vh_map (
     hs_id           integer
 );
 
-create index hf_vh_map_instance_id_key on hf_vh_map (instance_id);
-create index hf_vh_map_vh_id_key on hf_vh_map (vh_id);
-create index hf_vh_map_hs_id_key on hf_vh_map (hs_id);
+create index hf_vh_map_instance_id_idx on hf_vh_map (instance_id);
+create index hf_vh_map_vh_id_idx on hf_vh_map (vh_id);
+create index hf_vh_map_hs_id_idx on hf_vh_map (hs_id);
 
 -- was database_auth
 CREATE TABLE hf_ua_up_map (
@@ -377,9 +377,9 @@ CREATE TABLE hf_ua_up_map (
     up_id           integer
 );
 
-create index hf_ua_up_map_instance_map_key on hf_ua_up_map (instance_id);
-create index hf_ua_up_map_ua_id_key on hf_ua_up_map (ua_id);
-create index hf_ua_up_map_up_id_key on hf_ua_up_map (up_id);
+create index hf_ua_up_map_instance_map_idx on hf_ua_up_map (instance_id);
+create index hf_ua_up_map_ua_id_idx on hf_ua_up_map (ua_id);
+create index hf_ua_up_map_up_id_idx on hf_ua_up_map (up_id);
 
 CREATE TABLE hf_monitor_config_n_control (
     instance_id               integer,
@@ -390,7 +390,7 @@ CREATE TABLE hf_monitor_config_n_control (
     -- number of portions to use in frequency distribution curve
     portions_count            integer not null,
     -- allow some control over how the distribution curves are represented:
-    calculation_switches      varchar(20)
+    calculation_switches      varchar(20),
     -- Following 2 are used to suggest hf_monitor_status.expected_health:
     -- the percentile rank that triggers an alarm
     -- 0% rarely triggers, 100% triggers on most everything.
@@ -399,10 +399,10 @@ CREATE TABLE hf_monitor_config_n_control (
     health_threshold          integer
 );
 
-create index hf_monitor_config_n_control_instance_id_key on hf_monitor_config_n_control (instance_id);
-create index hf_monitor_config_n_control_monitor_id_key on hf_monitor_config_n_control (monitor_id);
-create index hf_monitor_config_n_control_asset_id_key on hf_monitor_config_n_control (asset_id);
-create index hf_monitor_config_n_control_active_p_key on hf_monitor_config_n_control (active_p);
+create index hf_monitor_config_n_control_instance_id_idx on hf_monitor_config_n_control (instance_id);
+create index hf_monitor_config_n_control_monitor_id_idx on hf_monitor_config_n_control (monitor_id);
+create index hf_monitor_config_n_control_asset_id_idx on hf_monitor_config_n_control (asset_id);
+create index hf_monitor_config_n_control_active_p_idx on hf_monitor_config_n_control (active_p);
 
 CREATE TABLE hf_monitor_log (
     instance_id          integer,
@@ -418,18 +418,18 @@ CREATE TABLE hf_monitor_log (
     -- health = numeric summary indicator determined by hf_procs
     health               integer,
     -- latest report from monitoring
-    report text
+    report text,
     -- sysadmins can log significant changes to asset, such as sw updates
     -- with health=null and/or:
     significant_change   varchar(1)
     -- Changes mark boundaries for data samples
 );
 
-create index hf_monitor_log_instance_id_key on hf_monitor_log (instance_id);
-create index hf_monitor_log_monitor_id_key on hf_monitor_log (monitor_id);
-create index hf_monitor_log_asset_id_key on hf_monitor_log (asset_id);
-create index hf_monitor_log_report_id_key on hf_monitor_log (report_id);
-create index hf_monitor_log_sig_change_id_key on hf_monitor_log (significant_change);
+create index hf_monitor_log_instance_id_idx on hf_monitor_log (instance_id);
+create index hf_monitor_log_monitor_id_idx on hf_monitor_log (monitor_id);
+create index hf_monitor_log_asset_id_idx on hf_monitor_log (asset_id);
+create index hf_monitor_log_report_id_idx on hf_monitor_log (report_id);
+create index hf_monitor_log_sig_change_id_idx on hf_monitor_log (significant_change);
 
 CREATE TABLE hf_monitor_status (
     instance_id                integer,
@@ -443,10 +443,10 @@ CREATE TABLE hf_monitor_status (
     expected_health            integer
 );
 
-create index hf_monitor_status_instance_id_key on hf_monitor_status (instance_id);
-create index hf_monitor_status_monitor_id_key on hf_monitor_status (monitor_id);
-create index hf_monitor_status_asset_id_key on hf_monitor_status (asset_id);
-create index hf_monitor_status_report_id_key on hf_monitor_status (report_id);
+create index hf_monitor_status_instance_id_idx on hf_monitor_status (instance_id);
+create index hf_monitor_status_monitor_id_idx on hf_monitor_status (monitor_id);
+create index hf_monitor_status_asset_id_idx on hf_monitor_status (asset_id);
+create index hf_monitor_status_report_id_idx on hf_monitor_status (report_id);
 
 CREATE TABLE hf_monitor_statistics (
     instance_id     integer,
@@ -464,9 +464,9 @@ CREATE TABLE hf_monitor_statistics (
     health_median   numeric
 ); 
 
-create index hf_monitor_statistics_instance_id_key on hf_monitor_statistics (instance_id);
-create index hf_monitor_statistics_monitor_id_key on hf_monitor_statistics (monitor_id);
-create index hf_monitor_statistics_analysis_id_key on hf_monitor_statistics (analysis_id);
+create index hf_monitor_statistics_instance_id_idx on hf_monitor_statistics (instance_id);
+create index hf_monitor_statistics_monitor_id_idx on hf_monitor_statistics (monitor_id);
+create index hf_monitor_statistics_analysis_id_idx on hf_monitor_statistics (analysis_id);
 
 -- Curves are normalized to 1.0
 -- Percents are represented decimally 0.01 is one percent
@@ -491,7 +491,7 @@ CREATE TABLE hf_monitor_freq_dist_curves (
     delta_x_pct      numeric not null
 );
 
-create index hf_monitor_freq_dist_curves_instance_id_key on hf_monitor_freq_dist_curves (instance_id);
-create index hf_monitor_freq_dist_curves_monitor_id_key on hf_monitor_freq_dist_curves (monitor_id);
-create index hf_monitor_freq_dist_curves_analysis_id_key on hf_monitor_freq_dist_curves (analysis_id);
+create index hf_monitor_freq_dist_curves_instance_id_idx on hf_monitor_freq_dist_curves (instance_id);
+create index hf_monitor_freq_dist_curves_monitor_id_idx on hf_monitor_freq_dist_curves (monitor_id);
+create index hf_monitor_freq_dist_curves_analysis_id_idx on hf_monitor_freq_dist_curves (analysis_id);
 
