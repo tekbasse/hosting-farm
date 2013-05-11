@@ -327,7 +327,7 @@ CREATE TABLE hf_up (
     details         text
 );
 
-create index hf_up_instance_id on hf_up (instance_id);
+create index hf_up_instance_id_idx on hf_up (instance_id);
 create index hf_up_up_id_idx on hf_up (up_id);
 
 CREATE TABLE hf_dc_hw_map (
