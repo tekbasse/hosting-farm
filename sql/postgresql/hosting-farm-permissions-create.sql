@@ -56,7 +56,7 @@
 
 -- qal_customer_id 1..*:1..* user_id 1..*:1..* role_id
 
-CREATE SEQUENCE ams_permissions_id start 100;
+CREATE SEQUENCE hf_permissions_id_seq start 100;
 SELECT nextval ('hf_permissions_id_seq');
 
 
@@ -75,9 +75,9 @@ CREATE TABLE hf_roles (
     description text
 );
 
-create index hf_roles_instance_id_key on hf_roles (instance_id);
-create index hf_roles_id on hf_roles (id);
-create index hf_roles_label on hf_roles (label);
+create index hf_roles_instance_id_idx on hf_roles (instance_id);
+create index hf_roles_id_idx on hf_roles (id);
+create index hf_roles_label_idx on hf_roles (label);
 
 CREATE TABLE hf_asset_type_property (
    -- distills a (property.label or property.id) + asset_type_id to a property_id
@@ -92,10 +92,10 @@ CREATE TABLE hf_asset_type_property (
    label varchar(40)
 );
 
-create index hf_asset_type_property_instance_id_key on hf_asset_type_property (instance_id);
-create index hf_asset_type_property_asset_type_id_key on hf_asset_type_property (asset_type_id);
-create index hf_asset_type_property_id_key on hf_asset_type_property (id);
-create index hf_asset_type_property_label_key on hf_asset_type_property (label);
+create index hf_asset_type_property_instance_id_idx on hf_asset_type_property (instance_id);
+create index hf_asset_type_property_asset_type_id_idx on hf_asset_type_property (asset_type_id);
+create index hf_asset_type_property_id_idx on hf_asset_type_property (id);
+create index hf_asset_type_property_label_idx on hf_asset_type_property (label);
 
 CREATE TABLE hf_user_roles_map (
     -- Permission for user_id to perform af hs_roles.allow on qal_customer_id hf_assets
@@ -107,10 +107,10 @@ CREATE TABLE hf_user_roles_map (
     hf_role_id 	    integer
 );
 
-create index hf_user_roles_map_instance_id_key on hf_user_roles_map (instance_id);
-create index hf_user_roles_map_user_id_key on hf_user_roles_map (user_id);
-create index hf_user_roles_map_qal_customer_id on hf_user_roles_map (qal_customer_id);
-create index hf_user_roles_map_hf_role_id on hf_user_roles_map (hf_role_id);
+create index hf_user_roles_map_instance_id_idx on hf_user_roles_map (instance_id);
+create index hf_user_roles_map_user_id_idx on hf_user_roles_map (user_id);
+create index hf_user_roles_map_qal_customer_id_idx on hf_user_roles_map (qal_customer_id);
+create index hf_user_roles_map_hf_role_id_idx on hf_user_roles_map (hf_role_id);
 
 CREATE TABLE hf_property_id_permissions_map (
 -- only one combination of property_id and role_id per privilege
@@ -126,9 +126,9 @@ CREATE TABLE hf_property_id_permissions_map (
     -- Consisent with OpenACS permissions: admin > delete > write > create > read.
 );
 
-create index hf_property_id_permissions_map_instance_id_key on hf_property_id_permissions_map (instance_id);
-create index hf_property_id_permissions_map_property_id_key on hf_property_id_permissions_map (property_id);
-create index hf_property_id_permissions_map_role_id_key on hf_property_id_permissions_map (role_id);
+create index hf_property_id_permissions_map_instance_id_idx on hf_property_id_permissions_map (instance_id);
+create index hf_property_id_permissions_map_property_id_idx on hf_property_id_permissions_map (property_id);
+create index hf_property_id_permissions_map_role_id_idx on hf_property_id_permissions_map (role_id);
 
 
 
@@ -140,5 +140,5 @@ CREATE TABLE hf_id_object_id_map (
        object_id integer
 );
 
-create index hf_id_object_id_map_hf_id_key on hf_id_object_id_map (hf_id);
-create index hf_id_object_id_map_object_id on hf_id_object_id_map (object_id);
+create index hf_id_object_id_map_hf_id_idx on hf_id_object_id_map (hf_id);
+create index hf_id_object_id_map_object_id_idx on hf_id_object_id_map (object_id);
