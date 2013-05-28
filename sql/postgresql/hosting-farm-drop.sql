@@ -157,12 +157,22 @@ drop index hf_asset_type_features_instance_id_idx;
 
 DROP TABLE hf_asset_type_features;
 
+
+drop index hf_asset_name_map_asset_id_idx;
+drop index hf_asset_name_map_instance_id_idx;
+drop index hf_asset_name_map_label_idx;
+
+DROP TABLE hf_asset_label_map;
+
 drop index hf_assets_label_idx;
 drop index hf_assets_qal_customer_id_idx;
 drop index hf_assets_qal_product_id_idx;
 drop index hf_assets_asset_type_id_idx;
-drop index hf_assets_id_idx;
+drop index hf_assets_trashed_p_idx;
+drop index hf_assets_user_id_idx;
+drop index hf_assets_template_id_idx;
 drop index hf_assets_instance_id_idx;
+drop index hf_assets_id_idx;
 
 DROP TABLE hf_assets;
 

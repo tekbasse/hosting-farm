@@ -42,6 +42,11 @@ CREATE TABLE hf_assets (
     instance_id     integer,
     -- asset_id
     id 	            integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+    -- following 3 fields are similar in use to q-wiki template mapping
+    template_id     integer,
+    user_id	    integer,
+    last_modified   timestamptz,
+    created 	    timestamptz,
     -- one of dc data center
     --        hw hardware
     --        vm virtual machine
@@ -56,16 +61,23 @@ CREATE TABLE hf_assets (
     qal_product_id  integer,
     qal_customer_id integer,
     label 	    varchar(30),
+    keywords        varchar(100),
     description     varchar(80),
-
+    -- publishable content. ported from q-wiki for publishing
+    contents	    text,
+    -- internal comments. ported from q-wiki for publishing
+    comments        text,
     -- see server.templated
     -- set to one if this asset is derived from a template
-    templated       varchar(1),
+    -- should only be 1 when template_p eq 0
+    templated_p     varchar(1),
 
     -- replacing vm_template with more general asset templating
     -- template means this is an archetype asset. copy it to create new asset of same type
     template_p      varchar(1),
+    -- becomes/became active
     time_start 	    timestamptz,
+    -- expires/expired on
     time_stop 	    timestamptz,
     ua_id 	    integer,
   -- status aka vm_to_configure, on,off etc.
@@ -74,7 +86,12 @@ CREATE TABLE hf_assets (
     op_status       varchar(20),
     -- for use with monitoring.
     trashed_p 	    varchar(1),
+    -- last trashed by
     trashed_by 	    integer,
+    -- possible future asset analyzing
+    popularity      integer,
+    -- built-in customization flags
+    flags	    varchar(12),
     -- mainly for promoting clients by linking to their website
     -- was table.advert_link
     publish_p       varchar(1),
@@ -83,13 +100,29 @@ CREATE TABLE hf_assets (
     triage_priority integer
  );
 
-create index hf_assets_instance_id_idx on hf_assets (instance_id);
 create index hf_assets_id_idx on hf_assets (id);
+create index hf_assets_instance_id_idx on hf_assets (instance_id);
+create index hf_assets_template_id_idx on hf_assets (template_id);
+create index hf_assets_user_id_idx on hf_assets (user_id);
+create index hf_assets_trashed_p_idx on hf_assets (trashed_p);
 create index hf_assets_asset_type_id_idx on hf_assets (asset_type_id);
 create index hf_assets_qal_product_id_idx on hf_assets (qal_product_id);
 create index hf_assets_qal_customer_id_idx on hf_assets (qal_customer_id);
 create index hf_assets_label_idx on hf_assets (label);
 
+-- following table ported from q-wiki for versioning
+CREATE TABLE hf_asset_label_map (
+       -- max size must consider label encoding all hf_asset.name characters
+       label varchar(903) not null,
+       -- should be a value from hf_assets.id
+       asset_id integer not null,
+       trashed_p varchar(1),
+       instance_id integer
+);
+
+create index hf_asset_name_map_label_idx on hf_asset_label_map (label);
+create index hf_asset_name_map_instance_id_idx on hf_asset_label_map (instance_id);
+create index hf_asset_name_map_asset_id_idx on hf_asset_label_map (asset_id);
 
 CREATE TABLE hf_asset_type_features (
     instance_id          integer,
