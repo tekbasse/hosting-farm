@@ -28,7 +28,8 @@ CREATE TABLE hf_asset_type (
    id                      varchar(24),
    -- aka feature.short_name
    label                   varchar(40),
-   one_line_description    varchar(85),
+   -- aka one_line_description
+   title                   varchar(85),
    descritpion             text
 );
 
@@ -102,8 +103,8 @@ CREATE TABLE hf_asset_type_features (
     -- aka feature.short_name
     feature_type         varchar(12),
     publish_p            varchar(1),
-    -- aka feature.name
-    one_line_description varchar(85),
+    -- aka feature.name or one_line_description
+    title                varchar(85),
     descritpion          text
 );
 

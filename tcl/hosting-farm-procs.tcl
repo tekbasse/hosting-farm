@@ -10,6 +10,31 @@ ad_library {
     # Assets can be created, revised, trashed and deleted, but their references (even deleted ones) remain in the 
     # extended/detailed table so that logged data remains connected and useful.
 
+
+    # temporary map showing qw_ vs. hf_ fields.
+    label (was qwiki.url)
+    name
+    title        title (was one_line_description)
+    content     # publishable content
+    keywords    # publishable search
+    description
+    comments    # internal comments
+   time_start  # becomes/became active
+    time_stop  # expires/expired
+    trashed_p
+    trashed_by
+
+    template_id
+#    flags   
+  template_p
+  templated_p  # this value should only be 1 when template_p eq 0
+  publish_p
+  monitor_p
+
+   instance_id
+    user_id
+
+
 }
 
 ad_proc -public hf_asset_id_exists { 
