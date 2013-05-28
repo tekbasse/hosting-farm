@@ -250,6 +250,16 @@ ad_proc -public hf_asset_create {
     keywords
     description
     comments
+    template_p
+    templated_p
+    publish_p
+    monitor_p
+    popularity
+    triage_priority
+    op_status
+    ua_id
+    qal_product_id
+    qal_customer_id
     {template_id ""}
     {flags ""}
     {instance_id ""}
@@ -289,8 +299,8 @@ ad_proc -public hf_asset_create {
         db_transaction {
             ns_log Notice "hf_asset_create: hf_asset_create id '$asset_id' template_id '$template_id' name '$name' instance_id '$instance_id' user_id '$user_id'"
             db_dml hf_asset_create { insert into hf_assets
-                (id,template_id,name,title,keywords,description,content,comments,instance_id,user_id,last_modified,created)
-                values (:asset_id,:template_id,:name,:title,:keywords,:description,:content,:comments,:instance_id,:user_id,current_timestamp,current_timestamp) }
+                (id,template_id,name,title,keywords,description,content,comments,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created)
+                values (:asset_id,:template_id,:name,:title,:keywords,:description,:content,:comments,:template_p,:templated_p,:publish_p,:monitor_p,:popularity,:triage_priority,:op_status,:ua_id,:qal_product_id,:qal_customer_id,:instance_id,:user_id,current_timestamp,current_timestamp) }
             
             # Add entry to hf_asset_label_map if new asset, otherwise update existing record.
             # A new record is only when template_id = asset_id
