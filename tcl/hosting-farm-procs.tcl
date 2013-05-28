@@ -4,7 +4,7 @@ ad_library {
     @creation-date 25 May 2013
     # this is ported from q-wiki.
     # to do: 
-    # remove contents etc.. ie. make hf_asset a generic pointer for multiple object types
+    # remove contents etc.. ie. make hf_assets a generic pointer for multiple object types
     # align with hf sql
 
     # Assets can be created, revised, trashed and deleted, but their references (even deleted ones) remain in the 
@@ -12,6 +12,8 @@ ad_library {
 
 
     # temporary map showing qw_ vs. hf_ fields.
+    template_id
+    id
     label (was qwiki.url)
     name
     title        title (was one_line_description)
@@ -19,18 +21,25 @@ ad_library {
     keywords    # publishable search
     description
     comments    # internal comments
-   time_start  # becomes/became active
-    time_stop  # expires/expired
     trashed_p
     trashed_by
 
-    template_id
+
+# wherever keywords are referenced, add these fields:
+   time_start  # becomes/became active
+    time_stop  # expires/expired
 #    flags   
   template_p
   templated_p  # this value should only be 1 when template_p eq 0
   publish_p
   monitor_p
-
+  popularity
+triage_priority
+flags
+op_status
+ua_id
+qal_product_id 
+qal_customer_id
    instance_id
     user_id
 
@@ -48,7 +57,7 @@ ad_proc -public hf_asset_id_exists {
         set instance_id [ad_conn subsite_id]
     }
     
-    set asset_exists_p [db_0or1row hf_asset_get_id {select name from hf_asset where id = :asset_id and instance_id = :instance_id } ]
+    set asset_exists_p [db_0or1row hf_asset_get_id {select name from hf_assets where id = :asset_id and instance_id = :instance_id } ]
     return $asset_exists_p
 }
 
@@ -76,7 +85,7 @@ ad_proc -public hf_change_asset_id_for_label {
         if { $asset_label_new ne "" && $asset_label eq $asset_label_new && !$trashed_p_new } {
             db_dml hf_change_revision { update hf_asset_label_map
             set asset_id = :asset_id_new where label = :asset_label and instance_id = :instance_id }
-            db_dml hf_change_revision_active { update hf_asset
+            db_dml hf_change_revision_active { update hf_assets
                 set last_modified = current_timestamp where id = :asset_id_new and instance_id = :instance_id }
             set success_p 1
         }
@@ -110,15 +119,15 @@ ad_proc -public hf_asset_rename {
             set pn_template_id [lindex $pn_stats_list 5]
             # just:
             # mv the template_id of asset_label revisions to asset_name revisions template_id
-            db_dml hf_name_change_template_id { update hf_asset
+            db_dml hf_name_change_template_id { update hf_assets
                 set last_modified = current_timestamp, template_id =:pn_template_id, name =:asset_name where template_id = :template_id and instance_id = :instance_id }
             # get rid of the existing asset_name entry
             db_dml hf_name_change_label_del { delete from hf_asset_label_map
                 where label = :asset_label and instance_id = :instance_id }
             
         } else {
-            # update hf_asset_label_map.label hf_asset.asset_name to asset_name for template_id, instance_id
-            db_dml hf_name_change_assets { update hf_asset
+            # update hf_asset_label_map.label hf_assets.asset_name to asset_name for template_id, instance_id
+            db_dml hf_name_change_assets { update hf_assets
                 set last_modified = current_timestamp, name = :asset_name where template_id = :template_id and instance_id = :instance_id }
             db_dml hf_name_change_label { update hf_asset_label_map
                 set label = :asset_name where label = :asset_label and instance_id = :instance_id }
@@ -148,7 +157,7 @@ ad_proc -public hf_asset_id_from_label {
             where label = :asset_label and instance_id = :instance_id } ]
     } else {
         set asset_exists_p [db_0or1row hf_asset_get_id_from_label {select asset_id from hf_asset_label_map 
-            where label = :asset_label and instance_id = :instance_id and not ( trashed = '1' ) } ]
+            where label = :asset_label and instance_id = :instance_id and not ( trashed_p = '1' ) } ]
     }
     if { !$asset_exists_p } {
         set asset_id ""
@@ -175,7 +184,7 @@ ad_proc -public hf_asset_label_from_id {
             where asset_id = :asset_id and instance_id = :instance_id } ]
     } else {
         set asset_exists_p [db_0or1row hf_asset_get_untrashed_label_from_id { select label as asset_label from hf_asset_label_map 
-            where asset_id = :asset_id and instance_id = :instance_id and not ( trashed = '1' ) } ]
+            where asset_id = :asset_id and instance_id = :instance_id and not ( trashed_p = '1' ) } ]
     }
     if { !$asset_exists_p } {
         set asset_stat_list [hf_asset_stats $asset_id]
@@ -184,13 +193,13 @@ ad_proc -public hf_asset_label_from_id {
         if { $template_id ne "" } {
             # get asset_label from template_id
             db_0or1row hf_asset_get_label_from_ids_template { select label as asset_label from hf_asset_label_map 
-                where asset_id in ( select id as asset_id from hf_asset 
+                where asset_id in ( select id as asset_id from hf_assets 
                                    where instance_id = :instance_id and template_id = :template_id ) } 
         } 
         if { $asset_label eq "" } {
             # maybe asset_id doesn't exist, but asset_id is a template_id 
             db_0or1row hf_asset_get_label_from_template_id { select label as asset_label from hf_asset_label_map 
-                where asset_id in ( select id as asset_id from hf_asset 
+                where asset_id in ( select id as asset_id from hf_assets 
                                    where instance_id = :instance_id and template_id = :asset_id ) } 
         }
     }
@@ -209,7 +218,7 @@ ad_proc -public hf_asset_label_id_from_template_id {
     }
     set asset_id ""
     db_0or1row hf_asset_get_label_from_template_id { select asset_id from hf_asset_label_map 
-        where instance_id = :instance_id and asset_id in ( select id as asset_id from hf_asset 
+        where instance_id = :instance_id and asset_id in ( select id as asset_id from hf_assets 
                                                           where instance_id = :instance_id and template_id = :template_id ) }
     return $asset_id
 }
@@ -226,7 +235,7 @@ ad_proc -public hf_asset_from_label {
         set instance_id [ad_conn subsite_id]
     }
     set asset_exists_p [db_0or1row hf_asset_get_id_from_label2 {select asset_id from hf_asset_label_map 
-        where label = :asset_label and instance_id = :instance_id and not ( trashed = '1' ) } ]
+        where label = :asset_label and instance_id = :instance_id and not ( trashed_p = '1' ) } ]
     if { !$asset_exists_p } {
         set asset_id ""
     }
@@ -279,7 +288,7 @@ ad_proc -public hf_asset_create {
         }
         db_transaction {
             ns_log Notice "hf_asset_create: hf_asset_create id '$asset_id' template_id '$template_id' name '$name' instance_id '$instance_id' user_id '$user_id'"
-            db_dml hf_asset_create { insert into hf_asset
+            db_dml hf_asset_create { insert into hf_assets
                 (id,template_id,name,title,keywords,description,content,comments,instance_id,user_id,last_modified,created)
                 values (:asset_id,:template_id,:name,:title,:keywords,:description,:content,:comments,:instance_id,:user_id,current_timestamp,current_timestamp) }
             
@@ -288,7 +297,7 @@ ad_proc -public hf_asset_create {
             if { $asset_id eq $template_id } {
                 ns_log Notice "hf_asset_create: hf_label_create label '$label' asset_id '$asset_id' trashed_p '$trashed_p' instance_id '$instance_id'"
                 db_dml hf_asset_label_create { insert into hf_asset_label_map
-                    ( label, asset_id, trashed, instance_id )
+                    ( label, asset_id, trashed_p, instance_id )
                     values ( :label, :asset_id, :trashed_p, :instance_id ) }
             } else {
                 ns_log Notice "hf_asset_create: hf_label_update label '$label' asset_id '$asset_id' trashed_p '$trashed_p' instance_id '$instance_id'"
@@ -310,7 +319,7 @@ ad_proc -public hf_asset_stats {
     {instance_id ""}
     {user_id ""}
 } {
-    Returns asset stats as a list: name, title, comments, keywords, description, template_id, flags, trashed, popularity, time last_modified, time created, user_id
+    Returns asset stats as a list: name, title, comments, keywords, description, template_id, flags, trashed_p, popularity, time last_modified, time created, user_id
 } {
     if { $instance_id eq "" } {
         # set instance_id subsite_id
@@ -324,7 +333,7 @@ ad_proc -public hf_asset_stats {
     set read_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege read]
 
     if { $read_p } {
-        set return_list_of_lists [db_list_of_lists hf_asset_stats { select name, title, comments, keywords, description, template_id, flags, trashed, popularity, last_modified, created, user_id from hf_asset where id = :asset_id and instance_id = :instance_id } ] 
+        set return_list_of_lists [db_list_of_lists hf_asset_stats { select name, title, comments, keywords, description, template_id, flags, trashed_p, popularity, last_modified, created, user_id from hf_assets where id = :asset_id and instance_id = :instance_id } ] 
         # convert return_lists_of_lists to return_list
         set return_list [lindex $return_list_of_lists 0]
         # convert trash null/empty value to logical 0
@@ -362,21 +371,21 @@ ad_proc -public hf_assets {
         if { $template_id eq "" } {
             if { $user_id ne "" } {
                 # get a list of asset_ids that are mapped to a label for instance_id and where the current revision was created by user_id
-                set return_list [db_list hf_assets_user_list { select id from hf_asset where instance_id = :instance_id and user_id = :user_id and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc } ]
+                set return_list [db_list hf_assets_user_list { select id from hf_assets where instance_id = :instance_id and user_id = :user_id and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc } ]
             } else {
                 # get a list of all asset_ids mapped to a label for instance_id.
-                set return_list [db_list hf_assets_list { select id as asset_id from hf_asset where id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc } ]
+                set return_list [db_list hf_assets_list { select id as asset_id from hf_assets where id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc } ]
             }
         } else {
             # is the template_id valid?
-            set has_template [db_0or1row hf_asset_template { select template_id as db_template_id from hf_asset where template_id= :template_id limit 1 } ]
+            set has_template [db_0or1row hf_asset_template { select template_id as db_template_id from hf_assets where template_id= :template_id limit 1 } ]
             if { $has_template && [info exists db_template_id] && $template_id > 0 } {
                 if { $user_id ne "" } {
                     # get a list of all asset_ids of the revisions of asset (template_id) that user_id created.
-                    set return_list [db_list hf_assets_t_u_list { select id from hf_asset where instance_id = :instance_id and user_id = :user_id and template_id = :template_id order by last_modified desc } ]
+                    set return_list [db_list hf_assets_t_u_list { select id from hf_assets where instance_id = :instance_id and user_id = :user_id and template_id = :template_id order by last_modified desc } ]
                 } else {
                     # get a list of all asset_ids of the revisions of asset (template_id) 
-                    set return_list [db_list hf_assets_list { select id from hf_asset where instance_id = :instance_id and template_id = :template_id order by last_modified } ]
+                    set return_list [db_list hf_assets_list { select id from hf_assets where instance_id = :instance_id and template_id = :template_id order by last_modified } ]
                 }
             } else {
                 set return_list [list ]
@@ -393,7 +402,7 @@ ad_proc -public hf_asset_read {
     {instance_id ""}
     {user_id ""}
 } {
-    Returns asset contents of asset_id. Returns asset as list of attribute values: name, title, keywords, description, template_id, flags, trashed, popularity, last_modified, created, user_id, content, comments
+    Returns asset contents of asset_id. Returns asset as list of attribute values: name, title, keywords, description, template_id, flags, trashed_p, popularity, last_modified, created, user_id, content, comments
 } {
     if { $instance_id eq "" } {
         # set instance_id subsite_id
@@ -406,7 +415,7 @@ ad_proc -public hf_asset_read {
     set read_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege read]
     set return_list [list ]
     if { $read_p } {
-        set return_list_of_lists [db_list_of_lists hf_asset_get { select name, title, keywords, description, template_id, flags, trashed, popularity, last_modified, created, user_id, content, comments from hf_asset where id = :asset_id and instance_id = :instance_id } ] 
+        set return_list_of_lists [db_list_of_lists hf_asset_get { select name, title, keywords, description, template_id, flags, trashed_p, popularity, last_modified, created, user_id, content, comments from hf_assets where id = :asset_id and instance_id = :instance_id } ] 
         # convert return_lists_of_lists to return_list
         set return_list [lindex $return_list_of_lists 0]
         # convert trash null/empty value to logical 0
@@ -445,7 +454,7 @@ ad_proc -public hf_asset_write {
     set new_asset_id ""
 
     if { $write_p } {
-        set asset_exists_p [db_0or1row hf_asset_get_user_id {select user_id as creator_id from hf_asset where id = :asset_id } ]
+        set asset_exists_p [db_0or1row hf_asset_get_user_id {select user_id as creator_id from hf_assets where id = :asset_id } ]
         if { $asset_exists_p } { 
             set asset_id_stats_list [hf_asset_stats $asset_id $instance_id $user_id]
             set template_id [lindex $asset_id_stats_list 5]
@@ -457,7 +466,7 @@ ad_proc -public hf_asset_write {
             set new_asset_id [db_nextval hf_asset_id_seq]
             ns_log Notice "hf_asset_write: hf_asset_create id '$asset_id' template_id '$template_id' name '$name' instance_id '$instance_id' user_id '$user_id'"
             db_transaction {
-                db_dml hf_asset_create { insert into hf_asset
+                db_dml hf_asset_create { insert into hf_assets
                     (id,template_id,name,title,keywords,description,content,comments,instance_id,user_id, last_modified, created)
                     values (:new_asset_id,:template_id,:name,:title,:keywords,:description,:content,:comments,:instance_id,:user_id, current_timestamp, current_timestamp) }
                 ns_log Notice "hf_asset_write: hf_asset_id_update asset_id '$new_asset_id' instance_id '$instance_id' old_asset_id '$old_asset_id'"
@@ -504,8 +513,8 @@ ad_proc -public hf_asset_delete {
         if { $asset_id ne "" } {
             set template_id [lindex [hf_asset_stats $asset_id $instance_id] 5]
             # delete a revision
-            db_dml hf_asset_delete { delete from hf_asset 
-                where id=:asset_id and instance_id =:instance_id and trashed = '1' }
+            db_dml hf_asset_delete { delete from hf_assets 
+                where id=:asset_id and instance_id =:instance_id and trashed_p = '1' }
             # is asset_id the active revision for template_id?
             set asset_id_active_p [db_0or1row hf_label_from_asset_id { select label from hf_asset_label_map 
                 where asset_id = :asset_id and instance_id = :instance_id } ]
@@ -514,8 +523,8 @@ ad_proc -public hf_asset_delete {
             # get active asset_id for reference later
             set asset_id [hf_asset_label_id_from_template_id $template_id $instance_id]
             # delete all revisions
-            db_dml hf_template_delete { delete from hf_asset 
-                where template_id=:template_id and instance_id =:instance_id and trashed = '1' }
+            db_dml hf_template_delete { delete from hf_assets 
+                where template_id=:template_id and instance_id =:instance_id and trashed_p = '1' }
             set asset_id_active_p 1
         }
 
@@ -525,8 +534,8 @@ ad_proc -public hf_asset_delete {
         if { $asset_id ne "" } {
             set template_id [lindex [hf_asset_stats $asset_id $instance_id] 5]
             # delete a revision
-            db_dml hf_asset_delete_u { delete from hf_asset 
-                where id=:asset_id and instance_id =:instance_id and user_id=:user_id and trashed = '1' }
+            db_dml hf_asset_delete_u { delete from hf_assets 
+                where id=:asset_id and instance_id =:instance_id and user_id=:user_id and trashed_p = '1' }
             # is asset_id the active revision for template_id?
             set asset_id_active_p [db_0or1row hf_label_from_asset_id { select label from hf_asset_label_map 
                 where asset_id = :asset_id and instance_id = :instance_id } ]
@@ -536,8 +545,8 @@ ad_proc -public hf_asset_delete {
             # get active asset_id for reference later
             set asset_id [hf_asset_label_id_from_template_id $template_id $instance_id]
             # delete all revisions
-            db_dml hf_template_delete_u { delete from hf_asset 
-                where template_id=:template_id and instance_id =:instance_id and user_id = :user_id and trashed = '1' }
+            db_dml hf_template_delete_u { delete from hf_assets 
+                where template_id=:template_id and instance_id =:instance_id and user_id = :user_id and trashed_p = '1' }
             set asset_id_active_p 1
         }
         
@@ -546,19 +555,19 @@ ad_proc -public hf_asset_delete {
     if { $asset_id_active_p } {
         # change the asset_id mapped to the label, or delete it if no alternates exist
         # find the most recent untrashed revision
-        set new_untrashed_id_exists_p [db_0or1row hf_previous_asset_id { select id as new_asset_id from hf_asset 
-            where template_id = :template_id and instance_id = :instance_id and not ( trashed = '1') and not ( id = :asset_id ) order by created desc limit 1 } ]
+        set new_untrashed_id_exists_p [db_0or1row hf_previous_asset_id { select id as new_asset_id from hf_assets 
+            where template_id = :template_id and instance_id = :instance_id and not ( trashed_p = '1') and not ( id = :asset_id ) order by created desc limit 1 } ]
         if { $new_untrashed_id_exists_p } {
             #  point to the most recent untrashed revision
             db_dml hf_asset_id_update { update hf_asset_label_map set asset_id = :new_asset_id 
                 where instance_id = :instance_id and asset_id = :asset_id }
         } else {
             # point to the most recent trashed revision, and trash the mapped label status for consistency
-            set new_trashed_id_exists_p [db_0or1row hf_previous_asset_id2 { select id as new_asset_id from hf_asset 
+            set new_trashed_id_exists_p [db_0or1row hf_previous_asset_id2 { select id as new_asset_id from hf_assets 
                 where template_id = :template_id and instance_id = :instance_id and not ( id = :asset_id ) order by created desc limit 1 } ]
             if { $new_trashed_id_exists_p } {
                 db_dml hf_asset_id_update_trashed { update hf_asset_label_map
-                    set asset_id = :new_asset_id, trashed = '1'
+                    set asset_id = :new_asset_id, trashed_p = '1'
                     where instance_id = :instance_id and asset_id = :asset_id }
             } else {
                 # the revision being deleted is the last revision, delete the mapped label entry
@@ -606,7 +615,7 @@ ad_proc -public hf_asset_trash {
             set template_id [lindex [hf_asset_stats $asset_id $instance_id] 5]
             set label [hf_asset_label_from_id $template_id]
             # wtr = write privilege trash revision
-            db_dml hf_asset_trash_wtr { update hf_asset set trashed =:trash_p, last_modified = current_timestamp
+            db_dml hf_asset_trash_wtr { update hf_assets set trashed_p =:trash_p, last_modified = current_timestamp
                 where id=:asset_id and instance_id =:instance_id }
             # is asset_id associated with a label ie published?
             set asset_id_active_p [db_0or1row hf_label_from_asset_id { select label from hf_asset_label_map 
@@ -618,7 +627,7 @@ ad_proc -public hf_asset_trash {
             # asset_id is blank. set asset_id to asset label's asset_id
             set asset_id [hf_asset_id_from_label $label]
             # wtp = write privilege trash asset ie bulk trashing revisions
-            db_dml hf_asset_trash_wtp { update hf_asset set trashed =:trash_p, last_modified = current_timestamp
+            db_dml hf_asset_trash_wtp { update hf_assets set trashed_p =:trash_p, last_modified = current_timestamp
                 where template_id=:template_id and instance_id =:instance_id }
             set asset_id_trash_p 1
         }
@@ -632,7 +641,7 @@ ad_proc -public hf_asset_trash {
             set template_id [lindex [hf_asset_stats $asset_id $instance_id] 5]            
             set label [hf_asset_label_from_id $template_id]
             # utr = user privilege trash revision
-            db_dml hf_asset_trash_utr { update hf_asset set trashed =:trash_p, last_modified = current_timestamp
+            db_dml hf_asset_trash_utr { update hf_assets set trashed_p =:trash_p, last_modified = current_timestamp
                 where id=:asset_id and instance_id =:instance_id and user_id=:user_id }
             # is asset_id associated with a label ie published?
             set asset_id_active_p [db_0or1row hf_label_from_asset_id { select label from hf_asset_label_map 
@@ -644,7 +653,7 @@ ad_proc -public hf_asset_trash {
             set asset_id [hf_asset_id_from_label $label]
             
             # utp = user privilege trash asset (as many revisions as they created)
-            db_dml hf_asset_trash_utp { update hf_asset set trashed =:trash_p, last_modified = current_timestamp
+            db_dml hf_asset_trash_utp { update hf_assets set trashed_p =:trash_p, last_modified = current_timestamp
                 where template_id=:template_id and instance_id =:instance_id and user_id=:user_id }            
             set asset_id_active_p 1
         }
@@ -658,8 +667,8 @@ ad_proc -public hf_asset_trash {
         ns_log Notice "hf_asset_trash(529). need to change asset_id"
         # asset_id is old_asset_id  
         # select most recent, available new_asset_id
-        set new_asset_id_exists [db_0or1row hf_available_asset_id { select id as new_asset_id from hf_asset 
-            where template_id = :template_id and instance_id = :instance_id and not (trashed = '1') and not ( id =:asset_id ) order by created desc limit 1 } ]
+        set new_asset_id_exists [db_0or1row hf_available_asset_id { select id as new_asset_id from hf_assets 
+            where template_id = :template_id and instance_id = :instance_id and not (trashed_p = '1') and not ( id =:asset_id ) order by created desc limit 1 } ]
         if { $new_asset_id_exists } {
             ns_log Notice "hf_asset_trash(583): new_asset_id $new_asset_id"
             #  point to the most recent untrashed revision
@@ -676,7 +685,7 @@ ad_proc -public hf_asset_trash {
     if { !$trash_p } {
         # if asset_id of label_map is trashed, untrash it.
 
-        db_0or1row hf_asset_label_trashed_p { select trashed as label_trashed_p from hf_asset_label_map
+        db_0or1row hf_asset_label_trashed_p { select trashed_p as label_trashed_p from hf_asset_label_map
             where label = :label and instance_id = :instance_id }
         set label_trashed_p_exists_p [info exists label_trashed_p]
         if { !$label_trashed_p_exists_p || ( $label_trashed_p_exists_p && $label_trashed_p ne "1" ) } {
@@ -685,7 +694,7 @@ ad_proc -public hf_asset_trash {
         if { $label_trashed_p } {
             set label_asset_id [hf_asset_id_from_label $label $instance_id]
  #           ns_log Notice "hf_asset_trash(603): updating trash and asset_id '$label_asset_id' for label '$label' to asset_id '$asset_id' untrashed"
-            db_dml hf_asset_label_map_update2 { update hf_asset_label_map set asset_id = :asset_id, trashed = :trash_p
+            db_dml hf_asset_label_map_update2 { update hf_asset_label_map set asset_id = :asset_id, trashed_p = :trash_p
                     where instance_id = :instance_id and asset_id = :label_asset_id }
             set asset_id_active_p 0
         }
@@ -696,7 +705,7 @@ ad_proc -public hf_asset_trash {
     if { $asset_id_active_p } {
         # published asset_id is affected, set mapped asset trash also.
         ns_log Notice "hf_asset_trash: updating hf_asset_label_map asset_id '$asset_id' instance_id '$instance_id'"
-        db_dml hf_asset_label_trash_update { update hf_asset_label_map set trashed = :trash_p 
+        db_dml hf_asset_label_trash_update { update hf_asset_label_map set trashed_p = :trash_p 
             where asset_id = :asset_id and instance_id = :instance_id }
     }
     return 1
