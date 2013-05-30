@@ -329,7 +329,7 @@ ad_proc -public hf_asset_stats {
     {instance_id ""}
     {user_id ""}
 } {
-    Returns asset stats as a list: name, title, comments, keywords, description, template_id, flags, trashed_p, popularity, time last_modified, time created, user_id
+    Returns asset stats as a list: name, title, keywords, description, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, qal_product_id, qal_customer_id, instance_id, user_id, last_modified, created
 } {
     if { $instance_id eq "" } {
         # set instance_id subsite_id
@@ -343,7 +343,7 @@ ad_proc -public hf_asset_stats {
     set read_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege read]
 
     if { $read_p } {
-        set return_list_of_lists [db_list_of_lists hf_asset_stats { select name, title, comments, keywords, description, template_id, flags, trashed_p, popularity, last_modified, created, user_id from hf_assets where id = :asset_id and instance_id = :instance_id } ] 
+        set return_list_of_lists [db_list_of_lists hf_asset_stats { select name,title,keywords,description,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created from hf_assets where id = :asset_id and instance_id = :instance_id } ] 
         # convert return_lists_of_lists to return_list
         set return_list [lindex $return_list_of_lists 0]
         # convert trash null/empty value to logical 0
