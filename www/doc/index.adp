@@ -35,15 +35,19 @@ This is primarily a web interface for a hosting farm system made by one hosting 
 <p>OpenACS is a highly scalable platform with many plug-in and built-in features for community-based services, including mature implementations of internationalization, localization, permissions, forum, file-storage, wiki, custom page templating, and notifications.</p>
 <p>Admin and user access via http/https.</p>
 <h3>Planned first release features</h3>
+<p>flexible UI for quick web app development. -done</p>
 <p>user DNS zone editing</p>
+<p>UI for one click (web-based) installers</p>
+<p>A conspicuous alert when system needs user attention (contract expiring, service down etc)</p>
+<p>use quotas with alerts</p>
+<p>storage usage, memory usage and traffic tracking.</p>
+<p>switchable, configurable automated log monitoring and alarms</p>
+<p>billing - general invoicing utility for handling initial orders, recurring billing, and quota overages.</p>
 <p>Support operations on multiple servers, data centers, and custom configured equipment.</p>
 <p>reseller service features</p>
-<p>billing - general invoicing utility, recurring billing (later)</p>
 <p>customer managed custom administrator permissions</p>
-<p>storage usage, memory usage and traffic tracking.</p>
-<p>use quotas with alerts</p>
 <p>One click installers</p>
 <p>ticket tracker with built-in streamlining for outages/disrutions that deal with multiple/bulk sets of clients</p>
 <p>social feedback mechanisms</p>
-<p>automated log monitoring and alarms</p>
+
 
