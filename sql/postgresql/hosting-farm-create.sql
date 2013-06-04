@@ -50,8 +50,8 @@ CREATE TABLE hf_assets (
     -- one of dc data center
     --        hw hardware
     --        vm virtual machine
-    --	   vh virtual host
-    -- 	   hs hosted service etc.
+    --	      vh virtual host
+    -- 	      hs hosted service etc.
     --        ss saas/sw as a service
     --        ot other
     asset_type_id   varchar(24),
@@ -64,7 +64,7 @@ CREATE TABLE hf_assets (
     keywords        varchar(100),
     description     varchar(80),
     -- publishable content. ported from q-wiki for publishing
-    contents	    text,
+    content	    text,
     -- internal comments. ported from q-wiki for publishing
     comments        text,
     -- see server.templated
@@ -194,7 +194,7 @@ CREATE TABLE hf_virtual_machines (
 );
 
 create index hf_virtual_machines_vm_id_idx on hf_virtual_machines (vm_id);
-create index hf_virutal_machines_domain_name_idx on hf_virtual_machines (domain_name);
+create index hf_virtual_machines_domain_name_idx on hf_virtual_machines (domain_name);
 create index hf_virtual_machines_ip_id_idx on hf_virtual_machines (ip_id);
 create index hf_virtual_machines_ni_id_idx on hf_virtual_machines (ni_id);
 create index hf_virtual_machines_type_id_idx on hf_virtual_machines (type_id);

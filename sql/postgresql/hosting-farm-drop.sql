@@ -134,7 +134,7 @@ DROP TABLE hf_network_interfaces;
 drop index hf_virtual_machines_type_id_idx;
 drop index hf_virtual_machines_ni_id_idx;
 drop index hf_virtual_machines_ip_id_idx;
-drop index hf_virutal_machines_domain_name_idx;
+drop index hf_virtual_machines_domain_name_idx;
 drop index hf_virtual_machines_vm_id_idx;
 
 DROP TABLE hf_virtual_machines;
