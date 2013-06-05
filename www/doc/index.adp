@@ -27,13 +27,17 @@ Hosting Farm is a virtual hosting operations management package for use with Ope
 It is initially designed for a hosting farm using freebsd jails.
 </p>
 <p>
-This is primarily a web interface for a hosting farm system made by one hosting farm company for system admins and their customers. 
+This is primarily a web interface for a hosting-farm system made by one hosting farm company for system admins and their customers. 
 </p>
+
 <h3>features</h3>
+<p>A consistent, secure, small-device friendly UI for local, custom services, with an easy crossover to other standard hosted solutions (such as horde, maia etc). </p>
 <p>Works with OpenACS on linux and FreeBSD. Should also work with OpenACS MacOS, or MSWindows systems with limited changes. Submissions to address any compatibility issues are welcome.</p>
-<p>Programmed in TCL with TCL API to a Postgresql database. Can be ported to Oracle..</p>
+<p>Programmed in TCL with TCL API to a Postgresql database. Can be ported to Oracle.. and integrate with perl scripts.</p>
 <p>OpenACS is a highly scalable platform with many plug-in and built-in features for community-based services, including mature implementations of internationalization, localization, permissions, forum, file-storage, wiki, custom page templating, and notifications.</p>
 <p>Admin and user access via http/https.</p>
+<p>Avoid pitfalls of Plesk/CPanel and other existing web-based admin panels, such as expressed at <a href="http://www.anchor.com.au/hosting/development/we_hate_plesk_and_cpanel">http://www.anchor.com.au/hosting/development/we_hate_plesk_and_cpanel</a></p>
+
 <h3>Planned first release features</h3>
 <p>flexible UI for quick web app development. -done</p>
 <p>user DNS zone editing</p>
@@ -49,5 +53,4 @@ This is primarily a web interface for a hosting farm system made by one hosting 
 <p>One click installers</p>
 <p>ticket tracker with built-in streamlining for outages/disrutions that deal with multiple/bulk sets of clients</p>
 <p>social feedback mechanisms</p>
-
 
