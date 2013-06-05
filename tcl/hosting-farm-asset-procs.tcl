@@ -4,8 +4,9 @@ ad_library {
     @creation-date 25 May 2013
     # this is ported from q-wiki.
     # to do: 
-    # remove contents etc.. ie. make hf_assets a generic pointer for multiple object types
-    # align with hf sql
+    # make q-wiki.tcl work for hf_asset procs
+    #  convert the tcl in the hf-asset.tcl to modular procs for multiple uses with
+    # subsets of assets ie dedicated custom 1 page apps.
 
     # Assets can be created, revised, trashed and deleted.
     # Deleted option should only be available if an asset is not referenced.. 

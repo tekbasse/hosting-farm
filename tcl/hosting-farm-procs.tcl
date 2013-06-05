@@ -12,3 +12,7 @@ ad_proc -public hf_asset_ids_for_user {
 } {
 
 }
+
+# hf_asset_create_from_asset_template
+# hf_asset_create_from_asset_label
+
