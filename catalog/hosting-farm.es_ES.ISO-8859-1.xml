@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<message_catalog package_key="hosting-farm" locale="es_ES" charset="ISO-8859-1">
+  <msg key="server_farm">torre de servidores</msg>
+  <msg key="Server_Farm">Torre de Servidores</msg>
+</message_catalog>
