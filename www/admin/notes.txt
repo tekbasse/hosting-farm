@@ -1,0 +1,2 @@
+apc = alt. php cache (ignore)
+dlz = dynamic loading zone (DNS editing)
