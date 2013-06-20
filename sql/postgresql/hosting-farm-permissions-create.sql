@@ -89,6 +89,7 @@ CREATE TABLE hf_role (
     --     access_rights.primary_contact
     --     access_rights.site_developer
     label 	varchar(300) unique not null,
+    title	varchar(40),
     description text
 );
 

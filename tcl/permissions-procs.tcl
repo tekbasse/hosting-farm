@@ -12,9 +12,6 @@ ad_proc -public hf_customer_ids_for_user {
 } {
 
 }
-# hf_customer_id_add_user_role
-# hf_customer_id_remove_user_role
-
 
 
 ad_proc -public hf_active_contract_ids_for_customer {
@@ -26,3 +23,10 @@ ad_proc -public hf_active_contract_ids_for_customer {
 
 }
 
+# hf_privilege_create instance_id customer_id user_id role_id
+# hf_privilege_delete instance_id customer_id user_id role_id
+
+# hf_role_create instance_id label description
+# hf_role_delete instance_id role_id
+# hf_role_write instance_id role_id label title description
+# hf_role_read instance_id label
