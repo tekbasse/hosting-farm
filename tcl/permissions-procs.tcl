@@ -19,40 +19,65 @@ ad_proc -public hf_customer_ids_for_user {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    # see accounts-ledger/sql/postgresql/entities-channels-create.sql
-
+    #qal_customer_id defined by qal_customer.id accounts-ledger/sql/postgresql/entities-channels-create.sql
+    set qal_customer_ids_list [db_list qal_customer_ids_get "select qal_customer_id from hf_user_customer_map where instance_id = :instance_id and user_id =:user_id"]
+    return $qal_customer_ids_list
 }
 
 
-ad_proc -public hf_active_contract_ids_for_customer {
+ad_proc -public hf_active_asset_ids_for_customer {
     customer_id
     {instance_id ""}
 } {
-    Returns a list of active contract_ids for customer_id
+    Returns a list of active asset_ids (contracts) for customer_id
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-
+    set asset_ids_list [db_list asset_ids_for_customer_get "select id from hf_assets where instance_id = :instance_id and qal_customer_id = :customer_id and time_stop > current_timestamp and not (trashed_p = '1')"]
+    return $asset_ids_list
 }
 
-ad_proc -private  hf_privilege_create {
+ad_proc -private hf_customer_privileges {
+    {instance_id ""}
+    customer_id
+} {
+    Lists customer roles assigned, as a list of user_id, role_id pairs.
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    set user_id [ad_conn user_id]
+    set property_label customer_roles
+    set read_p [hf_permission_p $instance_id $user_id $property_label $role_id read]
+    set assigned_roles_list [db_list_of_lists hf_user_roles_customer_read "select user_id, hf_role_id from hf_user_roles_map where instance_id = :instance_id and qal_customer_id = :customer_id"]
+    return $assigned_roles_list
+    
+}
+
+ad_proc -private hf_privilege_create {
     {instance_id ""}
     customer_id
     user_id
     role_id
 } {
-    Create a priviledge for passed condition. Returns 1 if succeeds.
+    Create a priviledge ie assign a customer's role to a user. Returns 1 if succeeds.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
+    # does this user have permission to assign?
+    set write_p [hf_permission_p $instance_id $user_id $property_id $role_id $privilege]
+    
+    # If privilege already exists, skip.
 
+    
 }
 
-ad_proc -private  hf_privilege_delete {
+ad_proc -private hf_privilege_delete {
     {instance_id ""}
     customer_id
     user_id
@@ -67,7 +92,7 @@ ad_proc -private  hf_privilege_delete {
 
 }
 
-ad_proc -private  hf_role_create {
+ad_proc -private hf_role_create {
     {instance_id ""} 
     label 
     title 
@@ -82,7 +107,7 @@ ad_proc -private  hf_role_create {
 
 }
 
-ad_proc -private  hf_role_delete {
+ad_proc -private hf_role_delete {
     {instance_id ""} 
     role_id
 } {
@@ -95,7 +120,7 @@ ad_proc -private  hf_role_delete {
 
 }
 
-ad_proc -private  hf_role_write {
+ad_proc -private hf_role_write {
     {instance_id ""} 
     role_id 
     label 
@@ -111,7 +136,7 @@ ad_proc -private  hf_role_write {
 
 }
 
-ad_proc -private  hf_role_read {
+ad_proc -private hf_role_read {
     {instance_id ""} 
     label
 } {
@@ -124,7 +149,7 @@ ad_proc -private  hf_role_read {
 
 }
 
-ad_proc -private  hf_property_create  {
+ad_proc -private hf_property_create  {
     {instance_id ""} 
     asset_type_id 
     title
@@ -139,7 +164,7 @@ ad_proc -private  hf_property_create  {
 
 }
 
-ad_proc -private  hf_property_delete {
+ad_proc -private hf_property_delete {
     property_id
 } {
     Deletes a property.
@@ -151,7 +176,7 @@ ad_proc -private  hf_property_delete {
 
 }
 
-ad_proc -private  hf_property_write {
+ad_proc -private hf_property_write {
     {instance_id ""} 
     property_id 
     asset_type_id 
@@ -166,7 +191,7 @@ ad_proc -private  hf_property_write {
 
 }
 
-ad_proc -private  hf_property_read {
+ad_proc -private hf_property_read {
     {instance_id ""} 
     asset_type_id
 } {
@@ -179,7 +204,7 @@ ad_proc -private  hf_property_read {
 
 }
 
-ad_proc -private  hf_permission_create {
+ad_proc -private hf_permission_create {
     {instance_id ""} 
     property_id
     role_id 
@@ -194,7 +219,7 @@ ad_proc -private  hf_permission_create {
 
 }
 
-ad_proc -private  hf_permission_delete {
+ad_proc -private hf_permission_delete {
     {instance_id ""} 
     property_id 
     role_id 
@@ -209,11 +234,11 @@ ad_proc -private  hf_permission_delete {
 
 }
 
-ad_proc -private  hf_permission_p {
+ad_proc -private hf_permission_p {
     {instance_id ""} 
     user_id 
-    property_id 
-    role_id 
+    customer_id
+    property_label 
     privilege
 } {
     Checks for permission  in place of permission::permission_p within hosting-farm package.
@@ -222,5 +247,14 @@ ad_proc -private  hf_permission_p {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
+    set allowed_p 0
+    # first, verify that the user has adequate system permission.
+    set allowed_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege $privilege]
+    # determine assigned customer_id roles for user_id
+    if { $allowed_p } {
+
+	
+    }
+    # do any of the assigned roles allow this PRIVILEGE for this PROPERTY_LABEL?
 
 }

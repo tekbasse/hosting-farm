@@ -38,6 +38,7 @@ create index hf_asset_type_id_idx on hf_asset_type (id);
 create index hf_asset_type_label_idx on hf_asset_type (label);
 
 -- part of database_list
+-- a contract is an asset that is not a template.
 CREATE TABLE hf_assets (
     instance_id     integer,
     -- asset_id
