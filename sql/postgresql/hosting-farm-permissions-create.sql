@@ -119,6 +119,7 @@ CREATE TABLE hf_user_roles_map (
     -- This is where roles for qal_customer_id are assigned to user_id
     instance_id     integer,
     user_id 	    integer,
+    -- from qal_customer.id defined in accounts-ledger package
     qal_customer_id integer,
     -- hf_role.id
     hf_role_id 	    integer
@@ -159,13 +160,3 @@ CREATE TABLE hf_id_object_id_map (
 create index hf_id_object_id_map_hf_id_idx on hf_id_object_id_map (hf_id);
 create index hf_id_object_id_map_object_id_idx on hf_id_object_id_map (object_id);
 
-CREATE TABLE hf_user_customer_map (
-       instance_id integer,
-       user_id integer,
--- from qal_customer.id defined in accounts-ledger package
-       qal_customer_id integer
-);
-
-create index hf_user_customer_map_instance_id_idx on hf_user_customer_map (instance_id);
-create index hf_user_customer_map_user_id_idx on hf_user_customer_map (user_id);
-create index hf_user_customer_map_qal_customer_id_idx on hf_user_customer_map (qal_customer_id);

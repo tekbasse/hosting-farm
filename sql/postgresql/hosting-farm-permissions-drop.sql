@@ -5,6 +5,7 @@
 -- @license GNU GENERAL PUBLIC LICENSE, Version 3
 --
 
+
 drop index hf_id_object_id_map_object_id_idx;
 drop index hf_id_object_id_map_hf_id_idx;
 

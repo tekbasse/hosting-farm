@@ -154,7 +154,7 @@ ad_proc -private hf_property_create  {
     asset_type_id 
     title
 } {
-    Creates a property. Returns value of property_id if successful, otherwise returns 0.
+    Creates a property_label. Returns value of property_id if successful, otherwise returns 0.
     asset_type_id is either asset_type or a hard-coded type defined via hf_property_create, for example: contact_record 
 } {
     if { $instance_id eq "" } {
@@ -249,12 +249,24 @@ ad_proc -private hf_permission_p {
     }
     set allowed_p 0
     # first, verify that the user has adequate system permission.
+    # This needs to work at least for admins, in order to set up hf_permissions.
     set allowed_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege $privilege]
-    # determine assigned customer_id roles for user_id
-    if { $allowed_p } {
-
-	
-    }
-    # do any of the assigned roles allow this PRIVILEGE for this PROPERTY_LABEL?
-
+    if { $allowed_p && $privilege eq "admin" } {
+	# user is set to go. No need to check further.
+    } elseif { $allowed_p } {
+	# this privilege is not allowed.
+	set allowed_p 0
+	# unless any of the roles assigned to the user allow this PRIVILEGE for this PROPERTY_LABEL
+	# checking.. 
+	# Verify user is a member of the customer_id users and
+	# determine assigned customer_id roles for user_id
+	set role_ids_list db_list hf_user_roles_for_customer_get "select hf_role_id from hf_user_roles_map where instance_id = :instance_id and qal_customer_id = :customer_id and user_id = :user_id"
+	if { [llength $roles_id_list] > 0 } {
+	    set property_id_exists_p [db_0or1row hf_property_id_exist_p "select id from hf_property where instance_id = :instance_id and asset_type_id = :property_label"]
+	    if { $property_id_exists_p } {
+		set allowed_p [db_0or1row hf_property_role_privilege_ck "select privilege from hf_property_role_privilege_map where instance_id = :instance_id and property_id = :property_id and privilege = :privilege and role_id in ([template::util::tcl_to_sql_list $roles_id_list])"]
+	    }
+	}
+    }    
+    return $allowed_p
 }
