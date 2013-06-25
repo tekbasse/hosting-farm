@@ -39,6 +39,81 @@ ad_proc -public hf_active_asset_ids_for_customer {
     return $asset_ids_list
 }
 
+
+ad_proc -private hf_property_create  {
+    {instance_id ""} 
+    asset_type_id 
+    title
+} {
+    Creates a property_label. Returns 1 if successful, otherwise returns 0.
+    asset_type_id is either asset_type or a hard-coded type defined via hf_property_create, for example: contact_record , or qal_customer_id coded. If referencing qal_customer_id prepend "customer_id-" to the id number.
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    # check permissions
+    set this_user_id [ad_conn user_id]
+    set role_id [hf_role_read permissions_admin]
+    set create_p [hf_permission_p $instance_id $this_user_id property $role_id create]
+    if { $create_p } {
+        # vet input data
+        if { [string length [string trim $title]] > 0 && [string length $asset_type_id] > 0 } {
+            set exists_p [db_0or1row hf_property_read "select id from hf_property where instance_id = :instance_id and asset_type_id = :asset_type_id"]
+            if { !$exists_p } {
+                db_dml hf_property_create {insert into hf_property
+                    (instance_id, asset_type_id, title)
+                    values (:instance_id, :asset_type_id, :title) }
+                set return_val 1
+            }
+        }
+    } else {
+        set return_val 0
+    }
+    return $return_val
+}
+
+ad_proc -private hf_property_delete {
+    property_id
+} {
+    Deletes a property.
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+
+}
+
+ad_proc -private hf_property_write {
+    {instance_id ""} 
+    property_id 
+    asset_type_id 
+    title
+} {
+    Revises a property. Returns 1 if successful, otherwise returns 0.
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+
+}
+
+ad_proc -private hf_property_read {
+    {instance_id ""} 
+    asset_type_id
+} {
+    Returns property info as a list, or an empty list if property doesn't exist for asset_type_id.
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+
+}
+
+
 ad_proc -private hf_customer_privileges {
     {instance_id ""}
     customer_id
@@ -54,7 +129,6 @@ ad_proc -private hf_customer_privileges {
     set read_p [hf_permission_p $instance_id $user_id $property_label $role_id read]
     set assigned_roles_list [db_list_of_lists hf_user_roles_customer_read "select user_id, hf_role_id from hf_user_roles_map where instance_id = :instance_id and qal_customer_id = :customer_id"]
     return $assigned_roles_list
-    
 }
 
 ad_proc -private hf_privilege_create {
@@ -69,11 +143,13 @@ ad_proc -private hf_privilege_create {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
+    set this_user_id [ad_conn user_id]
     # does this user have permission to assign?
-    set write_p [hf_permission_p $instance_id $user_id $property_id $role_id $privilege]
+    set property_id [hf_property_read $instance_id "customer_id-${customer_id}"
+    set write_p [hf_permission_p $instance_id $this_user_id $property_id $role_id write]
     
     # If privilege already exists, skip.
-
+##
     
 }
 
@@ -83,13 +159,17 @@ ad_proc -private hf_privilege_delete {
     user_id
     role_id
 } {
-    Deletes a priviledge. Returns 1 if succeeds.
+    Deletes a priviledge ie deletes's a customer's role to a user. Returns 1 if succeeds.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-
+    set this_user_id [ad_conn user_id]
+    # does this user have permission to delete?
+    set property_id [hf_property_read $instance_id "customer_id-${customer_id}"
+    set delete_p [hf_permission_p $instance_id $this_user_id $property_id $role_id delete]
+####
 }
 
 ad_proc -private hf_role_create {
@@ -146,62 +226,7 @@ ad_proc -private hf_role_read {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-
-}
-
-ad_proc -private hf_property_create  {
-    {instance_id ""} 
-    asset_type_id 
-    title
-} {
-    Creates a property_label. Returns value of property_id if successful, otherwise returns 0.
-    asset_type_id is either asset_type or a hard-coded type defined via hf_property_create, for example: contact_record 
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-
-}
-
-ad_proc -private hf_property_delete {
-    property_id
-} {
-    Deletes a property.
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-
-}
-
-ad_proc -private hf_property_write {
-    {instance_id ""} 
-    property_id 
-    asset_type_id 
-    title
-} {
-    Revises a property. Returns 1 if successful, otherwise returns 0.
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-
-}
-
-ad_proc -private hf_property_read {
-    {instance_id ""} 
-    asset_type_id
-} {
-    Returns property info as a list, or an empty list if property doesn't exist for asset_type_id.
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-
+   
 }
 
 ad_proc -private hf_permission_create {
