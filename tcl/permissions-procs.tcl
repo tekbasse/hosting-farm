@@ -56,20 +56,20 @@ ad_proc -private hf_property_create  {
     set this_user_id [ad_conn user_id]
     set role_id [hf_role_read permissions_admin]
     set create_p [hf_permission_p $instance_id $this_user_id property $role_id create]
+    set return_val 0
     if { $create_p } {
         # vet input data
         if { [string length [string trim $title]] > 0 && [string length $asset_type_id] > 0 } {
             set exists_p [db_0or1row hf_property_read "select id from hf_property where instance_id = :instance_id and asset_type_id = :asset_type_id"]
             if { !$exists_p } {
+                # create property
                 db_dml hf_property_create {insert into hf_property
                     (instance_id, asset_type_id, title)
                     values (:instance_id, :asset_type_id, :title) }
                 set return_val 1
             }
         }
-    } else {
-        set return_val 0
-    }
+    } 
     return $return_val
 }
 
@@ -82,7 +82,20 @@ ad_proc -private hf_property_delete {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-
+    # check permissions
+    set this_user_id [ad_conn user_id]
+    set role_id [hf_role_read permissions_admin]
+    set delete_p [hf_permission_p $instance_id $this_user_id property $role_id delete]
+    set return_val 0
+    if { $delete_p } {
+        set exists_p [db_0or1row hf_property_read "select id from hf_property where instance_id = :instance_id and id = :property_id"]
+        if { $exists_p } {
+            # delete property
+            db_dml hf_property_delete "delete from hf_property where instance_id = :instance_id and id = :property_id"
+            set return_val 1
+        } 
+    } 
+    return $return_val
 }
 
 ad_proc -private hf_property_write {
@@ -97,7 +110,30 @@ ad_proc -private hf_property_write {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-
+    # check permissions
+    set this_user_id [ad_conn user_id]
+    set role_id [hf_role_read permissions_admin]
+    set write_p [hf_permission_p $instance_id $this_user_id property $role_id write]
+    set return_val 0
+    if { $write_p } {
+        # vet input data
+        if { [string length [string trim $title]] > 0 && [string length $asset_type_id] > 0 } {
+            set exists_p [db_0or1row hf_property_ck2 "select id from hf_property where instance_id = :instance_id and id = :property_id"]
+            if { $exists_p } {
+                # update property
+                db_dml hf_property_update {update hf_property 
+                    set title = :title, asset_type_id = :asset_type_id 
+                    where instance_id = :instance_id and property_id = :property_id}
+            } else {
+                # create property
+                db_dml hf_property_create {insert into hf_property
+                    (instance_id, asset_type_id, title)
+                    values (:instance_id, :asset_type_id, :title) }
+            }
+            set return_val 1
+        }
+    } 
+    return $return_val
 }
 
 ad_proc -private hf_property_read {
@@ -110,7 +146,7 @@ ad_proc -private hf_property_read {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-
+# use db_list_of_lists to get info, then pop the record out of the list of lists .. to a list.
 }
 
 
