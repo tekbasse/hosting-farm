@@ -39,6 +39,26 @@ ad_proc -public hf_active_asset_ids_for_customer {
     return $asset_ids_list
 }
 
+ad_proc -private hf_property_id {
+    {instance_id ""} 
+    asset_type_id
+} {
+    Returns property id or -1 if doesn't exist.
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    # check permissions
+    set this_user_id [ad_conn user_id]
+    set role_id [hf_role_read permissions_admin]
+    set read_p [hf_permission_p $instance_id $this_user_id property $role_id read]
+    set exists_p 0
+    if { $read_p } {
+        set exists_p [db_0or1row hf_property_id_read "select id from hf_property where instance_id = :instance_id and asset_type_id = :asset_type_id"]
+    }
+    return $exists_p
+}
 
 ad_proc -private hf_property_create  {
     {instance_id ""} 
@@ -60,7 +80,7 @@ ad_proc -private hf_property_create  {
     if { $create_p } {
         # vet input data
         if { [string length [string trim $title]] > 0 && [string length $asset_type_id] > 0 } {
-            set exists_p [db_0or1row hf_property_read "select id from hf_property where instance_id = :instance_id and asset_type_id = :asset_type_id"]
+            set exists_p [expr { [hf_property_id $instance_id $asset_type_id] > -1 } ]
             if { !$exists_p } {
                 # create property
                 db_dml hf_property_create {insert into hf_property
@@ -88,7 +108,7 @@ ad_proc -private hf_property_delete {
     set delete_p [hf_permission_p $instance_id $this_user_id property $role_id delete]
     set return_val 0
     if { $delete_p } {
-        set exists_p [db_0or1row hf_property_read "select id from hf_property where instance_id = :instance_id and id = :property_id"]
+        set exists_p [expr { [hf_property_id $instance_id $asset_type_id] > -1 } ]
         if { $exists_p } {
             # delete property
             db_dml hf_property_delete "delete from hf_property where instance_id = :instance_id and id = :property_id"
@@ -140,13 +160,23 @@ ad_proc -private hf_property_read {
     {instance_id ""} 
     asset_type_id
 } {
-    Returns property info as a list, or an empty list if property doesn't exist for asset_type_id.
+    Returns property info as a list in the order id, title; or an empty list if property doesn't exist for asset_type_id.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-# use db_list_of_lists to get info, then pop the record out of the list of lists .. to a list.
+    # check permissions
+    set this_user_id [ad_conn user_id]
+    set role_id [hf_role_read permissions_admin]
+    set read_p [hf_permission_p $instance_id $this_user_id property $role_id read]
+    set return_list [list ]
+    if { $read_p } {
+        # use db_list_of_lists to get info, then pop the record out of the list of lists .. to a list.
+        set hf_properties_lists [db_list_of_lists "hf_property_set_read" "select id, title from hf_property where instance_id = :instance_id and asset_type_id = :asset_type_id "]
+        set return_list [lindex $hf_properties_lists 0]
+    }
+    return $return_list
 }
 
 
