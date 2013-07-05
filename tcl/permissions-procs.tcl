@@ -180,6 +180,27 @@ ad_proc -private hf_property_read {
 }
 
 
+ad_proc -private hf_customer_privileges_this_user {
+    {instance_id ""}
+    customer_id
+} {
+    Lists customer roles assigned to user for customer_id
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    set user_id [ad_conn user_id]
+    set property_label "customer_id-${customer_id}"
+    set role_id [hf_role_read permissions_read]
+    set read_p [hf_permission_p $instance_id $user_id $property_label $role_id read]
+    set assigned_roles_list [list ]
+    if { $read_p } {
+        set assigned_roles_list [db_list hf_user_roles_customer_read "select hf_role_id from hf_user_roles_map where instance_id = :instance_id and qal_customer_id = :customer_id and user_id = :user_id"]
+    }
+    return $assigned_roles_list
+}
+
 ad_proc -private hf_customer_privileges {
     {instance_id ""}
     customer_id
@@ -190,11 +211,38 @@ ad_proc -private hf_customer_privileges {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    set user_id [ad_conn user_id]
-    set property_label customer_roles
-    set read_p [hf_permission_p $instance_id $user_id $property_label $role_id read]
-    set assigned_roles_list [db_list_of_lists hf_user_roles_customer_read "select user_id, hf_role_id from hf_user_roles_map where instance_id = :instance_id and qal_customer_id = :customer_id"]
+    set this_user_id [ad_conn user_id]
+    set property_label "customer_id-${customer_id}"
+    set role_id [hf_role_read permissions_read]
+    set read_p [hf_permission_p $instance_id $this_user_id $property_label $role_id read]
+    set assigned_roles_list [list ]
+    if { $admin_p } {
+        set assigned_roles_list [db_list_of_lists hf_roles_customer_read "select user_id, hf_role_id from hf_user_roles_map where instance_id = :instance_id and qal_customer_id = :customer_id"]
+    }
     return $assigned_roles_list
+}
+
+ad_proc -private hf_privilege_exists {
+    {instance_id ""}
+    customer_id
+    user_id
+    role_id
+} {
+    If privilege exists, returns 1, else returns 0.
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    set this_user_id [ad_conn user_id]
+    set property_label "customer_id-${customer_id}"
+    set role_id [hf_role_read permissions_read]
+    set read_p [hf_permission_p $instance_id $this_user_id $property_label $role_id read]
+    set exists_p 0
+    if { $read_p } {
+        set exists_p [db_0or1row hf_privilege_exists_p "select hf_role_id from hf_user_roles_map where instance_id = :instance_id and qal_customer_id = :customer_id and hf_role_id = :role_id and user_id = :user_id"]
+    }
+    return $exists_p
 }
 
 ad_proc -private hf_privilege_create {
@@ -211,12 +259,22 @@ ad_proc -private hf_privilege_create {
     }
     set this_user_id [ad_conn user_id]
     # does this user have permission to assign?
-    set property_id [hf_property_read $instance_id "customer_id-${customer_id}"
-    set write_p [hf_permission_p $instance_id $this_user_id $property_id $role_id write]
+    set this_role_id [hf_role_read permissions_create]
+    set property_label "customer_id-${customer_id}"
+    set create_p [hf_permission_p $instance_id $this_user_id $property_label $this_role_id create]
     
-    # If privilege already exists, skip.
-##
-    
+    if { $create_p } {
+        # does permission already exist?
+        set exists_p [hf_privilege_exists_p $instance_id $customer_id $user_id $role_id]
+        if { $exists_p } {
+            # db update is redundant
+        } else {
+            db_dml hf_privilege_create { insert into hf_user_roles_map 
+                (instance_id, customer_id, hf_role_id, user_id)
+                values (:instance_id, :customer_id, :role_id, :user_id) }
+        }
+    }
+    return $create_p
 }
 
 ad_proc -private hf_privilege_delete {
@@ -233,9 +291,13 @@ ad_proc -private hf_privilege_delete {
     }
     set this_user_id [ad_conn user_id]
     # does this user have permission to delete?
-    set property_id [hf_property_read $instance_id "customer_id-${customer_id}"
-    set delete_p [hf_permission_p $instance_id $this_user_id $property_id $role_id delete]
-####
+    set this_role_id [hf_role_read permissions_delete]
+    set property_label "customer_id-${customer_id}"
+    set delete_p [hf_permission_p $instance_id $this_user_id $property_label $role_id delete]
+    if { $delete_p } {
+        db_dml hf_privilege_delete { delete from hf_user_roles_map where instance_id = :instance_id and customer_id = :customer_id and user_id = :user_id and role_id = :role_id }
+    }
+    return $delete_p
 }
 
 ad_proc -private hf_role_create {
@@ -338,26 +400,25 @@ ad_proc -private hf_permission_p {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    set allowed_p 0
     # first, verify that the user has adequate system permission.
     # This needs to work at least for admins, in order to set up hf_permissions.
     set allowed_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege $privilege]
     if { $allowed_p && $privilege eq "admin" } {
-	# user is set to go. No need to check further.
+        # user is set to go. No need to check further.
     } elseif { $allowed_p } {
-	# this privilege is not allowed.
-	set allowed_p 0
-	# unless any of the roles assigned to the user allow this PRIVILEGE for this PROPERTY_LABEL
-	# checking.. 
-	# Verify user is a member of the customer_id users and
-	# determine assigned customer_id roles for user_id
-	set role_ids_list db_list hf_user_roles_for_customer_get "select hf_role_id from hf_user_roles_map where instance_id = :instance_id and qal_customer_id = :customer_id and user_id = :user_id"
-	if { [llength $roles_id_list] > 0 } {
-	    set property_id_exists_p [db_0or1row hf_property_id_exist_p "select id from hf_property where instance_id = :instance_id and asset_type_id = :property_label"]
-	    if { $property_id_exists_p } {
-		set allowed_p [db_0or1row hf_property_role_privilege_ck "select privilege from hf_property_role_privilege_map where instance_id = :instance_id and property_id = :property_id and privilege = :privilege and role_id in ([template::util::tcl_to_sql_list $roles_id_list])"]
-	    }
-	}
+        # this privilege is not allowed.
+        set allowed_p 0
+        # unless any of the roles assigned to the user allow this PRIVILEGE for this PROPERTY_LABEL
+        # checking.. 
+        # Verify user is a member of the customer_id users and
+        # determine assigned customer_id roles for user_id
+        set role_ids_list db_list hf_user_roles_for_customer_get "select hf_role_id from hf_user_roles_map where instance_id = :instance_id and qal_customer_id = :customer_id and user_id = :user_id"
+        if { [llength $roles_id_list] > 0 } {
+            set property_id_exists_p [db_0or1row hf_property_id_exist_p "select id from hf_property where instance_id = :instance_id and asset_type_id = :property_label"]
+            if { $property_id_exists_p } {
+                set allowed_p [db_0or1row hf_property_role_privilege_ck "select privilege from hf_property_role_privilege_map where instance_id = :instance_id and property_id = :property_id and privilege = :privilege and role_id in ([template::util::tcl_to_sql_list $roles_id_list])"]
+            }
+        }
     }    
     return $allowed_p
 }
