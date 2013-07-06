@@ -6,6 +6,11 @@ ad_library {
     use hf_permission_p to check for permissions in place of permission::permission_p
 }
 
+# when checking permissions here, if user is not admin, user is checked against role_id for the specific property_label.
+# This allows: 
+#     admins to assign custom permissions administration to non-admins
+#     role-based assigning, permissions admin of customer assets and adding assets (without adding new roles, property types etc)
+
 ad_proc -public hf_customer_ids_for_user { 
     {user_id ""}
     {instance_id ""}
@@ -52,7 +57,7 @@ ad_proc -private hf_property_id {
     # check permissions
     set this_user_id [ad_conn user_id]
     set role_id [hf_role_id permissions_admin]
-    set read_p [hf_permission_p $instance_id $this_user_id property $role_id read]
+    set read_p [hf_permission_p $instance_id $this_user_id $role_id permissions_properties read]
     set exists_p 0
     if { $read_p } {
         set exists_p [db_0or1row hf_property_id_read "select id from hf_property where instance_id = :instance_id and asset_type_id = :asset_type_id"]
@@ -75,7 +80,7 @@ ad_proc -private hf_property_create  {
     # check permissions
     set this_user_id [ad_conn user_id]
     set role_id [hf_role_id permissions_admin]
-    set create_p [hf_permission_p $instance_id $this_user_id property $role_id create]
+    set create_p [hf_permission_p $instance_id $this_user_id $role_id permissions_properties create]
     set return_val 0
     if { $create_p } {
         # vet input data
@@ -105,7 +110,7 @@ ad_proc -private hf_property_delete {
     # check permissions
     set this_user_id [ad_conn user_id]
     set role_id [hf_role_id permissions_admin]
-    set delete_p [hf_permission_p $instance_id $this_user_id property $role_id delete]
+    set delete_p [hf_permission_p $instance_id $this_user_id $role_id permissions_properties delete]
     set return_val 0
     if { $delete_p } {
         set exists_p [expr { [hf_property_id $instance_id $asset_type_id] > -1 } ]
@@ -133,7 +138,7 @@ ad_proc -private hf_property_write {
     # check permissions
     set this_user_id [ad_conn user_id]
     set role_id [hf_role_id permissions_admin]
-    set write_p [hf_permission_p $instance_id $this_user_id property $role_id write]
+    set write_p [hf_permission_p $instance_id $this_user_id $role_id permissions_properties write]
     set return_val 0
     if { $write_p } {
         # vet input data
@@ -169,7 +174,7 @@ ad_proc -private hf_property_read {
     # check permissions
     set this_user_id [ad_conn user_id]
     set role_id [hf_role_id permissions_admin]
-    set read_p [hf_permission_p $instance_id $this_user_id property $role_id read]
+    set read_p [hf_permission_p $instance_id $this_user_id $role_id permissions_properties read]
     set return_list [list ]
     if { $read_p } {
         # use db_list_of_lists to get info, then pop the record out of the list of lists .. to a list.
@@ -191,9 +196,7 @@ ad_proc -private hf_customer_privileges_this_user {
         set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
-    set property_label "customer_id-${customer_id}"
-    set role_id [hf_role_id permissions_read]
-    set read_p [hf_permission_p $instance_id $user_id $property_label $role_id read]
+    set read_p [hf_permission_p $instance_id $user_id "customer_id-${customer_id}" permissions_privileges read]
     set assigned_roles_list [list ]
     if { $read_p } {
         set assigned_roles_list [db_list hf_user_roles_customer_read "select hf_role_id from hf_user_roles_map where instance_id = :instance_id and qal_customer_id = :customer_id and user_id = :user_id"]
@@ -212,9 +215,7 @@ ad_proc -private hf_customer_privileges {
         set instance_id [ad_conn package_id]
     }
     set this_user_id [ad_conn user_id]
-    set property_label "customer_id-${customer_id}"
-    set role_id [hf_role_id permissions_read]
-    set read_p [hf_permission_p $instance_id $this_user_id $property_label $role_id read]
+    set read_p [hf_permission_p $instance_id $this_user_id "customer_id-${customer_id}" permissions_privileges read]
     set assigned_roles_list [list ]
     if { $admin_p } {
         set assigned_roles_list [db_list_of_lists hf_roles_customer_read "select user_id, hf_role_id from hf_user_roles_map where instance_id = :instance_id and qal_customer_id = :customer_id"]
@@ -235,9 +236,7 @@ ad_proc -private hf_privilege_exists {
         set instance_id [ad_conn package_id]
     }
     set this_user_id [ad_conn user_id]
-    set property_label "customer_id-${customer_id}"
-    set role_id [hf_role_id permissions_read]
-    set read_p [hf_permission_p $instance_id $this_user_id $property_label $role_id read]
+    set read_p [hf_permission_p $instance_id $this_user_id "customer_id-${customer_id}" perimssions_roles read]
     set exists_p 0
     if { $read_p } {
         set exists_p [db_0or1row hf_privilege_exists_p "select hf_role_id from hf_user_roles_map where instance_id = :instance_id and qal_customer_id = :customer_id and hf_role_id = :role_id and user_id = :user_id"]
@@ -259,9 +258,7 @@ ad_proc -private hf_privilege_create {
     }
     set this_user_id [ad_conn user_id]
     # does this user have permission to assign?
-    set this_role_id [hf_role_id permissions_create]
-    set property_label "customer_id-${customer_id}"
-    set create_p [hf_permission_p $instance_id $this_user_id $property_label $this_role_id create]
+    set create_p [hf_permission_p $instance_id $this_user_id "customer_id-${customer_id}" permissions_privileges create]
     
     if { $create_p } {
         # does permission already exist?
@@ -291,9 +288,7 @@ ad_proc -private hf_privilege_delete {
     }
     set this_user_id [ad_conn user_id]
     # does this user have permission?
-    set this_role_id [hf_role_id permissions_delete]
-    set property_label "customer_id-${customer_id}"
-    set delete_p [hf_permission_p $instance_id $this_user_id $property_label $role_id delete]
+    set delete_p [hf_permission_p $instance_id $this_user_id "customer_id-${customer_id}" permissions_privileges delete]
     if { $delete_p } {
         db_dml hf_privilege_delete { delete from hf_user_roles_map where instance_id = :instance_id and customer_id = :customer_id and user_id = :user_id and role_id = :role_id }
     }
@@ -317,7 +312,7 @@ ad_proc -private hf_role_create {
     # check permissions
     set this_user_id [ad_conn user_id]
     set role_id [hf_role_id permissions_admin]
-    set create_p [hf_permission_p $instance_id $this_user_id role $role_id create]
+    set create_p [hf_permission_p $instance_id $this_user_id $role_id permissions_roles create]
     set return_val 0
     if { $create_p } {
         # vet input data
@@ -348,7 +343,7 @@ ad_proc -private hf_role_delete {
     # check permissions
     set this_user_id [ad_conn user_id]
     set role_id [hf_role_id permissions_admin]
-    set delete_p [hf_permission_p $instance_id $this_user_id role $role_id delete]
+    set delete_p [hf_permission_p $instance_id $this_user_id $role_id permissions_roles delete]
     set return_val 0
     if { $delete_p } {
         set exists_p [hf_role_id_exists $instance_id $role_id]
@@ -376,7 +371,7 @@ ad_proc -private hf_role_write {
     # check permissions
     set this_user_id [ad_conn user_id]
     set role_id [hf_role_id permissions_admin]
-    set write_p [hf_permission_p $instance_id $this_user_id role $role_id write]
+    set write_p [hf_permission_p $instance_id $this_user_id $role_id permissions_roles write]
     set return_val 0
     if { $write_p } {
         # vet input data
@@ -413,7 +408,7 @@ ad_proc -private hf_role_id {
     # check permissions
     set this_user_id [ad_conn user_id]
     set role_id [hf_role_id permissions_admin]
-    set read_p [hf_permission_p $instance_id $this_user_id role $role_id read]
+    set read_p [hf_permission_p $instance_id $this_user_id $role_id permissions_roles read]
     set id -1
     if { $read_p } {
         db_0or1row hf_role_id_get "select id from hf_role where instance_id = :instance_id and label = :label"
@@ -434,7 +429,7 @@ ad_proc -private hf_role_id_exists {
     # check permissions  Not necessary, because disclosure is extremely limited compared to speed.
 #    set this_user_id [ad_conn user_id]
 #    set role_id [hf_role_id permissions_admin]
-#    set read_p [hf_permission_p $instance_id $this_user_id role $role_id read]
+#    set read_p [hf_permission_p $instance_id $this_user_id $role_id permissions_roles read]
     set exists_p 0
     if { $read_p } {
         set exists_p [db_0or1row hf_role_id_exists "select id from hf_role where instance_id = :instance_id and label = :label"]
@@ -455,7 +450,7 @@ ad_proc -private hf_role_read {
     # check permissions
     set this_user_id [ad_conn user_id]
     set role_id [hf_role_id permissions_admin]
-    set read_p [hf_permission_p $instance_id $this_user_id role $role_id read]
+    set read_p [hf_permission_p $instance_id $this_user_id $role_id permissions_roles read]
     set role_list [list ]
     if { $read_p } {
         set role_list [db_list_of_lists hf_role_read "select label,title,description from hf_role where instance_id = :instance_id and id = :id"]
@@ -476,7 +471,7 @@ ad_proc -private hf_roles {
     # check permissions
     set this_user_id [ad_conn user_id]
     set role_id [hf_role_id permissions_admin]
-    set read_p [hf_permission_p $instance_id $this_user_id role $role_id read]
+    set read_p [hf_permission_p $instance_id $this_user_id $role_id permissions_roles read]
     set role_list [list ]
     if { $read_p } {
         set role_list [db_list_of_lists hf_roles_read "select label,title,description from hf_role where instance_id = :instance_id"]

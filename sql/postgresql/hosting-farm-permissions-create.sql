@@ -102,6 +102,7 @@ CREATE TABLE hf_property (
    -- for example, billing, technical, administrative differences per property
    instance_id     integer,
    -- hf_asset_type.id or hard-coded label, such as main_contact_record,admin_contact_record,tech_contact_record etc.
+   -- permissions_properties, permissions_roles, permissions_privileges
    -- aka property_label
    asset_type_id   varchar(24),
    -- property_id
