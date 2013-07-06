@@ -51,7 +51,7 @@ ad_proc -private hf_property_id {
     }
     # check permissions
     set this_user_id [ad_conn user_id]
-    set role_id [hf_role_read permissions_admin]
+    set role_id [hf_role_id permissions_admin]
     set read_p [hf_permission_p $instance_id $this_user_id property $role_id read]
     set exists_p 0
     if { $read_p } {
@@ -74,7 +74,7 @@ ad_proc -private hf_property_create  {
     }
     # check permissions
     set this_user_id [ad_conn user_id]
-    set role_id [hf_role_read permissions_admin]
+    set role_id [hf_role_id permissions_admin]
     set create_p [hf_permission_p $instance_id $this_user_id property $role_id create]
     set return_val 0
     if { $create_p } {
@@ -104,7 +104,7 @@ ad_proc -private hf_property_delete {
     }
     # check permissions
     set this_user_id [ad_conn user_id]
-    set role_id [hf_role_read permissions_admin]
+    set role_id [hf_role_id permissions_admin]
     set delete_p [hf_permission_p $instance_id $this_user_id property $role_id delete]
     set return_val 0
     if { $delete_p } {
@@ -132,7 +132,7 @@ ad_proc -private hf_property_write {
     }
     # check permissions
     set this_user_id [ad_conn user_id]
-    set role_id [hf_role_read permissions_admin]
+    set role_id [hf_role_id permissions_admin]
     set write_p [hf_permission_p $instance_id $this_user_id property $role_id write]
     set return_val 0
     if { $write_p } {
@@ -168,7 +168,7 @@ ad_proc -private hf_property_read {
     }
     # check permissions
     set this_user_id [ad_conn user_id]
-    set role_id [hf_role_read permissions_admin]
+    set role_id [hf_role_id permissions_admin]
     set read_p [hf_permission_p $instance_id $this_user_id property $role_id read]
     set return_list [list ]
     if { $read_p } {
@@ -192,7 +192,7 @@ ad_proc -private hf_customer_privileges_this_user {
     }
     set user_id [ad_conn user_id]
     set property_label "customer_id-${customer_id}"
-    set role_id [hf_role_read permissions_read]
+    set role_id [hf_role_id permissions_read]
     set read_p [hf_permission_p $instance_id $user_id $property_label $role_id read]
     set assigned_roles_list [list ]
     if { $read_p } {
@@ -213,7 +213,7 @@ ad_proc -private hf_customer_privileges {
     }
     set this_user_id [ad_conn user_id]
     set property_label "customer_id-${customer_id}"
-    set role_id [hf_role_read permissions_read]
+    set role_id [hf_role_id permissions_read]
     set read_p [hf_permission_p $instance_id $this_user_id $property_label $role_id read]
     set assigned_roles_list [list ]
     if { $admin_p } {
@@ -236,7 +236,7 @@ ad_proc -private hf_privilege_exists {
     }
     set this_user_id [ad_conn user_id]
     set property_label "customer_id-${customer_id}"
-    set role_id [hf_role_read permissions_read]
+    set role_id [hf_role_id permissions_read]
     set read_p [hf_permission_p $instance_id $this_user_id $property_label $role_id read]
     set exists_p 0
     if { $read_p } {
@@ -259,7 +259,7 @@ ad_proc -private hf_privilege_create {
     }
     set this_user_id [ad_conn user_id]
     # does this user have permission to assign?
-    set this_role_id [hf_role_read permissions_create]
+    set this_role_id [hf_role_id permissions_create]
     set property_label "customer_id-${customer_id}"
     set create_p [hf_permission_p $instance_id $this_user_id $property_label $this_role_id create]
     
@@ -290,8 +290,8 @@ ad_proc -private hf_privilege_delete {
         set instance_id [ad_conn package_id]
     }
     set this_user_id [ad_conn user_id]
-    # does this user have permission to delete?
-    set this_role_id [hf_role_read permissions_delete]
+    # does this user have permission?
+    set this_role_id [hf_role_id permissions_delete]
     set property_label "customer_id-${customer_id}"
     set delete_p [hf_permission_p $instance_id $this_user_id $property_label $role_id delete]
     if { $delete_p } {
@@ -304,7 +304,7 @@ ad_proc -private hf_role_create {
     {instance_id ""} 
     label 
     title 
-    description 
+    {description ""}
 } {
     Creates a role. Returns role_id, or 0 if unsuccessful.
 } {
@@ -313,6 +313,26 @@ ad_proc -private hf_role_create {
         set instance_id [ad_conn package_id]
     }
 
+    # table hf_role has instance_id, id (seq nextval), label, title, description, where label includes technical_contact, technical_staff, billing_*, primary_*, site_developer etc roles
+    # check permissions
+    set this_user_id [ad_conn user_id]
+    set role_id [hf_role_id permissions_admin]
+    set create_p [hf_permission_p $instance_id $this_user_id role $role_id create]
+    set return_val 0
+    if { $create_p } {
+        # vet input data
+        if { [string length [string trim $title]] > 0 && [string length $label] > 0 } {
+            set exists_p [hf_role_id_exists $instance_id $label]
+            if { !$exists_p } {
+                # create role
+                db_dml hf_role_create {insert into hf_role
+                    (instance_id, label, title, description)
+                    values (:instance_id, :label, :title, :description) }
+                set return_val 1
+            }
+        }
+    } 
+    return $return_val
 }
 
 ad_proc -private hf_role_delete {
@@ -325,7 +345,19 @@ ad_proc -private hf_role_delete {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-
+    # check permissions
+    set this_user_id [ad_conn user_id]
+    set role_id [hf_role_id permissions_admin]
+    set delete_p [hf_permission_p $instance_id $this_user_id role $role_id delete]
+    set return_val 0
+    if { $delete_p } {
+        set exists_p [hf_role_id_exists $instance_id $role_id]
+        if { $exists_p } {
+            db_dml hf_role_delete {delete from hf_role where instance_id = :instance_id and id = :role_id}
+            set return_val 1
+        } 
+    }
+    return $return_val
 }
 
 ad_proc -private hf_role_write {
@@ -341,21 +373,117 @@ ad_proc -private hf_role_write {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-
+    # check permissions
+    set this_user_id [ad_conn user_id]
+    set role_id [hf_role_id permissions_admin]
+    set write_p [hf_permission_p $instance_id $this_user_id role $role_id write]
+    set return_val 0
+    if { $write_p } {
+        # vet input data
+        if { [string length [string trim $title]] > 0 && [string length $label] > 0 } {
+            set exists_p [hf_role_id_exists $instance_id $label]
+            if { $exists_p } {
+                # update role
+                db_dml hf_role_update {update hf_role
+                    set label = :label and title = :title and description =:description where instance_id = :instance_id and id = :role_id}
+                set return_val 1
+            } else {
+                # create role
+                db_dml hf_role_create {insert into hf_role
+                    (instance_id, label, title, description)
+                    values (:instance_id, :label, :title, :description) }
+                set return_val 1
+            }
+        }
+    } 
+    return $return_val
 }
 
-ad_proc -private hf_role_read {
+
+ad_proc -private hf_role_id {
     {instance_id ""} 
     label
 } {
-    Returns data about a role as a list, or an empty list if label doesn't exist as a role.
+    Returns role_id from label or -1 if role doesn't exist.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-   
+    # check permissions
+    set this_user_id [ad_conn user_id]
+    set role_id [hf_role_id permissions_admin]
+    set read_p [hf_permission_p $instance_id $this_user_id role $role_id read]
+    set id -1
+    if { $read_p } {
+        db_0or1row hf_role_id_get "select id from hf_role where instance_id = :instance_id and label = :label"
+    }
+    return $id
 }
+
+ad_proc -private hf_role_id_exists {
+    {instance_id ""} 
+    label
+} {
+    Returns role_id from label or -1 if role doesn't exist.
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    # check permissions  Not necessary, because disclosure is extremely limited compared to speed.
+#    set this_user_id [ad_conn user_id]
+#    set role_id [hf_role_id permissions_admin]
+#    set read_p [hf_permission_p $instance_id $this_user_id role $role_id read]
+    set exists_p 0
+    if { $read_p } {
+        set exists_p [db_0or1row hf_role_id_exists "select id from hf_role where instance_id = :instance_id and label = :label"]
+    }
+    return $exists_p
+}
+
+ad_proc -private hf_role_read {
+    {instance_id ""} 
+    role_id
+} {
+    Returns role's label, title, and description as a list, or an empty list if role_id doesn't exist.
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    # check permissions
+    set this_user_id [ad_conn user_id]
+    set role_id [hf_role_id permissions_admin]
+    set read_p [hf_permission_p $instance_id $this_user_id role $role_id read]
+    set role_list [list ]
+    if { $read_p } {
+        set role_list [db_list_of_lists hf_role_read "select label,title,description from hf_role where instance_id = :instance_id and id = :id"]
+        set role_list [lindex $role_list 0]
+    }
+    return $role_list
+}
+
+ad_proc -private hf_roles {
+    {instance_id ""} 
+} {
+    Returns roles as a list, with each list item consisting of label, title, and description as a list, or an empty list if no roles exist.
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    # check permissions
+    set this_user_id [ad_conn user_id]
+    set role_id [hf_role_id permissions_admin]
+    set read_p [hf_permission_p $instance_id $this_user_id role $role_id read]
+    set role_list [list ]
+    if { $read_p } {
+        set role_list [db_list_of_lists hf_roles_read "select label,title,description from hf_role where instance_id = :instance_id"]
+    }
+    return $role_list
+}
+
 
 ad_proc -private hf_permission_create {
     {instance_id ""} 
