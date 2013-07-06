@@ -46,8 +46,10 @@ ad_proc -private hf_asset_ids_for_customer_id {
     ## make sure that user_id has permission to access customer_id info
     # check permissions
     set user_id [ad_conn user_id]
-    set read_p [hf_permission_p $instance_id $user_id $customer_id "customer_id-${customer_id}" read]
-
+    set read_p [hf_permission_p $instance_id $user_id "customer_id-${customer_id}" customer_assets read]
+    if { $read_p } {
+        
+    }
 
 
 }

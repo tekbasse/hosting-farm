@@ -88,6 +88,8 @@ CREATE TABLE hf_role (
     --     access_rights.billing_staff
     --     access_rights.primary_contact
     --     access_rights.site_developer
+    -- convert to: technical_contact,billing_contact,primary_contact,staff, supervisor ,admin
+    --  where staff is perhaps read-only, supervisor is read/write, admin handles most all
     --     permissions_admin
     label 	varchar(300) unique not null,
     title	varchar(40),
@@ -103,6 +105,7 @@ CREATE TABLE hf_property (
    instance_id     integer,
    -- hf_asset_type.id or hard-coded label, such as main_contact_record,admin_contact_record,tech_contact_record etc.
    -- permissions_properties, permissions_roles, permissions_privileges
+   -- customer_assets
    -- aka property_label
    asset_type_id   varchar(24),
    -- property_id
