@@ -484,37 +484,6 @@ ad_proc -private hf_roles {
     return $role_list
 }
 
-
-ad_proc -private hf_permission_create {
-    {instance_id ""} 
-    property_id
-    role_id 
-    privilege
-} {
-    Creates a permission, where privilege is create, read, write, delete, or admin. Returns 1 if successful, otherwise returns 0.
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-
-}
-
-ad_proc -private hf_permission_delete {
-    {instance_id ""} 
-    property_id 
-    role_id 
-    privilege 
-} {
-    Deletes a permission. Returns 1 if successful, otherwise returns 0.
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-
-}
-
 ad_proc -private hf_permission_p {
     {instance_id ""} 
     user_id 
