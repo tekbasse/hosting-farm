@@ -442,6 +442,8 @@ create index hf_monitor_config_n_control_active_p_idx on hf_monitor_config_n_con
 CREATE TABLE hf_monitor_log (
     instance_id          integer,
     monitor_id           integer not null,
+    -- if monitor_id is 0 such as when adding activity note, user_id should not be 0
+    user_id              integer not null,
     asset_id             integer not null,
     -- increases by 1 for each monitor_id's report of asset_id
     report_id            integer not null,

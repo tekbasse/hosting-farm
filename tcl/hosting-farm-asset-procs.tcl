@@ -16,8 +16,8 @@ ad_library {
     # temporary map showing qw_ vs. hf_ fields.
     template_id
     id
-    label (was qwiki.url)
-    name
+    label (was q-wiki.url)
+    name  (pretty label)
     title          title (was one_line_description)
     content        # publishable content
     keywords       # publishable search
@@ -208,7 +208,7 @@ ad_proc -public hf_asset_label_id_from_template_id {
     template_id
     {instance_id ""}
 } {
-    Returns asset_id mapped to the label mapped to template_id, else returns empty string.
+    Returns asset_id that is mapped to the label that is mapped to template_id, else returns empty string.
 } {
     if { $instance_id eq "" } {
         # set instance_id subsite_id

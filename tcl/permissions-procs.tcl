@@ -40,7 +40,12 @@ ad_proc -public hf_active_asset_ids_for_customer {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    set asset_ids_list [db_list asset_ids_for_customer_get "select id from hf_assets where instance_id = :instance_id and qal_customer_id = :customer_id and time_stop > current_timestamp and not (trashed_p = '1')"]
+    set user_id [ad_conn user_id]
+    set read_p [hf_permission_p $instance_id $user_id "customer_id-${customer_id}" customer_assets read]
+    set asset_ids_list [list ]
+    if { $read_p } {
+        set asset_ids_list [db_list asset_ids_for_customer_get "select id from hf_assets where instance_id = :instance_id and qal_customer_id = :customer_id and time_stop > current_timestamp and not (trashed_p = '1')"]
+    }
     return $asset_ids_list
 }
 
