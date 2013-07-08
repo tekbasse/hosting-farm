@@ -81,7 +81,8 @@ CREATE TABLE hf_assets (
     time_start 	    timestamptz,
     -- expires/expired on
     time_stop 	    timestamptz,
-    ua_id 	    integer,
+    ns_id           integer,
+    ua_id 	        integer,
   -- status aka vm_to_configure, on,off etc.
   -- use with qal_product_id for vm_to_configure.plan_id
   -- and qal_customer_id for vm_to_configure.company_id
@@ -148,6 +149,17 @@ create index hf_asset_type_features_id_idx on hf_asset_type_features (id);
 create index hf_asset_type_features_asset_type_id_idx on hf_asset_type_features (asset_type_id);
 create index hf_asset_type_features_label_idx on hf_asset_type_features (label);
 
+CREATE TABLE hf_ns_records (
+       instance_id integer,
+       id          integer not null DEFAULT nextval ( 'hf_id_seq' ),
+       active_p    integer,
+       -- name records to be added to dns
+       name_record text
+);
+
+create index hf_ns_records_instance_id_idx on hf_ns_records (instance_id);
+create index hf_ns_records_id_idx on hf_ns_records (ns_id);
+create index hf_ns_records_active_p_idx on hf_ns_records (active_p);
 
 CREATE TABLE hf_data_centers (
     instance_id integer,
@@ -184,6 +196,7 @@ CREATE TABLE hf_virtual_machines (
     domain_name   varchar(300),
     ip_id         integer,
     ni_id         integer,
+    ns_id         integer,
     -- from database_server.type_id
     --      server.server_type
     type_id       integer,
@@ -199,6 +212,7 @@ create index hf_virtual_machines_vm_id_idx on hf_virtual_machines (vm_id);
 create index hf_virtual_machines_domain_name_idx on hf_virtual_machines (domain_name);
 create index hf_virtual_machines_ip_id_idx on hf_virtual_machines (ip_id);
 create index hf_virtual_machines_ni_id_idx on hf_virtual_machines (ni_id);
+create index hf_virtual_machines_ns_id_idx on hf_virtual_machines (ns_id);
 create index hf_virtual_machines_type_id_idx on hf_virtual_machines (type_id);
 
 CREATE TABLE hf_network_interfaces (
@@ -299,6 +313,7 @@ CREATE TABLE hf_vhosts (
     instance_id integer,
     vh_id       integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     ua_id       integer,
+    ns_id       integer,
     domain_name varchar(200),
     details     text
 );
@@ -306,6 +321,7 @@ CREATE TABLE hf_vhosts (
 create index hf_vhosts_instance_id_idx on hf_vhosts (instance_id); 
 create index hf_vhosts_vh_id_idx on hf_vhosts (vh_id);
 create index hf_vhosts_ua_id_idx on hf_vhosts (ua_id);
+create index hf_vhosts_ns_id_idx on hf_vhosts (ns_id);
 create index hf_vhosts_domain_name_idx on hf_vhosts (domain_name);
 
 -- part of database_auth and database_list

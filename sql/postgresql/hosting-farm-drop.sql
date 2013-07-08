@@ -89,6 +89,7 @@ drop index hf_services_instance_id_idx;
 DROP TABLE hf_services;
 
 drop index hf_vhosts_domain_name_idx;
+drop index hf_vhosts_ns_id_idx;
 drop index hf_vhosts_ua_id_idx;
 drop index hf_vhosts_vh_id_idx;
 drop index hf_vhosts_instance_id_idx;
@@ -132,6 +133,7 @@ drop index hf_netowrk_interfaces_instance_id_idx;
 DROP TABLE hf_network_interfaces;
 
 drop index hf_virtual_machines_type_id_idx;
+drop index hf_virtual_machines_ns_id_idx;
 drop index hf_virtual_machines_ni_id_idx;
 drop index hf_virtual_machines_ip_id_idx;
 drop index hf_virtual_machines_domain_name_idx;
@@ -149,6 +151,12 @@ drop index hf_data_centers_dc_id_idx;
 drop index hf_data_centers_instance_id_idx;
 
 DROP TABLE hf_data_centers;
+
+drop index hf_ns_records_active_p_idx;
+drop index hf_ns_records_id_idx;
+drop index hf_ns_records_instance_id_idx;
+
+DROP TABLE hf_ns_records;
 
 drop index hf_asset_type_features_label_idx;
 drop index hf_asset_type_features_asset_type_id_idx;
