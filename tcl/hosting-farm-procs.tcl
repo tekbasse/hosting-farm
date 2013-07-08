@@ -3,7 +3,9 @@ ad_library {
     misc API for hosting-farm
     @creation-date 5 June 2013
 
-    user DNS zone editing
+    #user DNS zone editing needs 2 parts. 1:1 vm_id, and 1:1 asset_type
+    # need to add name_service table with ns_id to sql/postgresql/hosting-farm-create.sql
+
     # UI for one click (web-based) installers
       # installers install/update/monitor/activate/de-activate software, ie hosted service (hs) or software as a service (ss)
       # asset_type_id = hh or ss
@@ -63,6 +65,14 @@ ad_proc -private hf_asset_create_from_asset_template {
 } {
    this should be a proc equivalent to a page that loads template and creates new.. 
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
+    set customer_ids_list [hf_customer_ids_for_user $user_id]
 #     hf_asset_read instance_id asset_id
 #     hf_asset_create new_label
 }
@@ -75,6 +85,14 @@ ad_proc -private hf_asset_create_from_asset_label {
    this should be a proc equivalent to a page that loads asset_label and creates new.
 } {
     # code
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
+    set customer_ids_list [hf_customer_ids_for_user $user_id]
 }
 
 ad_proc -private hf_asset_templates_active {
@@ -83,6 +101,14 @@ ad_proc -private hf_asset_templates_active {
 } {
     returns active template references
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
+    set customer_ids_list [hf_customer_ids_for_user $user_id]
     # code
 }
 
@@ -92,6 +118,14 @@ ad_proc -private hf_asset_templates_all {
 } {
     returns all templates references (active and inactive)
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
+    set customer_ids_list [hf_customer_ids_for_user $user_id]
     # code
 }
 
@@ -105,6 +139,13 @@ ad_proc -private hf_nis_dc {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -113,6 +154,13 @@ ad_proc -private hf_vhs_vh {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -122,6 +170,13 @@ ad_proc -private hf_hws_dc {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -130,6 +185,13 @@ ad_proc -private hf_vms_hw {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -138,6 +200,13 @@ ad_proc -private hf_vhs_vm {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -147,6 +216,13 @@ ad_proc -private hf_nis_hw {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -155,6 +231,13 @@ ad_proc -private hf_ips_ni {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -163,6 +246,13 @@ ad_proc -private hf_ips_vm {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -173,6 +263,13 @@ ad_proc -private hf_dcs {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -181,6 +278,13 @@ ad_proc -private hf_hws {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -189,6 +293,13 @@ ad_proc -private hf_vms {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -197,6 +308,13 @@ ad_proc -private hf_nis {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -205,6 +323,13 @@ ad_proc -private hf_ips {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -213,6 +338,13 @@ ad_proc -private hf_oses {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -221,6 +353,13 @@ ad_proc -private hf_vhs {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -229,6 +368,13 @@ ad_proc -private hf_uas {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -237,6 +383,13 @@ ad_proc -private hf_sss {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -245,6 +398,13 @@ ad_proc -private hf_assets_active {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -253,6 +413,13 @@ ad_proc -private hf_assets_archive {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -261,6 +428,13 @@ ad_proc -private hf_assets_all {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -270,6 +444,13 @@ ad_proc -private hf_asset_templates_active {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -278,6 +459,13 @@ ad_proc -private hf_asset_features {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -290,6 +478,13 @@ ad_proc -private hf_dc_create {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -298,6 +493,13 @@ ad_proc -private hf_dc_deactivate {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -306,6 +508,13 @@ ad_proc -private hf_dc_read {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -314,6 +523,13 @@ ad_proc -private hf_dc_write {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -322,6 +538,13 @@ ad_proc -private hf_hw_create {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -330,6 +553,13 @@ ad_proc -private hf_hw_deactivate {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -338,6 +568,13 @@ ad_proc -private hf_hw_read {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -346,6 +583,13 @@ ad_proc -private hf_hw_write {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -354,6 +598,13 @@ ad_proc -private hf_ip_create {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -362,6 +613,13 @@ ad_proc -private hf_ip_deactivate {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -370,6 +628,13 @@ ad_proc -private hf_ip_read {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -378,6 +643,13 @@ ad_proc -private hf_ip_write {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -386,6 +658,13 @@ ad_proc -private hf_ni_create {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -394,6 +673,13 @@ ad_proc -private hf_ni_deactivate {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -402,6 +688,13 @@ ad_proc -private hf_ni_read {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -410,6 +703,13 @@ ad_proc -private hf_ni_write {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -418,6 +718,13 @@ ad_proc -private hf_os_create {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -426,6 +733,13 @@ ad_proc -private hf_os_deactivate {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -434,6 +748,13 @@ ad_proc -private hf_os_read {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -442,6 +763,13 @@ ad_proc -private hf_os_write {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -450,6 +778,13 @@ ad_proc -private hf_ss_create {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -458,6 +793,13 @@ ad_proc -private hf_ss_deactivate {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -466,6 +808,13 @@ ad_proc -private hf_ss_read {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -474,6 +823,13 @@ ad_proc -private hf_ss_write {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -482,6 +838,13 @@ ad_proc -private hf_vm_create {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -490,6 +853,13 @@ ad_proc -private hf_vm_deactivate {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -498,6 +868,13 @@ ad_proc -private hf_vm_read {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -506,6 +883,13 @@ ad_proc -private hf_vm_write {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -514,6 +898,13 @@ ad_proc -private hf_vm_quota_create {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -522,6 +913,13 @@ ad_proc -private hf_vm_quota_deactivate {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -530,6 +928,13 @@ ad_proc -private hf_vm_quota_read {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -538,6 +943,13 @@ ad_proc -private hf_vm_quota_write {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -546,6 +958,13 @@ ad_proc -private hf_ua_create {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -554,6 +973,13 @@ ad_proc -private hf_ua_deactivate {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -562,6 +988,13 @@ ad_proc -private hf_up_ck {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -570,6 +1003,13 @@ ad_proc -private hf_up_delta {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -579,6 +1019,13 @@ ad_proc -private hf_monitor_configs {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -587,6 +1034,13 @@ ad_proc -private hf_monitor_logs {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -595,6 +1049,13 @@ ad_proc -private hf_monitor_statuss {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -603,6 +1064,13 @@ ad_proc -private hf_monitor_statistics {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 
@@ -611,6 +1079,13 @@ ad_proc -private hf_monitor_report monitor_id {
 } {
     description
 } {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     #code
 }
 

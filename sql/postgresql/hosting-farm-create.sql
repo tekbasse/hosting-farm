@@ -54,6 +54,7 @@ CREATE TABLE hf_assets (
     --	      vh virtual host
     -- 	      hs hosted service etc.
     --        ss saas/sw as a service
+    --        ns custom domain name service records
     --        ot other
     asset_type_id   varchar(24),
     -- for mapping to ledger and sales attributes, and role-based permissions 
