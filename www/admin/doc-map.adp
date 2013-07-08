@@ -12,6 +12,16 @@ www/admin
    accounting
      reports
      generate invoice(s)
+
+     
+www/  (scope handled by permissions)
+  asset-templates
+  asset-new (from templates)
+  asset-list/edit
+    db edit
+    vm edit
+      dlz-manage (view/edit/add) # dlz - dynamically load domain name zone
+      vh edit
    db server
    vm/vh features
    vm templates
@@ -28,21 +38,11 @@ www/admin
        users
      databases
        users
-
-     
-www/
-  asset-templates
-  asset-new (from templates)
-  asset-list/edit
-    db edit
-    vm edit
-      dlz-manage (view/edit/add) # dlz - dynamically load domain name zone
-      vh edit
       
   client-permissions-view-edit
   support
      issues  view active-all/add/edit
-  accounting
+  accounting  (accounting library to use accounts-ledger,accounts-payables, accounts-receivables package libraries)
      statements
      pay invoice
      advance_pay / extend
