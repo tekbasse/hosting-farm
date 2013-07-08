@@ -893,6 +893,68 @@ ad_proc -private hf_vm_write {
     #code
 }
 
+
+ad_proc -private hf_ns_create {
+    args
+} {
+    create name service record (custom or customizable, auto generated records).
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
+    #code
+}
+
+ad_proc -private hf_ns_deactivate {
+    {vm_id_list ""}
+} {
+    description
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
+    #code
+}
+
+ad_proc -private hf_ns_read {
+    {vm_id_list ""}
+} {
+    description
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
+    #code
+}
+
+ad_proc -private hf_ns_write {
+    args
+} {
+    description
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
+    #code
+}
+
+
 ad_proc -private hf_vm_quota_create {
     args
 } {
