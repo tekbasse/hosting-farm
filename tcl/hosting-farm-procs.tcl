@@ -57,11 +57,23 @@ ad_proc -private hf_asset_ids_for_user {
     return $asset_ids_list
 }
 
+ad_proc -private hf_customer_id_of_asset_id {
+    {instance_id ""}
+    asset_id
+} {
+    returns customer_id of asset_id
+} {
+    set customer_id ""
+
+
+    return $customer_id
+}
 
 ad_proc -private hf_asset_create_from_asset_template {
     {instance_id ""}
-    asset_id 
-    args
+    customer_id
+    asset_id
+    asset_label_new
 } {
    this should be a proc equivalent to a page that loads template and creates new.. 
 } {
@@ -72,17 +84,21 @@ ad_proc -private hf_asset_create_from_asset_template {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    set customer_ids_list [hf_customer_ids_for_user $user_id]
+
+    # customer_id of asset_id doesn't matter, because this may a copy of another's asset or template.
+    #set read_p \[hf_permission_p $instance_id $user_id "customer_id-${customer_id}" customer_assets read\]
+    set read_p [hf_permission_p $instance_id $user_id 
+    set create_p [hf_permission_p $instance_id $user_id $customer_id customer_assets create]
 #     hf_asset_read instance_id asset_id
 #     hf_asset_create new_label
 }
 
 ad_proc -private hf_asset_create_from_asset_label {
     {instance_id ""}
-    asset_label
-    args
+    asset_label_orig
+    asset_label_new
 } {
-   this should be a proc equivalent to a page that loads asset_label and creates new.
+   creates a new asset_label based on an existing asset. Returns 1 if successful, otherwise 0.
 } {
     # code
     if { $instance_id eq "" } {
@@ -93,6 +109,11 @@ ad_proc -private hf_asset_create_from_asset_label {
         set user_id [ad_conn user_id]
     }
     set customer_ids_list [hf_customer_ids_for_user $user_id]
+#     hf_asset_read instance_id asset_id
+#     hf_asset_create new_label
+
+    # set asset_id_orig [hf_asset_id_from_label $asset_label_orig $instance_id]
+
 }
 
 ad_proc -private hf_asset_templates_active {
