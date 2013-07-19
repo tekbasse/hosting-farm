@@ -50,8 +50,8 @@ ad_proc -private hf_asset_ids_for_user {
     set asset_ids_list [list ]
     foreach customer_id $customer_ids_list {
         set assets_list [hf_asset_ids_for_customer $instance_id $customer_id]
-        if { [llength $assets_list > 0 ] } {
-            lappend asset_ids_list $assets_list
+        foreach asset_id $assets_list {
+            lappend asset_ids_list $asset_id
         }
     }
     return $asset_ids_list
@@ -63,9 +63,15 @@ ad_proc -private hf_customer_id_of_asset_id {
 } {
     returns customer_id of asset_id
 } {
-    set customer_id ""
-
-
+    # this is handy for helping fulfill hf_permission_p requirements
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    set cid_exists [db_0or1row hf_customer_id_of_asset_id "select qal_customer_id from hf_assets where instance_id = :instance_id and id = :asset_id"]
+    if { !$cid_exists } {
+        set customer_id ""
+    }
     return $customer_id
 }
 
@@ -86,8 +92,7 @@ ad_proc -private hf_asset_create_from_asset_template {
     }
 
     # customer_id of asset_id doesn't matter, because this may a copy of another's asset or template.
-    #set read_p \[hf_permission_p $instance_id $user_id "customer_id-${customer_id}" customer_assets read\]
-    set read_p [hf_permission_p $instance_id $user_id 
+    set read_p [hf_permission_p $instance_id $user_id "" published read]
     set create_p [hf_permission_p $instance_id $user_id $customer_id customer_assets create]
 #     hf_asset_read instance_id asset_id
 #     hf_asset_create new_label
