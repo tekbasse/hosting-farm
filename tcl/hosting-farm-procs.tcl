@@ -103,14 +103,17 @@ ad_proc -private hf_asset_create_from_asset_template {
                 incr i
             }
 
-#### TODO: create should not include the same ns_id or ua_id. create a new entry in hf_ua and hf_ns tables.
-            # if publish_p is 1, copy any relevant data anyway
-            # if monitor_p is 1, copy the monitor settings
-
             # template_p, publish_p, popularity should be false(0) for all copy cases,  op_status s/b ""
             set status [hf_asset_create $asset_label_new $aa(2) $aa(1) $aa(5) $aa(3) $aa(4) $aa(6) 0 $aa(10) 0 $aa(12) 0 $aa(14) "" $aa(16) $aa(17) $aa(18) $customer_id "" "" $instance_id $user_id]
             # params: name, asset_type_id, title, content, keywords, description, comments, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, {template_id ""}, {flags ""}, {instance_id ""}, {user_id ""}
+            if { $status } {
+#### TODO: create should not include the same ns_id or ua_id. create a new entry in hf_ua and hf_ns tables.
+                #            hf_ua_create
+                #            hf_ns_create
 
+                # if publish_p is 1, copy relevant data (done afaik)
+                # if monitor_p is 1, copy the monitor settings
+            }
         }
     }
     return $status
