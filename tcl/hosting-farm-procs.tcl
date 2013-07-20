@@ -36,7 +36,7 @@ ad_proc -private hf_asset_ids_for_user {
     {instance_id ""}
     {user_id ""}
 } {
-    Returns asset_ids available to user_id as list of lists (each list represents ids by  one customer)
+    Returns asset_ids available to user_id as list 
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -87,15 +87,27 @@ ad_proc -private hf_asset_create_from_asset_template {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
+    set user_id [ad_conn user_id]
 
     # customer_id of asset_id doesn't matter, because this may a copy of another's asset or template.
     set read_p [hf_permission_p $instance_id $user_id "" published read]
     set create_p [hf_permission_p $instance_id $user_id $customer_id customer_assets create]
-#     hf_asset_read instance_id asset_id
-#     hf_asset_create new_label
+    set status $create_p
+    if { $create_p } {
+        set asset_list [hf_asset_read $instance_id $asset_id]
+        # returns: name0,title1,asset_type_id2,keywords3,description4,content5,comments6,trashed_p7,trashed_by8,template_p9,templated_p10,publish_p11,monitor_p12,popularity13,triage_priority14,op_status15,ua_id16,ns_id17,qal_product_id18,qal_customer_id19,instance_id20,user_id21,last_modified22,created23
+        if { [llength $asset_list] > 1 } {
+            set i 0
+            foreach arg $asset_list {
+                set aa($i) $arg
+                incr i
+            }
+            set status [hf_asset_create $asset_label_new $aa(2) $aa(1) $aa(5) $aa(3) $aa(4) $aa(6) $aa(9) $aa(10) $aa(11) $aa(12) $aa(13) $aa(14) $aa(15) $aa(16) $aa(17) $aa(18) $customer_id "" "" $instance_id $user_id]
+            # params: name, asset_type_id, title, content, keywords, description, comments, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, {template_id ""}, {flags ""}, {instance_id ""}, {user_id ""}
+
+        }
+    }
+    return $status
 }
 
 ad_proc -private hf_asset_create_from_asset_label {
