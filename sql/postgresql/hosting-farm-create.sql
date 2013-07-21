@@ -141,7 +141,7 @@ CREATE TABLE hf_asset_type_features (
     publish_p            varchar(1),
     -- aka feature.name or one_line_description
     title                varchar(85),
-    descritpion          text
+    description          text
 );
 
 create index hf_asset_type_features_instance_id_idx on hf_asset_type_features (instance_id);
