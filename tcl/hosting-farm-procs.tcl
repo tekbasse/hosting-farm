@@ -520,6 +520,48 @@ ad_proc -private hf_asset_features {
 # basic API
 # With each change, call hf_monitor_log_create {
 #    asset_id, reported_by, user_id .. monitor_id=0}
+ad_proc -private hf_asset_type_create {
+    {instance_id ""}
+    label
+    title
+    description
+} {
+    creates asset type, returns id of new asset type
+} {
+# code
+
+}
+ad_proc -private hf_asset_type_write {
+    {instance_id ""}
+    id
+    label
+    title
+    description
+} {
+    writes to an existing asset type, returns 1 if successful
+} {
+# code
+
+}
+ad_proc -private hf_asset_type_read {
+    {instance_id ""}
+    id
+} {
+    returns an existing asset type in a list: label, title, description
+} {
+# code
+
+}
+ad_proc -private hf_asset_type_read {
+    {instance_id ""}
+    {label ""}
+} {
+    returns matching asset types, if label is nonblank, returns asset types that glob match the passed label value via tcl match.
+} {
+# code
+
+}
+
 ad_proc -private hf_dc_create {
     args
 } {
