@@ -38,7 +38,7 @@ This is primarily a web interface for a hosting-farm system made by one hosting 
 <p>Admin and user access via http/https.</p>
 <p>Avoid pitfalls of Plesk/CPanel and other existing web-based admin panels, such as expressed at <a href="http://www.anchor.com.au/hosting/development/we_hate_plesk_and_cpanel">http://www.anchor.com.au/hosting/development/we_hate_plesk_and_cpanel</a></p>
 
-<h3>Planned first release features</h3>
+<h3>first release features (planned)</h3>
 <p>flexible UI for quick web app development. -done</p>
 <p>user DNS zone editing</p>
 <p>UI for one click (web-based) installers</p>
@@ -51,6 +51,9 @@ This is primarily a web interface for a hosting-farm system made by one hosting 
 <p>reseller service features</p>
 <p>customer managed custom administrator permissions</p>
 <p>One click installers</p>
-<p>ticket tracker with built-in streamlining for outages/disrutions that deal with multiple/bulk sets of clients</p>
-<p>social feedback mechanisms</p>
+<p>ticket tracker with built-in streamlining for outages/disrutions that deal with multiple/bulk sets of clients (via separate OpenACS package)</p>
+<p>social feedback mechanisms (via separate OpenACS package)</p>
+<h3>additional features (planned)</h3>
+<p>marketing / lead performance metrics (via separate OpenACS package) that imports openacs.log statistical session activity</p>
+
 
