@@ -3,6 +3,9 @@ ad_library {
     API for hosting-farm
     @creation-date 25 May 2013
     # this is ported from q-wiki.
+    # in this context, template_id refers to a page with shared revisions of multiple page_id(s).
+    # hf_assets uses template in the context of an original from which copies are made.
+
     # to do: 
     # make q-wiki.tcl work for hf_asset procs
     #  convert the tcl in the hf-asset.tcl to modular procs for multiple uses with

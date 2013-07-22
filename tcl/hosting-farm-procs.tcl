@@ -142,13 +142,15 @@ ad_proc -private hf_asset_create_from_asset_label {
 
 }
 
-ad_proc -private hf_asset_templates_active {
+ad_proc -private hf_asset_templates {
     {instance_id ""}
-    {label_match "*"}
+    {label_match ""}
+    {include_inactives_p 0}
 } {
     returns active template references available to user
 } {
     # A variation on hf_assets
+    # if include_inactives_p eq 1 and label_match eq "", similar to hf_assets
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
@@ -156,23 +158,20 @@ ad_proc -private hf_asset_templates_active {
     set user_id [ad_conn user_id]
     set customer_ids_list [hf_customer_ids_for_user $user_id]
     # code
-
-}
-
-ad_proc -private hf_asset_templates_all {
-    {instance_id ""}
-    {label_match "*"}
-} {
-    returns all templates references (active and inactive) available to user
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
+    set all_assets_list_of_lists [db_list_of_lists hf_assets_get {select id,label, title, description from hf_asset_type where instance_id =:instance_id} ]
+    if { $label ne "" } {
+        set return_list_of_lists [list ]
+        foreach asset_type_list $all_asset_types_list_of_lists {
+            if { [string match -nocase $label_match [lindex $asset_type_list 1]] } {
+                lappend return_list_of_lists $asset_type_list
+            }
+        }
+    } else {
+        set return_list_of_lists $all_asset_types_list_of_lists
     }
-    set user_id [ad_conn user_id]
-    set customer_ids_list [hf_customer_ids_for_user $user_id]
-    # code
+
 }
+
 
 # API for various asset types:
 #   in each case, add ecds-pagination bar when displaying. defaults to all allowed by user permissions
@@ -581,7 +580,7 @@ ad_proc -private hf_asset_type_read {
 
 ad_proc -private hf_asset_types {
     {instance_id ""}
-    {label ""}
+    {label_match ""}
 } {
     returns matching asset types as a list of list: {id,label,title,description}, if label is nonblank, returns asset types that glob match the passed label value via tcl match.
 } {
@@ -590,10 +589,10 @@ ad_proc -private hf_asset_types {
         set instance_id [ad_conn package_id]
     }
     set all_asset_types_list_of_lists [db_list_of_lists hf_asset_types_get {select id,label, title, description from hf_asset_type where instance_id =:instance_id} ]
-    if { $label ne "" } {
+    if { $label_match ne "" } {
         set return_list_of_lists [list ]
         foreach asset_type_list $all_asset_types_list_of_lists {
-            if { [string match -nocase $label [lindex $asset_type_list 1]] } {
+            if { [string match -nocase $label_match [lindex $asset_type_list 1]] } {
                 lappend return_list_of_lists $asset_type_list
             }
         }
