@@ -126,7 +126,7 @@ ad_proc -private hf_asset_create_from_asset_label {
 } {
    creates a new asset_label based on an existing asset. Returns 1 if successful, otherwise 0.
 } {
-    # code
+    # code: basically duplicate hf_asset_create_from_asset_template, getting id from hf_asset_id_from_label
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
@@ -146,32 +146,30 @@ ad_proc -private hf_asset_templates_active {
     {instance_id ""}
     {label_match "*"}
 } {
-    returns active template references
+    returns active template references available to user
 } {
+    # A variation on hf_assets
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
+    set user_id [ad_conn user_id]
     set customer_ids_list [hf_customer_ids_for_user $user_id]
     # code
+
 }
 
 ad_proc -private hf_asset_templates_all {
     {instance_id ""}
     {label_match "*"}
 } {
-    returns all templates references (active and inactive)
+    returns all templates references (active and inactive) available to user
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
+    set user_id [ad_conn user_id]
     set customer_ids_list [hf_customer_ids_for_user $user_id]
     # code
 }
