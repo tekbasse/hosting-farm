@@ -145,9 +145,10 @@ ad_proc -private hf_asset_create_from_asset_label {
 ad_proc -private hf_asset_templates {
     {instance_id ""}
     {label_match ""}
-    {include_inactives_p 0}
+    {inactives_included_p 0}
+    {published_p 1}
 } {
-    returns active template references available to user
+    returns active template references (id) available to user
 } {
     # A variation on hf_assets
     # if include_inactives_p eq 1 and label_match eq "", similar to hf_assets
@@ -155,21 +156,33 @@ ad_proc -private hf_asset_templates {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
+    # scope to user_id
     set user_id [ad_conn user_id]
     set customer_ids_list [hf_customer_ids_for_user $user_id]
-    # code
-    set all_assets_list_of_lists [db_list_of_lists hf_assets_get {select id,label, title, description from hf_asset_type where instance_id =:instance_id} ]
-    if { $label ne "" } {
-        set return_list_of_lists [list ]
-        foreach asset_type_list $all_asset_types_list_of_lists {
-            if { [string match -nocase $label_match [lindex $asset_type_list 1]] } {
-                lappend return_list_of_lists $asset_type_list
+    #    set all_assets_list_of_lists \[db_list_of_lists hf_asset_templates_list {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,time_start,time_stop,ns_id,op_status,trashed_p,trashed_by,popularity,flags,publish_p,monitor_p,triage_priority from hf_assets where template_p =:1 and instance_id =:instance_id} \]
+    set templates_list_of_lists [db_list_of_lists hf_asset_templates_select {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,time_start,time_stop,trashed_p,trashed_by,flags,publish_p from hf_assets where template_p =:1 and instance_id =:instance_id} ]
+    # build list of ids that meet criteria
+    set return_list [list ]
+    foreach template_list $templates_lists_of_lists {
+        # first make sure that user_id has access to asset.
+        set customer_id [lindex $template_list 6]
+        set insert_p 0
+        if { $customer_id eq "" || [lsearch -exact $customer_ids_list $customer_id] > -1 } {
+            # now check the various requested criteria
+            if { $label ne "" } {
+                if { [string match -nocase $label_match [lindex $asset_type_list 1]] } {
+                    set insert_p 1
+                }
+
+
+
+            }
+            if { $insert_p } {
+                set insert_p 0
+                lappend return_list [lindex $template_list 0]
             }
         }
-    } else {
-        set return_list_of_lists $all_asset_types_list_of_lists
     }
-
 }
 
 
