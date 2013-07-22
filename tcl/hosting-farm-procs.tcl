@@ -526,11 +526,24 @@ ad_proc -private hf_asset_type_create {
     title
     description
 } {
-    creates asset type, returns id of new asset type
+    creates asset type, returns id of new asset type, or ""
 } {
-# code
-
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    set user_id [ad_conn user_id]
+    set admin_p [hf_permission_p $instance_id $user_id "" technical admin]
+    set asset_type_id ""
+    if { $admin_p } {
+        set asset_type_id [db_nextval hf_id_seq]
+        db_dml asset_type_create {insert into hf_asset_type
+            (instance_id,id,label,title,description)
+            values (:instance_id,:asset_type_id,:label,:title,:description) }
+    }
+    return $asset_type_id
 }
+
 ad_proc -private hf_asset_type_write {
     {instance_id ""}
     id
@@ -540,26 +553,56 @@ ad_proc -private hf_asset_type_write {
 } {
     writes to an existing asset type, returns 1 if successful
 } {
-# code
-
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    set user_id [ad_conn user_id]
+    set admin_p [hf_permission_p $instance_id $user_id "" technical admin]
+    if { $admin_p } {
+        db_dml asset_type_write {update hf_asset_type
+            set label =:label, title =:title, description=:description where instance_id =:instance_id and id=:id}
+    }
+    return $admin_p
 }
+
 ad_proc -private hf_asset_type_read {
     {instance_id ""}
-    id
+    id_list
 } {
-    returns an existing asset type in a list: label, title, description
+    returns an existing asset type in a list of lists: {label1, title1, description1} {labelN, titleN, descriptionN} or blank list if none found. Bad id's are ignored.
 } {
-# code
-
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    set return_list_of_lists [db_list_of_lists hf_asset_type_read "select id, label, title, description from hf_asset_type where instance_id =:instance_id and id in ([template::util::tcl_to_sql_list $id_list])" ]
+    }
+    return $return_list_of_lists
 }
-ad_proc -private hf_asset_type_read {
+
+ad_proc -private hf_asset_types {
     {instance_id ""}
     {label ""}
 } {
-    returns matching asset types, if label is nonblank, returns asset types that glob match the passed label value via tcl match.
+    returns matching asset types as a list of list: {id,label,title,description}, if label is nonblank, returns asset types that glob match the passed label value via tcl match.
 } {
-# code
-
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    set all_asset_types_list_of_lists [db_list_of_lists hf_asset_types_get {select id,label, title, description from hf_asset_type where instance_id =:instance_id} ]
+    if { $label ne "" } {
+        set return_list_of_lists [list ]
+        foreach asset_type_list $all_asset_types_list_of_lists {
+            if { [string match -nocase $label [lindex $asset_type_list 1]] } {
+                lappend return_list_of_lists $asset_type_list
+            }
+        }
+    } else {
+        set return_list_of_lists $all_asset_types_list_of_lists
+    }
+    return $return_list_of_lists
 }
 
 ad_proc -private hf_dc_create {
