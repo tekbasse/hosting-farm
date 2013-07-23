@@ -126,7 +126,8 @@ ad_proc -private hf_asset_create_from_asset_label {
 } {
    creates a new asset_label based on an existing asset. Returns 1 if successful, otherwise 0.
 } {
-    # code: basically duplicate hf_asset_create_from_asset_template, getting id from hf_asset_id_from_label
+  #### TODO code: basically duplicate hf_asset_create_from_asset_template, getting id from hf_asset_id_from_label
+
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
@@ -150,8 +151,7 @@ ad_proc -private hf_asset_templates {
 } {
     returns active template references (id) available to user
 } {
-    # A variation on hf_assets
-    # if include_inactives_p eq 1 and label_match eq "", similar to hf_assets
+    # A variation on hf_assets, if include_inactives_p eq 1 and label_match eq ""
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
@@ -160,7 +160,11 @@ ad_proc -private hf_asset_templates {
     set user_id [ad_conn user_id]
     set customer_ids_list [hf_customer_ids_for_user $user_id]
     #    set all_assets_list_of_lists \[db_list_of_lists hf_asset_templates_list {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,time_start,time_stop,ns_id,op_status,trashed_p,trashed_by,popularity,flags,publish_p,monitor_p,triage_priority from hf_assets where template_p =:1 and instance_id =:instance_id} \]
-    set templates_list_of_lists [db_list_of_lists hf_asset_templates_select {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,time_start,time_stop,trashed_p,trashed_by,flags,publish_p from hf_assets where template_p =:1 and instance_id =:instance_id} ]
+    if { $inactives_included_p } {
+        set templates_list_of_lists [db_list_of_lists hf_asset_templates_select_all {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,time_start,time_stop,trashed_p,trashed_by,flags,publish_p from hf_assets where template_p =:1 and instance_id =:instance_id} ]
+    } else {
+        set templates_list_of_lists [db_list_of_lists hf_asset_templates_select {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,time_start,time_stop,trashed_p,trashed_by,flags,publish_p from hf_assets where template_p =:1 and instance_id =:instance_id and time_stop =:null and trashed_p <> '1' } ]
+    }
     # build list of ids that meet criteria
     set return_list [list ]
     foreach template_list $templates_lists_of_lists {
@@ -169,11 +173,11 @@ ad_proc -private hf_asset_templates {
         set insert_p 0
         if { $customer_id eq "" || [lsearch -exact $customer_ids_list $customer_id] > -1 } {
             # now check the various requested criteria
-            if { $label ne "" } {
+            if { $label_match ne "" } {
                 if { [string match -nocase $label_match [lindex $asset_type_list 1]] } {
                     set insert_p 1
                 }
-
+                
 
 
             }
