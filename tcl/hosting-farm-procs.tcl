@@ -195,11 +195,67 @@ ad_proc -private hf_asset_templates {
     return $return_list
 }
 
+ad_proc -private hf_assets_w_detail {
+    {instance_id ""}
+    {label_match ""}
+    {inactives_included_p 0}
+    {published_p ""}
+    {templated_p ""}
+} {
+    returns active template references (id) and other info via a list of lists, where each list is an ordered tcl list of asset related values: id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,template_p,time_start,time_stop,trashed_p,trashed_by,flags,publish_p
+} {
+    # A variation on hf_assets, if include_inactives_p eq 1 and label_match eq ""
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    # scope to user_id
+    set user_id [ad_conn user_id]
+    set customer_ids_list [hf_customer_ids_for_user $user_id]
+    #    set all_assets_list_of_lists \[db_list_of_lists hf_asset_templates_list {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,time_start,time_stop,ns_id,op_status,trashed_p,trashed_by,popularity,flags,publish_p,monitor_p,triage_priority from hf_assets where template_p =:1 and instance_id =:instance_id} \]
+    if { $inactives_included_p } {
+        set templates_list_of_lists [db_list_of_lists hf_asset_templates_select_all {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,template_p,time_start,time_stop,trashed_p,trashed_by,flags,publish_p from hf_assets where instance_id =:instance_id} ]
+    } else {
+        set templates_list_of_lists [db_list_of_lists hf_asset_templates_select {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,template_p,time_start,time_stop,trashed_p,trashed_by,flags,publish_p from hf_assets where instance_id =:instance_id and time_stop =:null and trashed_p <> '1' } ]
+    }
+    # build list of ids that meet at least one criteria
+    set return_list [list ]
+    foreach template_list $templates_lists_of_lists {
+        # first make sure that user_id has access to asset.
+        set customer_id [lindex $template_list 6]
+        set insert_p 0
+        if { $customer_id eq "" || [lsearch -exact $customer_ids_list $customer_id] > -1 } {
+
+            # now check the various requested criteria options. Matching any one or more qualifies.
+            # label?
+            if { $label_match ne "" && [string match -nocase $label_match [lindex $template_list 7]] } {
+                set insert_p 1
+            }
+            # published_p?
+            if { $published_p ne "" } {
+                set published_p_val [lindex $template_list 14]
+                if { $published_p eq $published_p_val } {
+                    set insert_p 1
+                }
+            }
+## add other criteria 
+            if { $insert_p } {
+                set insert_p 0
+                # just id's:  lappend return_list [lindex $template_list 0]
+                 lappend return_list $template_list
+            }
+        }
+    }
+    return $return_list
+}
+
 
 # API for various asset types:
 #   in each case, add ecds-pagination bar when displaying. defaults to all allowed by user permissions
 
 # asset mapped procs
+# Are the mapping procs redundant? Is it more practical to use mapping directly in sql, and tie each mapping to an asset?
+# Yes.  ignore direct mapping procs for now.
 #   direct:
 ad_proc -private hf_nis_dc {
     {dc_list ""}
@@ -323,8 +379,7 @@ ad_proc -private hf_ips_vm {
     #code
 }
 
-
-# info tables: 
+## info tables: 
 ad_proc -private hf_dcs {
     {customer_id_list ""}
 } {
@@ -460,66 +515,9 @@ ad_proc -private hf_sss {
     #code
 }
 
-ad_proc -private hf_assets_active {
-    {customer_id_list ""}
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
-
-ad_proc -private hf_assets_archive {
-    {customer_id_list ""}
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
-
-ad_proc -private hf_assets_all {
-    {customer_id_list ""}
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
+## make procs that return the asset objects given one or more asset ids.
 
 
-ad_proc -private hf_asset_templates_active {
-    {asset_type_id_list ""}
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
 
 ad_proc -private hf_asset_features {
     {asset_type_id_list ""}
