@@ -147,9 +147,9 @@ ad_proc -private hf_asset_templates {
     {instance_id ""}
     {label_match ""}
     {inactives_included_p 0}
-    {published_p 1}
+    {published_p ""}
 } {
-    returns active template references (id) available to user
+    returns active template references (id) and other info via a list of lists, where each list is an ordered tcl list of asset related values: id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,time_start,time_stop,trashed_p,trashed_by,flags,publish_p
 } {
     # A variation on hf_assets, if include_inactives_p eq 1 and label_match eq ""
     if { $instance_id eq "" } {
@@ -165,28 +165,34 @@ ad_proc -private hf_asset_templates {
     } else {
         set templates_list_of_lists [db_list_of_lists hf_asset_templates_select {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,time_start,time_stop,trashed_p,trashed_by,flags,publish_p from hf_assets where template_p =:1 and instance_id =:instance_id and time_stop =:null and trashed_p <> '1' } ]
     }
-    # build list of ids that meet criteria
+    # build list of ids that meet at least one criteria
     set return_list [list ]
     foreach template_list $templates_lists_of_lists {
         # first make sure that user_id has access to asset.
         set customer_id [lindex $template_list 6]
         set insert_p 0
         if { $customer_id eq "" || [lsearch -exact $customer_ids_list $customer_id] > -1 } {
-            # now check the various requested criteria
-            if { $label_match ne "" } {
-                if { [string match -nocase $label_match [lindex $asset_type_list 1]] } {
+
+            # now check the various requested criteria options. Matching any one or more qualifies.
+            # label?
+            if { $label_match ne "" && [string match -nocase $label_match [lindex $template_list 7]] } {
+                set insert_p 1
+            }
+            # published_p?
+            if { $published_p ne "" } {
+                set published_p_val [lindex $template_list 14]
+                if { $published_p eq $published_p_val } {
                     set insert_p 1
                 }
-                
-
-
             }
             if { $insert_p } {
                 set insert_p 0
-                lappend return_list [lindex $template_list 0]
+                # just id's:  lappend return_list [lindex $template_list 0]
+                 lappend return_list $template_list
             }
         }
     }
+    return $return_list
 }
 
 
