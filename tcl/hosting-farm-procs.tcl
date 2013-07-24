@@ -382,6 +382,7 @@ ad_proc -private hf_ips_vm {
 ## info tables: 
 ad_proc -private hf_dcs {
     {customer_id_list ""}
+    {asset_id_list ""}
 } {
     description
 } {
@@ -397,6 +398,7 @@ ad_proc -private hf_dcs {
 
 ad_proc -private hf_hws {
     {customer_id_list ""}
+    {asset_id_list ""}
 } {
     description
 } {
@@ -412,6 +414,7 @@ ad_proc -private hf_hws {
 
 ad_proc -private hf_vms {
     {customer_id_list ""}
+    {asset_id_list ""}
 } {
     description
 } {
@@ -427,6 +430,7 @@ ad_proc -private hf_vms {
 
 ad_proc -private hf_nis {
     {customer_id_list ""}
+    {asset_id_list ""}
 } {
     description
 } {
@@ -442,6 +446,7 @@ ad_proc -private hf_nis {
 
 ad_proc -private hf_ips {
     {customer_id_list ""}
+    {asset_id_list ""}
 } {
     description
 } {
@@ -457,6 +462,7 @@ ad_proc -private hf_ips {
 
 ad_proc -private hf_oses {
     {customer_id_list ""}
+    {asset_id_list ""}
 } {
     description
 } {
@@ -472,6 +478,7 @@ ad_proc -private hf_oses {
 
 ad_proc -private hf_vhs {
     {customer_id_list ""}
+    {asset_id_list ""}
 } {
     description
 } {
@@ -487,6 +494,7 @@ ad_proc -private hf_vhs {
 
 ad_proc -private hf_uas {
     {customer_id_list ""}
+    {asset_id_list ""}
 } {
     description
 } {
@@ -502,6 +510,7 @@ ad_proc -private hf_uas {
 
 ad_proc -private hf_sss {
     {customer_id_list ""}
+    {asset_id_list ""}
 } {
     description
 } {
@@ -638,7 +647,7 @@ ad_proc -private hf_dc_create {
     #code
 }
 
-ad_proc -private hf_dc_deactivate {
+ad_proc -private hf_dc_halt {
     {dc_id_list ""}
 } {
     description
@@ -698,7 +707,7 @@ ad_proc -private hf_hw_create {
     #code
 }
 
-ad_proc -private hf_hw_deactivate {
+ad_proc -private hf_hw_halt {
     {hw_id_list ""}
 } {
     description
@@ -758,7 +767,7 @@ ad_proc -private hf_ip_create {
     #code
 }
 
-ad_proc -private hf_ip_deactivate {
+ad_proc -private hf_ip_halt {
     {ip_id_list ""}
 } {
     description
@@ -818,7 +827,7 @@ ad_proc -private hf_ni_create {
     #code
 }
 
-ad_proc -private hf_ni_deactivate {
+ad_proc -private hf_ni_halt {
     {ni_id_list ""}
 } {
     description
@@ -878,7 +887,7 @@ ad_proc -private hf_os_create {
     #code
 }
 
-ad_proc -private hf_os_deactivate {
+ad_proc -private hf_os_halt {
     {os_id_list ""}
 } {
     description
@@ -938,7 +947,7 @@ ad_proc -private hf_ss_create {
     #code
 }
 
-ad_proc -private hf_ss_deactivate {
+ad_proc -private hf_ss_halt {
     {ss_id_list ""}
 } {
     description
@@ -998,7 +1007,7 @@ ad_proc -private hf_vm_create {
     #code
 }
 
-ad_proc -private hf_vm_deactivate {
+ad_proc -private hf_vm_halt {
     {vm_id_list ""}
 } {
     description
@@ -1059,7 +1068,7 @@ ad_proc -private hf_ns_create {
     #code
 }
 
-ad_proc -private hf_ns_deactivate {
+ad_proc -private hf_ns_halt {
     {vm_id_list ""}
 } {
     description
@@ -1120,7 +1129,7 @@ ad_proc -private hf_vm_quota_create {
     #code
 }
 
-ad_proc -private hf_vm_quota_deactivate {
+ad_proc -private hf_vm_quota_halt {
     {plan_id_list ""}
 } {
     description
@@ -1180,7 +1189,7 @@ ad_proc -private hf_ua_create {
     #code
 }
 
-ad_proc -private hf_ua_deactivate {
+ad_proc -private hf_ua_halt {
     args
 } {
     description
