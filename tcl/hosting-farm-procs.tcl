@@ -379,12 +379,14 @@ ad_proc -private hf_ips_vm {
     #code
 }
 
-## info tables: 
+## make procs that return the asset objects given one or more asset ids.
+# info tables: 
 ad_proc -private hf_dcs {
     {customer_id_list ""}
     {asset_id_list ""}
 } {
-    description
+    returns an ordered list of lists of data centers and their direct properties. No duplicates are in the list.
+    If an asset consists of multiple DCs, each dc is a separate list (ie an asset can take up more than one line or list).
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -400,7 +402,7 @@ ad_proc -private hf_hws {
     {customer_id_list ""}
     {asset_id_list ""}
 } {
-    description
+    returns an ordered list of lists of hardware and their direct properties
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -416,7 +418,7 @@ ad_proc -private hf_vms {
     {customer_id_list ""}
     {asset_id_list ""}
 } {
-    description
+    returns an ordered list of lists of virtual machines and their direct properties
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -432,7 +434,7 @@ ad_proc -private hf_nis {
     {customer_id_list ""}
     {asset_id_list ""}
 } {
-    description
+    returns an ordered list of lists of network interfaces and their direct properties
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -448,7 +450,7 @@ ad_proc -private hf_ips {
     {customer_id_list ""}
     {asset_id_list ""}
 } {
-    description
+    returns an ordered list of lists of ip references and their direct properties
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -464,7 +466,7 @@ ad_proc -private hf_oses {
     {customer_id_list ""}
     {asset_id_list ""}
 } {
-    description
+    returns an ordered list of lists of operating systems and their direct properties
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -480,7 +482,7 @@ ad_proc -private hf_vhs {
     {customer_id_list ""}
     {asset_id_list ""}
 } {
-    description
+    returns an ordered lists of lists of virtual hosts and their direct properties
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -496,7 +498,7 @@ ad_proc -private hf_uas {
     {customer_id_list ""}
     {asset_id_list ""}
 } {
-    description
+    returns an ordered lists of lists of user accounts and their direct properties
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -512,7 +514,7 @@ ad_proc -private hf_sss {
     {customer_id_list ""}
     {asset_id_list ""}
 } {
-    description
+    returns an ordered list of lists of software as services and their direct properties
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -524,7 +526,6 @@ ad_proc -private hf_sss {
     #code
 }
 
-## make procs that return the asset objects given one or more asset ids.
 
 
 
