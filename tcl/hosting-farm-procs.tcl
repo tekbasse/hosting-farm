@@ -382,8 +382,10 @@ ad_proc -private hf_ips_vm {
 ## make procs that return the asset objects given one or more asset ids.
 # info tables: 
 ad_proc -private hf_dcs {
+    {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
+    {dc_id_list ""}
 } {
     returns an ordered list of lists of data centers and their direct properties. No duplicates are in the list.
     If an asset consists of multiple DCs, each dc is a separate list (ie an asset can take up more than one line or list).
@@ -392,10 +394,16 @@ ad_proc -private hf_dcs {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
+    set user_id [ad_conn user_id]
+    #code  hf_data_centers: instance_id,dc_id, affix (was datacentr.short_code), description, details
+    #  hf_dc_ni_map:  instance_id, dc_id, ni_id
+    #  hf_dc_hw_map: instance_id, dc_id, hw_id
+    # hf_assets: instance_id id, asset_type_id=dc, etc..
+
+    # two strategies are required to scale query, depending on info provided.
+    # if customer_id_list or asset_id_list ne "" and dc_id_list eq "", scope asset_id_list via hf_assets_w_detail
+
+    # else, if dc_id_list ne "", query dc_id details with join/mapped to asset_id, then check the asset_id against permissions.
 }
 
 ad_proc -private hf_hws {
