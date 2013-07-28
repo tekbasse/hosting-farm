@@ -105,7 +105,7 @@ CREATE TABLE hf_property (
    instance_id     integer,
    -- hf_asset_type.id or hard-coded label, such as main_contact_record,admin_contact_record,tech_contact_record etc.
    -- permissions_properties, permissions_roles, permissions_privileges
-   -- customer_assets, customer_other (records etc), published (for ex. for ecommerce functions)
+   -- customer_assets, customer_other (records etc), published (for ex. for ecommerce functions, assets (general customer, published etc)
    -- aka property_label
    asset_type_id   varchar(24),
    -- property_id
