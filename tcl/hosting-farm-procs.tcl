@@ -197,21 +197,23 @@ ad_proc -private hf_asset_templates {
 
 ad_proc -private hf_assets_w_detail {
     {instance_id ""}
+    {customer_ids_list ""}
     {label_match ""}
     {inactives_included_p 0}
     {published_p ""}
-    {templated_p ""}
+    {template_p ""}
+    {asset_type_id ""}
 } {
-    returns active template references (id) and other info via a list of lists, where each list is an ordered tcl list of asset related values: id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,template_p,time_start,time_stop,trashed_p,trashed_by,flags,publish_p
+    returns asset detail with references (id) and other info via a list of lists, where each list is an ordered tcl list of asset related values: id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,template_p,time_start,time_stop,trashed_p,trashed_by,flags,publish_p
 } {
-    # A variation on hf_assets, if include_inactives_p eq 1 and label_match eq ""
+    # A variation on hf_assets
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
     # scope to user_id
     set user_id [ad_conn user_id]
-    set customer_ids_list [hf_customer_ids_for_user $user_id]
+    set all_customer_ids_list [hf_customer_ids_for_user $user_id]
     #    set all_assets_list_of_lists \[db_list_of_lists hf_asset_templates_list {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,time_start,time_stop,ns_id,op_status,trashed_p,trashed_by,popularity,flags,publish_p,monitor_p,triage_priority from hf_assets where template_p =:1 and instance_id =:instance_id} \]
     if { $inactives_included_p } {
         set templates_list_of_lists [db_list_of_lists hf_asset_templates_select_all {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,template_p,time_start,time_stop,trashed_p,trashed_by,flags,publish_p from hf_assets where instance_id =:instance_id and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc} ]
@@ -224,7 +226,7 @@ ad_proc -private hf_assets_w_detail {
         # first make sure that user_id has access to asset.
         set customer_id [lindex $template_list 6]
         set insert_p 0
-        if { $customer_id eq "" || [lsearch -exact $customer_ids_list $customer_id] > -1 } {
+        if { $customer_id eq "" || ( [lsearch -exact $all_customer_ids_list $customer_id] > -1 && [lsearch -exact $customer_ids_list $customer_id] ) } {
 
             # now check the various requested criteria options. Matching any one or more qualifies.
             # label?
@@ -238,10 +240,21 @@ ad_proc -private hf_assets_w_detail {
                     set insert_p 1
                 }
             }
-## add other criteria 
+            if { !$insert_p && $template_p ne "" } {
+                set template_p_val [lindex $template_list 10]
+                if { $template_p eq $template_p_val } {
+                    set insert_p 1
+                }
+            }
+            if { !$insert_p && $asset_type_id ne "" } {
+                set asset_type_id_val [lindex $template_list 4]
+                if { $asset_type_id eq $asset_type_id_val } {
+                    set insert_p 1
+                }
+            }
             if { $insert_p } {
                 set insert_p 0
-                # just id's:  lappend return_list [lindex $template_list 0]
+                # just id's:  lappend return_list \[lindex $template_list 0\]
                  lappend return_list $template_list
             }
         }
@@ -385,9 +398,8 @@ ad_proc -private hf_dcs {
     {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
-    {dc_id_list ""}
 } {
-    returns an ordered list of lists of data centers and their direct properties. No duplicates are in the list.
+    returns an ordered list of lists of data centers and their direct properties. No duplicate properties are in the list.
     If an asset consists of multiple DCs, each dc is a separate list (ie an asset can take up more than one line or list).
 } {
     if { $instance_id eq "" } {
@@ -395,15 +407,41 @@ ad_proc -private hf_dcs {
         set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
-    #code  hf_data_centers: instance_id,dc_id, affix (was datacentr.short_code), description, details
-    #  hf_dc_ni_map:  instance_id, dc_id, ni_id
-    #  hf_dc_hw_map: instance_id, dc_id, hw_id
-    # hf_assets: instance_id id, asset_type_id=dc, etc..
-
-    # two strategies are required to scale query, depending on info provided.
-    # if customer_id_list or asset_id_list ne "" and dc_id_list eq "", scope asset_id_list via hf_assets_w_detail
-
-    # else, if dc_id_list ne "", query dc_id details with join/mapped to asset_id, then check the asset_id against permissions.
+    set asset_type_id "dc"
+    # get hf_assets: instance_id id, asset_type_id=dc, etc..
+    set asset_detail_list [hf_assets_w_detail $instance_id $customer_id_list "" 1 "" "" $asset_type_id]
+    # id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,template_p,time_start,time_stop,trashed_p,trashed_by,flags,publish_p
+    set asset_id_list [list ]
+    foreach one_asset_detail_list $asset_detail_list {
+        lappend asset_id_list [lindex $one_asset_detail_list 0]
+    }
+    # tables hf_data_centers.instance_id,dc_id, affix (was datacentr.short_code), description, details
+    #  hf_dc_ni_map.instance_id, dc_id, ni_id
+    #  hf_dc_hw_map.instance_id, dc_id, hw_id
+    set dc_detail_list [db_list_of_lists hf_dc_get "select dc_id, affix, description, details from hf_data_centers where instance_id =:instance_id and dc_id in ([template::util::tcl_to_sql_list $asset_id_list])"]
+    # dc_id_list is a subset of asset_id_list
+    # to this point, the maximum available dc_id(s) have been returned, and filtered to customer_id_list
+ 
+    # If proc parameters are not blank, filter the results.
+    set filter_asset_id_p [expr { $asset_id_list ne "" } ]
+    if { $filter_asset_id_p } {
+        set return_list [list ]
+        set insert_p 0
+        # scope to filter
+        # this is setup to handle multiple filters, but right now just handling the one..
+        foreach one_dc_detail_list $dc_detail_list {
+            if { $filter_asset_id_p && [lsearch -exact $asset_id_list [lindex $one_dc_detail_list 0 ] ] > -1 } {
+                set insert_p 1
+            }
+            if { $insert_p } {
+                set insert_p 0
+                lappend return_list $one_dc_detail_list
+            }
+        }
+    } else {
+        set return_list $dc_detail_list
+    } 
+    return $return_list
 }
 
 ad_proc -private hf_hws {
