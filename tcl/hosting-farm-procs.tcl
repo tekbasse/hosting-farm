@@ -467,35 +467,50 @@ ad_proc -private hf_nis {
     {customer_id_list ""}
     {asset_id_list ""}
 } {
-    returns an ordered list of lists of an asset's network interfaces and their direct properties: 
-    asset_id, ni_id, os_dev_ref, ipv4_addr_range, ipv6_addr_range, bia_mac_address, ul_mac_address
+    returns an ordered list of lists of an asset's direct network interfaces and their properties: 
+    asset_id, asset_id_type, ni_id, os_dev_ref, ipv4_addr_range, ipv6_addr_range, bia_mac_address, ul_mac_address
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
-    set ni_list [list ]
     # asset_id can be dc, vm, or  hw
-    foreach asset_id $asset_id_list {
-        set read_p [hf_permission_p $instance_id $user_id $customer_id_list $asset_id read]
-        if { $read_p } {
-            # query is different for each asset_id_type..
-            ## determine asset_id_type
-            
-## if dc
-            #  hf_dc_ni_map.instance_id, dc_id, ni_id
-            #  hf_network_interfaces.instance_id, ni_id, os_dev_ref, ipv4_addr_range, ipv6_addr_range, bia_mac_address, ul_mac_address
-            set asset_list [db_list_of_lists hf_dc_nis_get "select ni_id, os_dev_ref, ipv4_addr_range, ipv6_addr_range, bia_mac_address, ul_mac_address from hf_network_interfaces where ni_id in (select ni_id from hf_dc_ni_map where instance_id =:instance_id and dc_id =:asset_id)"]
-            foreach asset_ni_list $asset_lists {
-                lappend ni_list $asset_ni_list
-            }
-            #  hw and vm are 1:1 mapped, so can reference ni_id directly.
-## if vm
+    # by limiting ni to direct connections helps keep context with ui
 
-## if hw
-            
+    # use hf_assets_w_detail to get valid asset_id, asset_id_type
+    set asset_detail_lists [hf_assets_w_detail $instance_id $customer_id_list "" 1 "" "" ""]
+    set asset_id_list_arr(dc) [list ]
+    set asset_id_list_arr(hw) [list ]
+    set asset_id_list_arr(vm) [list ]
+    foreach asset_list $asset_detail_lists {
+        # build asset_ids_list_arr(dc, hw, vm)
+        set asset_id [lindex $asset_list 0]
+        set asset_type_id [lindex $asset_list 4]
+        lappend asset_id_list_arr($asset_type_id) $asset_id
+    }
+    
+    set ni_list [list ]
+    # foreach asset__id_type_list, query db 
+
+    if { [llength $asset_id_list_arr(dc)] > 0 } {
+        # dc
+        #  hf_dc_ni_map.instance_id, dc_id, ni_id
+        #  hf_network_interfaces.instance_id, ni_id, os_dev_ref, ipv4_addr_range, ipv6_addr_range, bia_mac_address, ul_mac_address
+        set asset_list [db_list_of_lists hf_dc_nis_get "select dc.dc_id, 'dc' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_dc_ni_map dc, hf_network_interfaces ni where ni.ni_id in (select ni_id from hf_dc_ni_map where instance_id =:instance_id and dc_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(dc)])"]
+        foreach asset_ni_list $asset_lists {
+            lappend ni_list $asset_ni_list
         }
+    }
+
+    #  hw and vm are 1:1 mapped, so can reference ni_id directly.
+    ## hw
+
+    ## vm
+
+
+            
+
     }
     return $ni_list
 }
