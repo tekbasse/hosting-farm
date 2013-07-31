@@ -117,6 +117,7 @@ DROP TABLE hf_asset_feature_map;
 
 drop index hf_operating_systems_requires_upgrade_p_idx;
 drop index hf_operating_systems_os_id_idx;
+drop index hf_operating_systems_instance_id_idx;
 
 DROP TABLE hf_operating_systems;
 
@@ -138,6 +139,7 @@ drop index hf_virtual_machines_ni_id_idx;
 drop index hf_virtual_machines_ip_id_idx;
 drop index hf_virtual_machines_domain_name_idx;
 drop index hf_virtual_machines_vm_id_idx;
+drop index hf_virtual_machines_vm_instance_id_idx;
 
 DROP TABLE hf_virtual_machines;
 

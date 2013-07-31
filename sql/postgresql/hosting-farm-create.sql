@@ -192,6 +192,7 @@ create index hf_hardware_hw_id_idx on hf_hardware (hw_id);
 
 
 CREATE TABLE hf_virtual_machines (
+    instance_id integer,
     vm_id         integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     domain_name   varchar(300),
     ip_id         integer,
@@ -208,6 +209,7 @@ CREATE TABLE hf_virtual_machines (
     details       text
 );
 
+create index hf_virtual_machines_vm_instance_id_idx on hf_virtual_machines (instance_id);
 create index hf_virtual_machines_vm_id_idx on hf_virtual_machines (vm_id);
 create index hf_virtual_machines_domain_name_idx on hf_virtual_machines (domain_name);
 create index hf_virtual_machines_ip_id_idx on hf_virtual_machines (ip_id);
@@ -247,6 +249,7 @@ create index hf_ip_addresses_ipv4_addr_idx on hf_ip_addresses (ipv4_addr);
 create index hf_ip_addresses_ipv6_addr_idx on hf_ip_addresses (ipv6_addr);
 
 CREATE TABLE hf_operating_systems (
+    instance_id         integer,
     os_id               integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- server.fsys
     label               varchar(20),
@@ -258,6 +261,7 @@ CREATE TABLE hf_operating_systems (
     description         text
 );
 
+create index hf_operating_systems_instance_id_idx on hf_operating_systems (instance_id);
 create index hf_operating_systems_os_id_idx on hf_operating_systems (os_id);
 create index hf_operating_systems_requires_upgrade_p_idx on hf_operating_systems (requires_upgrade_p);
 
