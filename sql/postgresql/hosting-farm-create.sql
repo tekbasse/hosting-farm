@@ -221,6 +221,10 @@ CREATE TABLE hf_network_interfaces (
     ni_id              integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- see interfaces.assigned_interface
     os_dev_ref         varchar(20),
+    -- burned in address MAC address
+    bia_mac_address    varchar(20),
+    -- universal/local programmed (non-OUI) MAC address
+    ul_mac_address     varchar(20),
     ipv4_addr_range    varchar(20),
     ipv6_addr_range    varchar(50)
 );
