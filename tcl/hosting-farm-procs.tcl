@@ -270,20 +270,6 @@ ad_proc -private hf_assets_w_detail {
 # Are the mapping procs redundant? Is it more practical to use mapping directly in sql, and tie each mapping to an asset?
 # Yes.  ignore direct mapping procs for now.
 #   direct:
-ad_proc -private hf_nis_dc {
-    {dc_list ""}
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
 
 ad_proc -private hf_vhs_vh {
     {vh_list ""}
@@ -347,20 +333,6 @@ ad_proc -private hf_vhs_vm {
 }
 
 #   indirect, practical:
-ad_proc -private hf_nis_hw {
-    {hw_list ""} 
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
 
 ad_proc -private hf_ips_ni {
     {ni_list ""}
@@ -497,21 +469,26 @@ ad_proc -private hf_nis {
         # dc
         #  hf_dc_ni_map.instance_id, dc_id, ni_id
         #  hf_network_interfaces.instance_id, ni_id, os_dev_ref, ipv4_addr_range, ipv6_addr_range, bia_mac_address, ul_mac_address
-        set asset_list [db_list_of_lists hf_dc_nis_get "select dc.dc_id, 'dc' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_dc_ni_map dc, hf_network_interfaces ni where ni.ni_id in (select ni_id from hf_dc_ni_map where instance_id =:instance_id and dc_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(dc)])"]
+        set asset_list [db_list_of_lists hf_dc_nis_get "select dc.dc_id, 'dc' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_dc_ni_map dc, hf_network_interfaces ni where dc.ni_id = ni.ni_id and ni.ni_id in (select ni_id from hf_dc_ni_map where instance_id =:instance_id and dc_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(dc)])"]
         foreach asset_ni_list $asset_lists {
             lappend ni_list $asset_ni_list
         }
     }
 
     #  hw and vm are 1:1 mapped, so can reference ni_id directly.
-    ## hw
-
-    ## vm
-
-
-            
-
+  
+    if { [llength $asset_id_list(hw)] > 0 } {
+        ## hw
+        #  hf_hardware.instance_id, hw_id, system_name, backup_sys, ni_id, os_id, description, details
+        set asset_list [db_list_of_lists hf_hw_nis_get "select hw.hw_id, 'hw' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_hardware hw, hf_network_interfaces ni where ni.ni_id = hw.ni_id and ni.ni_id in (select ni_id from hf_hardware where instance_id =:instance_id and hw_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(hw)])"]
     }
+         
+    if { [llength $asset_id_list(vm)] > 0 } {
+        ## vm
+        # hf_virtual_machines instance_id, vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details
+        set asset_list [db_list_of_lists hf_vm_nis_get "select vm.hw_id, 'vm' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_virtual_machines vm, hf_network_interfaces ni where ni.ni_id = vm.ni_id and ni.ni_id in (select ni_id from hf_virtual_machines where instance_id =:instance_id and vm_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(vm)])"]
+    }
+    
     return $ni_list
 }
 
