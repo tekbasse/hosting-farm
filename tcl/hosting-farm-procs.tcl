@@ -420,6 +420,7 @@ ad_proc -private hf_dcs {
 }
 
 ad_proc -private hf_hws {
+    {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
 } {
@@ -430,9 +431,57 @@ ad_proc -private hf_hws {
         set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
-## TODO
-    #  hf_dc_hw_map.instance_id, dc_id, hw_id
+    set asset_type_id "hw"
+
+    # get hf_assets: instance_id id, asset_type_id=hw, etc..
+    set asset_detail_list [hf_assets_w_detail $instance_id $customer_id_list "" 1 "" "" $asset_type_id]
+    # id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,template_p,time_start,time_stop,trashed_p,trashed_by,flags,publish_p
+    set asset_id_list [list ]
+    foreach one_asset_detail_list $asset_detail_list {
+        lappend asset_id_list [lindex $one_asset_detail_list 0]
+    }
+
+    # get dc_id's that have hw associated with it. We do this because we might be filtering by asset_ids, and we want to include subsets.
+    set dc_id_list [hf_dcs $instance_id $customer_id_list $asset_id_list]
+    #  tables hf_dc_hw_map.instance_id, dc_id, hw_id
+    set hw_id_indirect_list [db_list_of_lists hf_dc_get_hw_ids "select hw_id from hf_dc_hw_map where instance_id =:instance_id and dc_id in ([template::util::tcl_to_sql_list $dc_id_list)"]
+
+
+    # get hw that are directly assets.
+    set asset_detail_list [hf_assets_w_detail $instance_id $customer_id_list "" 1 "" "" $asset_type_id]
+    # id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,template_p,time_start,time_stop,trashed_p,trashed_by,flags,publish_p
+    # build full list of hw_ids
+    set hw_id_list $hw_id_indirect_list
+    foreach one_asset_detail_list $asset_detail_list {
+        lappend hw_id_list [lindex $one_asset_detail_list 0]
+    }
+
+    # build detail hw list
     #  hf_hardware.instance_id, hw_id, system_name, backup_sys, ni_id, os_id, description, details
+    set hw_detail_list [db_list_of_lists hf_hw_get "select hw_id, system_name, backup_sys,ni_id, os_id, description, details from hf_hardware where instance_id =:instance_id and hw_id in ([template::util::tcl_to_sql_list $hw_id_list])"]
+
+    # If proc parameters are not blank, filter the results.
+    ## review the filters here. This should include direct asset_id references and their children..
+    ## but it is filtering children..
+    set filter_asset_id_p [expr { $asset_id_list ne "" } ]
+    if { $filter_asset_id_p } {
+        set return_list [list ]
+        set insert_p 0
+        # scope to filter
+        foreach one_hw_detail_list $hw_detail_list {
+            if { $filter_asset_id_p && [lsearch -exact $asset_id_list [lindex $one_hw_detail_list 0 ] ] > -1 } {
+                set insert_p 1
+            }
+            if { $insert_p } {
+                set insert_p 0
+#                set hw_id \[lindex $one_hw_detail_list 0\]
+                lappend return_list $one_hw_detail_list
+            }
+        }
+    } else {
+        set return_list $hw_detail_list
+    } 
+    return $return_list
 }
 
 ad_proc -private hf_nis {
