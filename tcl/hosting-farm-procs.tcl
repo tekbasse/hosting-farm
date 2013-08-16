@@ -163,7 +163,7 @@ ad_proc -private hf_asset_templates {
     if { $inactives_included_p } {
         set templates_list_of_lists [db_list_of_lists hf_asset_templates_select_all {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,time_start,time_stop,trashed_p,trashed_by,flags,publish_p from hf_assets where template_p =:1 and instance_id =:instance_id and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc} ]
     } else {
-        set templates_list_of_lists [db_list_of_lists hf_asset_templates_select {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,time_start,time_stop,trashed_p,trashed_by,flags,publish_p from hf_assets where template_p =:1 and instance_id =:instance_id and time_stop =:null and trashed_p <> '1' and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc } ]
+        set templates_list_of_lists [db_list_of_lists hf_asset_templates_select {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,time_start,time_stop,trashed_p,trashed_by,flags,publish_p from hf_assets where template_p =:1 and instance_id =:instance_id and ( time_stop =null or time_stop < current_timestamp ) and trashed_p <> '1' and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc } ]
     }
     # build list of ids that meet at least one criteria
     set return_list [list ]
@@ -218,7 +218,7 @@ ad_proc -private hf_assets_w_detail {
     if { $inactives_included_p } {
         set templates_list_of_lists [db_list_of_lists hf_asset_templates_select_all {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,template_p,time_start,time_stop,trashed_p,trashed_by,flags,publish_p from hf_assets where instance_id =:instance_id and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc} ]
     } else {
-        set templates_list_of_lists [db_list_of_lists hf_asset_templates_select {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,template_p,time_start,time_stop,trashed_p,trashed_by,flags,publish_p from hf_assets where instance_id =:instance_id and time_stop =:null and trashed_p <> '1' and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc } ]
+        set templates_list_of_lists [db_list_of_lists hf_asset_templates_select {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,template_p,time_start,time_stop,trashed_p,trashed_by,flags,publish_p from hf_assets where instance_id =:instance_id and time_stop =null and trashed_p <> '1' and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc } ]
     }
     # build list of ids that meet at least one criteria
     set return_list [list ]
@@ -407,8 +407,9 @@ ad_proc -private hf_dcs {
             if { $insert_p } {
                 set insert_p 0
                 set dc_id [lindex $one_dc_detail_list 0]
-                db_1row hf_dc_ni_map_count "select count(ni_id) as ni_id_count from hf_dc_ni_map where dc_id =:dc_id"
-                db_1row hf_dc_hw_map_count "select count(hw_id) as hw_id_count from hf_dc_hw_map where dc_id =:dc_id"
+                # count only active ones
+                db_1row hf_dc_ni_map_count "select count(ni_id) as ni_id_active_count from hf_dc_ni_map where dc_id =:dc_id and dc_id in ( select id from hf_assets where ( time_stop =null or time_stop < current_timestamp) and trashed_p <> '1' ) "
+                db_1row hf_dc_hw_map_count "select count(hw_id) as hw_id_active_count from hf_dc_hw_map where dc_id =:dc_id and dc_id in ( select id from hf_assets where ( time_stop =null or time_stop < current_timestamp) and trashed_p <> '1' ) "
                 lappend one_dc_detail_list $ni_id_count $hw_id_count
                 lappend return_list $one_dc_detail_list
             }
@@ -465,7 +466,7 @@ ad_proc -private hf_hws {
     ## but it is filtering children..
     set filter_asset_id_p [expr { $asset_id_list ne "" } ]
     if { $filter_asset_id_p } {
-        set return_list [list ]
+        set base_return_list [list ]
         set insert_p 0
         # scope to filter
         foreach one_hw_detail_list $hw_detail_list {
@@ -475,12 +476,19 @@ ad_proc -private hf_hws {
             if { $insert_p } {
                 set insert_p 0
 #                set hw_id \[lindex $one_hw_detail_list 0\]
-                lappend return_list $one_hw_detail_list
+                lappend base_return_list $one_hw_detail_list
             }
         }
     } else {
-        set return_list $hw_detail_list
+        set base_return_list $hw_detail_list
     } 
+    # append VM count
+    set return_list [list ]
+    foreach hw_list $base_return_list {
+        set hw_id [lindex $hw_list 0]
+        # count only active ones
+        db_1row hf_dc_ni_map_count "select count(vm_id) as vm_id_active_count from hf_hw_vm_map where hw_id =:hw_id and hw_id in ( select id from hf_assets where ( time_stop =null or time_stop < current_timestamp) and trashed_p <> '1' ) "
+        lappend return_list $vm_id_active_count
     return $return_list
 }
 
