@@ -425,7 +425,7 @@ ad_proc -private hf_hws {
     {customer_id_list ""}
     {asset_id_list ""}
 } {
-    returns an ordered list of lists of hardware and their direct properties
+    returns an ordered list of lists of hardware and their direct properties hw_id, system_name, backup_sys, ni_id, os_id, description, details, count of active VMs
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -462,8 +462,6 @@ ad_proc -private hf_hws {
     set hw_detail_list [db_list_of_lists hf_hw_get "select hw_id, system_name, backup_sys,ni_id, os_id, description, details from hf_hardware where instance_id =:instance_id and hw_id in ([template::util::tcl_to_sql_list $hw_id_list])"]
 
     # If proc parameters are not blank, filter the results.
-    ## review the filters here. This should include direct asset_id references and their children..
-    ## but it is filtering children..
     set filter_asset_id_p [expr { $asset_id_list ne "" } ]
     if { $filter_asset_id_p } {
         set base_return_list [list ]
@@ -493,6 +491,7 @@ ad_proc -private hf_hws {
 }
 
 ad_proc -private hf_nis {
+    {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
 } {
@@ -535,13 +534,13 @@ ad_proc -private hf_nis {
     #  hw and vm are 1:1 mapped, so can reference ni_id directly.
   
     if { [llength $asset_id_list(hw)] > 0 } {
-        ## hw
+        # hw
         #  hf_hardware.instance_id, hw_id, system_name, backup_sys, ni_id, os_id, description, details
         set asset_list [db_list_of_lists hf_hw_nis_get "select hw.hw_id, 'hw' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_hardware hw, hf_network_interfaces ni where ni.ni_id = hw.ni_id and ni.ni_id in (select ni_id from hf_hardware where instance_id =:instance_id and hw_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(hw)])"]
     }
          
     if { [llength $asset_id_list(vm)] > 0 } {
-        ## vm
+        # vm
         # hf_virtual_machines instance_id, vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details
         set asset_list [db_list_of_lists hf_vm_nis_get "select vm.hw_id, 'vm' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_virtual_machines vm, hf_network_interfaces ni where ni.ni_id = vm.ni_id and ni.ni_id in (select ni_id from hf_virtual_machines where instance_id =:instance_id and vm_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(vm)])"]
     }
@@ -550,10 +549,11 @@ ad_proc -private hf_nis {
 }
 
 ad_proc -private hf_vms {
+    {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
 } {
-    returns an ordered list of lists of virtual machines and their direct properties
+    returns an ordered list of lists of an asset's virtual machines and their direct properties. A hardware id is an asset_id.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -562,11 +562,25 @@ ad_proc -private hf_vms {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
+    # get all available asset_ids to user (ie. customers of user) (even ones that might be listed as a different type)
+
+    #get all available hw_ids to user
+    # get all vm's mapped to those hw_ids
+    # hf_hw_vm_map.instance_id, hw_id, vm_id
+
+    # get all direct vm's available to user
+    # vm = asset_id_type
+
+    # build list of list using collected vm_id's
+    # hf_virtual_machines.instance_id, vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details
+
+    # hf_vm_vh_map.instance_id, vm_id, vh_id (include count(vh_id) per vm_id )
 }
 
 
 ad_proc -private hf_ips {
+    {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
 } {
