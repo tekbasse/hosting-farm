@@ -266,103 +266,6 @@ ad_proc -private hf_assets_w_detail {
 # API for various asset types:
 #   in each case, add ecds-pagination bar when displaying. defaults to all allowed by user permissions
 
-# asset mapped procs
-# Are the mapping procs redundant? Is it more practical to use mapping directly in sql, and tie each mapping to an asset?
-# Yes.  ignore direct mapping procs for now.
-#   direct:
-
-ad_proc -private hf_vhs_vh {
-    {vh_list ""}
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
-
-
-ad_proc -private hf_hws_dc {
-    {dc_list ""}
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
-
-ad_proc -private hf_vms_hw {
-    {hw_list ""}
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
-
-ad_proc -private hf_vhs_vm {
-    {vm_list ""}
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
-
-#   indirect, practical:
-
-ad_proc -private hf_ips_ni {
-    {ni_list ""}
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
-
-ad_proc -private hf_ips_vm {
-    {vm_list ""}
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
 
 ## make procs that return the asset objects given one or more asset ids.
 # info tables: 
@@ -782,8 +685,8 @@ ad_proc -private hf_dc_create {
     #code
 }
 
-ad_proc -private hf_dc_halt {
-    {dc_id_list ""}
+ad_proc -private hf_asset_halt {
+    {asset_id_list ""}
 } {
     description
 } {
@@ -842,21 +745,6 @@ ad_proc -private hf_hw_create {
     #code
 }
 
-ad_proc -private hf_hw_halt {
-    {hw_id_list ""}
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
-
 ad_proc -private hf_hw_read {
     {hw_id_list ""}
 } {
@@ -902,20 +790,6 @@ ad_proc -private hf_ip_create {
     #code
 }
 
-ad_proc -private hf_ip_halt {
-    {ip_id_list ""}
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
 
 ad_proc -private hf_ip_read {
     {ip_id_list ""}
@@ -962,20 +836,6 @@ ad_proc -private hf_ni_create {
     #code
 }
 
-ad_proc -private hf_ni_halt {
-    {ni_id_list ""}
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
 
 ad_proc -private hf_ni_read {
     {ni_id_list ""}
@@ -1022,20 +882,6 @@ ad_proc -private hf_os_create {
     #code
 }
 
-ad_proc -private hf_os_halt {
-    {os_id_list ""}
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
 
 ad_proc -private hf_os_read {
     {os_id_list ""}
@@ -1082,20 +928,6 @@ ad_proc -private hf_ss_create {
     #code
 }
 
-ad_proc -private hf_ss_halt {
-    {ss_id_list ""}
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
 
 ad_proc -private hf_ss_read {
     {ss_id_list ""}
@@ -1142,20 +974,6 @@ ad_proc -private hf_vm_create {
     #code
 }
 
-ad_proc -private hf_vm_halt {
-    {vm_id_list ""}
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
 
 ad_proc -private hf_vm_read {
     {vm_id_list ""}
@@ -1203,20 +1021,6 @@ ad_proc -private hf_ns_create {
     #code
 }
 
-ad_proc -private hf_ns_halt {
-    {vm_id_list ""}
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
 
 ad_proc -private hf_ns_read {
     {vm_id_list ""}
@@ -1264,20 +1068,6 @@ ad_proc -private hf_vm_quota_create {
     #code
 }
 
-ad_proc -private hf_vm_quota_halt {
-    {plan_id_list ""}
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
 
 ad_proc -private hf_vm_quota_read {
     {plan_id_list ""}
@@ -1324,20 +1114,6 @@ ad_proc -private hf_ua_create {
     #code
 }
 
-ad_proc -private hf_ua_halt {
-    args
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
 
 ad_proc -private hf_up_ck {
     {ua,submitted_up}
