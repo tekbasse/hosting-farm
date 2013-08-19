@@ -311,7 +311,7 @@ CREATE TABLE hf_vm_quota_map (
   -- plan.high_end is ambiguous and isn't differentiated from private_vps, so ignoring.
  );
 
-create index hf_vm_quote_map_instance_id_idx on hf_vm_quota_map (instance_id);
+create index hf_vm_quota_map_instance_id_idx on hf_vm_quota_map (instance_id);
 create index hf_vm_quota_map_plan_id_idx on hf_vm_quota_map (plan_id);
 create index hf_vm_quota_map_vm_type_idx on hf_vm_quota_map (vm_type);
 create index hf_vm_quota_map_private_vps_idx on hf_vm_quota_map (private_vps);
