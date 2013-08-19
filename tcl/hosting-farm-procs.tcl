@@ -26,6 +26,11 @@ ad_library {
     # social feedback mechanisms
 
 
+    # objects can easily be passed to procs via an array and upvar
+    #  array references don't work in sql, so these use ordered lists
+    # a proc should be written to write a series of avariables to an array, and an array to a set of variables equal to the indexes.
+    # somthing similary to qf_get_inputs_as_array added to the help-procs section:  qf_variables_from_array, qf_array_to_variables
+
 }
 
 # following defined in permissions-procs.tcl
@@ -422,7 +427,7 @@ ad_proc -private hf_nis {
     }
     
     set ni_list [list ]
-    # foreach asset__id_type_list, query db 
+    # foreach asset_id_type_list, query db 
 
     if { [llength $asset_id_list_arr(dc)] > 0 } {
         # dc
@@ -440,14 +445,19 @@ ad_proc -private hf_nis {
         # hw
         #  hf_hardware.instance_id, hw_id, system_name, backup_sys, ni_id, os_id, description, details
         set asset_list [db_list_of_lists hf_hw_nis_get "select hw.hw_id, 'hw' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_hardware hw, hf_network_interfaces ni where ni.ni_id = hw.ni_id and ni.ni_id in (select ni_id from hf_hardware where instance_id =:instance_id and hw_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(hw)])"]
+        foreach asset_ni_list $asset_lists {
+            lappend ni_list $asset_ni_list
+        }
     }
          
     if { [llength $asset_id_list(vm)] > 0 } {
         # vm
         # hf_virtual_machines instance_id, vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details
         set asset_list [db_list_of_lists hf_vm_nis_get "select vm.hw_id, 'vm' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_virtual_machines vm, hf_network_interfaces ni where ni.ni_id = vm.ni_id and ni.ni_id in (select ni_id from hf_virtual_machines where instance_id =:instance_id and vm_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(vm)])"]
+        foreach asset_ni_list $asset_lists {
+            lappend ni_list $asset_ni_list
+        }
     }
-    
     return $ni_list
 }
 
@@ -706,6 +716,9 @@ ad_proc -private hf_dc_write {
 } {
     writes or creates a dc asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
 } {
+    # hf_data_centers.instance_id, dc_id, affix, description, details
+    # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
+
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
