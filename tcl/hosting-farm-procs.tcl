@@ -475,20 +475,53 @@ ad_proc -private hf_vms {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    ##code
     # get all available asset_ids to user (ie. customers of user) (even ones that might be listed as a different type)
+    # a vm is a subset of an hw, which is a subset of a dc.
+    set asset_detail_lists [hf_assets_w_detail $instance_id $customer_id_list "" 1 "" "" ""]
+    set asset_id_list_arr(dc) [list ]
+    set asset_id_list_arr(hw) [list ]
+    set asset_id_list_arr(vm) [list ]
+    foreach asset_list $asset_detail_lists {
+        # build asset_ids_list_arr(dc, hw, vm)
+        set asset_id [lindex $asset_list 0]
+        set asset_type_id [lindex $asset_list 4]
+        lappend asset_id_list_arr($asset_type_id) $asset_id
+    }
 
     #get all available hw_ids to user
-    # get all vm's mapped to those hw_ids
+    set vm_list [list ]
+
+    # get all dc's associated with user, and subsequently, hw under those dc's
+    set hw_id_list $asset_id_list_arr(hw)
+    if { [llength $asset_id_list_arr(dc)] > 0 } {
+        # dc
+        set hw_id_indirect_list [db_list_of_lists hf_dc_get_hw_ids2 "select hw_id from hf_dc_hw_map where instance_id =:instance_id and dc_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(dc)"]
+        foreach hw_id $hw_id_indirect_list {
+            lappend hw_id_list $hw_id
+        }
+    }
+
+    # get all vm's mapped to hw_ids
     # hf_hw_vm_map.instance_id, hw_id, vm_id
+    set vm_id_list [db_list hf_vm_get_vm_ids "select vm_id from hf_hw_vm_map where instance_id =:instance_id and hw_ic in ([template::util::tcl_to_sql_list $hw_id_list"]
 
     # get all direct vm's available to user
     # vm = asset_id_type
+    # see above: asset_id_list_arr(vm) 
 
     # build list of list using collected vm_id's
-    # hf_virtual_machines.instance_id, vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details
+    foreach vm_id $asset_id_list_arr(vm) {
+        lappend vm_id_list $vm_id
+    }
+    ## if asset_id_list is not blank, filter list to selected asset_ids in list
 
-    # hf_vm_vh_map.instance_id, vm_id, vh_id (include count(vh_id) per vm_id )
+    # hf_virtual_machines.instance_id, vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details
+    set vm_detail_list [db_list_of_lists hf_vm_get_detail "select vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details from hf_virtual_machines where instance_id =:instance_id and vm_id in ([template::util::tcl_to_sql_list $vm_id_list])"]
+
+    # if filtering list by details, do it here
+
+    # add final details
+    ## hf_vm_vh_map.instance_id, vm_id, vh_id (include count(vh_id) per vm_id )
 }
 
 
