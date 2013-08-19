@@ -670,20 +670,6 @@ ad_proc -private hf_asset_types {
     return $return_list_of_lists
 }
 
-ad_proc -private hf_dc_create {
-    args
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
 
 ad_proc -private hf_asset_halt {
     {asset_id_list ""}
@@ -718,7 +704,7 @@ ad_proc -private hf_dc_read {
 ad_proc -private hf_dc_write {
     args
 } {
-    description
+    writes or creates a dc asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -730,20 +716,6 @@ ad_proc -private hf_dc_write {
     #code
 }
 
-ad_proc -private hf_hw_create {
-    args
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
 
 ad_proc -private hf_hw_read {
     {hw_id_list ""}
@@ -763,22 +735,7 @@ ad_proc -private hf_hw_read {
 ad_proc -private hf_hw_write {
     args
 } {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
-
-ad_proc -private hf_ip_create {
-    args
-} {
-    description
+    writes or creates a hw asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -809,7 +766,7 @@ ad_proc -private hf_ip_read {
 ad_proc -private hf_ip_write {
     args
 } {
-    description
+    writes or creates an ip asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -820,22 +777,6 @@ ad_proc -private hf_ip_write {
     }
     #code
 }
-
-ad_proc -private hf_ni_create {
-    args
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
-
 
 ad_proc -private hf_ni_read {
     {ni_id_list ""}
@@ -855,7 +796,7 @@ ad_proc -private hf_ni_read {
 ad_proc -private hf_ni_write {
     args
 } {
-    description
+    writes or creates an ip asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -866,22 +807,6 @@ ad_proc -private hf_ni_write {
     }
     #code
 }
-
-ad_proc -private hf_os_create {
-    args
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
-
 
 ad_proc -private hf_os_read {
     {os_id_list ""}
@@ -901,7 +826,7 @@ ad_proc -private hf_os_read {
 ad_proc -private hf_os_write {
     args
 } {
-    description
+    writes or creates an os asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -912,22 +837,6 @@ ad_proc -private hf_os_write {
     }
     #code
 }
-
-ad_proc -private hf_ss_create {
-    args
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
-
 
 ad_proc -private hf_ss_read {
     {ss_id_list ""}
@@ -947,7 +856,7 @@ ad_proc -private hf_ss_read {
 ad_proc -private hf_ss_write {
     args
 } {
-    description
+    writes or creates an ss asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -958,22 +867,6 @@ ad_proc -private hf_ss_write {
     }
     #code
 }
-
-ad_proc -private hf_vm_create {
-    args
-} {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
-
 
 ad_proc -private hf_vm_read {
     {vm_id_list ""}
@@ -993,23 +886,7 @@ ad_proc -private hf_vm_read {
 ad_proc -private hf_vm_write {
     args
 } {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
-
-
-ad_proc -private hf_ns_create {
-    args
-} {
-    create name service record (custom or customizable, auto generated records).
+    writes or creates a vm asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -1040,23 +917,7 @@ ad_proc -private hf_ns_read {
 ad_proc -private hf_ns_write {
     args
 } {
-    description
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #code
-}
-
-
-ad_proc -private hf_vm_quota_create {
-    args
-} {
-    description
+    writes or creates an ns_id. If ns_id is blank, a new one is created, and the new ns_id returned. The ns_id is returned if successful, otherwise -1 is returned.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -1087,7 +948,7 @@ ad_proc -private hf_vm_quota_read {
 ad_proc -private hf_vm_quota_write {
     args
 } {
-    description
+    writes or creates a vm_quota. If id is blank, a new one is created, and the new id returned. id is returned if successful, otherwise -1 is returned.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -1099,11 +960,13 @@ ad_proc -private hf_vm_quota_write {
     #code
 }
 
-ad_proc -private hf_ua_create {
+ad_proc -private hf_ua_write {
     args
 } {
-    description
+       writes or creates a ua. If ua_id is blank, a new one is created, and the new id returned. id is returned if successful, otherwise -1 is returned.
 } {
+    # permissions must be careful here.
+    # only admin_p or create_p create new
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
@@ -1114,12 +977,27 @@ ad_proc -private hf_ua_create {
     #code
 }
 
+ad_proc -private hf_ua_read {
+    args
+} {
+       see hf_ua_ck for access credential checking. hf_ua_read is for admin only.
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
+    #code
+}
 
 ad_proc -private hf_up_ck {
     {ua,submitted_up}
 } {
-    description
+    checks submitted against existing. returns 1 if matches, otherwise returns 0.
 } {
+    # hf_up_ck takes the place of a standard hf_ua_read
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
@@ -1130,11 +1008,13 @@ ad_proc -private hf_up_ck {
     #code
 }
 
-ad_proc -private hf_up_delta {
+ad_proc -private hf_up_write {
     {ua,submitted_up, new}
 } {
-    description
+    writes or creates a up. If up is blank, a new one is created, and 1 is returned, otherwise returns 0.
 } {
+    # must have admin_p to create
+    # otherwise hf_up_ck must be 1 to update
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
@@ -1176,7 +1056,7 @@ ad_proc -private hf_monitor_logs {
     #code
 }
 
-ad_proc -private hf_monitor_statuss {
+ad_proc -private hf_monitor_status {
     {asset_id_list ""}
 } {
     description
