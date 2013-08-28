@@ -353,7 +353,7 @@ ad_proc -private hf_hws {
     # get dc_id's that have hw associated with it. We do this because we might be filtering by asset_ids, and we want to include subsets.
     set dc_id_list [hf_dcs $instance_id $customer_id_list $asset_id_list]
     #  tables hf_dc_hw_map.instance_id, dc_id, hw_id
-    set hw_id_indirect_list [db_list_of_lists hf_dc_get_hw_ids "select hw_id from hf_dc_hw_map where instance_id =:instance_id and dc_id in ([template::util::tcl_to_sql_list $dc_id_list)"]
+    set hw_id_indirect_list [db_list_of_lists hf_dc_get_hw_ids "select hw_id from hf_dc_hw_map where instance_id =:instance_id and dc_id in ([template::util::tcl_to_sql_list $dc_id_list])"]
 
 
     # get hw that are directly assets.
@@ -403,7 +403,7 @@ ad_proc -private hf_nis {
     {customer_id_list ""}
     {asset_id_list ""}
 } {
-    returns an ordered list of lists of an asset's direct network interfaces and their properties: 
+    returns an ordered list of lists of an asset's network interfaces and their properties: 
     asset_id, asset_id_type, ni_id, os_dev_ref, ipv4_addr_range, ipv6_addr_range, bia_mac_address, ul_mac_address
 } {
     if { $instance_id eq "" } {
@@ -426,16 +426,16 @@ ad_proc -private hf_nis {
         lappend asset_id_list_arr($asset_type_id) $asset_id
     }
     
-    set ni_list [list ]
+    set ni_detail_lists [list ]
     # foreach asset_id_type_list, query db 
 
     if { [llength $asset_id_list_arr(dc)] > 0 } {
         # dc
         #  hf_dc_ni_map.instance_id, dc_id, ni_id
         #  hf_network_interfaces.instance_id, ni_id, os_dev_ref, ipv4_addr_range, ipv6_addr_range, bia_mac_address, ul_mac_address
-        set asset_list [db_list_of_lists hf_dc_nis_get "select dc.dc_id, 'dc' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_dc_ni_map dc, hf_network_interfaces ni where dc.ni_id = ni.ni_id and ni.ni_id in (select ni_id from hf_dc_ni_map where instance_id =:instance_id and dc_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(dc)])"]
+        set asset_lists [db_list_of_lists hf_dc_nis_get "select dc.dc_id, 'dc' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_dc_ni_map dc, hf_network_interfaces ni where dc.ni_id = ni.ni_id and ni.ni_id in (select ni_id from hf_dc_ni_map where instance_id =:instance_id and dc_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(dc)])"]
         foreach asset_ni_list $asset_lists {
-            lappend ni_list $asset_ni_list
+            lappend ni_detail_lists $asset_ni_list
         }
     }
 
@@ -444,21 +444,50 @@ ad_proc -private hf_nis {
     if { [llength $asset_id_list(hw)] > 0 } {
         # hw
         #  hf_hardware.instance_id, hw_id, system_name, backup_sys, ni_id, os_id, description, details
-        set asset_list [db_list_of_lists hf_hw_nis_get "select hw.hw_id, 'hw' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_hardware hw, hf_network_interfaces ni where ni.ni_id = hw.ni_id and ni.ni_id in (select ni_id from hf_hardware where instance_id =:instance_id and hw_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(hw)])"]
+        set asset_lists [db_list_of_lists hf_hw_nis_get "select hw.hw_id, 'hw' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_hardware hw, hf_network_interfaces ni where ni.ni_id = hw.ni_id and ni.ni_id in (select ni_id from hf_hardware where instance_id =:instance_id and hw_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(hw)])"]
         foreach asset_ni_list $asset_lists {
-            lappend ni_list $asset_ni_list
+            lappend ni_detail_lists $asset_ni_list
         }
     }
          
     if { [llength $asset_id_list(vm)] > 0 } {
         # vm
         # hf_virtual_machines instance_id, vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details
-        set asset_list [db_list_of_lists hf_vm_nis_get "select vm.hw_id, 'vm' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_virtual_machines vm, hf_network_interfaces ni where ni.ni_id = vm.ni_id and ni.ni_id in (select ni_id from hf_virtual_machines where instance_id =:instance_id and vm_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(vm)])"]
+        set asset_lists [db_list_of_lists hf_vm_nis_get "select vm.hw_id, 'vm' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_virtual_machines vm, hf_network_interfaces ni where ni.ni_id = vm.ni_id and ni.ni_id in (select ni_id from hf_virtual_machines where instance_id =:instance_id and vm_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(vm)])"]
         foreach asset_ni_list $asset_lists {
-            lappend ni_list $asset_ni_list
+            lappend ni_detail_lists $asset_ni_list
         }
     }
-    return $ni_list
+
+
+    # If proc parameters are not blank, filter the results.
+    # results already scoped for customer_id_list via asset_detail_lists
+    set filter_asset_id_p [expr { $asset_id_list ne "" } ]
+    # right now there is only 1 filter, so check to see if this filter can be bypassed
+    if { $filter_asset_id_p } {
+        set base_return_list [list ]
+        set insert_p 0
+        # scope to filter
+        foreach ni_list $ni_detail_lists {
+            # filter to only asset_id_list
+            if { $filter_asset_id_p && [lsearch -exact $asset_id_list [lindex $ni_list 0]] > -1 } {
+                set insert_p 1
+            }
+            # if filtering list by details, do it here
+
+            if { $insert_p } {
+                set insert_p 0
+                lappend base_return_list $ni_list
+            }
+        }
+    } else {
+        set base_return_list $ni_detail_lists
+    } 
+
+    # Are there any more details to add? 
+    # could be useful to add status info if available, but not right now.
+    
+    return $base_return_list
 }
 
 ad_proc -private hf_vms {
@@ -488,40 +517,70 @@ ad_proc -private hf_vms {
         lappend asset_id_list_arr($asset_type_id) $asset_id
     }
 
-    #get all available hw_ids to user
-    set vm_list [list ]
+    if { $customer_id_list eq "" } {
+        #get all available hw_ids to user
+        set vm_list [list ]
 
-    # get all dc's associated with user, and subsequently, hw under those dc's
-    set hw_id_list $asset_id_list_arr(hw)
-    if { [llength $asset_id_list_arr(dc)] > 0 } {
-        # dc
-        set hw_id_indirect_list [db_list_of_lists hf_dc_get_hw_ids2 "select hw_id from hf_dc_hw_map where instance_id =:instance_id and dc_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(dc)"]
-        foreach hw_id $hw_id_indirect_list {
-            lappend hw_id_list $hw_id
+        # get all dc's associated with user, and subsequently, hw under those dc's
+        set hw_id_list $asset_id_list_arr(hw)
+        if { [llength $asset_id_list_arr(dc)] > 0 } {
+            # dc
+            set hw_id_indirect_list [db_list_of_lists hf_dc_get_hw_ids2 "select hw_id from hf_dc_hw_map where instance_id =:instance_id and dc_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(dc)])"]
+            foreach hw_id $hw_id_indirect_list {
+                lappend hw_id_list $hw_id
+            }
+        }
+        # get all vm's mapped to hw_ids
+        # hf_hw_vm_map.instance_id, hw_id, vm_id
+        set vm_id_list [db_list hf_vm_get_vm_ids "select vm_id from hf_hw_vm_map where instance_id =:instance_id and hw_ic in ([template::util::tcl_to_sql_list $hw_id_list])"]
+        
+        # get all direct vm's available to user
+        # vm is an asset_id_type, so direct vm's are in: asset_id_list_arr(vm) 
+        
+        # build list of list using collected vm_id's
+        foreach vm_id $vm_id_list {
+            lappend asset_id_list_arr(vm) $vm_id
         }
     }
 
-    # get all vm's mapped to hw_ids
-    # hf_hw_vm_map.instance_id, hw_id, vm_id
-    set vm_id_list [db_list hf_vm_get_vm_ids "select vm_id from hf_hw_vm_map where instance_id =:instance_id and hw_ic in ([template::util::tcl_to_sql_list $hw_id_list"]
-
-    # get all direct vm's available to user
-    # vm = asset_id_type
-    # see above: asset_id_list_arr(vm) 
-
-    # build list of list using collected vm_id's
-    foreach vm_id $asset_id_list_arr(vm) {
-        lappend vm_id_list $vm_id
-    }
-    ## if asset_id_list is not blank, filter list to selected asset_ids in list
-
+    set vm_id_list $asset_id_list_arr(vm)
+    # detail is retrieved from db before applying arbitrary filters, to help optimize db caching
     # hf_virtual_machines.instance_id, vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details
     set vm_detail_list [db_list_of_lists hf_vm_get_detail "select vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details from hf_virtual_machines where instance_id =:instance_id and vm_id in ([template::util::tcl_to_sql_list $vm_id_list])"]
 
-    # if filtering list by details, do it here
+    # If proc parameters are not blank, filter the results.
+    # results already scoped for customer_id_list via asset_detail_lists
+    set filter_asset_id_p [expr { $asset_id_list ne "" } ]
+    if { $filter_asset_id_p } {
+        set base_return_list [list ]
+        set insert_p 0
+        # scope to filter
+        foreach vm_list $vm_detail_list {
+            if { $filter_asset_id_p && [lsearch -exact $asset_id_list [lindex $vm_list 0]] > -1 } {
+                set insert_p 1
+            }
+            # if filtering list by details, do it here
+
+            if { $insert_p } {
+                set insert_p 0
+                lappend base_return_list $vm_list
+            }
+        }
+    } else {
+        set base_return_list $vm_detail_list
+    } 
 
     # add final details
-    ## hf_vm_vh_map.instance_id, vm_id, vh_id (include count(vh_id) per vm_id )
+    # hf_vm_vh_map.instance_id, vm_id, vh_id (include count(vh_id) per vm_id )
+    set return_list [list ]
+    foreach base_list $base_return_list {
+        set vm_detail $base_list
+        set vm_id [lindex $base_list 0]
+        db_1row hf_vm_vh_ct "select count(vh_id) as vh_count from hf_vm_vh_map where instance_id =:instance_id and vm_id =:vm_id "
+        lappend vm_detail $vh_count
+        lappend return_list $vm_detail
+    }
+    return $return_list
 }
 
 
