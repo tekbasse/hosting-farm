@@ -52,7 +52,7 @@ CREATE TABLE hf_assets (
     --        hw hardware
     --        vm virtual machine
     --	      vh virtual host
-    -- 	      hs hosted service etc.
+    -- 	      hs hosted service etc. (using ss, because hs sounds like hf and looks like ns..)
     --        ss saas/sw as a service
     --        ns custom domain name service records
     --        ot other
@@ -336,7 +336,7 @@ create index hf_vhosts_domain_name_idx on hf_vhosts (domain_name);
 CREATE TABLE hf_services (
     instance_id     integer,
   -- was database_id
-    hs_id           integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+    ss_id           integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     server_name     varchar(40),
     service_name    varchar(300),
     daemon_ref      varchar(40),
@@ -346,13 +346,13 @@ CREATE TABLE hf_services (
     ua_id           integer,
     -- from database_server.type_id 
     -- type can be: db, protocol, generic daemon etc.    port integer,
-    hs_type         varchar(24),
+    ss_type         varchar(24),
     -- see database_server.db_type (pgsql, mysql etc.)    
-    hs_subtype      varchar(24),
+    ss_subtype      varchar(24),
     -- see dbs.database_type_id
-    hs_undersubtype varchar(24),
+    ss_undersubtype varchar(24),
     -- if needed in future: 
-    hs_ultrasubtype varchar(24),
+    ss_ultrasubtype varchar(24),
     config_uri      varchar(300),
     -- following from database_memory_detail
     memory_bytes    bigint,
@@ -361,7 +361,7 @@ CREATE TABLE hf_services (
 );
 
 create index hf_services_instance_id_idx on hf_services (instance_id);
-create index hf_services_hs_id_idx on hf_services (hs_id);
+create index hf_services_ss_id_idx on hf_services (ss_id);
 create index hf_services_server_name_idx on hf_services (server_name);
 create index hf_services_daemon_ref_idx on hf_services (daemon_ref);
 create index hf_services_protocol_idx on hf_services (protocol);
@@ -423,12 +423,12 @@ create index hf_vm_vh_map_vh_id_idx on hf_vm_vh_map (vh_id);
 CREATE TABLE hf_vh_map (
     instance_id     integer,
     vh_id           integer,
-    hs_id           integer
+    ss_id           integer
 );
 
 create index hf_vh_map_instance_id_idx on hf_vh_map (instance_id);
 create index hf_vh_map_vh_id_idx on hf_vh_map (vh_id);
-create index hf_vh_map_hs_id_idx on hf_vh_map (hs_id);
+create index hf_vh_map_ss_id_idx on hf_vh_map (ss_id);
 
 -- was database_auth
 CREATE TABLE hf_ua_up_map (

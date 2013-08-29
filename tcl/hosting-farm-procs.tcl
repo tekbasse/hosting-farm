@@ -8,7 +8,9 @@ ad_library {
 
     # UI for one click (web-based) installers
       # installers install/update/monitor/activate/de-activate software, ie hosted service (hs) or software as a service (ss)
-      # asset_type_id = hh or ss
+      # asset_type_id = hs or ss
+      # code is going to use ss for all cases of hs or ss, because hs sounds like hf and looks like ns, which might increase 
+      # errors and make code more difficult to read and debug.
 
     # A conspicuous alert when system needs user attention (contract expiring, service down etc)
     # Use: util_user_message  For example, see q-wiki/www/q-wiki.tcl 
@@ -640,8 +642,8 @@ ad_proc -private hf_vhs {
     #code
     # hf_hosts.instance_id vh_id ua_id ns_id domain_name details
     # hf_vm_vh_map.instance_id vm_id vh_id
-    # hf_vh_map.instance_id vh_id hs_id
-    #                             hs = hosted service
+    # hf_vh_map.instance_id vh_id ss_id
+    #                             ss = hosted service
 }
 
 ad_proc -private hf_uas {
@@ -667,7 +669,7 @@ ad_proc -private hf_uas {
     
 }
 
-ad_proc -private hf_hss {
+ad_proc -private hf_sss {
     {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
@@ -682,8 +684,8 @@ ad_proc -private hf_hss {
         set user_id [ad_conn user_id]
     }
     #code
-    # hf_services.instance_id hs_id server_name service_name daemon_ref protocol port ua_id hs_type hs_subtype hs_undersubtype hs_ultrasubtype config_uri memory_bytes details
-    # hf_vh_map.hs_id
+    # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
+    # hf_vh_map.ss_id
 }
 
 
@@ -813,7 +815,7 @@ ad_proc -private hf_asset_halt {
 ad_proc -private hf_dc_read {
     {dc_id_list ""}
 } {
-    description
+    reads full detail of one dc. This is not redundant to hf_dcs. This accepts only 1 id and includes all attributes (no summary counts)
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -847,7 +849,7 @@ ad_proc -private hf_dc_write {
 ad_proc -private hf_hw_read {
     {hw_id_list ""}
 } {
-    description
+    reads full detail of one hw. This is not redundant to hf_hws. This accepts only 1 id and includes all attributes (no summary counts)
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -878,7 +880,7 @@ ad_proc -private hf_hw_write {
 ad_proc -private hf_ip_read {
     {ip_id_list ""}
 } {
-    description
+    reads full detail of one ip. This is not redundant to hf_ips. This accepts only 1 id and includes all attributes (no summary counts)
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -908,7 +910,7 @@ ad_proc -private hf_ip_write {
 ad_proc -private hf_ni_read {
     {ni_id_list ""}
 } {
-    description
+    reads full detail of one ni. This is not redundant to hf_nis. This accepts only 1 id and includes all attributes (no summary counts)
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -968,7 +970,7 @@ ad_proc -private hf_os_write {
 ad_proc -private hf_ss_read {
     {ss_id_list ""}
 } {
-    description
+    reads full detail of one ss. This is not redundant to hf_sss. This accepts only 1 id and includes all attributes (no summary counts)
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -998,7 +1000,7 @@ ad_proc -private hf_ss_write {
 ad_proc -private hf_vm_read {
     {vm_id_list ""}
 } {
-    description
+    reads full detail of one vm. This is not redundant to hf_vms. This accepts only 1 id and includes all attributes (no summary counts)
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -1029,7 +1031,7 @@ ad_proc -private hf_vm_write {
 ad_proc -private hf_ns_read {
     {vm_id_list ""}
 } {
-    description
+    reads full detail of one ns. This is not redundant to hf_nss. This accepts only 1 id and includes all attributes (no summary counts)
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
