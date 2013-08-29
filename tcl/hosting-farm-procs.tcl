@@ -599,9 +599,13 @@ ad_proc -private hf_ips {
         set user_id [ad_conn user_id]
     }
     #code
+    #   hf_ip_addresses.instance_id ip_id ipv4_addr ipv4_status ipv6_addr ipv6_status
+    #   hf_virtual_machines.ip_id
+
 }
 
 ad_proc -private hf_oses {
+    {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
 } {
@@ -615,9 +619,12 @@ ad_proc -private hf_oses {
         set user_id [ad_conn user_id]
     }
     #code
+    # hf_hardware.os_id
+    # hf_operating_systems.instance_id os_id label brand version kernel orphaned_p requires_upgrade_p description
 }
 
 ad_proc -private hf_vhs {
+    {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
 } {
@@ -631,9 +638,14 @@ ad_proc -private hf_vhs {
         set user_id [ad_conn user_id]
     }
     #code
+    # hf_hosts.instance_id vh_id ua_id ns_id domain_name details
+    # hf_vm_vh_map.instance_id vm_id vh_id
+    # hf_vh_map.instance_id vh_id hs_id
+    #                             hs = hosted service
 }
 
 ad_proc -private hf_uas {
+    {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
 } {
@@ -647,13 +659,20 @@ ad_proc -private hf_uas {
         set user_id [ad_conn user_id]
     }
     #code
+    # hf_assets.ua_id
+    # hf_vhosts.ua_id
+    # hf_services.ua_id
+    # hf_ua.instance_id ua_id details connection_type
+    # hf_ua_up_map.instance_id ua_id up_id
+    
 }
 
-ad_proc -private hf_sss {
+ad_proc -private hf_hss {
+    {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
 } {
-    returns an ordered list of lists of software as services and their direct properties
+    returns an ordered list of lists of software as services (hosted services) and their direct properties
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -663,12 +682,15 @@ ad_proc -private hf_sss {
         set user_id [ad_conn user_id]
     }
     #code
+    # hf_services.instance_id hs_id server_name service_name daemon_ref protocol port ua_id hs_type hs_subtype hs_undersubtype hs_ultrasubtype config_uri memory_bytes details
+    # hf_vh_map.hs_id
 }
 
 
 
 
 ad_proc -private hf_asset_features {
+    {instance_id ""}
     {asset_type_id_list ""}
 } {
     description
