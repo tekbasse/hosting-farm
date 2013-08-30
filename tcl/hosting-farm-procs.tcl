@@ -683,7 +683,7 @@ ad_proc -private hf_sss {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
     # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
     # hf_vh_map.ss_id
 }
@@ -812,7 +812,7 @@ ad_proc -private hf_asset_halt {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_dc_read {
@@ -827,7 +827,7 @@ ad_proc -private hf_dc_read {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_dc_write {
@@ -845,7 +845,7 @@ ad_proc -private hf_dc_write {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 
@@ -861,7 +861,7 @@ ad_proc -private hf_hw_read {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_hw_write {
@@ -876,7 +876,7 @@ ad_proc -private hf_hw_write {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 
@@ -892,7 +892,7 @@ ad_proc -private hf_ip_read {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_ip_write {
@@ -907,7 +907,7 @@ ad_proc -private hf_ip_write {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_ni_read {
@@ -922,7 +922,7 @@ ad_proc -private hf_ni_read {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_ni_write {
@@ -937,7 +937,7 @@ ad_proc -private hf_ni_write {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_os_read {
@@ -952,7 +952,7 @@ ad_proc -private hf_os_read {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_os_write {
@@ -967,7 +967,7 @@ ad_proc -private hf_os_write {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_ss_read {
@@ -982,7 +982,7 @@ ad_proc -private hf_ss_read {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_ss_write {
@@ -997,7 +997,7 @@ ad_proc -private hf_ss_write {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_vm_read {
@@ -1012,7 +1012,7 @@ ad_proc -private hf_vm_read {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_vm_write {
@@ -1027,7 +1027,7 @@ ad_proc -private hf_vm_write {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 
@@ -1043,7 +1043,7 @@ ad_proc -private hf_ns_read {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_ns_write {
@@ -1058,7 +1058,7 @@ ad_proc -private hf_ns_write {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 
@@ -1090,7 +1090,7 @@ ad_proc -private hf_vm_quota_write {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_ua_write {
@@ -1107,7 +1107,7 @@ ad_proc -private hf_ua_write {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_ua_read {
@@ -1122,7 +1122,7 @@ ad_proc -private hf_ua_read {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_up_ck {
@@ -1138,7 +1138,7 @@ ad_proc -private hf_up_ck {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_up_write {
@@ -1155,7 +1155,7 @@ ad_proc -private hf_up_write {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 
@@ -1171,7 +1171,7 @@ ad_proc -private hf_monitor_configs {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_monitor_logs {
@@ -1186,7 +1186,7 @@ ad_proc -private hf_monitor_logs {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_monitor_status {
@@ -1201,7 +1201,7 @@ ad_proc -private hf_monitor_status {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_monitor_statistics {
@@ -1216,7 +1216,7 @@ ad_proc -private hf_monitor_statistics {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
 ad_proc -private hf_monitor_report monitor_id {
@@ -1231,6 +1231,6 @@ ad_proc -private hf_monitor_report monitor_id {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
 }
 
