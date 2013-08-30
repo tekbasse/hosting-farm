@@ -286,7 +286,7 @@ create index hf_dc_ni_map_instance_id_idx on hf_dc_ni_map (instance_id);
 create index hf_dc_ni_map_dc_id_idx on hf_dc_ni_map (dc_id);
 create index hf_dc_ni_map_ni_id_idx on hf_dc_ni_map (ni_id);
 
-CREATE TABLE hf_vm_quota_map (
+CREATE TABLE hf_vm_quotas (
   instance_id        integer,
   plan_id            integer not null,
   description        varchar(40) not null,
@@ -311,10 +311,10 @@ CREATE TABLE hf_vm_quota_map (
   -- plan.high_end is ambiguous and isn't differentiated from private_vps, so ignoring.
  );
 
-create index hf_vm_quota_map_instance_id_idx on hf_vm_quota_map (instance_id);
-create index hf_vm_quota_map_plan_id_idx on hf_vm_quota_map (plan_id);
-create index hf_vm_quota_map_vm_type_idx on hf_vm_quota_map (vm_type);
-create index hf_vm_quota_map_private_vps_idx on hf_vm_quota_map (private_vps);
+create index hf_vm_quotas_instance_id_idx on hf_vm_quotas (instance_id);
+create index hf_vm_quotas_plan_id_idx on hf_vm_quotas (plan_id);
+create index hf_vm_quotas_vm_type_idx on hf_vm_quotas (vm_type);
+create index hf_vm_quotas_private_vps_idx on hf_vm_quotas (private_vps);
 
 -- vh might be a domain resolving to ni
 CREATE TABLE hf_vhosts (

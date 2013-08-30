@@ -96,12 +96,12 @@ drop index hf_vhosts_instance_id_idx;
 
 DROP TABLE hf_vhosts;
 
-drop index hf_vm_quota_map_private_vps_idx;
-drop index hf_vm_quota_map_vm_type_idx;
-drop index hf_vm_quota_map_plan_id_idx;
-drop index hf_vm_quota_map_instance_id_idx;
+drop index hf_vm_quotas_private_vps_idx;
+drop index hf_vm_quotas_vm_type_idx;
+drop index hf_vm_quotas_plan_id_idx;
+drop index hf_vm_quotas_instance_id_idx;
 
-DROP TABLE hf_vm_quota_map;
+DROP TABLE hf_vm_quotas;
 
 drop index hf_dc_ni_map_ni_id_idx;
 drop index hf_dc_ni_map_dc_id_idx;

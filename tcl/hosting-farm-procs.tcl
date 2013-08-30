@@ -600,7 +600,7 @@ ad_proc -private hf_ips {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
     #   hf_ip_addresses.instance_id ip_id ipv4_addr ipv4_status ipv6_addr ipv6_status
     #   hf_virtual_machines.ip_id
 
@@ -620,7 +620,7 @@ ad_proc -private hf_oses {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
     # hf_hardware.os_id
     # hf_operating_systems.instance_id os_id label brand version kernel orphaned_p requires_upgrade_p description
 }
@@ -639,7 +639,7 @@ ad_proc -private hf_vhs {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
     # hf_hosts.instance_id vh_id ua_id ns_id domain_name details
     # hf_vm_vh_map.instance_id vm_id vh_id
     # hf_vh_map.instance_id vh_id ss_id
@@ -660,7 +660,7 @@ ad_proc -private hf_uas {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
     # hf_assets.ua_id
     # hf_vhosts.ua_id
     # hf_services.ua_id
@@ -704,7 +704,10 @@ ad_proc -private hf_asset_features {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
+    # hf_asset_type_features.instance_id feature_id asset_type_id label feature_type publish_p title description
+    # hf_asset_feature_map.instance_id asset_id feature_id
+
 }
 
 
@@ -761,7 +764,7 @@ ad_proc -private hf_asset_type_read {
     {instance_id ""}
     id_list
 } {
-    returns an existing asset type in a list of lists: {label1, title1, description1} {labelN, titleN, descriptionN} or blank list if none found. Bad id's are ignored.
+    returns an existing asset_type in a list of lists: {label1, title1, description1} {labelN, titleN, descriptionN} or blank list if none found. Bad id's are ignored.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -1071,7 +1074,8 @@ ad_proc -private hf_vm_quota_read {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    #code
+    ##code
+    # hf_vm_quotas.instance_id plan_id description base_storage base_traffic base_memory base_sku over_storage_sku over_traffic_sku over_memory_sku storage_unit traffic_unit memory_unit qemu_memory status_id vm_type max_domain private_vps
 }
 
 ad_proc -private hf_vm_quota_write {
