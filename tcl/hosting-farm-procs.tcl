@@ -3,9 +3,6 @@ ad_library {
     misc API for hosting-farm
     @creation-date 5 June 2013
 
-    #user DNS zone editing needs 2 parts. 1:1 vm_id, and 1:1 asset_type
-    # need to add name_service table with ns_id to sql/postgresql/hosting-farm-create.sql
-
     # UI for one click (web-based) installers
       # installers install/update/monitor/activate/de-activate software, ie hosted service (hs) or software as a service (ss)
       # asset_type_id = hs or ss
