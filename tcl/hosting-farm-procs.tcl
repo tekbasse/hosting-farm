@@ -3,6 +3,9 @@ ad_library {
     misc API for hosting-farm
     @creation-date 5 June 2013
 
+    ## change ni_id reference in assets.. remove. Use hf_dc_ni_map, or hf_hw_ni_map as appropriate.
+    ## make sure that hardware assets can have multiple ip numbers assigned.
+
     #user DNS zone editing needs 2 parts. 1:1 vm_id, and 1:1 asset_type
     # need to add name_service table with ns_id to sql/postgresql/hosting-farm-create.sql
 
@@ -442,7 +445,7 @@ ad_proc -private hf_nis {
     }
 
     #  hw and vm are 1:1 mapped, so can reference ni_id directly.
-  
+  ## not 1:1, think firewalls, switches etc.
     if { [llength $asset_id_list(hw)] > 0 } {
         # hw
         #  hf_hardware.instance_id, hw_id, system_name, backup_sys, ni_id, os_id, description, details
