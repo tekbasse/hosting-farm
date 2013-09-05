@@ -231,7 +231,7 @@ CREATE TABLE hf_network_interfaces (
     ipv6_addr_range    varchar(50)
 );
 
-create index hf_netowrk_interfaces_instance_id_idx on hf_network_interfaces (instance_id);
+create index hf_network_interfaces_instance_id_idx on hf_network_interfaces (instance_id);
 create index hf_network_interfaces_ni_id_idx on hf_network_interfaces (ni_id);
 
 CREATE TABLE hf_ip_addresses (
@@ -275,16 +275,6 @@ CREATE TABLE hf_asset_feature_map (
 create index hf_asset_feature_map_instance_id_idx on hf_asset_feature_map (instance_id);
 create index hf_asset_feature_map_asset_id_idx on hf_asset_feature_map (asset_id);
 create index hf_asset_feature_map_feature_id_idx on hf_asset_feature_map (feature_id);
-
-CREATE TABLE hf_dc_ni_map (
-    instance_id     integer,
-    dc_id           integer,
-    ni_id           integer
-);
-
-create index hf_dc_ni_map_instance_id_idx on hf_dc_ni_map (instance_id);
-create index hf_dc_ni_map_dc_id_idx on hf_dc_ni_map (dc_id);
-create index hf_dc_ni_map_ni_id_idx on hf_dc_ni_map (ni_id);
 
 CREATE TABLE hf_vm_quotas (
   instance_id        integer,
@@ -399,6 +389,29 @@ CREATE TABLE hf_dc_hw_map (
 create index hf_dc_hw_map_instance_id_idx on hf_dc_hw_map (instance_id);
 create index hf_dc_hw_map_dc_id_idx on hf_dc_hw_map (dc_id);
 create index hf_dc_hw_map_hw_id_idx on hf_dc_hw_map (hw_id);
+
+
+CREATE TABLE hf_dc_ni_map (
+    instance_id     integer,
+    dc_id           integer,
+    ni_id           integer
+);
+
+create index hf_dc_ni_map_instance_id_idx on hf_dc_ni_map (instance_id);
+create index hf_dc_ni_map_dc_id_idx on hf_dc_ni_map (dc_id);
+create index hf_dc_ni_map_ni_id_idx on hf_dc_ni_map (ni_id);
+
+
+CREATE TABLE hf_hw_ni_map (
+    instance_id     integer,
+    hw_id           integer,
+    ni_id           integer
+);
+
+create index hf_hw_ni_map_instance_id_idx on hf_hw_ni_map (instance_id);
+create index hf_hw_ni_map_hw_id_idx on hf_hw_ni_map (hw_id);
+create index hf_hw_ni_map_ni_id_idx on hf_hw_ni_map (ni_id);
+
 
 CREATE TABLE hf_hw_vm_map (
     instance_id     integer,
