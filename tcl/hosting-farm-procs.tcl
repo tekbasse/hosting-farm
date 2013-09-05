@@ -630,7 +630,7 @@ ad_proc -private hf_vhs {
     {customer_id_list ""}
     {asset_id_list ""}
 } {
-    returns an ordered lists of lists of virtual hosts and their direct properties
+    returns an ordered lists of lists of virtual hosts and their direct properties. 
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -640,6 +640,8 @@ ad_proc -private hf_vhs {
         set user_id [ad_conn user_id]
     }
     ##code
+    # a common use will be to supply vm_id as asset_id_list.
+    #
     # hf_hosts.instance_id vh_id ua_id ns_id domain_name details
     # hf_vm_vh_map.instance_id vm_id vh_id
     # hf_vh_map.instance_id vh_id ss_id
@@ -650,8 +652,10 @@ ad_proc -private hf_uas {
     {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
+    {vh_id_list ""}
+    {ss_id_list ""}
 } {
-    returns an ordered lists of lists of user accounts and their direct properties
+    returns an ordered lists of lists of user accounts and their direct properties for asset_id
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -673,6 +677,7 @@ ad_proc -private hf_sss {
     {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
+    {ss_id_list ""}
 } {
     returns an ordered list of lists of software as services (hosted services) and their direct properties
 } {
