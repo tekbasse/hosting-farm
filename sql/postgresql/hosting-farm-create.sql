@@ -81,6 +81,7 @@ CREATE TABLE hf_assets (
     time_start 	    timestamptz,
     -- expires/expired on
     time_stop 	    timestamptz,
+    -- DNS record reference
     ns_id           integer,
     ua_id 	        integer,
   -- status aka vm_to_configure, on,off etc.
@@ -181,6 +182,7 @@ CREATE TABLE hf_hardware (
     -- following aka backup_config.server_name backup_server
     system_name varchar(200),
     backup_sys  varchar(200),
+    -- network interface id, this is the remote console (primary only, if more than one)
     ni_id       integer,
     os_id       integer,
     description varchar(200),
@@ -196,7 +198,9 @@ CREATE TABLE hf_virtual_machines (
     vm_id         integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     domain_name   varchar(300),
     ip_id         integer,
+    -- network interface id
     ni_id         integer,
+    -- DNS record id
     ns_id         integer,
     -- from database_server.type_id
     --      server.server_type
@@ -401,7 +405,7 @@ create index hf_dc_ni_map_instance_id_idx on hf_dc_ni_map (instance_id);
 create index hf_dc_ni_map_dc_id_idx on hf_dc_ni_map (dc_id);
 create index hf_dc_ni_map_ni_id_idx on hf_dc_ni_map (ni_id);
 
-
+-- hw_ni map is separate fro dc_ni map, because these are inherently 2 different systems
 CREATE TABLE hf_hw_ni_map (
     instance_id     integer,
     hw_id           integer,

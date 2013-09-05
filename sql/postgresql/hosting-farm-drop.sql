@@ -62,6 +62,12 @@ drop index hf_hw_vm_map_instance_id_idx;
 
 DROP TABLE hf_hw_vm_map;
 
+drop index hf_hw_ni_map_instance_id_idx;
+drop index hf_hw_ni_map_hw_id_idx;
+drop index hf_hw_ni_map_ni_id_idx;
+
+DROP TABLE hf_hw_ni_map;
+
 drop index hf_dc_hw_map_hw_id_idx;
 drop index hf_dc_hw_map_dc_id_idx;
 drop index hf_dc_hw_map_instance_id_idx;
@@ -103,11 +109,6 @@ drop index hf_vm_quotas_instance_id_idx;
 
 DROP TABLE hf_vm_quotas;
 
-
-drop index hf_hw_ni_map_instance_id_idx;
-drop index hf_hw_ni_map_hw_id_idx;
-drop index hf_hw_ni_map_ni_id_idx;
-DROP TABLE hf_hw_ni_map;
 
 drop index hf_dc_ni_map_ni_id_idx;
 drop index hf_dc_ni_map_dc_id_idx;

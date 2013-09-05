@@ -3,9 +3,6 @@ ad_library {
     misc API for hosting-farm
     @creation-date 5 June 2013
 
-    ## change ni_id reference in assets.. remove. Use hf_dc_ni_map, or hf_hw_ni_map as appropriate.
-    ## make sure that hardware assets can have multiple ip numbers assigned.
-
     #user DNS zone editing needs 2 parts. 1:1 vm_id, and 1:1 asset_type
     # need to add name_service table with ns_id to sql/postgresql/hosting-farm-create.sql
 
@@ -444,17 +441,17 @@ ad_proc -private hf_nis {
         }
     }
 
-    #  hw and vm are 1:1 mapped, so can reference ni_id directly.
-  ## not 1:1, think firewalls, switches etc.
     if { [llength $asset_id_list(hw)] > 0 } {
-        # hw
+        ## hw  --confirm this works for multiple ni_id's
+        # hf_hw_ni_map.instance_id, hw_id, ni_id
         #  hf_hardware.instance_id, hw_id, system_name, backup_sys, ni_id, os_id, description, details
-        set asset_lists [db_list_of_lists hf_hw_nis_get "select hw.hw_id, 'hw' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_hardware hw, hf_network_interfaces ni where ni.ni_id = hw.ni_id and ni.ni_id in (select ni_id from hf_hardware where instance_id =:instance_id and hw_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(hw)])"]
+        set asset_lists [db_list_of_lists hf_hw_nis_get "select hw.hw_id, 'hw' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_hw_ni_map hw, hf_network_interfaces ni where hw.ni_id = ni.ni_id and ni.ni_id in (select ni_id from hf_hw_ni_map where instance_id =:instance_id and hw_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(hw)])"]
         foreach asset_ni_list $asset_lists {
             lappend ni_detail_lists $asset_ni_list
         }
     }
-         
+
+    # vm are 1:1 mapped, so can reference ni_id directly.         
     if { [llength $asset_id_list(vm)] > 0 } {
         # vm
         # hf_virtual_machines instance_id, vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details
