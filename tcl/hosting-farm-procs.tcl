@@ -705,20 +705,22 @@ ad_proc -private hf_ips {
 
 ad_proc -private hf_oses {
     {instance_id ""}
-    {customer_id_list ""}
-    {asset_id_list ""}
+    {os_id_list ""}
+    {orphaned_p 1}
+    {requires_upgrade_p 1}
 } {
-    returns an ordered list of lists of operating systems and their direct properties
+    returns an ordered list of lists of operating systems and their direct properties. Defaults to all oses
 } {
  if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    ##code
-    # hf_hardware.os_id
+   # no permissions needed     set user_id \[ad_conn user_id\]
+
+    ## add os detail to hf_vms and hf_hws
+    # hf_hardware.os_id hw_id
+    # hf_virtual_machines.os_id vm_id
+ 
     # hf_operating_systems.instance_id os_id label brand version kernel orphaned_p requires_upgrade_p description
 }
 
