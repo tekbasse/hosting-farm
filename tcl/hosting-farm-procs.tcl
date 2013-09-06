@@ -111,9 +111,9 @@ ad_proc -private hf_asset_create_from_asset_template {
             set status [hf_asset_create $asset_label_new $aa(2) $aa(1) $aa(5) $aa(3) $aa(4) $aa(6) 0 $aa(10) 0 $aa(12) 0 $aa(14) "" $aa(16) $aa(17) $aa(18) $customer_id "" "" $instance_id $user_id]
             # params: name, asset_type_id, title, content, keywords, description, comments, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, {template_id ""}, {flags ""}, {instance_id ""}, {user_id ""}
             if { $status } {
-#### TODO: create should not include the same ns_id or ua_id. create a new entry in hf_ua and hf_ns tables.
-                #            hf_ua_create
-                #            hf_ns_create
+#### TODO: create should not include the same ns_id or ua_id. create a new entry in hf_ua and hf_ns tables. Delay coding until these procs created:
+                #            hf_ua_write
+                #            hf_ns_write
 
                 # if publish_p is 1, copy relevant data (done afaik)
                 # if monitor_p is 1, copy the monitor settings
@@ -439,8 +439,7 @@ ad_proc -private hf_nis {
     }
 
     if { [llength $asset_id_list(hw)] > 0 } {
-        ## hw  --confirm this works for multiple ni_id's
-        # hf_hw_ni_map.instance_id, hw_id, ni_id
+        #  hf_hw_ni_map.instance_id, hw_id, ni_id
         #  hf_hardware.instance_id, hw_id, system_name, backup_sys, ni_id, os_id, description, details
         set asset_lists [db_list_of_lists hf_hw_nis_get "select hw.hw_id, 'hw' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_hw_ni_map hw, hf_network_interfaces ni where hw.ni_id = ni.ni_id and ni.ni_id in (select ni_id from hf_hw_ni_map where instance_id =:instance_id and hw_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(hw)])"]
         foreach asset_ni_list $asset_lists {
@@ -494,15 +493,14 @@ ad_proc -private hf_vms {
     {customer_id_list ""}
     {asset_id_list ""}
 } {
-    returns an ordered list of lists of an asset's virtual machines and their direct properties. A hardware id is an asset_id.
+    returns an ordered list of lists of an asset's virtual machines and their direct properties. A hardware id is an asset_id. 
+    The ordered list is:  vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details, count of vhosts on vm
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
+    set user_id [ad_conn user_id]
     # get all available asset_ids to user (ie. customers of user) (even ones that might be listed as a different type)
     # a vm is a subset of an hw, which is a subset of a dc.
     set asset_detail_lists [hf_assets_w_detail $instance_id $customer_id_list "" 1 "" "" ""]
@@ -587,20 +585,122 @@ ad_proc -private hf_ips {
     {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
+    {ip_id_list ""}
 } {
-    returns an ordered list of lists of ip references and their direct properties
+    returns an ordered list of lists of ip references and their direct properties. 
+    Ordered list is: asset_id,  ip_id, ipv4_addr, ipv4_status, ipv6_addr, ipv6_status
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    ##code
-    #   hf_ip_addresses.instance_id ip_id ipv4_addr ipv4_status ipv6_addr ipv6_status
-    #   hf_virtual_machines.ip_id
+    set user_id [ad_conn user_id]
 
+    # Process is similar to hf_vms, so call that first.
+    # get all available asset_ids to user (ie. customers of user) (even ones that might be listed as a different type)
+    # set vm_detail_list \[hf_vms $instance_id $customer_id_list $asset_id_list\]
+    # Actually, we are copying the code to make the process a little faster (fewer queries)
+# following directly from from hf_vms 
+# START
+    # get all available asset_ids to user (ie. customers of user) (even ones that might be listed as a different type)
+    # a vm is a subset of an hw, which is a subset of a dc.
+    set asset_detail_lists [hf_assets_w_detail $instance_id $customer_id_list "" 1 "" "" ""]
+    set asset_id_list_arr(dc) [list ]
+    set asset_id_list_arr(hw) [list ]
+    set asset_id_list_arr(vm) [list ]
+    foreach asset_list $asset_detail_lists {
+        # build asset_ids_list_arr(dc, hw, vm)
+        set asset_id [lindex $asset_list 0]
+        set asset_type_id [lindex $asset_list 4]
+        lappend asset_id_list_arr($asset_type_id) $asset_id
+    }
+
+    if { $customer_id_list eq "" } {
+        #get all available hw_ids to user
+        set vm_list [list ]
+
+        # get all dc's associated with user, and subsequently, hw under those dc's
+        set hw_id_list $asset_id_list_arr(hw)
+        if { [llength $asset_id_list_arr(dc)] > 0 } {
+            # dc
+            set hw_id_indirect_list [db_list_of_lists hf_dc_get_hw_ids2 "select hw_id from hf_dc_hw_map where instance_id =:instance_id and dc_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(dc)])"]
+            foreach hw_id $hw_id_indirect_list {
+                lappend hw_id_list $hw_id
+            }
+        }
+        # get all vm's mapped to hw_ids
+        # hf_hw_vm_map.instance_id, hw_id, vm_id
+        set vm_id_list [db_list hf_vm_get_vm_ids "select vm_id from hf_hw_vm_map where instance_id =:instance_id and hw_ic in ([template::util::tcl_to_sql_list $hw_id_list])"]
+        
+        # get all direct vm's available to user
+        # vm is an asset_id_type, so direct vm's are in: asset_id_list_arr(vm) 
+        
+        # build list of list using collected vm_id's
+        foreach vm_id $vm_id_list {
+            lappend asset_id_list_arr(vm) $vm_id
+        }
+    }
+
+    set vm_id_list $asset_id_list_arr(vm)
+    # detail is retrieved from db before applying arbitrary filters, to help optimize db caching
+    # hf_virtual_machines.instance_id, vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details
+    set vm_detail_list [db_list_of_lists hf_vm_get_detail "select vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details from hf_virtual_machines where instance_id =:instance_id and vm_id in ([template::util::tcl_to_sql_list $vm_id_list])"]
+
+    # If proc parameters are not blank, filter the results.
+    # results already scoped for customer_id_list via asset_detail_lists
+    set filter_asset_id_p [expr { $asset_id_list ne "" } ]
+    if { $filter_asset_id_p } {
+        set base_return_list [list ]
+        set insert_p 0
+        # scope to filter
+        foreach vm_list $vm_detail_list {
+            if { $filter_asset_id_p && [lsearch -exact $asset_id_list [lindex $vm_list 0]] > -1 } {
+                set insert_p 1
+            }
+            # if filtering list by details, do it here
+
+            if { $insert_p } {
+                set insert_p 0
+                lappend base_return_list $vm_list
+            }
+        }
+    } else {
+        set base_return_list $vm_detail_list
+    } 
+# END
+# previous directly from hf_vms
+# results in base_return_list, consisting of this ordered list:
+#    vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details, count of vhosts on vm
+    # of note:  hf_virtual_machines.ip_id    
+    set ip_ids_list [list ]
+    foreach base_list $base_return_list {
+        lappend ip_ids_list [lindex $base_list 2]
+    }
+    #   hf_ip_addresses.instance_id ip_id ipv4_addr ipv4_status ipv6_addr ipv6_status
+    set ip_detail_list [db_list_of_lists ip_addresses_get "select vm.vm_id, ip.ip_id, ip.ipv4_addr, ip.ipv4_status, ip.ipv6_addr, ip.ipv6_status from hf_assets vm, hf_ip_addresses ip where ip.ip_id = vm.ip_id and ip.ip_id in ([template::util::tcl_to_sql_list $ip_ids_list])"
+    
+    # If proc ip_id_list is not blank, filter the results.
+    # results already scoped for customer_id_list via asset_detail_lists
+    set filter_ip_id_p [expr { $ip_id_list ne "" } ]
+    if { $filter_ip_id_p } {
+        set base_return_list [list ]
+        set insert_p 0
+        # scope to filter
+        foreach ip_list $ip_detail_list {
+            if { $filter_ip_id_p && [lsearch -exact $ip_id_list [lindex $ip_list 1]] > -1 } {
+                set insert_p 1
+            }
+            # if filtering list by details, do it here
+
+            if { $insert_p } {
+                set insert_p 0
+                lappend base_return_list $ip_list
+            }
+        }
+    } else {
+        set base_return_list $ip_detail_list
+    } 
+    return $base_return_list
 }
 
 ad_proc -private hf_oses {
@@ -610,7 +710,7 @@ ad_proc -private hf_oses {
 } {
     returns an ordered list of lists of operating systems and their direct properties
 } {
-    if { $instance_id eq "" } {
+ if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
