@@ -203,6 +203,7 @@ CREATE TABLE hf_virtual_machines (
     ni_id         integer,
     -- DNS record id
     ns_id         integer,
+    os_id         integer,
     -- from database_server.type_id
     --      server.server_type
     type_id       integer,
