@@ -709,25 +709,49 @@ ad_proc -private hf_oses {
     {orphaned_p 1}
     {requires_upgrade_p 1}
 } {
-    returns an ordered list of lists of operating systems and their direct properties. Defaults to all oses
+    returns an ordered list of lists of operating systems and their direct properties. Defaults to all oses. Set orphaned_p 0 to not include orphaned ones. Set requires_upgrade_p to 0 to only include current, supported ones.
+    Ordered list: os_id label brand version kernel orphaned_p requires_upgrade_p description
 } {
- if { $instance_id eq "" } {
+    if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-   # no permissions needed     set user_id \[ad_conn user_id\]
-
+    # no permissions needed     set user_id \[ad_conn user_id\]
+    # build sql_extra
+    set sql_extra ""
+    if { $orphaned_p ne 1 } {
+        set orphaned_p 0
+        append sql_extra " and orphaned_p <> '1'"
+    }
+    if { $requires_upgrade_p ne 1 } {
+        set requires_upgrade_p 0
+        append sql_extra " and requires_upgrade_p <> '1'"
+    }
+    if { $os_id_list ne "" } {
+        set clean_os_id_list [list ]
+        foreach os_id $os_id_list {
+            # verify os_id_list elements are numbers
+            if { [qf_is_natural_number $os_id] } {
+                lappend clean_os_id_list $os_id
+            }
+        }
+        if { [llength $clean_os_id_list] > 0 } {
+            append sql_extra " and os_id in ([template::util::tcl_to_sql_list $clean_os_id_list])"
+        }
+    }
     ## add os detail to hf_vms and hf_hws
-    # hf_hardware.os_id hw_id
-    # hf_virtual_machines.os_id vm_id
- 
+      # hf_hardware.os_id hw_id
+      # hf_virtual_machines.os_id vm_id
     # hf_operating_systems.instance_id os_id label brand version kernel orphaned_p requires_upgrade_p description
+    set os_detail_list [db_list_of_lists operating_systems_get "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id = :instance_id ${sql_extra}"]
+    return $os_detail_list
 }
 
 ad_proc -private hf_vhs {
     {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
+    {vh_id_list ""}
 } {
     returns an ordered lists of lists of virtual hosts and their direct properties. 
 } {
