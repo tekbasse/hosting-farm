@@ -677,7 +677,7 @@ ad_proc -private hf_ips {
         lappend ip_ids_list [lindex $base_list 2]
     }
     #   hf_ip_addresses.instance_id ip_id ipv4_addr ipv4_status ipv6_addr ipv6_status
-    set ip_detail_list [db_list_of_lists ip_addresses_get "select vm.vm_id, ip.ip_id, ip.ipv4_addr, ip.ipv4_status, ip.ipv6_addr, ip.ipv6_status from hf_assets vm, hf_ip_addresses ip where ip.ip_id = vm.ip_id and ip.ip_id in ([template::util::tcl_to_sql_list $ip_ids_list])"
+    set ip_detail_list [db_list_of_lists hf_ip_addresses_get "select vm.vm_id, ip.ip_id, ip.ipv4_addr, ip.ipv4_status, ip.ipv6_addr, ip.ipv6_status from hf_assets vm, hf_ip_addresses ip where ip.ip_id = vm.ip_id and ip.ip_id in ([template::util::tcl_to_sql_list $ip_ids_list])"
     
     # If proc ip_id_list is not blank, filter the results.
     # results already scoped for customer_id_list via asset_detail_lists
@@ -743,7 +743,7 @@ ad_proc -private hf_oses {
       # hf_hardware.os_id hw_id
       # hf_virtual_machines.os_id vm_id
     # hf_operating_systems.instance_id os_id label brand version kernel orphaned_p requires_upgrade_p description
-    set os_detail_list [db_list_of_lists operating_systems_get "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id = :instance_id ${sql_extra}"]
+    set os_detail_list [db_list_of_lists hf_operating_systems_get "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id = :instance_id ${sql_extra}"]
     return $os_detail_list
 }
 
@@ -843,21 +843,48 @@ ad_proc -private hf_vhs {
     foreach base_list $base_return_list {
         lappend vm_ids_list [lindex $base_list 0]
     }
-    ##code
-
     # hf_vm_vh_map.instance_id vm_id vh_id
     # every vh_id is mapped to a vm_id
+    set vm_vh_list [db_list_of_lists hf_vm_vh_map_get "select vm_id, vh_id from hf_vm_vh_map where vh_id in ([template::util::tcl_to_sql_list $vm_ids_list])"]
 
-
-    #
+    if { $vh_id_list ne "" } {
+        # filter vm_vh_list to vh_id_list
+        set vm_vh_2_list [list ]
+        foreach vm_vh_list $vm_vh_list {
+            if { [lsearch -exact $vh_id_list [lindex $vm_vh_list 1]] > -1 } {
+                lappend vm_vh_2_list $vm_vh_list
+            }
+        }
+        set vm_vh_list $vm_vh_2_list
+    }
+    set vh_id_list [list ]
+    foreach vm_vh_list $vm_vh_list {
+        set vh_id [lindex $vm_vh_list 1]
+        lappend vh_id_list $vh_id
+        # create an array to reverse index later
+        set vm_vh_arr($vh_id) [lindex $vm_vh_list 0]
+    }
     # hf_hosts.instance_id vh_id ua_id ns_id domain_name details
-
-    # hf_vh_map.instance_id vh_id ss_id
-    #                             ss = hosted service
-
-
-    # needs to return a list like this:
+    set vh_set_list [db_list_of_lists hf_vh_detail_get "select vh_id, ua_id, ns_id, domain_name, details from hf_hosts where vh_id in ([template::util::tcl_to_sql_list $vh_id_list])"]
+    # build this list:
     # vm_id vh_id ua_id ns_id domain_name details count(ss_id)
+    # don't assume all vh_id are in vh_set_list
+    set vh_detail_list [list ]
+    foreach vh_list $vh_set_list {
+        set vh_one_list [list ]
+        set vh_id [lindex $vh_list 0]
+        lappend vh_one_list $vm_vh_arr($vh_id)
+        foreach vh_el $vh_list {
+            lappend vh_one_list $vh_el
+        }
+        # add more detail
+        # hf_vh_map.instance_id vh_id ss_id
+        #                             ss = hosted service
+        db_1row hf_vh_ss_count_get "select count(ss_id) as ss_id_count from hf_vh_map where vh_id =:vh_id"
+        lappend vh_one_list $ss_id_count
+        lappend vh_detail_list $vh_one_list
+    }
+    return $vh_detail_list
 }
 
 ad_proc -private hf_uas {
