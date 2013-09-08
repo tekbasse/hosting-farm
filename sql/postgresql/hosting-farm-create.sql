@@ -439,15 +439,15 @@ create index hf_vm_vh_map_instance_id_idx on hf_vm_vh_map (instance_id);
 create index hf_vm_vh_map_vm_id_idx on hf_vm_vh_map (vm_id);
 create index hf_vm_vh_map_vh_id_idx on hf_vm_vh_map (vh_id);
 
-CREATE TABLE hf_vh_map (
+CREATE TABLE hf_vh_ss_map (
     instance_id     integer,
     vh_id           integer,
     ss_id           integer
 );
 
-create index hf_vh_map_instance_id_idx on hf_vh_map (instance_id);
-create index hf_vh_map_vh_id_idx on hf_vh_map (vh_id);
-create index hf_vh_map_ss_id_idx on hf_vh_map (ss_id);
+create index hf_vh_ss_map_instance_id_idx on hf_vh_ss_map (instance_id);
+create index hf_vh_ss_map_vh_id_idx on hf_vh_ss_map (vh_id);
+create index hf_vh_ss_map_ss_id_idx on hf_vh_ss_map (ss_id);
 
 -- was database_auth
 CREATE TABLE hf_ua_up_map (
