@@ -890,6 +890,7 @@ ad_proc -private hf_m_uas {
         set ua_id [lindex $base_list 2]
         lappend as_ids_list $asset_id
         lappend ua_ids_list $ua_id
+#        set ua_type_arr($ua_id) "as"
         if { $asset_type eq "vm" } {
             lappend vm_ids_list $asset_id
         }
@@ -899,7 +900,8 @@ ad_proc -private hf_m_uas {
     # every vh_id is mapped to a vm_id
     # hf_vm_vh_map.instance_id vm_id vh_id
     set vm_vh_map_list [db_list_of_lists hf_vm_vh_map_get "select vm_id, vh_id from hf_vm_vh_map where vh_id in ([template::util::tcl_to_sql_list $vm_ids_list])"]
-    # filter vm_vh_list to vh_id_list
+ 
+   # filter vm_vh_list to vh_id_list
     if { $vh_id_list ne "" } {
         set vm_vh_2_list [list ]
         foreach vm_vh $vm_vh_list {
@@ -910,6 +912,7 @@ ad_proc -private hf_m_uas {
         }
         set vm_vh_map_list $vm_vh_2_list
     }
+
     set vh_ids_list [list ]
     foreach vm_vh_list $vm_vh_map_list {
         set vh_id [lindex $vm_vh_list 1]
@@ -920,22 +923,45 @@ ad_proc -private hf_m_uas {
     # hf_hosts.instance_id vh_id ua_id ns_id domain_name details
     set vh_set_list [db_list_of_lists hf_vh_ua_detail_get "select vh_id, ua_id from hf_hosts where vh_id in ([template::util::tcl_to_sql_list $vh_ids_list])"]
     foreach vh_ua_list $vh_set_list {
-        lappend vh_ids_list [lindex $vh_ua_list 0]
-        lappend ua_ids_list [lindex $vh_ua_list 1]
+        set vh_id [lindex $vh_ua_list 0]
+        set ua_id [lindex $vh_ua_list 1]
+        lappend vh_ids_list $vh_id
+        lappend ua_ids_list $ua_id
+ #       set ua_type_arr($ua_id) "vh"
     }
 
     # include cases where ss is a subsite of a vh_id and not referenced by asset_id directly.
     # hf_vm_ss_map.instance_id vh_id ss_id
     #                             ss = hosted service
     # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
-    set ss_set_list [db_list_of_lists hf_ss_ua_get "select ss_id, ua_id from hf_services where instance_id =:instance_id and ss_id in (select ss_id from hf_vh_ss_map where instance_id =:instance_id and vh_id =:vh_id)"]
-    foreach ss_ua_list $ss_set_list {
-        lappend ss_ids_list [lindex $ss_ua_list 0]
-        lappend ua_ids_list [lindex $ss_ua_list 1]
-    }
+    set ss_set_list [db_list_of_lists hf_ss_ua_get "select vh_id, ss_id, ua_id from hf_services ss, hf_vh_ss_map vs where ss.instance_id = vs.instance_id and ss.ss_id = vs.ss_id and instance_id =:instance_id and vh_id in ([template::util::tcl_to_sql_list $vh_ids_list])"]
 
-    # any other cases?
-######
+    if { $ss_id_list ne "" } {
+        # filter ss_set_list to ss_id_list
+        set ss_set_2_list [list ]
+        foreach ss_set $ss_set_list {
+            set ss_id [lindex $ss_set 1]
+            if { [lsearch -exact $ss_id_list $ss_id] > -1 } {
+                set vh_id [lindex $ss_ua_list 0]
+                set ss_id [lindex $ss_ua_list 1]
+                set ua_id [lindex $ss_ua_list 2]
+                lappend ss_ids_list $ss_id
+                lappend ua_ids_list $ua_id
+            #        set ua_type_arr($ua_id) "ss"
+                lappend ss_set_2_list $ss_set
+            }
+        }
+        set ss_set_list $ss_set_2_list
+    } else {
+        foreach ss_ua_list $ss_set_list {
+            set vh_id [lindex $ss_ua_list 0]
+            set ss_id [lindex $ss_ua_list 1]
+            set ua_id [lindex $ss_ua_list 2]
+            lappend ss_ids_list $ss_id
+            lappend ua_ids_list $ua_id
+            #        set ua_type_arr($ua_id) "ss"
+        }
+    }
 
     # bulk query
     set ua_detail_list [db_list_of_lists hf_ua_detail_get "select ua_id details connection_type from hf_ua where instance_id =:instance_id and ua_id in ([template::util::tcl_to_sql_list $ua_ids_list])"]
@@ -945,60 +971,51 @@ ad_proc -private hf_m_uas {
         set ua_detail_arr($ua_id) $ua_detail
     }
 
-    # build return_list ua_index_list
+    # build return_list ua_index_list in order of:
     # asset_id asset_type vh_id ss_id ua_id details connection_type    
 
+    set vh_id ""
+    set ss_id ""
     foreach as_list $base_asset_list {
         set as_id [lindex $as_list 0]
         set as_type [lindex $as_list 1]
-        set vh_id ""
-        set ss_id ""
         set ua_id [lindex $as_list 2]
         set ua_list [list $as_id $as_type $vh_id $ss_id $ua_id]
         lappend ua_index_list $ua_list
-        foreach ss_ua $sss_list {
-            set ss_id [lindex $ss_ua 0]
-            set ua_id [lindex $ss_ua 1]
-            set ua_list [list $vm_id $vh_id $ss_id $ua_id]
-            lappend ua_ids_list $ua_id
-            lappend ua_index_list $ua_list
-        }
+    }
+    
+    set as_id ""
+    set as_type ""
+    foreach ss_ua $ss_set_list {
+        set vh_id [lindex $ss_ua 0]
+        set ss_id [lindex $ss_ua 1]
+        set ua_id [lindex $ss_ua 2]
+
+        set ua_list [list $as_id $as_type $vh_id $ss_id $ua_id]
+        lappend ua_index_list $ua_list
     }
 
-
+    set ss_id ""
     foreach vh_list $vh_detail_list {
         set vm_id [lindex $vh_list 0]
         set vh_id [lindex $vh_list 1]
         set ua_id [lindex $vh_list 2]
-        lappend ua_ids_list $ua_id
-        set ss_id ""
-        set ua_list [list $vm_id $vh_id $ss_id $ua_id]
+        set ua_list [list $as_id $as_type $vh_id $ss_id $ua_id]
         lappend ua_index_list $ua_list
-        # add more cases?
-        # hf_vh_ss_map.instance_id vh_id ss_id
-        #                             ss = hosted service
-        # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
-        set ss_ua_list [db_list_of_lists hf_ss_ua_get "select ss_id, ua_id from hf_services where instance_id =:instance_id and ss_id in (select ss_id from hf_vh_ss_map where instance_id =:instance_id and vh_id =:vh_id)"]
-        foreach ss_ua $sss_list {
-            set ss_id [lindex $ss_ua 0]
-            set ua_id [lindex $ss_ua 1]
-            set ua_list [list $vm_id $vh_id $ss_id $ua_id]
-            lappend ua_ids_list $ua_id
-            lappend ua_index_list $ua_list
-        }
     }
 
-
+    # append ua detail
     set ua_map_detail_list [list ]
     foreach ua_index $ua_index_list {
-        set ua_id [lindex $ua_index 3]
+        set ua_id [lindex $ua_index 4]
         if { [info exists ua_detail_arr($ua_id) ] } {
             #set ua_final $ua_index
             # don't want to duplicate ua_id
-            set ua_final [lrange $ua_index 0 2]
-            foreach element $ua_detail_arr($ua_id) {
-                lappend ua_final $element
-            }
+            set ua_final_list [lrange $ua_index 0 4]
+            # detail:
+            lappend ua_final_list [lindex $ua_detail_arr($ua_id) 1]
+            # connection_type:
+            lappend ua_final_list [lindex $ua_detail_arr($ua_id) 2]
             lappend ua_map_detail_list $ua_final
         } else {
             ns_log Warning "hf_m_uas(883): missing ua_id '$ua_id' for ua_index: '$ua_index'"
