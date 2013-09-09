@@ -44,11 +44,11 @@ drop index hf_ua_up_map_instance_map_idx;
 
 DROP TABLE hf_ua_up_map;
 
-drop index hf_vh_ss_map_ss_id_idx;
-drop index hf_vh_ss_map_vh_id_idx;
-drop index hf_vh_ss_map_instance_id_idx;
+-- drop index hf_vh_ss_map_ss_id_idx;
+-- drop index hf_vh_ss_map_vh_id_idx;
+-- drop index hf_vh_ss_map_instance_id_idx;
 
-DROP TABLE hf_vh_ss_map;
+-- DROP TABLE hf_vh_ss_map;
 
 drop index hf_vm_vh_map_vh_id_idx;
 drop index hf_vm_vh_map_vm_id_idx;
@@ -89,6 +89,8 @@ drop index hf_services_port_idx;
 drop index hf_services_protocol_idx;
 drop index hf_services_daemon_ref_idx;
 drop index hf_services_server_name_idx;
+drop index hf_services_vh_id_idx;
+drop index hf_services_vm_id_idx;
 drop index hf_services_ss_id_idx;
 drop index hf_services_instance_id_idx;
 

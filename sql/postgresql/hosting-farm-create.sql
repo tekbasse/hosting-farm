@@ -333,6 +333,10 @@ CREATE TABLE hf_services (
     instance_id     integer,
   -- was database_id
     ss_id           integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+    -- vm where service operates
+    vm_id           integer,
+    -- vh where service operates (if configured for a specifc vh)
+    vh_id           integer,
     server_name     varchar(40),
     service_name    varchar(300),
     daemon_ref      varchar(40),
@@ -358,6 +362,8 @@ CREATE TABLE hf_services (
 
 create index hf_services_instance_id_idx on hf_services (instance_id);
 create index hf_services_ss_id_idx on hf_services (ss_id);
+create index hf_services_vm_id_idx on hf_services (vm_id);
+create index hf_services_vh_id_idx on hf_services (vh_id);
 create index hf_services_server_name_idx on hf_services (server_name);
 create index hf_services_daemon_ref_idx on hf_services (daemon_ref);
 create index hf_services_protocol_idx on hf_services (protocol);
@@ -439,15 +445,16 @@ create index hf_vm_vh_map_instance_id_idx on hf_vm_vh_map (instance_id);
 create index hf_vm_vh_map_vm_id_idx on hf_vm_vh_map (vm_id);
 create index hf_vm_vh_map_vh_id_idx on hf_vm_vh_map (vh_id);
 
-CREATE TABLE hf_vh_ss_map (
-    instance_id     integer,
-    vh_id           integer,
-    ss_id           integer
-);
+-- hf_vh_ss_map has been replaced by adding vm_id, vh_id in hf_services
+-- CREATE TABLE hf_vh_ss_map (
+--    instance_id     integer,
+--    vh_id           integer,
+--    ss_id           integer
+-- );
 
-create index hf_vh_ss_map_instance_id_idx on hf_vh_ss_map (instance_id);
-create index hf_vh_ss_map_vh_id_idx on hf_vh_ss_map (vh_id);
-create index hf_vh_ss_map_ss_id_idx on hf_vh_ss_map (ss_id);
+-- create index hf_vh_ss_map_instance_id_idx on hf_vh_ss_map (instance_id);
+-- create index hf_vh_ss_map_vh_id_idx on hf_vh_ss_map (vh_id);
+-- create index hf_vh_ss_map_ss_id_idx on hf_vh_ss_map (ss_id);
 
 -- was database_auth
 CREATE TABLE hf_ua_up_map (
