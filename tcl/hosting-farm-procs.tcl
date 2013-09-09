@@ -2,6 +2,7 @@ ad_library {
 
     misc API for hosting-farm
     @creation-date 5 June 2013
+## recheck references. Now vm_id and vh_id are referenced in ss asset_type, so need to check for those secondary cases when creating asset_id scope.
 
     # UI for one click (web-based) installers
       # installers install/update/monitor/activate/de-activate software, ie hosted service (hs) or software as a service (ss)
@@ -277,6 +278,7 @@ ad_proc -private hf_dcs {
     {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
+    {inactives_included_p 0}
 } {
     returns an ordered list of lists of data centers and their direct properties. No duplicate properties are in the list.
     If an asset consists of multiple DCs, each dc is a separate list (ie an asset can take up more than one line or list).
@@ -289,7 +291,7 @@ ad_proc -private hf_dcs {
     set user_id [ad_conn user_id]
     set asset_type_id "dc"
     # get hf_assets: instance_id id, asset_type_id=dc, etc..
-    set asset_detail_list [hf_assets_w_detail $instance_id $customer_id_list "" 1 "" "" $asset_type_id]
+    set asset_detail_list [hf_assets_w_detail $instance_id $customer_id_list "" $inactives_included_p "" "" $asset_type_id]
     # id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,template_p,time_start,time_stop,trashed_p,trashed_by,flags,publish_p
     set asset_id_list [list ]
     foreach one_asset_detail_list $asset_detail_list {
@@ -331,6 +333,7 @@ ad_proc -private hf_hws {
     {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
+    {inactives_included_p 0}
 } {
     returns an ordered list of lists of hardware and their direct properties hw_id, system_name, backup_sys, ni_id, os_id, description, details, count of active VMs
 } {
@@ -342,7 +345,7 @@ ad_proc -private hf_hws {
     set asset_type_id "hw"
 
     # get hf_assets: instance_id id, asset_type_id=hw, etc..
-    set asset_detail_list [hf_assets_w_detail $instance_id $customer_id_list "" 1 "" "" $asset_type_id]
+    set asset_detail_list [hf_assets_w_detail $instance_id $customer_id_list "" $inactives_included_p "" "" $asset_type_id]
     # id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,template_p,time_start,time_stop,trashed_p,trashed_by,flags,publish_p
     set asset_id_list [list ]
     foreach one_asset_detail_list $asset_detail_list {
@@ -401,6 +404,7 @@ ad_proc -private hf_nis {
     {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
+    {inactives_included_p 0}
 } {
     returns an ordered list of lists of an asset's network interfaces and their properties: 
     asset_id, asset_id_type, ni_id, os_dev_ref, ipv4_addr_range, ipv6_addr_range, bia_mac_address, ul_mac_address
@@ -414,7 +418,7 @@ ad_proc -private hf_nis {
     # by limiting ni to direct connections helps keep context with ui
 
     # use hf_assets_w_detail to get valid asset_id, asset_id_type
-    set asset_detail_lists [hf_assets_w_detail $instance_id $customer_id_list "" 1 "" "" ""]
+    set asset_detail_lists [hf_assets_w_detail $instance_id $customer_id_list "" $inactives_included_p "" "" ""]
     set asset_id_list_arr(dc) [list ]
     set asset_id_list_arr(hw) [list ]
     set asset_id_list_arr(vm) [list ]
@@ -493,6 +497,7 @@ ad_proc -private hf_asset_type_ua_ids {
     {customer_id_list ""}
     {asset_id_list ""}
     {asset_type_list ""}
+    {inactives_included_p 0}
 } {
     This is hf_vms_basic, but for all assets. returns a list of list of asset_ids,types and ua's filtered by customer_id_list and asset_id_list. Blank values assume all cases. each list consists of: asset_id asset_type ua_id
 } {
@@ -504,7 +509,7 @@ ad_proc -private hf_asset_type_ua_ids {
 
     # get all available asset_ids to user (ie. customers of user) (even ones that might be listed as a different type)
     # a vm is a subset of an hw, which is a subset of a dc.
-    set asset_detail_lists [hf_assets_w_detail $instance_id $customer_id_list "" 1 "" "" ""]
+    set asset_detail_lists [hf_assets_w_detail $instance_id $customer_id_list "" $inactives_included_p "" "" ""]
     set asset_types_list [list ]
     set asset_ids_list [list ]
     foreach asset_list $asset_detail_lists {
@@ -581,6 +586,7 @@ ad_proc -private hf_vms_basic {
     {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
+    {inactives_included_p 0}
 } {
     returns an ordered list of lists of vm detail
     Ordered list is: vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details, count of vhosts on vm
@@ -593,7 +599,7 @@ ad_proc -private hf_vms_basic {
 
     # get all available asset_ids to user (ie. customers of user) (even ones that might be listed as a different type)
     # a vm is a subset of an hw, which is a subset of a dc.
-    set asset_detail_lists [hf_assets_w_detail $instance_id $customer_id_list "" 1 "" "" ""]
+    set asset_detail_lists [hf_assets_w_detail $instance_id $customer_id_list "" $inactives_included_p "" "" ""]
     set asset_id_list_arr(dc) [list ]
     set asset_id_list_arr(hw) [list ]
     set asset_id_list_arr(vm) [list ]
@@ -1174,6 +1180,7 @@ ad_proc -private hf_sss {
     {customer_id_list ""}
     {asset_id_list ""}
     {ss_id_list ""}
+    {inactives_included_p 0}
 } {
     returns an ordered list of lists of software as services (hosted services) and their direct properties
 } {
@@ -1181,9 +1188,14 @@ ad_proc -private hf_sss {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
+    set user_id [ad_conn user_id]
+
+    # get all available asset_ids to user (ie. customers of user) 
+    set asset_detail_lists [hf_assets_w_detail $instance_id $customer_id_list "" $inactives_included_p "" "" ""]
+
+    ## filter to ss, but also include cases where ss is indirectly referenced, such as via vm or vh types
+
+
     ##code
     # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
     # hf_vh_ss_map.ss_id
