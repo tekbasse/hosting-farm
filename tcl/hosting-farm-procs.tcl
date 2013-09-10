@@ -2,7 +2,6 @@ ad_library {
 
     misc API for hosting-farm
     @creation-date 5 June 2013
-## recheck references. Now vm_id and vh_id are referenced in ss asset_type, so need to check for those secondary cases when creating asset_id scope.
 
     # UI for one click (web-based) installers
       # installers install/update/monitor/activate/de-activate software, ie hosted service (hs) or software as a service (ss)
@@ -851,9 +850,9 @@ ad_proc -private hf_vhs {
             lappend vh_one_list $vh_el
         }
         # add more detail
-        # hf_vh_map.instance_id vh_id ss_id
-        #                             ss = hosted service
-        db_1row hf_vh_ss_count_get "select count(ss_id) as ss_id_count from hf_vh_map where vh_id =:vh_id"
+        # hf_ss_map.instance_id hf_id ss_id
+        ##                             ss = hosted service
+        db_1row hf_ss_count_get "select count(ss_id) as ss_id_count from hf_ss_map where hf_id =:vh_id"
         lappend vh_one_list $ss_id_count
         lappend vh_detail_list $vh_one_list
     }
@@ -939,8 +938,9 @@ ad_proc -private hf_m_uas {
     # include cases where ss is a subsite of a vh_id and not referenced by asset_id directly.
     # hf_vm_ss_map.instance_id vh_id ss_id
     #                             ss = hosted service
-    # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
-    set ss_set_list [db_list_of_lists hf_ss_ua_get "select vh_id, ss_id, ua_id from hf_services ss, hf_vh_ss_map vs where ss.instance_id = vs.instance_id and ss.ss_id = vs.ss_id and instance_id =:instance_id and vh_id in ([template::util::tcl_to_sql_list $vh_ids_list])"]
+    ## hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
+    ## should also include vm_ids_list...???
+    set ss_set_list [db_list_of_lists hf_ss_ua_get "select vh_id, ss_id, ua_id from hf_services ss, hf_ss_map vs where ss.instance_id = vs.instance_id and ss.ss_id = vs.ss_id and instance_id =:instance_id and hf_id in ([template::util::tcl_to_sql_list $vh_ids_list])"]
 
     if { $ss_id_list ne "" } {
         # filter ss_set_list to ss_id_list
@@ -1100,7 +1100,7 @@ ad_proc -private hf_asset_uas {
         # include cases where ss is a subsite of a vh_id and not referenced by asset_id directly.
         # hf_vm_ss_map.instance_id vh_id ss_id
         #                             ss = hosted service
-        # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
+        ## hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
         set ss_set_list [db_list_of_lists hf_ss_ua_get "select vh_id, ss_id, ua_id from hf_services ss, hf_vh_ss_map vs where ss.instance_id = vs.instance_id and ss.ss_id = vs.ss_id and instance_id =:instance_id and vh_id in ([template::util::tcl_to_sql_list $vh_ids_list])"]
         
         foreach ss_ua_list $ss_set_list {
@@ -1198,7 +1198,7 @@ ad_proc -private hf_sss {
 
     ##code
     # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
-    # hf_vh_ss_map.ss_id
+    # hf_ss_map.ss_id
 }
 
 
