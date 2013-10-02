@@ -28,7 +28,7 @@ ad_library {
     # objects can easily be passed to procs via an array and upvar
     #  array references don't work in sql, so these use ordered lists
     # a proc should be written to write a series of avariables to an array, and an array to a set of variables equal to the indexes.
-    # somthing similary to qf_get_inputs_as_array added to the help-procs section:  qf_variables_from_array, qf_array_to_variables
+    # somthing similary to qf_get_inputs_as_array added to the help-procs section:  qf_variables_from_array, qf_array_from_variables, qf_array_from_ordered_lists $key_list $value_list 
 
 }
 
@@ -685,6 +685,7 @@ ad_proc -private hf_vms {
 
     # add final details
     # hf_vm_vh_map.instance_id, vm_id, vh_id (include count(vh_id) per vm_id )
+## hf_ss_map.instance_id, ss_id, hf_id (where hf_id is vm_id or vh_id etc)
     set return_list [list ]
     foreach base_list $base_return_list {
         set vm_detail $base_list
@@ -852,6 +853,7 @@ ad_proc -private hf_vhs {
         # add more detail
         # hf_ss_map.instance_id hf_id ss_id
         ##                             ss = hosted service
+## hf_ss_map.instance_id, ss_id, hf_id (where hf_id is vm_id or vh_id etc)
         db_1row hf_ss_count_get "select count(ss_id) as ss_id_count from hf_ss_map where hf_id =:vh_id"
         lappend vh_one_list $ss_id_count
         lappend vh_detail_list $vh_one_list
@@ -878,6 +880,7 @@ ad_proc -private hf_m_uas {
         # hf_assets.ua_id
         # hf_vhosts.ua_id
         # hf_services.ua_id
+## hf_ss_map.instance_id, ss_id, hf_id (where hf_id is vm_id or vh_id etc)
 
     # build ua_ids_list
     # and compile index list and arrays
@@ -936,6 +939,9 @@ ad_proc -private hf_m_uas {
     }
 
     # include cases where ss is a subsite of a vh_id and not referenced by asset_id directly.
+
+## hf_ss_map.instance_id, ss_id, hf_id (where hf_id is vm_id or vh_id etc)
+# was:
     # hf_vm_ss_map.instance_id vh_id ss_id
     #                             ss = hosted service
     ## hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
@@ -1048,7 +1054,7 @@ ad_proc -private hf_asset_uas {
         # hf_assets.ua_id
         # hf_vhosts.ua_id
         # hf_services.ua_id
-
+## hf_ss_map.instance_id, ss_id, hf_id (where hf_id is vm_id or vh_id etc)
     # build ua_ids_list
     # and compile index list and arrays
     # then
@@ -1098,6 +1104,8 @@ ad_proc -private hf_asset_uas {
         }
         
         # include cases where ss is a subsite of a vh_id and not referenced by asset_id directly.
+## hf_ss_map.instance_id, ss_id, hf_id (where hf_id is vm_id or vh_id etc)
+# was:
         # hf_vm_ss_map.instance_id vh_id ss_id
         #                             ss = hosted service
         ## hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
@@ -1198,6 +1206,7 @@ ad_proc -private hf_sss {
 
     ##code
     # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
+## hf_ss_map.instance_id, ss_id, hf_id (where hf_id is vm_id or vh_id etc)
     # hf_ss_map.ss_id
 }
 

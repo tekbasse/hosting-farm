@@ -100,7 +100,7 @@ CREATE TABLE hf_assets (
     -- was table.advert_link
     publish_p       varchar(1),
     monitor_p       varchar(1),
-    -- when monitoring, higher value is higher priority
+    -- when monitoring, higher value is higher priority for alerts, alert reponses
     triage_priority integer
  );
 
@@ -329,6 +329,8 @@ create index hf_vhosts_ns_id_idx on hf_vhosts (ns_id);
 create index hf_vhosts_domain_name_idx on hf_vhosts (domain_name);
 
 -- part of database_auth and database_list
+-- a service can be mapped to any hf_id via hf_ss_map
+--  This mapping helps to alert on asset dependencies etc
 CREATE TABLE hf_services (
     instance_id     integer,
   -- was database_id
@@ -445,7 +447,7 @@ create index hf_vm_vh_map_vh_id_idx on hf_vm_vh_map (vh_id);
 CREATE TABLE hf_ss_map (
     instance_id     integer,
     ss_id           integer,
--- this is hf_id, because it can be an id of a vm, vh another ss ..any asset.
+-- this is hf_id, because it can be an id of a vm, vh another ss ..any asset id
 -- this is an hf_id where the ss operates.
     hf_id           integer
  );
