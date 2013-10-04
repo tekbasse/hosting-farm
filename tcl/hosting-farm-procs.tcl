@@ -24,11 +24,26 @@ ad_library {
     # ticket tracker with built-in streamlining for outages/disrutions that deal with multiple/bulk sets of clients
     # social feedback mechanisms
 
+    # asset object description. 
+    # Every asset_id has a reference in the hf_assets table, including vhosts, services.
+    # asset_id, hf_id              - generic asset
+    #       ->  service, ss_id     - service asset attached to no asset, or a generic asset
+    # dc  dc_id                    - datacenter 
+    #       ->  ss_id              - service asset attached to (with dependency primarily on) datacenter
+    # hw  hw_id                    - hardware
+    #       ->  ss_id              - service asset attached to (with dependency primarily on) hardware
+    # vm  vm_id                    - virtual machine
+    #       ->  ss_id              - service asset attached to (with dependency primarily on) virtual machine
+    # vh  vh_id                    - virtual host
+    #       ->  ss_id              - service asset attached to (with dependency primarily on) virtual host
 
     # objects can easily be passed to procs via an array and upvar
     #  array references don't work in sql, so these use ordered lists
-    # a proc should be written to write a series of avariables to an array, and an array to a set of variables equal to the indexes.
-    # somthing similary to qf_get_inputs_as_array added to the help-procs section:  qf_variables_from_array, qf_array_from_variables, qf_array_from_ordered_lists $key_list $value_list 
+    ## For dynamically generated objects, a proc should be written
+    # to write a series of avariables to an array, and an array to a set of variables equal to the indexes.
+    # somthing similar to qf_get_inputs_as_array, or set array but where the pairs are in separate lists
+    # for eks: qf_get_inputs_as_array but added to the q-forms help-procs section:
+    # qf_vars_from_array, qf_array_from_vars, qf_array_from_ordered_lists $key_list $value_list 
 
 }
 
