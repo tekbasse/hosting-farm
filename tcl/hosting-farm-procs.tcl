@@ -888,7 +888,7 @@ ad_proc -private hf_m_uas {
     {vh_id_list ""}
     {ss_id_list ""}
 } {
-    returns an ordered lists of lists of management user accounts and their direct properties for asset_id.
+    returns an ordered lists of lists of management user accounts and their direct properties for each asset_id.
     Ordered list: asset_id asset_type vh_id ss_id ua_id details connection_type  (ss_id, asset_type and/or vh_id may be blank for some references)
 } {
     if { $instance_id eq "" } {
@@ -896,11 +896,10 @@ ad_proc -private hf_m_uas {
         set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
-    # ua's referenced by: 
+    # ua's are referenced by: 
         # hf_assets.ua_id
         # hf_vhosts.ua_id
         # hf_services.ua_id
-## hf_ss_map.instance_id, ss_id, hf_id (where hf_id is vm_id or vh_id etc)
 
     # build ua_ids_list
     # and compile index list and arrays
@@ -922,8 +921,11 @@ ad_proc -private hf_m_uas {
         if { $asset_type eq "vm" } {
             lappend vm_ids_list $asset_id
         }
+        if { $asset_type ne "ss" } {
+            # ss is listed directly, so exclude from indirect checks
+            lappend as_wo_ss_ids_list $asset_id
+        }
     }
-
     # get vhost uas
     # every vh_id is mapped to a vm_id
     # hf_vm_vh_map.instance_id vm_id vh_id
@@ -959,15 +961,10 @@ ad_proc -private hf_m_uas {
     }
 
     # include cases where ss is a subsite of a vh_id and not referenced by asset_id directly.
-
-## hf_ss_map.instance_id, ss_id, hf_id (where hf_id is vm_id or vh_id etc)
-# was:
-    # hf_vm_ss_map.instance_id vh_id ss_id
+    # hf_ss_map.instance_id, ss_id, hf_id (where hf_id is vm_id or vh_id etc)
     #                             ss = hosted service
-    ## hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
-    ## should also include vm_ids_list...???
-    set ss_set_list [db_list_of_lists hf_ss_ua_get "select vh_id, ss_id, ua_id from hf_services ss, hf_ss_map vs where ss.instance_id = vs.instance_id and ss.ss_id = vs.ss_id and instance_id =:instance_id and hf_id in ([template::util::tcl_to_sql_list $vh_ids_list])"]
-
+    # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
+    set ss_set_list [db_list_of_lists hf_ss_ua_get "select hf_id, ss_id, ua_id from hf_services ss, hf_ss_map vs where ss.instance_id = vs.instance_id and ss.ss_id = vs.ss_id and ss.instance_id =:instance_id and vs.hf_id in ([template::util::tcl_to_sql_list $as_wo_ss_ids_list]) "]
     if { $ss_id_list ne "" } {
         # filter ss_set_list to ss_id_list
         set ss_set_2_list [list ]
@@ -1000,6 +997,7 @@ ad_proc -private hf_m_uas {
     # convert ua_detail_list to ua_detail_arr
     foreach ua_detail $ua_detail_list {
         set ua_id [lindex $ua_detail 0]
+        # build hash table for appending detail later
         set ua_detail_arr($ua_id) $ua_detail
     }
 
@@ -1056,6 +1054,7 @@ ad_proc -private hf_m_uas {
     return $ua_map_detail_list
 }
 
+
 ad_proc -private hf_asset_uas {
     {instance_id ""}
     {customer_id_list ""}
@@ -1074,7 +1073,7 @@ ad_proc -private hf_asset_uas {
         # hf_assets.ua_id
         # hf_vhosts.ua_id
         # hf_services.ua_id
-## hf_ss_map.instance_id, ss_id, hf_id (where hf_id is vm_id or vh_id etc)
+
     # build ua_ids_list
     # and compile index list and arrays
     # then
@@ -1099,12 +1098,17 @@ ad_proc -private hf_asset_uas {
             if { $asset_type eq "vm" } {
                 lappend vm_ids_list $asset_id
             }
+            if { $asset_type ne "ss" } {
+                # ss is listed directly, so exclude from indirect checks
+                lappend as_wo_ss_ids_list $asset_id
+            }
+
         }
         
         # get vhost uas
         # every vh_id is mapped to a vm_id
         # hf_vm_vh_map.instance_id vm_id vh_id
-        set vm_vh_map_list [db_list_of_lists hf_vm_vh_map_get "select vm_id, vh_id from hf_vm_vh_map where instance_id =:instance_id and vh_id in ([template::util::tcl_to_sql_list $vm_ids_list])"]
+        set vm_vh_map_list [db_list_of_lists hf_vm_vh_map_get2 "select vm_id, vh_id from hf_vm_vh_map where instance_id =:instance_id and vh_id in ([template::util::tcl_to_sql_list $vm_ids_list])"]
         
         set vh_ids_list [list ]
         foreach vm_vh_list $vm_vh_map_list {
@@ -1114,7 +1118,7 @@ ad_proc -private hf_asset_uas {
             set vm_vh_arr($vh_id) [lindex $vm_vh_list 0]
         }
         # hf_hosts.instance_id vh_id ua_id ns_id domain_name details
-        set vh_set_list [db_list_of_lists hf_vh_ua_detail_get "select vh_id, ua_id from hf_hosts where instance_id =:instance_id and vh_id in ([template::util::tcl_to_sql_list $vh_ids_list])"]
+        set vh_set_list [db_list_of_lists hf_vh_ua_detail_get2 "select vh_id, ua_id from hf_hosts where instance_id =:instance_id and vh_id in ([template::util::tcl_to_sql_list $vh_ids_list])"]
         foreach vh_ua_list $vh_set_list {
             set vh_id [lindex $vh_ua_list 0]
             set ua_id [lindex $vh_ua_list 1]
@@ -1124,13 +1128,10 @@ ad_proc -private hf_asset_uas {
         }
         
         # include cases where ss is a subsite of a vh_id and not referenced by asset_id directly.
-## hf_ss_map.instance_id, ss_id, hf_id (where hf_id is vm_id or vh_id etc)
-# was:
-        # hf_vm_ss_map.instance_id vh_id ss_id
+        # hf_ss_map.instance_id, ss_id, hf_id (where hf_id is vm_id or vh_id etc)
         #                             ss = hosted service
-        ## hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
-        set ss_set_list [db_list_of_lists hf_ss_ua_get "select vh_id, ss_id, ua_id from hf_services ss, hf_vh_ss_map vs where ss.instance_id = vs.instance_id and ss.ss_id = vs.ss_id and instance_id =:instance_id and vh_id in ([template::util::tcl_to_sql_list $vh_ids_list])"]
-        
+        # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
+        set ss_set_list [db_list_of_lists hf_ss_ua_get2 "select hf_id, ss_id, ua_id from hf_services ss, hf_ss_map vs where ss.instance_id = vs.instance_id and ss.ss_id = vs.ss_id and ss.instance_id =:instance_id and vs.hf_id in ([template::util::tcl_to_sql_list $as_wo_ss_ids_list]) "]
         foreach ss_ua_list $ss_set_list {
             set vh_id [lindex $ss_ua_list 0]
             set ss_id [lindex $ss_ua_list 1]
@@ -1142,7 +1143,7 @@ ad_proc -private hf_asset_uas {
         
         
         # bulk query
-        set ua_detail_list [db_list_of_lists hf_ua_detail_get "select ua_id details connection_type from hf_ua where instance_id =:instance_id and ua_id in ([template::util::tcl_to_sql_list $ua_ids_list])"]
+        set ua_detail_list [db_list_of_lists hf_ua_detail_get2 "select ua_id details connection_type from hf_ua where instance_id =:instance_id and ua_id in ([template::util::tcl_to_sql_list $ua_ids_list])"]
         # convert ua_detail_list to ua_detail_arr
         foreach ua_detail $ua_detail_list {
             set ua_id [lindex $ua_detail 0]
