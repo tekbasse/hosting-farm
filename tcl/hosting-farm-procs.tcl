@@ -1063,7 +1063,6 @@ ad_proc -private hf_asset_uas {
     returns an ordered lists of lists of user accounts and their direct properties for a virtual machine vm_id or other asset_id
     Ordered list: asset_id asset_type vh_id ss_id ua_id details connection_type  (ss_id, asset_type and/or vh_id may be blank for some references)
 } {
-    ## check performance of this vs. hf_m_uas ..IF this is not faster for 1 vm with hf_m_uas, then simplify by cutting out this proc.
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
@@ -1221,14 +1220,21 @@ ad_proc -private hf_sss {
 
     # get all available asset_ids to user (ie. customers of user) 
     set asset_detail_lists [hf_assets_w_detail $instance_id $customer_id_list "" $inactives_included_p "" "" ""]
+    set as_ids_list [list ]
+    foreach asset_list $asset_detail_lists {
+        set asset_id [lindex $asset_list 0]
+        lappend as_ids_list $asset_id
+    }
+    # filter to ss, but also include cases where ss is indirectly referenced, such as via vm or vh types
+    # hf_ss_map.instance_id, ss_id, hf_id (where hf_id is vm_id or vh_id etc)
+    set ss_set_list [db_list_of_lists hf_ss_ua_get2 "select distinct hf_id, ss_id from hf_ss_map where instance_id =:instance_id and ( hf_id in ([template::util::tcl_to_sql_list $as_ids_list]) or ss_id in ([template::util::tcl_to_sql_list $as_ids_list]) )"]
 
-    ## filter to ss, but also include cases where ss is indirectly referenced, such as via vm or vh types
+    ## build primary asset table from asset_detail_lists that match ss_set_list 
 
-
-    ##code
+    ## Then add hf_services detail
     # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
-## hf_ss_map.instance_id, ss_id, hf_id (where hf_id is vm_id or vh_id etc)
-    # hf_ss_map.ss_id
+
+    # return ss_detail_list
 }
 
 
