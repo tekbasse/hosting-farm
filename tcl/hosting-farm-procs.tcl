@@ -1207,10 +1207,9 @@ ad_proc -private hf_sss {
     {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
-    {ss_id_list ""}
     {inactives_included_p 0}
 } {
-    returns an ordered list of lists of software as services (hosted services) and their direct properties
+    returns an ordered list of lists of software as services (hosted services) and their direct properties. ss_id is a subset of asset_id.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -1225,9 +1224,29 @@ ad_proc -private hf_sss {
         set asset_id [lindex $asset_list 0]
         lappend as_ids_list $asset_id
     }
+    # filter as_id_list by asset_id_list
+    if { $asset_id_list ne "" } {
+        set filtered_ids_list [list ]
+        set insert_p 0
+        # scope to filter
+        foreach as_id $as_ids_list {
+            if { [lsearch -exact $asset_id_list $as_id ] > -1 } {
+                set insert_p 1
+            }
+            if { $insert_p } {
+                set insert_p 0
+                lappend filtered_ids_list $as_id
+            }
+        }
+    } else {
+        set filtered_ids_list $as_ids_list
+    }
+
     # filter to ss, but also include cases where ss is indirectly referenced, such as via vm or vh types
     # hf_ss_map.instance_id, ss_id, hf_id (where hf_id is vm_id or vh_id etc)
-    set ss_set_list [db_list_of_lists hf_ss_ua_get2 "select distinct hf_id, ss_id from hf_ss_map where instance_id =:instance_id and ( hf_id in ([template::util::tcl_to_sql_list $as_ids_list]) or ss_id in ([template::util::tcl_to_sql_list $as_ids_list]) )"]
+    set ss_set_list [db_list_of_lists hf_ss_ua_get2 "select distinct hf_id, ss_id from hf_ss_map where instance_id =:instance_id and ( hf_id in ([template::util::tcl_to_sql_list $filtered_ids_list]) or ss_id in ([template::util::tcl_to_sql_list $filtered_ids_list]) )"]
+    ## How to handle cases where ids in ss_set_list are not in as_ids_list?
+    ## Log them; but also include a subset of the data in the return list --enough to identify, but not act on a service
 
     ## build primary asset table from asset_detail_lists that match ss_set_list 
 
