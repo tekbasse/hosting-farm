@@ -1227,14 +1227,9 @@ ad_proc -private hf_sss {
     # filter as_id_list by asset_id_list
     if { $asset_id_list ne "" } {
         set filtered_ids_list [list ]
-        set insert_p 0
         # scope to filter
         foreach as_id $as_ids_list {
             if { [lsearch -exact $asset_id_list $as_id ] > -1 } {
-                set insert_p 1
-            }
-            if { $insert_p } {
-                set insert_p 0
                 lappend filtered_ids_list $as_id
             }
         }
@@ -1242,13 +1237,43 @@ ad_proc -private hf_sss {
         set filtered_ids_list $as_ids_list
     }
 
-    # filter to ss, but also include cases where ss is indirectly referenced, such as via vm or vh types
+    # filter to ss, but also include cases where ss is indirectly referenced, such as via vm or vh types (which may expand the set of asset_ids).
     # hf_ss_map.instance_id, ss_id, hf_id (where hf_id is vm_id or vh_id etc)
     set ss_set_list [db_list_of_lists hf_ss_ua_get2 "select distinct hf_id, ss_id from hf_ss_map where instance_id =:instance_id and ( hf_id in ([template::util::tcl_to_sql_list $filtered_ids_list]) or ss_id in ([template::util::tcl_to_sql_list $filtered_ids_list]) )"]
-    ## How to handle cases where ids in ss_set_list are not in as_ids_list?
-    ## Log them; but also include a subset of the data in the return list --enough to identify, but not act on a service
+    # How to handle cases where ids in ss_set_list are not in as_ids_list?
+    # Log them; but also include a subset of the data in the return list --enough to identify, but not act on a service.
+    # Users want to know if they are about to adversely affect something else.
+    set ss_ids_list [list ]
+    # scope to filter
+    foreach ss_id $ss_set_list {
+        if { [lsearch -exact $as_ids_list $ss_id ] > -1 } {
+            lappend ss_ids_list $as_id
+        }
+    }
 
-    ## build primary asset table from asset_detail_lists that match ss_set_list 
+    # build primary asset table from asset_detail_lists that match ss_ids_list 
+    set asset_return_list [list ]
+    foreach asset_list $asset_detail_lists {
+        set asset_id [lindex $asset_list 0]
+        set asset_id_loc [lsearch -exact $ss_ids_list asset_id]
+        if { $asset_id_loc > -1 } {
+            lappend asset_return_list $asset_list
+            # remove ss_id from list
+            set ss_ids_list [lreplace $ss_ids_list $asset_id_loc $asset_id_loc]
+        }
+    }
+    # Add basic details of any remaining ss_ids_list elements.
+    ## Get basic details from the db directly to bypass permissions. Only get essential info; leave all else blank.
+    ## can this come from hosting-farm-asset-procs? 
+#hf_asset_stats:name, title, asset_type_id, keywords, description, template_p, templated_p, trashed_p, trashed_by, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, instance_id, user_id, last_modified, created, flags
+# hf_asset_read: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created
+# compare to:
+# hf_assets_w_detail: id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,template_p,time_start,time_stop,trashed_p,trashed_by,flags,publish_p
+# name = label? yes. see hf_asset_create_from_asset_template
+    set ss3_asset_list [db_list_of_lists hf_asset_ss_ck_get "select " 
+    foreach ss_id $ss_ids_list {
+
+    }
 
     ## Then add hf_services detail
     # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
