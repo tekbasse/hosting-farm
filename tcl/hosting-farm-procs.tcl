@@ -128,7 +128,7 @@ ad_proc -private hf_asset_create_from_asset_template {
             set status [hf_asset_create $asset_label_new $aa(2) $aa(1) $aa(5) $aa(3) $aa(4) $aa(6) 0 $aa(10) 0 $aa(12) 0 $aa(14) "" $aa(16) $aa(17) $aa(18) $customer_id "" "" $instance_id $user_id]
             # params: name, asset_type_id, title, content, keywords, description, comments, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, {template_id ""}, {flags ""}, {instance_id ""}, {user_id ""}
             if { $status } {
-#### TODO: create should not include the same ns_id or ua_id. create a new entry in hf_ua and hf_ns tables. Delay coding until these procs created:
+## TODO: create should not include the same ns_id or ua_id. create a new entry in hf_ua and hf_ns tables. Delay coding until these procs created:
                 #            hf_ua_write
                 #            hf_ns_write
 
@@ -147,7 +147,7 @@ ad_proc -private hf_asset_create_from_asset_label {
 } {
    creates a new asset_label based on an existing asset. Returns 1 if successful, otherwise 0.
 } {
-  #### TODO code: basically duplicate hf_asset_create_from_asset_template, getting id from hf_asset_id_from_label
+  ## TODO code: basically duplicate hf_asset_create_from_asset_template, getting id from hf_asset_id_from_label
 
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -1262,23 +1262,47 @@ ad_proc -private hf_sss {
             set ss_ids_list [lreplace $ss_ids_list $asset_id_loc $asset_id_loc]
         }
     }
-    # Add basic details of any remaining ss_ids_list elements.
-    ## Get basic details from the db directly to bypass permissions. Only get essential info; leave all else blank.
-    ## can this come from hosting-farm-asset-procs? 
-#hf_asset_stats:name, title, asset_type_id, keywords, description, template_p, templated_p, trashed_p, trashed_by, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, instance_id, user_id, last_modified, created, flags
-# hf_asset_read: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created
-# compare to:
-# hf_assets_w_detail: id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,template_p,time_start,time_stop,trashed_p,trashed_by,flags,publish_p
-# name = label? yes. see hf_asset_create_from_asset_template
-    set ss3_asset_list [db_list_of_lists hf_asset_ss_ck_get "select " 
-    foreach ss_id $ss_ids_list {
+    # Add basic details of any remaining ss_ids_list elements to asset_return_list
+    # details must be consistent with 
+    # hf_assets_w_detail: id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,template_p,time_start,time_stop,trashed_p,trashed_by,flags,publish_p
 
+    # Get basic details from the db directly to bypass permissions. Only get essential, descriptive info; leave all else blank.
+    set ss3_asset_list [db_list_of_lists hf_asset_templates_select_v2 "select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,'' as keywords,templated_p,template_p,time_start,time_stop,trashed_p,trashed_by,flags,publish_p from hf_assets where instance_id =:instance_id and time_stop =null and trashed_p <> '1' and id in ( [template::util::tcl_to_sql_list $ss_ids_list] ) order by last_modified desc " ]
+    # removed keywords
+    # name = label? yes. see hf_asset_create_from_asset_template
+    
+    # add ss3_asset_list to asset_return_list
+    foreach ss3_asset $ss3_asset_list {
+        lappend asset_return_list $ss3_asset
     }
 
-    ## Then add hf_services detail
+    # add hf_services detail to asset_return_list
     # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
-
-    # return ss_detail_list
+    set attr_list [db_list_of_lists hf_services_getv2 "select ss_id server_name service_name ss_type ss_subtype ss_undersubtype ss_ultrasubtype daemon_ref protocol port ua_id config_uri memory_bytes details from hf_services where instance_id =:instance_id and ss_id in ([template::util::tcl_to_sql_list $ss_ids_list]) or ss_id in ([template_::util::tcl_to_sql_list $filtered_ids_list])"]
+    # build hash array of attr_list
+    for a1_list $attr_list {
+        set ss_id [lindex $a1_list 0]
+        # include all info if id in filtered_ids_list
+        if { [lsearch -exact $filtered_ids_list $ss_id] > -1 } {
+            set att_arr($ss_id) [lrange $a1_list 1 end]
+        } else {
+            # filter to min info if id in ss_ids_list. 
+            # Since ss_id is not in filtered_ids_list, it is in ss_ids_list.
+            # filter out: ua_id daemon_ref protocol port config_uri memory_bytes details, replace with blank elements
+            set att_arr($ss_id) [lrange $a1_list 1 6]
+            lappend att_arr($ss_id) "" "" "" "" "" "" ""
+        }
+    }
+    set new_a_return_list [list ]
+    foreach asset_list $asset_return_list {
+        set ss_id [lindex $asset_list 0]
+        set new_a_list $asset_list
+        foreach ii $att_arr($ss_id) {
+            lappend new_a_list $ii
+        }
+        lappend new_a_return_list $new_a_list
+    }
+    return $new_a_return_list
 }
 
 
