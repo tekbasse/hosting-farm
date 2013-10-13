@@ -1312,32 +1312,40 @@ ad_proc -private hf_asset_features {
     {instance_id ""}
     {asset_type_id_list ""}
 } {
-    description
+    returns a tcl_list_of_lists of features with attributes in order of: asset_type_id, feature_id, label, feature_type, publish_p, title, description
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
+    set user_id [ad_conn user_id]
+    # asset type doesn't involve specific client data, so no permissions check required
+    # validate/filter the asset_type_id_list for nonqualifying reference types
+    set new_as_type_id_list [list ]
+    foreach asset_type_id $asset_type_id_list {
+        if { [ad_var_type_check_number_p $asset_type_id] } {
+            lappend new_as_type_id_list $asset_type_id
+        }
     }
-    ##code
+
     # hf_asset_type_features.instance_id feature_id asset_type_id label feature_type publish_p title description
     # hf_asset_feature_map.instance_id asset_id feature_id
-
+    set feature_list [db_list_of_lists hf_asset_type_features_get "select asset_type_id, feature_id, label, feature_type, publish_p, title, description from from hf_asset_type_features where instance_id =:instance_id and asset_type_id in ([template_::util::tcl_to_sql_list $new_as_type_id_list])"]
+    return $feature_list
 }
 
 
 # basic API
 # With each change, call hf_monitor_log_create {
 #    asset_id, reported_by, user_id .. monitor_id=0}
-ad_proc -private hf_asset_type_create {
+ad_proc -private hf_asset_type_write {
     {instance_id ""}
+    {id ""}
     label
     title
     description
 } {
-    creates asset type, returns id of new asset type, or ""
+    creates or writes asset type, if id is blank, returns id of new asset type; otherwise returns 1 if id exists and db updated. Requires hf technical admin permission.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -1346,36 +1354,29 @@ ad_proc -private hf_asset_type_create {
     set user_id [ad_conn user_id]
     set admin_p [hf_permission_p $instance_id $user_id "" technical admin]
     set asset_type_id ""
+    set return_val $admin_p
     if { $admin_p } {
-        set asset_type_id [db_nextval hf_id_seq]
-        db_dml asset_type_create {insert into hf_asset_type
-            (instance_id,id,label,title,description)
-            values (:instance_id,:asset_type_id,:label,:title,:description) }
+        if { $id eq "" } {
+            # create new id
+            set asset_type_id [db_nextval hf_id_seq]
+            db_dml asset_type_create {insert into hf_asset_type
+                (instance_id,id,label,title,description)
+                values (:instance_id,:asset_type_id,:label,:title,:description) }
+            set return_val $asset_type_id
+        } else {
+            # check if id exists
+            db_0or1row asset_type_id_ck "select label as id_ck from hf_asset_type where instance_id =:instance_id and id=:id"
+            if { [info exists id_ck] } {
+                db_dml asset_type_write {update hf_asset_type
+                    set label =:label, title =:title, description=:description where instance_id =:instance_id and id=:id}
+            } else {
+                set return_val 0
+            }
+        }
     }
-    return $asset_type_id
+    return $return_val
 }
 
-ad_proc -private hf_asset_type_write {
-    {instance_id ""}
-    id
-    label
-    title
-    description
-} {
-    writes to an existing asset type, returns 1 if successful
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set user_id [ad_conn user_id]
-    set admin_p [hf_permission_p $instance_id $user_id "" technical admin]
-    if { $admin_p } {
-        db_dml asset_type_write {update hf_asset_type
-            set label =:label, title =:title, description=:description where instance_id =:instance_id and id=:id}
-    }
-    return $admin_p
-}
 
 ad_proc -private hf_asset_type_read {
     {instance_id ""}
@@ -1387,7 +1388,15 @@ ad_proc -private hf_asset_type_read {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    set return_list_of_lists [db_list_of_lists hf_asset_type_read "select id, label, title, description from hf_asset_type where instance_id =:instance_id and id in ([template::util::tcl_to_sql_list $id_list])" ]
+    # validate/filter the asset_type_id_list for nonqualifying reference types
+    set new_as_type_id_list [list ]
+    foreach asset_type_id $id_list {
+        if { [ad_var_type_check_number_p $asset_type_id] } {
+            lappend new_as_type_id_list $asset_type_id
+        }
+    }
+
+    set return_list_of_lists [db_list_of_lists hf_asset_type_read "select id, label, title, description from hf_asset_type where instance_id =:instance_id and id in ([template::util::tcl_to_sql_list $new_as_type_id_list])" ]
     }
     return $return_list_of_lists
 }
@@ -1420,15 +1429,14 @@ ad_proc -private hf_asset_types {
 ad_proc -private hf_asset_halt {
     {asset_id_list ""}
 } {
-    description
+    Halts the operation of an asset, such as service, vm, vhost etc
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
+    set user_id [ad_conn user_id]
+    
     ##code
 }
 
