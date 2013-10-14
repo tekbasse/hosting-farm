@@ -1438,6 +1438,12 @@ ad_proc -private hf_asset_halt {
     set user_id [ad_conn user_id]
     
     ##code
+    # check permission
+    # determine asset_type
+    # process via tcl switch
+    #    add priority value
+    #    add to operations stack that is listened to by an ad_scheduled_proc procedure working in short interval cycles
+    # return 1 if has permission.
 }
 
 ad_proc -private hf_dc_read {
@@ -1449,16 +1455,17 @@ ad_proc -private hf_dc_read {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
+    set user_id [ad_conn user_id]
     ##code
+    # hf_data_centers.instance_id, dc_id, affix, description, details
+    # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
+
 }
 
 ad_proc -private hf_dc_write {
     args
 } {
-    writes or creates a dc asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
+    writes or creates a dc asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise 0 is returned.
 } {
     # hf_data_centers.instance_id, dc_id, affix, description, details
     # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
@@ -1523,7 +1530,7 @@ ad_proc -private hf_ip_read {
 ad_proc -private hf_ip_write {
     args
 } {
-    writes or creates an ip asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
+    writes or creates an ip asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise 0 is returned.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
