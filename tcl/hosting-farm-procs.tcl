@@ -1447,15 +1447,59 @@ ad_proc -private hf_asset_halt {
 }
 
 ad_proc -private hf_dc_read {
-    {dc_id_list ""}
+    {instance_id ""}
+    {customer_id_list ""}
+    {dc_id ""}
+    {inactives_included_p 0}
 } {
-    reads full detail of one dc. This is not redundant to hf_dcs. This accepts only 1 id and includes all attributes (no summary counts)
+    reads full detail of dcs. This is not redundant to hf_dcs. This is for 1 dc_id. It includes all attributes and no summary counts of dependents.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
+    # Since the dependency tree is large, no dependencies are checked
+    set asset_type_id "dc"
+ 
+# check if asset_id is of type dc. If so, call hf_asset_read which checks permissions.
+
+# hf_asset_read     asset_id     {instance_id ""}     {user_id ""}
+#    Returns asset contents of asset_id. Returns asset as list of attribute values: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created
+
+# then get remaining detail
+
+    # tables hf_data_centers.instance_id,dc_id, affix (was datacentr.short_code), description, details
+    set dc_detail_list [db_list_of_lists hf_dc_get "select dc_id, affix, description, details from hf_data_centers where instance_id =:instance_id and dc_id in ([template::util::tcl_to_sql_list $asset_id_list])"]
+    # dc_id_list is a subset of asset_id_list
+    # to this point, the maximum available dc_id(s) have been returned, and filtered to customer_id_list
+ 
+    # If proc parameters are not blank, filter the results.
+    set filter_asset_id_p [expr { $asset_id_list ne "" } ]
+    if { $filter_asset_id_p } {
+        set return_list [list ]
+        set insert_p 0
+        # scope to filter
+        # this is setup to handle multiple filters, but right now just handling the one..
+        foreach one_dc_detail_list $dc_detail_list {
+            if { $filter_asset_id_p && [lsearch -exact $asset_id_list [lindex $one_dc_detail_list 0 ] ] > -1 } {
+                set insert_p 1
+            }
+            if { $insert_p } {
+                set insert_p 0
+                set dc_id [lindex $one_dc_detail_list 0]
+                # count only active ones
+                db_1row hf_dc_ni_map_count "select count(ni_id) as ni_id_active_count from hf_dc_ni_map where instance_id =:instance_id and dc_id =:dc_id and dc_id in ( select id from hf_assets where ( time_stop =null or time_stop < current_timestamp) and trashed_p <> '1' ) "
+                db_1row hf_dc_hw_map_count "select count(hw_id) as hw_id_active_count from hf_dc_hw_map where instance_id =:instance_id and dc_id =:dc_id and dc_id in ( select id from hf_assets where ( time_stop =null or time_stop < current_timestamp) and trashed_p <> '1' ) "
+                lappend one_dc_detail_list $ni_id_count $hw_id_count
+                lappend return_list $one_dc_detail_list
+            }
+        }
+    } else {
+        set return_list $dc_detail_list
+    } 
+    return $return_list
+
     ##code
     # hf_data_centers.instance_id, dc_id, affix, description, details
     # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
