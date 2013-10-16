@@ -440,12 +440,12 @@ ad_proc -public hf_asset_read {
         # convert return_lists_of_lists to return_list
         set return_list [lindex $return_list_of_lists 0]
         # convert null/empty values to logical 0 for these index numbers:
-	# trashed_p, template_p, templated_p, publish_p, monitor_p
-	set field_idx_list [list 6 8 9 10 11]
-	foreach field_idx $field_idx_list {
-	    if { [llength $return_list] > 1 && [lindex $return_list $field_idx] eq "" } {
-		set return_list [lreplace $return_list $field_idx $field_idx 0]
-	    }
+        # trashed_p, template_p, templated_p, publish_p, monitor_p
+        set field_idx_list [list 6 8 9 10 11]
+        foreach field_idx $field_idx_list {
+            if { [llength $return_list] > 1 && [lindex $return_list $field_idx] eq "" } {
+                set return_list [lreplace $return_list $field_idx $field_idx 0]
+            }
         }
     }
     return $return_list
