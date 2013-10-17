@@ -51,6 +51,7 @@ ad_library {
 ad_proc -public hf_asset_id_exists { 
     asset_id
     {instance_id ""}
+    {asset_type_id ""}
 } {
     Returns 1 if asset_id exists for instance_id, else returns 0
 } {
@@ -58,8 +59,21 @@ ad_proc -public hf_asset_id_exists {
         # set instance_id subsite_id
         set instance_id [ad_conn subsite_id]
     }
-    
-    set asset_exists_p [db_0or1row hf_asset_get_id {select name from hf_assets where id = :asset_id and instance_id = :instance_id } ]
+    if { $asset_type_id eq "" } {
+        set asset_filter_p 0
+    } else {
+        regsub -nocase -all -- {[^a-z0-9]} $asset_type_id {} filtered_as_type_id
+        if { $filtered_as_type_id eq "" || [string length $filtered_as_type_id] > 24 } {
+            set asset_filter_p 0
+        } else {
+            set asset_filter_p 1
+        }
+    }
+    if { $asset_filter_p } {
+        set asset_exists_p [db_0or1row hf_asset_get_id {select name from hf_assets where id = :asset_id and instance_id = :instance_id and asset_type_id =:filtered_as_type_id } ]
+    } else {
+        set asset_exists_p [db_0or1row hf_asset_get_id {select name from hf_assets where id = :asset_id and instance_id = :instance_id } ]
+    }
     return $asset_exists_p
 }
 
