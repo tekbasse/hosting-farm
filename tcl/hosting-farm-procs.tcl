@@ -1446,13 +1446,13 @@ ad_proc -private hf_asset_halt {
     # return 1 if has permission.
 }
 
+# Would be nice to be able to pass attributes via upvar array, but db_ procs do not have feature to quote array references
+
 ad_proc -private hf_dc_read {
     {instance_id ""}
-    {customer_id_list ""}
     {dc_id ""}
-    {inactives_included_p 0}
 } {
-    reads full detail of dcs. This is not redundant to hf_dcs. This is for 1 dc_id. It includes all attributes and no summary counts of dependents.
+    reads full detail of dcs. This is not redundant to hf_dcs. This is for 1 dc_id. It includes all attributes and no summary counts of dependents. Returns general asset contents followed by specific dc details. dc description is contextual to dc, whereas asset description is in context of all assets. Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created, dc_affix, dc_description, dc_details 
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -1461,55 +1461,56 @@ ad_proc -private hf_dc_read {
     set user_id [ad_conn user_id]
     # Since the dependency tree is large, no dependencies are checked
     set asset_type_id "dc"
- 
-# check if asset_id is of type dc. If so, call hf_asset_read which checks permissions.
 
-# hf_asset_read     asset_id     {instance_id ""}     {user_id ""}
-#    Returns asset contents of asset_id. Returns asset as list of attribute values: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created
+    set attribute_list [hf_asset_read $dc_id $instance_id $user_id]
+    # Returns asset contents of asset_id. Returns asset as list of attribute values: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created
 
-# then get remaining detail
+    # is asset_id of type dc?
+    set return_list [list ]
+    if { $asset_type_id eq "dc" } {
+        set return_list $attribute_list
+        # get, append remaining detail
 
-    # tables hf_data_centers.instance_id,dc_id, affix (was datacentr.short_code), description, details
-    set dc_detail_list [db_list_of_lists hf_dc_get "select dc_id, affix, description, details from hf_data_centers where instance_id =:instance_id and dc_id in ([template::util::tcl_to_sql_list $asset_id_list])"]
-    # dc_id_list is a subset of asset_id_list
-    # to this point, the maximum available dc_id(s) have been returned, and filtered to customer_id_list
- 
-    # If proc parameters are not blank, filter the results.
-    set filter_asset_id_p [expr { $asset_id_list ne "" } ]
-    if { $filter_asset_id_p } {
-        set return_list [list ]
-        set insert_p 0
-        # scope to filter
-        # this is setup to handle multiple filters, but right now just handling the one..
-        foreach one_dc_detail_list $dc_detail_list {
-            if { $filter_asset_id_p && [lsearch -exact $asset_id_list [lindex $one_dc_detail_list 0 ] ] > -1 } {
-                set insert_p 1
-            }
-            if { $insert_p } {
-                set insert_p 0
-                set dc_id [lindex $one_dc_detail_list 0]
-                # count only active ones
-                db_1row hf_dc_ni_map_count "select count(ni_id) as ni_id_active_count from hf_dc_ni_map where instance_id =:instance_id and dc_id =:dc_id and dc_id in ( select id from hf_assets where ( time_stop =null or time_stop < current_timestamp) and trashed_p <> '1' ) "
-                db_1row hf_dc_hw_map_count "select count(hw_id) as hw_id_active_count from hf_dc_hw_map where instance_id =:instance_id and dc_id =:dc_id and dc_id in ( select id from hf_assets where ( time_stop =null or time_stop < current_timestamp) and trashed_p <> '1' ) "
-                lappend one_dc_detail_list $ni_id_count $hw_id_count
-                lappend return_list $one_dc_detail_list
-            }
+        # tables hf_data_centers.instance_id,dc_id, affix (was datacentr.short_code), description, details
+        set dc_detail_list [db_list hf_dc_detail_get "select affix, description, details from hf_data_centers where instance_id =:instance_id and dc_id=:dc_id"]
+        foreach dc_att_list $dc_detail_list {
+            lappend return_list $dc_att_list
         }
-    } else {
-        set return_list $dc_detail_list
-    } 
+    }
     return $return_list
-
-    ##code
-    # hf_data_centers.instance_id, dc_id, affix, description, details
-    # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
-
 }
 
 ad_proc -private hf_dc_write {
-    args
+    dc_id
+    name
+    title
+    asset_type_id
+    keywords
+    description
+    content
+    comments
+    trashed_p
+    trashed_by
+    template_p
+    templated_p
+    publish_p
+    monitor_p
+    popularity
+    triage_priority
+    op_status
+    ua_id
+    ns_id
+    qal_product_id
+    qal_customer_id
+    instance_id
+    user_id
+    last_modified
+    created
+    dc_affix
+    dc_description
+    dc_details 
 } {
-    writes or creates a dc asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise 0 is returned.
+    writes or creates a dc asset_type_id. If asset_id (dc_id) is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise 0 is returned.
 } {
     # hf_data_centers.instance_id, dc_id, affix, description, details
     # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
@@ -1518,10 +1519,22 @@ ad_proc -private hf_dc_write {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
+    set user_id [ad_conn user_id]
+    if { $dc_id ne "" } {
+        # validate dc_id. If dc_id not a dc or does not exist, set dc_id ""
+        if { ![hf_asset_id_exists $dc_id $instance_id "dc"] } {
+            set dc_id ""
+        }
     }
-    ##code
+
+    if { $dc_id eq "" } {
+        # check permission to create
+        ## insert dc asset
+        
+    } else {
+        # check permission to write
+        ## update dc_id asset
+    }
 }
 
 
