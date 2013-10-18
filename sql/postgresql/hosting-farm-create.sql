@@ -102,7 +102,7 @@ CREATE TABLE hf_assets (
     monitor_p       varchar(1),
     -- when monitoring, higher value is higher priority for alerts, alert reponses
     triage_priority integer
- );
+);
 
 create index hf_assets_id_idx on hf_assets (id);
 create index hf_assets_instance_id_idx on hf_assets (instance_id);

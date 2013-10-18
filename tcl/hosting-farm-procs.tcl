@@ -39,6 +39,8 @@ ad_library {
     # vh  vh_id                    - virtual host
     #       ->  ss_id              - service asset attached to (with dependency primarily on) virtual host
 
+# ni, ip, os, ns are not assets, but attributes that can be assigned to assets.
+
     # objects can easily be passed to procs via an array and upvar
     #  array references don't work in sql, so these use ordered lists
     ## For dynamically generated objects, a proc should be written
@@ -1510,11 +1512,10 @@ ad_proc -private hf_dc_write {
     dc_description
     dc_details 
 } {
-    writes or creates a dc asset_type_id. If asset_id (dc_id) is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise empty string is returned.
+    writes or creates a dc asset_type_id. If asset_id (dc_id) is blank, a new one is created. The new asset_id is returned if successful, otherwise empty string is returned.
 } {
     # hf_data_centers.instance_id, dc_id, affix, description, details
     # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
-
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
@@ -1561,9 +1562,121 @@ ad_proc -private hf_hw_read {
 }
 
 ad_proc -private hf_hw_write {
+    hw_id
+    name
+    title
+    asset_type_id
+    keywords
+    description
+    content
+    comments
+    trashed_p
+    trashed_by
+    template_p
+    templated_p
+    publish_p
+    monitor_p
+    popularity
+    triage_priority
+    op_status
+    ua_id
+    ns_id
+    qal_product_id
+    qal_customer_id
+    instance_id
+    user_id
+    last_modified
+    created
+    hw_system_name
+    hw_backup_sys
+    hw_ni_id
+    hw_os_id
+    hw_description
+    hw_details
+} {
+    writes or creates an hw asset_type_id. If asset_id (hw_id) is blank, a new one is created. The new asset_id is returned if successful, otherwise empty string is returned.
+} {
+    # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
+    #  hf_hardware.instance_id, hw_id, system_name, backup_sys, ni_id, os_id, description, details
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    set user_id [ad_conn user_id]
+    ##code
+    set new_hw_id ""
+    if { $hw_id ne "" } {
+        # validate hw_id. If hw_id not an hw or does not exist, set hw_id ""
+        if { ![hf_asset_id_exists $hw_id $instance_id "hw"] } {
+            set hw_id ""
+        }
+    }
+
+    if { $hw_id eq "" } {
+        # hf_asset_create checks permission to create
+        set hw_id_new [hf_asset_create $label $name $asset_type_id $title $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
+    } else {
+        # hf_asset_write checks permission to write
+        set hw_id_new [hf_asset_write $label $name $title $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $hw_id $flags $instance_id $user_id]
+    }
+    if { $hw_id_new ne "" } {
+        # insert hw asset hf_hardware
+        db_dml hw_asset_create {insert into hf_hardware
+            (instance_id, hw_id, system_name, backup_sys, ni_id, os_id, description, details)
+            values (:instance_id,:hw_id_new,:hw_system_name,:hw_backup_sys,:hw_ni_id,:hw_os_id,:hw_description,:hw_details}
+    } 
+    return $hw_id_new
+}
+
+ad_proc -private hf_vm_read {
+    {vm_id_list ""}
+} {
+    reads full detail of one vm. This is not redundant to hf_vms. This accepts only 1 id and includes all attributes (no summary counts)
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
+    ##code
+}
+
+ad_proc -private hf_vm_write {
     args
 } {
-    writes or creates a hw asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
+    writes or creates a vm asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
+    ##code
+}
+
+ad_proc -private hf_ss_read {
+    {ss_id_list ""}
+} {
+    reads full detail of one ss. This is not redundant to hf_sss. This accepts only 1 id and includes all attributes (no summary counts)
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
+    ##code
+}
+
+ad_proc -private hf_ss_write {
+    args
+} {
+    writes or creates an ss asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -1655,66 +1768,6 @@ ad_proc -private hf_os_write {
     args
 } {
     writes or creates an os asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    ##code
-}
-
-ad_proc -private hf_ss_read {
-    {ss_id_list ""}
-} {
-    reads full detail of one ss. This is not redundant to hf_sss. This accepts only 1 id and includes all attributes (no summary counts)
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    ##code
-}
-
-ad_proc -private hf_ss_write {
-    args
-} {
-    writes or creates an ss asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    ##code
-}
-
-ad_proc -private hf_vm_read {
-    {vm_id_list ""}
-} {
-    reads full detail of one vm. This is not redundant to hf_vms. This accepts only 1 id and includes all attributes (no summary counts)
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    ##code
-}
-
-ad_proc -private hf_vm_write {
-    args
-} {
-    writes or creates a vm asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
