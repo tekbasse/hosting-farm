@@ -1462,11 +1462,10 @@ ad_proc -private hf_dc_read {
     }
     set user_id [ad_conn user_id]
     # Since the dependency tree is large, no dependencies are checked
-    set asset_type_id "dc"
 
     set attribute_list [hf_asset_read $dc_id $instance_id $user_id]
     # Returns asset contents of asset_id. Returns asset as list of attribute values: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created
-
+    set asset_type_id [lindex $attribute_list 2]
     # is asset_id of type dc?
     set return_list [list ]
     if { $asset_type_id eq "dc" } {
@@ -1559,11 +1558,9 @@ ad_proc -private hf_hw_read {
     }
     set user_id [ad_conn user_id]
     # Since the dependency tree is large, no dependencies are checked
-    set asset_type_id "hw"
-
     set attribute_list [hf_asset_read $hw_id $instance_id $user_id]
     # Returns asset contents of asset_id. Returns asset as list of attribute values: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created
-
+    set asset_type_id [lindex $attribute_list 2]
     # is asset_id of type hw?
     set return_list [list ]
     if { $asset_type_id eq "hw" } {
@@ -1621,7 +1618,6 @@ ad_proc -private hf_hw_write {
         set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
-    ##code
     set new_hw_id ""
     if { $hw_id ne "" } {
         # validate hw_id. If hw_id not an hw or does not exist, set hw_id ""
@@ -1647,18 +1643,34 @@ ad_proc -private hf_hw_write {
 }
 
 ad_proc -private hf_vm_read {
-    {vm_id_list ""}
+    {vm_id ""}
 } {
-    reads full detail of one vm. This is not redundant to hf_vms. This accepts only 1 id and includes all attributes (no summary counts)
+    reads full detail of one vm. This is not redundant to hf_vms. This accepts only 1 id and includes all attributes and no summary counts of dependents.
+    Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created, vm_domain_name, vm_ip_id, vm_ni_id, vm_ns_id, vm_os_id, vm_type_id, vm_resource_path, vm_mount_union, vm_details
+
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
+    set user_id [ad_conn user_id]
+    # Since the dependency tree is large, no dependencies are checked
+    set attribute_list [hf_asset_read $vm_id $instance_id $user_id]
+    # Returns asset contents of asset_id. Returns asset as list of attribute values: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created
+    set asset_type_id [lindex $attribute_list 2]
+    # is asset_id of type vm?
+    set return_list [list ]
+    if { $asset_type_id eq "vm" } {
+        set return_list $attribute_list
+        # get, append remaining detail
+
+        # hf_virtual_machines.instance_id, vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details
+        set vm_detail_list [db_list_of_lists hf_vm_detail_get "select vm_id, domain_name, ip_id, ni_id, ns_id, os_id, type_id, resource_path, mount_union, details from hf_virtual_machines where instance_id =:instance_id and vm_id =:vm_id"
+        foreach vm_att_list $vm_detail_list {
+            lappend return_list $vm_att_list
+        }
     }
-    ##code
+    return $return_list
 }
 
 ad_proc -private hf_vm_write {
