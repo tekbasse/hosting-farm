@@ -1637,7 +1637,7 @@ ad_proc -private hf_hw_write {
         # insert hw asset hf_hardware
         db_dml hw_asset_create {insert into hf_hardware
             (instance_id, hw_id, system_name, backup_sys, ni_id, os_id, description, details)
-            values (:instance_id,:hw_id_new,:hw_system_name,:hw_backup_sys,:hw_ni_id,:hw_os_id,:hw_description,:hw_details}
+            values (:instance_id,:hw_id_new,:hw_system_name,:hw_backup_sys,:hw_ni_id,:hw_os_id,:hw_description,:hw_details) }
     } 
     return $hw_id_new
 }
@@ -1675,18 +1675,72 @@ ad_proc -private hf_vm_read {
 }
 
 ad_proc -private hf_vm_write {
-    args
+    vm_id
+    name
+    title
+    asset_type_id
+    keywords
+    description
+    content
+    comments
+    trashed_p
+    trashed_by
+    template_p
+    templated_p
+    publish_p
+    monitor_p
+    popularity
+    triage_priority
+    op_status
+    ua_id
+    ns_id
+    qal_product_id
+    qal_customer_id
+    instance_id
+    user_id
+    last_modified
+    created
+    vm_domain_name
+	vm_ip_id
+	vm_ni_id
+	vm_ns_id
+	vm_type_id
+	vm_resource_path
+	vm_mount_union
+	vm_details
 } {
-    writes or creates a vm asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
+    writes or creates an vm asset_type_id. If asset_id (vm_id) is blank, a new one is created. The new asset_id is returned if successful, otherwise empty string is returned.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
+    set user_id [ad_conn user_id]
+    # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
+
+    set new_vm_id ""
+    if { $vm_id ne "" } {
+        # validate vm_id. If vm_id not an vm or does not exist, set vm_id ""
+        if { ![hf_asset_id_exists $vm_id $instance_id "vm"] } {
+            set vm_id ""
+        }
     }
-    ##code
+
+    if { $vm_id eq "" } {
+        # hf_asset_create checks permission to create
+        set vm_id_new [hf_asset_create $label $name $asset_type_id $title $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
+    } else {
+        # hf_asset_write checks permission to write
+        set vm_id_new [hf_asset_write $label $name $title $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $vm_id $flags $instance_id $user_id]
+    }
+    if { $vm_id_new ne "" } {
+        # insert vm asset hf_virtual_machines
+        # hf_virtual_machines.instance_id, vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details
+        db_dml vm_asset_create {insert into hf_virtual_machines
+            (instance_id, vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details)
+            values (:instance_id, :new_vm_id, :vm_domain_name, :vm_ip_id, :vm_ni_id, :vm_ns_id, :vm_type_id, :vm_resource_path, :vm_mount_union, :vm_details) }
+    } 
+    return $vm_id_new
 }
 
 ad_proc -private hf_ss_read {
