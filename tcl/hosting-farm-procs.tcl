@@ -1429,7 +1429,7 @@ ad_proc -private hf_asset_types {
 
 
 ad_proc -private hf_asset_halt {
-    {asset_id_list ""}
+    asset_id
 } {
     Halts the operation of an asset, such as service, vm, vhost etc
 } {
@@ -1547,7 +1547,7 @@ ad_proc -private hf_dc_write {
 
 ad_proc -private hf_hw_read {
     {instance_id ""}
-    {hw_id ""}
+    hw_id
 } {
     reads full detail of one hw. This is not redundant to hf_hws. This accepts only 1 id and includes all attributes and no summary counts of dependents.
     Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created, hw_system_name, hw_backup_sys, hw_ni_id, hw_os_id, hw_description, hw_details
@@ -1643,7 +1643,8 @@ ad_proc -private hf_hw_write {
 }
 
 ad_proc -private hf_vm_read {
-    {vm_id ""}
+    {instance_id ""}
+    vm_id
 } {
     reads full detail of one vm. This is not redundant to hf_vms. This accepts only 1 id and includes all attributes and no summary counts of dependents.
     Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created, vm_domain_name, vm_ip_id, vm_ni_id, vm_ns_id, vm_os_id, vm_type_id, vm_resource_path, vm_mount_union, vm_details
@@ -1665,7 +1666,7 @@ ad_proc -private hf_vm_read {
         # get, append remaining detail
 
         # hf_virtual_machines.instance_id, vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details
-        set vm_detail_list [db_list_of_lists hf_vm_detail_get "select vm_id, domain_name, ip_id, ni_id, ns_id, os_id, type_id, resource_path, mount_union, details from hf_virtual_machines where instance_id =:instance_id and vm_id =:vm_id"
+        set vm_detail_list [db_list hf_vm_detail_get "select domain_name, ip_id, ni_id, ns_id, os_id, type_id, resource_path, mount_union, details from hf_virtual_machines where instance_id =:instance_id and vm_id =:vm_id"]
         foreach vm_att_list $vm_detail_list {
             lappend return_list $vm_att_list
         }
@@ -1689,18 +1690,34 @@ ad_proc -private hf_vm_write {
 }
 
 ad_proc -private hf_ss_read {
-    {ss_id_list ""}
+    {instance_id ""}
+    ss_id
 } {
-    reads full detail of one ss. This is not redundant to hf_sss. This accepts only 1 id and includes all attributes (no summary counts)
+    reads full detail of one ss. This is not redundant to hf_sss. This accepts only 1 id and includes all attributes and no summary counts of dependents.
+    Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created, ss_server_name ss_service_name ss_daemon_ref ss_protocol ss_port ss_ua_id ss_ss_type ss_ss_subtype ss_ss_undersubtype ss_ss_ultrasubtype ss_config_uri ss_memory_bytes ss_details
+
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
+    set user_id [ad_conn user_id]
+    # Since the dependency tree is large, no dependencies are checked
+    set attribute_list [hf_asset_read $ss_id $instance_id $user_id]
+    # Returns asset contents of asset_id. Returns asset as list of attribute values: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created
+    set asset_type_id [lindex $attribute_list 2]
+    # is asset_id of type ss?
+    set return_list [list ]
+    if { $asset_type_id eq "ss" } {
+        set return_list $attribute_list
+        # get, append remaining detail
+        # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
+        set ss_detail_listt [db_list hf_ss_detail_get "select server_name, service_name, ss_type, ss_subtype, ss_undersubtype, ss_ultrasubtype, daemon_ref, protocol, port, ua_id, config_uri, memory_bytes, details from hf_services where instance_id =:instance_id and ss_id =:ss_id"]
+        foreach ss_att_list $ss_detail_list {
+            lappend return_list $ss_att_list
+        }
     }
-    ##code
+    return $return_list
 }
 
 ad_proc -private hf_ss_write {
