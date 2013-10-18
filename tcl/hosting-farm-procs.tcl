@@ -1510,7 +1510,7 @@ ad_proc -private hf_dc_write {
     dc_description
     dc_details 
 } {
-    writes or creates a dc asset_type_id. If asset_id (dc_id) is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise 0 is returned.
+    writes or creates a dc asset_type_id. If asset_id (dc_id) is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise empty string is returned.
 } {
     # hf_data_centers.instance_id, dc_id, affix, description, details
     # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
@@ -1520,6 +1520,7 @@ ad_proc -private hf_dc_write {
         set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
+    set new_dc_id ""
     if { $dc_id ne "" } {
         # validate dc_id. If dc_id not a dc or does not exist, set dc_id ""
         if { ![hf_asset_id_exists $dc_id $instance_id "dc"] } {
@@ -1528,12 +1529,17 @@ ad_proc -private hf_dc_write {
     }
 
     if { $dc_id eq "" } {
-        # check permission to create
-        ## insert dc asset
-        
+        # hf_asset_create checks permission to create
+        set dc_id_new [hf_asset_create $label $name $asset_type_id $title $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
+        if { $dc_id_new ne "" } {
+            ## insert dc asset hf_datacenters
+        } 
     } else {
-        # check permission to write
-        ## update dc_id asset
+        # hf_asset_write checks permission to write
+        set dc_id_new [hf_asset_write $label $name $title $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $dc_id $flags $instance_id $user_id]
+        if { $dc_id_new ne "" } {
+            ## update (insert) dc_id asset hf_datacenters
+        }
     }
 }
 

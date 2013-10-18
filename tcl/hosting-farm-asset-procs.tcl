@@ -486,10 +486,12 @@ ad_proc -public hf_asset_write {
     ns_id
     qal_product_id
     qal_customer_id
+    asset_id
     {template_id ""}
     {flags ""}
     {instance_id ""}
     {user_id ""}
+
 } {
     Writes a new revision of an existing asset. asset_id is an existing revision of template_id. returns the new asset_id or a blank asset_id if unsuccessful.
 } {
