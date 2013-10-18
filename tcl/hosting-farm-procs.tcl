@@ -1551,7 +1551,7 @@ ad_proc -private hf_hw_read {
     {hw_id ""}
 } {
     reads full detail of one hw. This is not redundant to hf_hws. This accepts only 1 id and includes all attributes and no summary counts of dependents.
-    Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created, hw_* ## 
+    Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created, hw_system_name, hw_backup_sys, hw_ni_id, hw_os_id, hw_description, hw_details
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
