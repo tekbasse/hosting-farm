@@ -1531,16 +1531,17 @@ ad_proc -private hf_dc_write {
     if { $dc_id eq "" } {
         # hf_asset_create checks permission to create
         set dc_id_new [hf_asset_create $label $name $asset_type_id $title $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
-        if { $dc_id_new ne "" } {
-            ## insert dc asset hf_datacenters
-        } 
     } else {
         # hf_asset_write checks permission to write
         set dc_id_new [hf_asset_write $label $name $title $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $dc_id $flags $instance_id $user_id]
-        if { $dc_id_new ne "" } {
-            ## update (insert) dc_id asset hf_datacenters
-        }
     }
+    if { $dc_id_new ne "" } {
+        # insert dc asset hf_datacenters
+        db_dml dc_asset_create {insert into hf_data_centers
+            (instance_id, dc_id, affix, description, details)
+            values (:instance_id,:dc_id_new,:dc_affix,:dc_description,:dc_details) }
+    } 
+    return $dc_id_new
 }
 
 
