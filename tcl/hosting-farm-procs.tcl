@@ -1547,18 +1547,36 @@ ad_proc -private hf_dc_write {
 
 
 ad_proc -private hf_hw_read {
-    {hw_id_list ""}
+    {instance_id ""}
+    {hw_id ""}
 } {
-    reads full detail of one hw. This is not redundant to hf_hws. This accepts only 1 id and includes all attributes (no summary counts)
+    reads full detail of one hw. This is not redundant to hf_hws. This accepts only 1 id and includes all attributes and no summary counts of dependents.
+    Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created, hw_* ## 
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
+    set user_id [ad_conn user_id]
+    # Since the dependency tree is large, no dependencies are checked
+    set asset_type_id "hw"
+
+    set attribute_list [hf_asset_read $hw_id $instance_id $user_id]
+    # Returns asset contents of asset_id. Returns asset as list of attribute values: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created
+
+    # is asset_id of type hw?
+    set return_list [list ]
+    if { $asset_type_id eq "hw" } {
+        set return_list $attribute_list
+        # get, append remaining detail
+
+        #  hf_hardware.instance_id, hw_id, system_name, backup_sys, ni_id, os_id, description, details
+        set hw_detail_list [db_list hf_hw_detail_get "select system_name, backup_sys, ni_id, os_id, description, details from hf_hardware where instance_id =:instance_id and hw_id=:hw_id"]
+        foreach hw_att_list $hw_detail_list {
+            lappend return_list $hw_att_list
+        }
     }
-    ##code
+    return $return_list
 }
 
 ad_proc -private hf_hw_write {
