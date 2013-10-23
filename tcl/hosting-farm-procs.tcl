@@ -43,12 +43,15 @@ ad_library {
 
     # objects can easily be passed to procs via an array and upvar
     #  array references don't work in sql, so these use ordered lists
-    ## For dynamically generated objects, a proc should be written
+
+    # For dynamically generated objects, a proc should be written
     # to write a series of avariables to an array, and an array to a set of variables equal to the indexes.
     # somthing similar to qf_get_inputs_as_array, or set array but where the pairs are in separate lists
     # for eks: qf_get_inputs_as_array but added to the q-forms help-procs section:
     # qf_vars_from_array, qf_array_from_vars, qf_array_from_ordered_lists $key_list $value_list 
-
+    # Just found existing ones in acs-templating library:
+    # template::util::list_to_array
+    # template::util::array_to_vars
 }
 
 # following defined in permissions-procs.tcl
@@ -1749,7 +1752,6 @@ ad_proc -private hf_ss_read {
 } {
     reads full detail of one ss. This is not redundant to hf_sss. This accepts only 1 id and includes all attributes and no summary counts of dependents.
     Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created, ss_server_name ss_service_name ss_daemon_ref ss_protocol ss_port ss_ua_id ss_ss_type ss_ss_subtype ss_ss_undersubtype ss_ss_ultrasubtype ss_config_uri ss_memory_bytes ss_details
-
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -1775,25 +1777,83 @@ ad_proc -private hf_ss_read {
 }
 
 ad_proc -private hf_ss_write {
-    args
+    ss_id
+    name
+    title
+    asset_type_id
+    keywords
+    description
+    content
+    comments
+    trashed_p
+    trashed_by
+    template_p
+    templated_p
+    publish_p
+    monitor_p
+    popularity
+    triage_priority
+    op_status
+    ua_id
+    ns_id
+    qal_product_id
+    qal_customer_id
+    instance_id
+    user_id
+    last_modified
+    created
+	ss_server_name
+	ss_service_name
+	ss_daemon_ref
+	ss_protocol
+	ss_port
+	ss_ua_id
+	ss_ss_type
+	ss_ss_subtype
+	ss_ss_undersubtype
+	ss_ss_ultrasubtype
+	ss_config_uri
+	ss_memory_bytes
+	ss_details
+  {
+    writes or creates an ss asset_type_id. If asset_id (ss_id) is blank, a new one is created. The new asset_id is returned if successful, otherwise empty string is returned.
 } {
-    writes or creates an ss asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
-} {
+    # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
+    # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
+    set user_id [ad_conn user_id]
+    set new_ss_id ""
+    if { $ss_id ne "" } {
+        # validate ss_id. If ss_id not an ss or does not exist, set ss_id ""
+        if { ![hf_asset_id_exists $ss_id $instance_id "ss"] } {
+            set ss_id ""
+        }
     }
-    ##code
+
+    if { $ss_id eq "" } {
+        # hf_asset_create checks permission to create
+        set ss_id_new [hf_asset_create $label $name $asset_type_id $title $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
+    } else {
+        # hf_asset_write checks permission to write
+        set ss_id_new [hf_asset_write $label $name $title $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $ss_id $flags $instance_id $user_id]
+    }
+    if { $ss_id_new ne "" } {
+        # insert ss asset hf_services
+        db_dml ss_asset_create {insert into hf_services
+            (instance_id, ss_id, server_name, service_name, daemon_ref, protocol, port, ua_id, ss_type, ss_subtype, ss_undersubtype, ss_ultrasubtype, config_uri, memory_bytes, details)
+            values (:instance_id,:ss_id_new,:ss_server_name,:ss_service_name,:ss_daemon_ref,:ss_protocol,:ss_port,:ss_ua_id,:ss_ss_type,:ss_ss_subtype,:ss_ss_undersubtype,:ss_ss_ultrasubtype,:ss_config_uri,:ss_memory_bytes,:ss_details)}
+    } 
+    return $ss_id_new
 }
 
-
+# The following are not assets by default. Log changes to a log of the asset the property is assigned to
 ad_proc -private hf_ip_read {
-    {ip_id_list ""}
+    ip_id
 } {
-    reads full detail of one ip. This is not redundant to hf_ips. This accepts only 1 id and includes all attributes (no summary counts)
+    reads full detail of one asset's ip. This is not redundant to hf_ips. This accepts only 1 id and includes all attributes (no summary counts)
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
