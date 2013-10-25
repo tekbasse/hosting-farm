@@ -1859,10 +1859,12 @@ ad_proc -private hf_ip_read {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
+    set user_id [ad_conn user_id]
+    
     ##code
+    # get asset_id via a new proc hf_id_of_ip_id
+    # check permissions
+    # if ok, get ip data
 }
 
 ad_proc -private hf_ip_write {
