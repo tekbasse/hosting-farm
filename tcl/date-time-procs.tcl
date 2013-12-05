@@ -10,17 +10,18 @@ ad_proc -public hf_clock_scan_interval {
     delta 
     units
 } {
-   Formats $seconds to a string for processing by clock scan, 
+   Formats a timestamp to seconds for processing by clock scan, 
     then returns a new timestamp in seconds.
 } {
-    
+    ns_log Notice "hf_clock_scan_interval starting with $seconds $delta $units"
     set stamp [clock format $seconds -format "%Y%m%dT%H%M%S"]
     if { $delta < 0 } {
         append stamp " - " [expr { abs( $delta ) } ] " " $units
     } else {
         append stamp " + " $delta " " $units
     }
-    return [clock scan $stamp]
+    set timestamp [clock scan $stamp]
+    return 
 }
 
 ad_proc -public hf_interval_ymdhms { 
@@ -34,6 +35,8 @@ ad_proc -public hf_interval_ymdhms {
     This proc has audit features. It will automatically
     attempt to correct and report any discrepancies it finds.
 } {
+    ns_log Notice "hf_interval_ymdhms starting with $s1 $s2"
+    set units_list [list years months days hours minutes seconds]
     # if s1 and s2 aren't in seconds, convert to seconds.
     if { ![string is integer -strict $s1] } {
         set s1 [clock scan $s1]
@@ -57,7 +60,8 @@ ad_proc -public hf_interval_ymdhms {
     set y_count 0
     set s1_p0 $s1
     set s2_y_check $s1_p0
-    while { $s2_y_check <= $s2  } {
+    set count 0
+    while { $y_count < 10000 $s2_y_check <= $s2 } {
         set s1_p1 $s2_y_check
         set y $y_count
         incr y_count
@@ -82,7 +86,7 @@ ad_proc -public hf_interval_ymdhms {
     # Calculate months from s1_p1 to s2
     set m_count 0
     set s2_m_check $s1_p1
-    while { $s2_m_check <= $s2  } {
+    while { $m_count < 10000 && $s2_m_check <= $s2  } {
         set s1_p2 $s2_m_check
         set m $m_count
         incr m_count
@@ -156,7 +160,7 @@ ad_proc -public hf_interval_ymdhms {
     # Sanity check: if 60 minutes, push it up to an hour unit
     if { $mm >= 60 } {
         # adjust 60 minutes to 1 hour
-        # ns_log Notice "interval_ymdhms: debug info mm - 60, h + 1"
+        ns_log Notice "interval_ymdhms: debug info mm - 60, h + 1"
         set mm [expr { $mm - 60 } ]
         incr h
         set mm_correction_p 1
@@ -183,7 +187,7 @@ ad_proc -public hf_interval_ymdhms {
     set i 0
     set s1_test [clock format $s1 -format "%Y%m%dT%H%M%S"]
     set signs_inconsistent_p 0
-    foreach unit {years months days hours minutes seconds} {
+    foreach unit $units_list {
         set t_term [lindex $return_list $i]
         if { $t_term != 0 } {
             if { $t_term > 0 } {
@@ -197,7 +201,7 @@ ad_proc -public hf_interval_ymdhms {
     }
     
     set s2_test [clock scan $s1_test]
-    #  ns_log Notice "test s2 '$s2_test' from: '$s1_test'"
+    ns_log Notice "test s2 '$s2_test' from: '$s1_test'"
     set counter 0
     while { $s2 ne $s2_test && $counter < 30 } {
         set s2_diff [expr { $s2_test - $s2 } ]
@@ -242,7 +246,7 @@ ad_proc -public hf_interval_ymdhms {
         # test results by adding difference to s1 to get s2:
         set i 0
         set s1_test [clock format $s1 -format "%Y%m%dT%H%M%S"]
-        foreach unit {years months days hours minutes seconds} {
+        foreach unit $units_list {
             set t_term [lindex $return_list $i]
             if { $t_term != 0 } {
                 if { $t_term > 0 } {
@@ -279,10 +283,12 @@ ad_proc -public hf_interval_ymdhms_w_units {
 } {
     Returns interval_ymdhms values with units.
 } {
+    ns_log Notice "hf_interval_ymdhms_w_units starting with $t1 $t2"
+    set units_list [list year month day hour minute second]
     set v_list [hf_interval_ymdhms $t2 $t1]
     set i 0
     set a ""
-    foreach f {year month day hour minute second} {
+    foreach f $units_list {
         set v_val [lindex $v_list $i]
         set unit $f
         if { $v_val > 1 } {
@@ -308,6 +314,8 @@ ad_proc -public hf_interval_remains_ymdhms {
     This proc has audit features. It will automatically
     attempt to correct and report any discrepancies it finds.
 } {
+    ns_log Notice "hf_interval_remains_ymdhms starting with $s1 $s2"
+    set units_list [list years months days hours minutes seconds]
     # if s1 and s2 aren't in seconds, convert to seconds.
     if { ![string is integer -strict $s1] } {
         set s1 [clock scan $s1]
@@ -329,7 +337,7 @@ ad_proc -public hf_interval_remains_ymdhms {
     set y_count 0
     set s1_p0 $s1
     set s2_y_check $s1_p0
-    while { $s2_y_check > $s2  } {
+    while { $y_count > -10000 && $s2_y_check > $s2  } {
         set s1_p1 $s2_y_check
         set y $y_count
         incr y_count -1
@@ -341,7 +349,7 @@ ad_proc -public hf_interval_remains_ymdhms {
     # Calculate months from s1_p1 to s2
     set m_count 0
     set s2_m_check $s1_p1
-    while { $s2_m_check > $s2  } {
+    while { $m_count > -10000 && $s2_m_check > $s2  } {
         set s1_p2 $s2_m_check
         set m $m_count
         incr m_count -1
@@ -395,7 +403,7 @@ ad_proc -public hf_interval_remains_ymdhms {
     # Sanity check: if 60 minutes, push it up to an hour unit
     if { $mm <= -60 } {
         # adjust 60 minutes to 1 hour
-        # ns_log Notice "interval_remains_ymdhms: debug info mm + 60, h - 1"
+        ns_log Notice "interval_remains_ymdhms: debug info mm + 60, h - 1"
         set mm [expr { $mm + 60 } ]
         incr h -1
         set mm_correction_p 1
@@ -423,7 +431,7 @@ ad_proc -public hf_interval_remains_ymdhms {
     set i 0
     set s1_test [clock format $s1 -format "%Y%m%dT%H%M%S"]
     set signs_inconsistent_p 0
-    foreach unit {years months days hours minutes seconds} {
+    foreach unit $units_list {
         set t_term [lindex $return_list $i]
         if { $t_term != 0 } {
             if { $t_term > 0 } {
@@ -438,7 +446,7 @@ ad_proc -public hf_interval_remains_ymdhms {
     set s2_test [clock scan $s1_test]
     
     set counter 0
-    while { $s2 ne $s2_test && $counter < 3 } {
+    while { $s2 ne $s2_test && $counter < 30 } {
         set s2_diff [expr { $s2_test - $s2 } ]
         ns_log Notice "interval_remains_ymdhms: debug s1 $s1 s2 $s2 y $y m $m d $d h $h s $s s2_diff $s2_diff"
         if { [expr { abs($s2_diff) } ] >= 86399 } {
@@ -481,7 +489,7 @@ ad_proc -public hf_interval_remains_ymdhms {
         # test results by adding difference to s1 to get s2:
         set i 0
         set s1_test [clock format $s1 -format "%Y%m%dT%H%M%S"]
-        foreach unit {years months days hours minutes seconds} {
+        foreach unit $units_list {
             set t_term [lindex $return_list $i]
             if { $t_term != 0 } {
                 if { $t_term > 0 } {
@@ -519,10 +527,12 @@ ad_proc -public hf_interval_remains_ymdhms_w_units {
 } {
     Returns interval_remains_ymdhms values with units.
 } {
+    ns_log Notice "hf_interval_remains_ymdhms_w_units starting with $t1 $t2"
+    set units_list [list year month day hour minute second]
     set v_list [hf_interval_ymdhms $t2 $t1]
     set i 0
     set a ""
-    foreach f {year month day hour minute second} {
+    foreach f $units_list {
         set v_val [lindex $v_list $i]
         set unit $f
         if { $v_val > 1 } {
