@@ -59,8 +59,8 @@ ad_library {
 # hf_active_asset_ids_for_customer 
 
 ad_proc -private hf_asset_ids_for_user { 
-    {instance_id ""}
     {user_id ""}
+    {instance_id ""}
 } {
     Returns asset_ids available to user_id as list 
 } {
@@ -84,8 +84,8 @@ ad_proc -private hf_asset_ids_for_user {
 }
 
 ad_proc -private hf_customer_id_of_asset_id {
-    {instance_id ""}
     asset_id
+    {instance_id ""}
 } {
     returns customer_id of asset_id
 } {
@@ -102,10 +102,10 @@ ad_proc -private hf_customer_id_of_asset_id {
 }
 
 ad_proc -private hf_asset_create_from_asset_template {
-    {instance_id ""}
     customer_id
     asset_id
     asset_label_new
+    {instance_id ""}
 } {
    this should be a proc equivalent to a page that loads template and creates new.. 
 } {
@@ -116,8 +116,8 @@ ad_proc -private hf_asset_create_from_asset_template {
     set user_id [ad_conn user_id]
 
     # customer_id of asset_id doesn't matter, because this may a copy of another's asset or template.
-    set read_p [hf_permission_p $instance_id $user_id "" published read]
-    set create_p [hf_permission_p $instance_id $user_id $customer_id customer_assets create]
+    set read_p [hf_permission_p $user_id "" published read $instance_id]
+    set create_p [hf_permission_p $user_id $customer_id customer_assets create $instance_id]
     set status $create_p
     if { $create_p } {
         set asset_list [hf_asset_read $instance_id $asset_id]
@@ -146,9 +146,9 @@ ad_proc -private hf_asset_create_from_asset_template {
 }
 
 ad_proc -private hf_asset_create_from_asset_label {
-    {instance_id ""}
     asset_label_orig
     asset_label_new
+    {instance_id ""}
 } {
    creates a new asset_label based on an existing asset. Returns 1 if successful, otherwise 0.
 } {
@@ -170,10 +170,10 @@ ad_proc -private hf_asset_create_from_asset_label {
 }
 
 ad_proc -private hf_asset_templates {
-    {instance_id ""}
     {label_match ""}
     {inactives_included_p 0}
     {published_p ""}
+    {instance_id ""}
 } {
     returns active template references (id) and other info via a list of lists, where each list is an ordered tcl list of asset related values: id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,time_start,time_stop,trashed_p,trashed_by,flags,publish_p
 } {
@@ -1344,11 +1344,11 @@ ad_proc -private hf_asset_features {
 # With each change, call hf_monitor_log_create {
 #    asset_id, reported_by, user_id .. monitor_id=0}
 ad_proc -private hf_asset_type_write {
-    {instance_id ""}
-    {id ""}
     label
     title
     description
+    {id ""}
+    {instance_id ""}
 } {
     creates or writes asset type, if id is blank, returns id of new asset type; otherwise returns 1 if id exists and db updated. Requires hf technical admin permission.
 } {
@@ -1357,7 +1357,7 @@ ad_proc -private hf_asset_type_write {
         set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
-    set admin_p [hf_permission_p $instance_id $user_id "" technical admin]
+    set admin_p [hf_permission_p $user_id "" technical admin $instance_id]
     set asset_type_id ""
     set return_val $admin_p
     if { $admin_p } {
@@ -1384,8 +1384,8 @@ ad_proc -private hf_asset_type_write {
 
 
 ad_proc -private hf_asset_type_read {
-    {instance_id ""}
     id_list
+    {instance_id ""}
 } {
     returns an existing asset_type in a list of lists: {label1, title1, description1} {labelN, titleN, descriptionN} or blank list if none found. Bad id's are ignored.
 } {
@@ -1400,15 +1400,15 @@ ad_proc -private hf_asset_type_read {
             lappend new_as_type_id_list $asset_type_id
         }
     }
-
+    
     set return_list_of_lists [db_list_of_lists hf_asset_type_read "select id, label, title, description from hf_asset_type where instance_id =:instance_id and id in ([template::util::tcl_to_sql_list $new_as_type_id_list])" ]
-    }
+    
     return $return_list_of_lists
 }
 
 ad_proc -private hf_asset_types {
-    {instance_id ""}
     {label_match ""}
+    {instance_id ""}
 } {
     returns matching asset types as a list of list: {id,label,title,description}, if label is nonblank, returns asset types that glob match the passed label value via tcl match.
 } {
@@ -1454,8 +1454,8 @@ ad_proc -private hf_asset_halt {
 # Would be nice to be able to pass attributes via upvar array, but db_ procs do not have feature to quote array references
 
 ad_proc -private hf_dc_read {
-    {instance_id ""}
     {dc_id ""}
+    {instance_id ""}
 } {
     reads full detail of dcs. This is not redundant to hf_dcs. This is for 1 dc_id. It includes all attributes and no summary counts of dependents. Returns general asset contents followed by specific dc details. dc description is contextual to dc, whereas asset description is in context of all assets. Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created, dc_affix, dc_description, dc_details 
 } {
@@ -1549,8 +1549,8 @@ ad_proc -private hf_dc_write {
 
 
 ad_proc -private hf_hw_read {
-    {instance_id ""}
     hw_id
+    {instance_id ""}
 } {
     reads full detail of one hw. This is not redundant to hf_hws. This accepts only 1 id and includes all attributes and no summary counts of dependents.
     Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created, hw_system_name, hw_backup_sys, hw_ni_id, hw_os_id, hw_description, hw_details
@@ -1646,8 +1646,8 @@ ad_proc -private hf_hw_write {
 }
 
 ad_proc -private hf_vm_read {
-    {instance_id ""}
     vm_id
+    {instance_id ""}
 } {
     reads full detail of one vm. This is not redundant to hf_vms. This accepts only 1 id and includes all attributes and no summary counts of dependents.
     Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created, vm_domain_name, vm_ip_id, vm_ni_id, vm_ns_id, vm_os_id, vm_type_id, vm_resource_path, vm_mount_union, vm_details
@@ -1747,8 +1747,8 @@ ad_proc -private hf_vm_write {
 }
 
 ad_proc -private hf_ss_read {
-    {instance_id ""}
     ss_id
+    {instance_id ""}
 } {
     reads full detail of one ss. This is not redundant to hf_sss. This accepts only 1 id and includes all attributes and no summary counts of dependents.
     Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created, ss_server_name ss_service_name ss_daemon_ref ss_protocol ss_port ss_ua_id ss_ss_type ss_ss_subtype ss_ss_undersubtype ss_ss_ultrasubtype ss_config_uri ss_memory_bytes ss_details
@@ -1815,7 +1815,7 @@ ad_proc -private hf_ss_write {
 	ss_config_uri
 	ss_memory_bytes
 	ss_details
-  {
+} {
     writes or creates an ss asset_type_id. If asset_id (ss_id) is blank, a new one is created. The new asset_id is returned if successful, otherwise empty string is returned.
 } {
     # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
@@ -1852,6 +1852,7 @@ ad_proc -private hf_ss_write {
 # The following are not assets by default. Log changes to a log of the asset the property is assigned to
 ad_proc -private hf_ip_read {
     ip_id
+    {instance_id ""}
 } {
     reads full detail of one asset's ip. This is not redundant to hf_ips. This accepts only 1 id and includes all attributes (no summary counts)
 } {
@@ -1869,6 +1870,7 @@ ad_proc -private hf_ip_read {
 
 ad_proc -private hf_ip_write {
     args
+    {instance_id ""}
 } {
     writes or creates an ip asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise 0 is returned.
 } {
@@ -1884,6 +1886,7 @@ ad_proc -private hf_ip_write {
 
 ad_proc -private hf_ni_read {
     {ni_id_list ""}
+    {instance_id ""}
 } {
     reads full detail of one ni. This is not redundant to hf_nis. This accepts only 1 id and includes all attributes (no summary counts)
 } {
@@ -1899,6 +1902,7 @@ ad_proc -private hf_ni_read {
 
 ad_proc -private hf_ni_write {
     args
+    {instance_id ""}
 } {
     writes or creates an ip asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
 } {
@@ -1914,6 +1918,7 @@ ad_proc -private hf_ni_write {
 
 ad_proc -private hf_os_read {
     {os_id_list ""}
+    {instance_id ""}
 } {
     description
 } {
@@ -1929,6 +1934,7 @@ ad_proc -private hf_os_read {
 
 ad_proc -private hf_os_write {
     args
+    {instance_id ""}
 } {
     writes or creates an os asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
 } {
@@ -1945,6 +1951,7 @@ ad_proc -private hf_os_write {
 
 ad_proc -private hf_ns_read {
     {vm_id_list ""}
+    {instance_id ""}
 } {
     reads full detail of one ns. This is not redundant to hf_nss. This accepts only 1 id and includes all attributes (no summary counts)
 } {
@@ -1960,6 +1967,7 @@ ad_proc -private hf_ns_read {
 
 ad_proc -private hf_ns_write {
     args
+    {instance_id ""}
 } {
     writes or creates an ns_id. If ns_id is blank, a new one is created, and the new ns_id returned. The ns_id is returned if successful, otherwise -1 is returned.
 } {
@@ -1976,6 +1984,7 @@ ad_proc -private hf_ns_write {
 
 ad_proc -private hf_vm_quota_read {
     {plan_id_list ""}
+    {instance_id ""}
 } {
     description
 } {
@@ -1992,6 +2001,7 @@ ad_proc -private hf_vm_quota_read {
 
 ad_proc -private hf_vm_quota_write {
     args
+    {instance_id ""}
 } {
     writes or creates a vm_quota. If id is blank, a new one is created, and the new id returned. id is returned if successful, otherwise -1 is returned.
 } {
@@ -2007,6 +2017,7 @@ ad_proc -private hf_vm_quota_write {
 
 ad_proc -private hf_ua_write {
     args
+    {instance_id ""}
 } {
        writes or creates a ua. If ua_id is blank, a new one is created, and the new id returned. id is returned if successful, otherwise -1 is returned.
 } {
@@ -2024,6 +2035,7 @@ ad_proc -private hf_ua_write {
 
 ad_proc -private hf_ua_read {
     args
+    {instance_id ""}
 } {
        see hf_ua_ck for access credential checking. hf_ua_read is for admin only.
 } {
@@ -2039,6 +2051,7 @@ ad_proc -private hf_ua_read {
 
 ad_proc -private hf_up_ck {
     {ua,submitted_up}
+    {instance_id ""}
 } {
     checks submitted against existing. returns 1 if matches, otherwise returns 0.
 } {
@@ -2055,6 +2068,7 @@ ad_proc -private hf_up_ck {
 
 ad_proc -private hf_up_write {
     {ua,submitted_up, new}
+    {instance_id ""}
 } {
     writes or creates a up. If up is blank, a new one is created, and 1 is returned, otherwise returns 0.
 } {
@@ -2073,6 +2087,7 @@ ad_proc -private hf_up_write {
 
 ad_proc -private hf_monitor_configs {
     {asset_id_list ""}
+    {instance_id ""}
 } {
     description
 } {
@@ -2088,6 +2103,7 @@ ad_proc -private hf_monitor_configs {
 
 ad_proc -private hf_monitor_logs {
     {asset_id_list ""}
+    {instance_id ""}
 } {
     description
 } {
@@ -2103,6 +2119,7 @@ ad_proc -private hf_monitor_logs {
 
 ad_proc -private hf_monitor_status {
     {asset_id_list ""}
+    {instance_id ""}
 } {
     description
 } {
@@ -2118,6 +2135,7 @@ ad_proc -private hf_monitor_status {
 
 ad_proc -private hf_monitor_statistics {
     {monitor_id_list ""}
+    {instance_id ""}
 } {
     description
 } {
@@ -2131,8 +2149,10 @@ ad_proc -private hf_monitor_statistics {
     ##code
 }
 
-ad_proc -private hf_monitor_report monitor_id {
+ad_proc -private hf_monitor_report {
+    monitor_id 
     args
+    {instance_id ""}
 } {
     description
 } {

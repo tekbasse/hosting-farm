@@ -50,8 +50,8 @@ ad_library {
 
 ad_proc -public hf_asset_id_exists { 
     asset_id
-    {instance_id ""}
     {asset_type_id ""}
+    {instance_id ""}
 } {
     Returns 1 if asset_id exists for instance_id, else returns 0
 } {
@@ -90,7 +90,7 @@ ad_proc -public hf_change_asset_id_for_label {
     }
     set user_id [ad_conn user_id]
 #    set write_p \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege write\] 
-    set write_p [hf_permission_p $instance_id $user_id "" assets write]
+    set write_p [hf_permission_p $user_id "" assets write $instance_id]
     set success_p 0
     if { $write_p } {
         # new asset
@@ -123,7 +123,7 @@ ad_proc -public hf_asset_rename {
     }
     set user_id [ad_conn user_id]
 #    set write_p \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege write\] 
-    set write_p [hf_permission_p $instance_id $user_id "" assets write]
+    set write_p [hf_permission_p $user_id "" assets write $instance_id]
     set success_p 0
     if { $write_p && $asset_label ne "" && $asset_name ne "" } {
         set asset_labels_id [hf_asset_id_from_label $asset_label $instance_id]
@@ -169,7 +169,7 @@ ad_proc -public hf_asset_id_from_label {
     }
     set user_id [ad_conn user_id]
    # set write_p \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege write\]    
-    set write_p [hf_permission_p $instance_id $user_id "" assets write]
+    set write_p [hf_permission_p $user_id "" assets write $instance_id]
     if { $write_p } {
         # okay to return trashed assets
         set asset_exists_p [db_0or1row hf_asset_get_id_from_label {select asset_id from hf_asset_label_map 
@@ -197,7 +197,7 @@ ad_proc -public hf_asset_label_from_id {
     }
     set user_id [ad_conn user_id]
    # set write_p \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege write\]    
-    set write_p [hf_permission_p $instance_id $user_id "" assets write]
+    set write_p [hf_permission_p $user_id "" assets write $instance_id]
     if { $write_p } {
         # okay to return trashed assets
         set asset_exists_p [db_0or1row hf_asset_get_all_label_from_id { select label as asset_label from hf_asset_label_map 
@@ -300,7 +300,7 @@ ad_proc -public hf_asset_create {
     }
     set return_asset_id 0
    # set create_p \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege create\]
-    set create_p [hf_permission_p $instance_id $user_id "" assets create_p]
+    set create_p [hf_permission_p $user_id "" assets create_p $instance_id]
     ns_log Notice "hf_asset_create: create_p $create_p"
     if { $create_p } {
         set template_id ""
@@ -364,7 +364,7 @@ ad_proc -public hf_asset_stats {
     }
     # check permissions
     #set read_p \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege read\]
-    set read_p [hf_permission_p $instance_id $user_id "" assets read]
+    set read_p [hf_permission_p $user_id "" assets read $instance_id]
     if { $read_p } {
         set return_list_of_lists [db_list_of_lists hf_asset_stats { select name,title,asset_type_id,keywords,description,template_p,templated_p,trashed_p,trashed_by,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,flags from hf_assets where id = :asset_id and instance_id = :instance_id } ] 
         # convert return_lists_of_lists to return_list
@@ -399,7 +399,7 @@ ad_proc -public hf_assets {
         set party_id $user_id
     }
    # set read_p [permission::permission_p -party_id $party_id -object_id $instance_id -privilege read]
-    set read_p [hf_permission_p $instance_id $user_id "" assets read]
+    set read_p [hf_permission_p $user_id "" assets read $instance_id]
     if { $read_p } {
         if { $template_id eq "" } {
             if { $user_id ne "" } {
@@ -447,7 +447,7 @@ ad_proc -public hf_asset_read {
         set untrusted_user_id [ad_conn untrusted_user_id]
     }
    # set read_p \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege read\]
-    set read_p [hf_permission_p $instance_id $user_id "" assets read]
+    set read_p [hf_permission_p $user_id "" assets read $instance_id]
     set return_list [list ]
     if { $read_p } {
         set return_list_of_lists [db_list_of_lists hf_asset_get { select name, title, asset_type_id, keywords, description, content, comments, trashed_p, trashed_by, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id,ns_id, qal_product_id, qal_customer_id, instance_id, user_id, last_modified, created from hf_assets where id = :asset_id and instance_id = :instance_id } ] 
@@ -504,7 +504,7 @@ ad_proc -public hf_asset_write {
         set untrusted_user_id [ad_conn untrusted_user_id]
     }
    # set write_p \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege write\]
-    set write_p [hf_permission_p $instance_id $user_id "" assets write]
+    set write_p [hf_permission_p $user_id "" assets write $instance_id]
     set new_asset_id ""
 
     if { $write_p } {
@@ -559,7 +559,7 @@ ad_proc -public hf_asset_delete {
         set user_id [ad_conn user_id]
     }
     #set delete_p \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege delete\]
-    set delete_p [hf_permission_p $instance_id $user_id "" assets delete]
+    set delete_p [hf_permission_p $user_id "" assets delete $instance_id]
     set success_p 0
     set asset_id_active_p 0
     ns_log Notice "hf_asset_delete: delete_p '$delete_p' asset_id '$asset_id' template_id '$template_id'"
@@ -660,7 +660,7 @@ ad_proc -public hf_asset_trash {
         set untrusted_user_id [ad_conn untrusted_user_id]
     }
     #set write_p \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege write\]
-    set write_p [hf_permission_p $instance_id $user_id "" assets write]
+    set write_p [hf_permission_p $user_id "" assets write $instance_id]
     set asset_id_active_p 0
 
     # if write_p, don't need to scope to user_id == asset_user_id

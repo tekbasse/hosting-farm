@@ -2,7 +2,7 @@ ad_library {
 
     misc date-time procedures..
     @creation-date 4 December 2013
-    see: http://wiki.tcl.tk/39012 for interval_*ymdhs procs discussion
+    see: http://wiki.tcl.tk/39012 for interval_*ymdhms procs discussion
 }
 
 ad_proc -public hf_clock_scan_interval { 
@@ -10,7 +10,7 @@ ad_proc -public hf_clock_scan_interval {
     delta 
     units
 } {
-   clock_scan_interval formats $seconds to a string for processing by clock scan, 
+   Formats $seconds to a string for processing by clock scan, 
     then returns a new timestamp in seconds.
 } {
     
@@ -23,7 +23,7 @@ ad_proc -public hf_clock_scan_interval {
     return [clock scan $stamp]
 }
 
-ad_proc -public hf_interval_ymdhs { 
+ad_proc -public hf_interval_ymdhms { 
     s1 
     s2
 } {
@@ -61,21 +61,21 @@ ad_proc -public hf_interval_ymdhs {
         set s1_p1 $s2_y_check
         set y $y_count
         incr y_count
-        set s2_y_check [clock_scan_interval $s1_p0 $y_count years]
+        set s2_y_check [hf_clock_scan_interval $s1_p0 $y_count years]
     }
     # interval s1_p0 to s1_p1 counted in y years
     
     # is the base offset incremented one too much?
-    set s2_y_check [clock_scan_interval $s1 $y years]
+    set s2_y_check [hf_clock_scan_interval $s1 $y years]
     if { $s2_y_check > $s2 } {
         set y [expr { $y - 1 } ]
-        set s2_y_check [clock_scan_interval $s1 $y years]
+        set s2_y_check [hf_clock_scan_interval $s1 $y years]
     }
     # increment s1 (s1_p0) forward y years to s1_p1
     if { $y == 0 } {
         set s1_p1 $s1
     } else {
-        set s1_p1 [clock_scan_interval $s1 $y years]
+        set s1_p1 [hf_clock_scan_interval $s1 $y years]
     }
     # interval s1 to s1_p1 counted in y years
     
@@ -86,7 +86,7 @@ ad_proc -public hf_interval_ymdhs {
         set s1_p2 $s2_m_check
         set m $m_count
         incr m_count
-        set s2_m_check [clock_scan_interval $s1_p1 $m_count months]
+        set s2_m_check [hf_clock_scan_interval $s1_p1 $m_count months]
     }
     # interval s1_p1 to s1_p2 counted in m months
     
@@ -103,7 +103,7 @@ ad_proc -public hf_interval_ymdhs {
     }
     
     # Move interval from s1_p2 to s1_p3
-    set s1_p3 [clock_scan_interval $s1_p2 $d days]
+    set s1_p3 [hf_clock_scan_interval $s1_p2 $d days]
     # s1_p3 is less than a day from s2
     
     
@@ -112,13 +112,13 @@ ad_proc -public hf_interval_ymdhs {
     # 3600
     set h [expr { int( ( $s2 - $s1_p3 ) / 3600. ) } ]
     # Move interval from s1_p3 to s1_p4
-    set s1_p4 [clock_scan_interval $s1_p3 $h hours]
+    set s1_p4 [hf_clock_scan_interval $s1_p3 $h hours]
     # s1_p4 is less than an hour from s2
     
     
     # Sometimes h = 24, yet is already included as a day!
     # For example, this case:
-    # interval_ymdhs 20010410T000000 19570613T000000
+    # interval_ymdhms 20010410T000000 19570613T000000
     # from Age() example in PostgreSQL documentation:
     # http://www.postgresql.org/docs/9.1/static/functions-datetime.html
     # psql test=# select age(timestamp '2001-04-10', timestamp '1957-06-13');
@@ -127,7 +127,7 @@ ad_proc -public hf_interval_ymdhs {
     # 43 years 9 mons 27 days
     # (1 row)
     # According to LibreCalc, the difference is 16007 days
-    #puts "s2=s1+16007days? [clock format [clock_scan_interval $s1 16007 days] -format %Y%m%dT%H%M%S]"
+    #puts "s2=s1+16007days? [clock format [hf_clock_scan_interval $s1 16007 days] -format %Y%m%dT%H%M%S]"
     # ^ this calc is consistent with 16007 days 
     # So, let's ignore the Postgresql irregularity for now.
     # Here's more background:
@@ -151,12 +151,12 @@ ad_proc -public hf_interval_ymdhs {
     # 60
     set mm [expr { int( ( $s2 - $s1_p4 ) / 60. ) } ]
     # Move interval from s1_p4 to s1_p5
-    set s1_p5 [clock_scan_interval $s1_p4 $mm minutes]
+    set s1_p5 [hf_clock_scan_interval $s1_p4 $mm minutes]
     
     # Sanity check: if 60 minutes, push it up to an hour unit
     if { $mm >= 60 } {
         # adjust 60 minutes to 1 hour
-        # ns_log Notice "interval_ymdhs: debug info mm - 60, h + 1"
+        # ns_log Notice "interval_ymdhms: debug info mm - 60, h + 1"
         set mm [expr { $mm - 60 } ]
         incr h
         set mm_correction_p 1
@@ -201,38 +201,38 @@ ad_proc -public hf_interval_ymdhs {
     set counter 0
     while { $s2 ne $s2_test && $counter < 30 } {
         set s2_diff [expr { $s2_test - $s2 } ]
-        ns_log Notice "interval_ymdhs: debug s1 $s1 s2 $s2 y $y m $m d $d h $h s $s s2_diff $s2_diff"
+        ns_log Notice "interval_ymdhms: debug s1 $s1 s2 $s2 y $y m $m d $d h $h s $s s2_diff $s2_diff"
         if { [expr { abs($s2_diff) } ] > 86399 } {
             if { $s2_diff > 0 } {
                 incr d -1
-                ns_log Notice "interval_ymdhs: debug, audit adjustment. decreasing 1 day to $d"
+                ns_log Notice "interval_ymdhms: debug, audit adjustment. decreasing 1 day to $d"
             } else {
                 incr d
-                ns_log Notice "interval_ymdhs: debug, audit adjustment. increasing 1 day to $d"
+                ns_log Notice "interval_ymdhms: debug, audit adjustment. increasing 1 day to $d"
             }
         } elseif { [expr { abs($s2_diff) } ] > 3599 } {
             if { $s2_diff > 0 } {
                 incr h -1
-                ns_log Notice "interval_ymdhs: debug, audit adjustment. decreasing 1 hour to $h"
+                ns_log Notice "interval_ymdhms: debug, audit adjustment. decreasing 1 hour to $h"
             } else {
                 incr h
-                ns_log Notice "interval_ymdhs: debug, audit adjustment. increasing 1 hour to $h"
+                ns_log Notice "interval_ymdhms: debug, audit adjustment. increasing 1 hour to $h"
             }
         } elseif { [expr { abs($s2_diff) } ] > 59 } {
             if { $s2_diff > 0 } {
                 incr mm -1
-                ns_log Notice "interval_ymdhs: debug, audit adjustment. decreasing 1 minute to $mm"
+                ns_log Notice "interval_ymdhms: debug, audit adjustment. decreasing 1 minute to $mm"
             } else {
                 incr mm
-                ns_log Notice "interval_ymdhs: debug, audit adjustment. increasing 1 minute to $mm"
+                ns_log Notice "interval_ymdhms: debug, audit adjustment. increasing 1 minute to $mm"
             }
         } elseif { [expr { abs($s2_diff) } ] > 0 } {
             if { $s2_diff > 0 } {
                 incr s -1
-                ns_log Notice "interval_ymdhs: debug, audit adjustment. decreasing 1 second to $s"
+                ns_log Notice "interval_ymdhms: debug, audit adjustment. decreasing 1 second to $s"
             } else {
                 incr s
-                ns_log Notice "interval_ymdhs: debug, audit adjustment. increasing 1 second to $s"
+                ns_log Notice "interval_ymdhms: debug, audit adjustment. increasing 1 second to $s"
             }
         }
         
@@ -257,10 +257,10 @@ ad_proc -public hf_interval_ymdhs {
         incr counter
     }
     if { ( $counter > 0 || $signs_inconsistent_p ) && ( $h_correction_p || $mm_correction_p || $s_correction_p ) } {
-        #	ns_log Notice "interval_ymdhs: Corrections in the main calculation were applied: h ${h_correction_p}, mm ${mm_correction_p}, s ${s_correction_p}" 
+        #	ns_log Notice "interval_ymdhms: Corrections in the main calculation were applied: h ${h_correction_p}, mm ${mm_correction_p}, s ${s_correction_p}" 
     }
     if { $signs_inconsistent_p } {
-        ns_log Notice "interval_ymdhs: signs inconsistent y $y m $m d $d h $h mm $mm s $s"
+        ns_log Notice "interval_ymdhms: signs inconsistent y $y m $m d $d h $h mm $mm s $s"
     }
     if { $s2 eq $s2_test } {
         return $return_list
@@ -268,18 +268,18 @@ ad_proc -public hf_interval_ymdhs {
         set s2_diff [expr { $s2_test - $s2 } ]
         ns_log Notice "debug s1 $s1 s1_p1 $s1_p1 s1_p2 $s1_p2 s1_p3 $s1_p3 s1_p4 $s1_p4"
         ns_log Notice "debug y $y m $m d $d h $h mm $mm s $s"
-        ns_log Notice "interval_ymdhs error: s2 is '$s2' but s2_test is '$s2_test' a difference of ${s2_diff} from s1 '$s1_test'."
+        ns_log Notice "interval_ymdhms error: s2 is '$s2' but s2_test is '$s2_test' a difference of ${s2_diff} from s1 '$s1_test'."
         #	error "result audit fails" "error: s2 is $s2 but s2_test is '$s2_test' a difference of ${s2_diff} from: '$s1_test'."
     }
 }
 
-ad_proc -public hf_interval_ymdhs_w_units { 
+ad_proc -public hf_interval_ymdhms_w_units { 
     t1 
     t2 
 } {
-    Returns interval_ymdhs values with units.
+    Returns interval_ymdhms values with units.
 } {
-    set v_list [interval_ymdhs $t2 $t1]
+    set v_list [hf_interval_ymdhms $t2 $t1]
     set i 0
     set a ""
     foreach f {year month day hour minute second} {
@@ -297,7 +297,7 @@ ad_proc -public hf_interval_ymdhs_w_units {
 }
 
 
-ad_proc -public hf_interval_remains_ymdhs { 
+ad_proc -public hf_interval_remains_ymdhms { 
     s1 
     s2 
 } {
@@ -333,7 +333,7 @@ ad_proc -public hf_interval_remains_ymdhs {
         set s1_p1 $s2_y_check
         set y $y_count
         incr y_count -1
-        set s2_y_check [clock_scan_interval $s1_p0 $y_count years]
+        set s2_y_check [hf_clock_scan_interval $s1_p0 $y_count years]
     }
     # interval s1_p0 to s1_p1 counted in y years
     
@@ -345,7 +345,7 @@ ad_proc -public hf_interval_remains_ymdhs {
         set s1_p2 $s2_m_check
         set m $m_count
         incr m_count -1
-        set s2_m_check [clock_scan_interval $s1_p1 $m_count months]
+        set s2_m_check [hf_clock_scan_interval $s1_p1 $m_count months]
     }
     # interval s1_p1 to s1_p2 counted in m months
     
@@ -362,7 +362,7 @@ ad_proc -public hf_interval_remains_ymdhs {
     }
     
     # Move interval from s1_p2 to s1_p3
-    set s1_p3 [clock_scan_interval $s1_p2 $d days]
+    set s1_p3 [hf_clock_scan_interval $s1_p2 $d days]
     # s1_p3 is less than a day from s2
     
     
@@ -371,7 +371,7 @@ ad_proc -public hf_interval_remains_ymdhs {
     # 3600
     set h [expr { int( ceil( ( $s2 - $s1_p3 ) / 3600. ) ) } ]
     # Move interval from s1_p3 to s1_p4
-    set s1_p4 [clock_scan_interval $s1_p3 $h hours]
+    set s1_p4 [hf_clock_scan_interval $s1_p3 $h hours]
     # s1_p4 is less than an hour from s2
     
     # Sanity check: if over 24 or 48 hours, push it up to a day unit
@@ -390,12 +390,12 @@ ad_proc -public hf_interval_remains_ymdhs {
     # 60
     set mm [expr { int( ceil( ( $s2 - $s1_p4 ) / 60. ) ) } ]
     # Move interval from s1_p4 to s1_p5
-    set s1_p5 [clock_scan_interval $s1_p4 $mm minutes]
+    set s1_p5 [hf_clock_scan_interval $s1_p4 $mm minutes]
     
     # Sanity check: if 60 minutes, push it up to an hour unit
     if { $mm <= -60 } {
         # adjust 60 minutes to 1 hour
-        # ns_log Notice "interval_remains_ymdhs: debug info mm + 60, h - 1"
+        # ns_log Notice "interval_remains_ymdhms: debug info mm + 60, h - 1"
         set mm [expr { $mm + 60 } ]
         incr h -1
         set mm_correction_p 1
@@ -440,38 +440,38 @@ ad_proc -public hf_interval_remains_ymdhs {
     set counter 0
     while { $s2 ne $s2_test && $counter < 3 } {
         set s2_diff [expr { $s2_test - $s2 } ]
-        ns_log Notice "interval_remains_ymdhs: debug s1 $s1 s2 $s2 y $y m $m d $d h $h s $s s2_diff $s2_diff"
+        ns_log Notice "interval_remains_ymdhms: debug s1 $s1 s2 $s2 y $y m $m d $d h $h s $s s2_diff $s2_diff"
         if { [expr { abs($s2_diff) } ] >= 86399 } {
             if { $s2_diff > 0 } {
                 incr d -1
-                ns_log Notice "interval_remains_ymdhs: debug, audit adjustment. increasing 1 day to $d"
+                ns_log Notice "interval_remains_ymdhms: debug, audit adjustment. increasing 1 day to $d"
             } else {
                 incr d
-                ns_log Notice "interval_remains_ymdhs: debug, audit adjustment. decreasing 1 day to $d"
+                ns_log Notice "interval_remains_ymdhms: debug, audit adjustment. decreasing 1 day to $d"
             }
         } elseif { [expr { abs($s2_diff) } ] > 3599 } {
             if { $s2_diff > 0 } {
                 incr h -1
-                ns_log Notice "interval_remains_ymdhs: debug, audit adjustment. increasing 1 hour to $h"
+                ns_log Notice "interval_remains_ymdhms: debug, audit adjustment. increasing 1 hour to $h"
             } else {
                 incr h
-                ns_log Notice "interval_remains_ymdhs: debug, audit adjustment. decreasing 1 hour to $h"
+                ns_log Notice "interval_remains_ymdhms: debug, audit adjustment. decreasing 1 hour to $h"
             }
         } elseif { [expr { abs($s2_diff) } ] > 59 } {
             if { $s2_diff > 0 } {
                 incr mm -1
-                ns_log Notice "interval_remains_ymdhs: debug, audit adjustment. increasing 1 minute to $mm"
+                ns_log Notice "interval_remains_ymdhms: debug, audit adjustment. increasing 1 minute to $mm"
             } else {
                 incr mm
-                ns_log Notice "interval_remains_ymdhs: debug, audit adjustment. decreasing 1 minute to $mm"
+                ns_log Notice "interval_remains_ymdhms: debug, audit adjustment. decreasing 1 minute to $mm"
             }
         } elseif { [expr { abs($s2_diff) } ] > 0 } {
             if { $s2_diff > 0 } {
                 incr s -1
-                ns_log Notice "interval_remains_ymdhs: debug, audit adjustment. increasing 1 second to $s"
+                ns_log Notice "interval_remains_ymdhms: debug, audit adjustment. increasing 1 second to $s"
             } else {
                 incr s
-                ns_log Notice "interval_remains_ymdhs: debug, audit adjustment. decreasing 1 second to $s"
+                ns_log Notice "interval_remains_ymdhms: debug, audit adjustment. decreasing 1 second to $s"
             }
         }
         
@@ -496,10 +496,10 @@ ad_proc -public hf_interval_remains_ymdhs {
         incr counter
     }
     if { ( $counter > 0 || $signs_inconsistent_p ) && ( $h_correction_p || $mm_correction_p || $s_correction_p ) } {
-        #	ns_log Notice "interval_remains_ymdhs: Corrections in the main calculation were applied: h ${h_correction_p}, mm ${mm_correction_p}, s ${s_correction_p}" 
+        #	ns_log Notice "interval_remains_ymdhms: Corrections in the main calculation were applied: h ${h_correction_p}, mm ${mm_correction_p}, s ${s_correction_p}" 
     }
     if { $signs_inconsistent_p } {
-        ns_log Notice "interval_remains_ymdhs: signs inconsistent y $y m $m d $d h $h mm $mm s $s"
+        ns_log Notice "interval_remains_ymdhms: signs inconsistent y $y m $m d $d h $h mm $mm s $s"
     }
     if { $s2 eq $s2_test } {
         return $return_list
@@ -507,19 +507,19 @@ ad_proc -public hf_interval_remains_ymdhs {
         set s2_diff [expr { $s2_test - $s2 } ]
         ns_log Notice "debug s1 $s1 s1_p1 $s1_p1 s1_p2 $s1_p2 s1_p3 $s1_p3 s1_p4 $s1_p4"
         ns_log Notice "debug y $y m $m d $d h $h mm $mm s $s"
-        ns_log Notice "interval_remains_ymdhs error: s2 is '$s2' but s2_test is '$s2_test' a difference of ${s2_diff} from s1 '$s1_test'."
+        ns_log Notice "interval_remains_ymdhms error: s2 is '$s2' but s2_test is '$s2_test' a difference of ${s2_diff} from s1 '$s1_test'."
         #	error "result audit fails" "error: s2 is $s2 but s2_test is '$s2_test' a difference of ${s2_diff} from: '$s1_test'."
     }
     
 }
 
-ad_proc -public hf_interval_remains_ymdhs_w_units { 
+ad_proc -public hf_interval_remains_ymdhms_w_units { 
     t1 
     t2
 } {
-    Returns interval_remains_ymdhs values with units.
+    Returns interval_remains_ymdhms values with units.
 } {
-    set v_list [interval_ymdhs $t2 $t1]
+    set v_list [hf_interval_ymdhms $t2 $t1]
     set i 0
     set a ""
     foreach f {year month day hour minute second} {
