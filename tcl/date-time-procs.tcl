@@ -21,7 +21,7 @@ ad_proc -public hf_clock_scan_interval {
         append stamp " + " $delta " " $units
     }
     set timestamp [clock scan $stamp]
-    return 
+    return $timestamp
 }
 
 ad_proc -public hf_interval_ymdhms { 
@@ -61,14 +61,14 @@ ad_proc -public hf_interval_ymdhms {
     set s1_p0 $s1
     set s2_y_check $s1_p0
     set count 0
-    while { $y_count < 10000 $s2_y_check <= $s2 } {
+    while { $y_count < 10000 && $s2_y_check <= $s2 } {
         set s1_p1 $s2_y_check
         set y $y_count
         incr y_count
         set s2_y_check [hf_clock_scan_interval $s1_p0 $y_count years]
     }
     # interval s1_p0 to s1_p1 counted in y years
-    
+    ns_log Notice "hf_interval_ymdhms(71): y_count $y_count y $y s1_p1 $s1_p1"
     # is the base offset incremented one too much?
     set s2_y_check [hf_clock_scan_interval $s1 $y years]
     if { $s2_y_check > $s2 } {
@@ -93,7 +93,7 @@ ad_proc -public hf_interval_ymdhms {
         set s2_m_check [hf_clock_scan_interval $s1_p1 $m_count months]
     }
     # interval s1_p1 to s1_p2 counted in m months
-    
+    ns_log Notice "hf_interval_ymdhms(96): m_count $m_count m $m s1_p2 $s1_p1"
     # Calculate interval s1_p2 to s2 in days
     # day_in_sec [expr { 60 * 60 * 24 } ]
     # 86400
@@ -201,7 +201,7 @@ ad_proc -public hf_interval_ymdhms {
     }
     
     set s2_test [clock scan $s1_test]
-    ns_log Notice "test s2 '$s2_test' from: '$s1_test'"
+    ns_log Notice "interval_ymdhms: test s2 '$s2_test' from: '$s1_test'"
     set counter 0
     while { $s2 ne $s2_test && $counter < 30 } {
         set s2_diff [expr { $s2_test - $s2 } ]
@@ -284,15 +284,16 @@ ad_proc -public hf_interval_ymdhms_w_units {
     Returns interval_ymdhms values with units.
 } {
     ns_log Notice "hf_interval_ymdhms_w_units starting with $t1 $t2"
-    set units_list [list year month day hour minute second]
+    set units_list [list "year" "month" "day" "hour" "minute" "second"]
     set v_list [hf_interval_ymdhms $t2 $t1]
+    # All units must be positive, or this breaks
     set i 0
     set a ""
     foreach f $units_list {
-        set v_val [lindex $v_list $i]
+        set v_val [expr { abs ( [lindex $v_list $i] ) } ]
         set unit $f
         if { $v_val > 1 } {
-            append f "s"
+            append unit "s"
         }
         if { $v_val > 0 } {
             append a "${v_val} #accounts-leger.${unit}#"
@@ -344,7 +345,7 @@ ad_proc -public hf_interval_remains_ymdhms {
         set s2_y_check [hf_clock_scan_interval $s1_p0 $y_count years]
     }
     # interval s1_p0 to s1_p1 counted in y years
-    
+    ns_log Notice "hf_interval_remains_ymdhms(347): y_count $y_count y $y s1_p1 $s1_p1"
     
     # Calculate months from s1_p1 to s2
     set m_count 0
@@ -353,10 +354,10 @@ ad_proc -public hf_interval_remains_ymdhms {
         set s1_p2 $s2_m_check
         set m $m_count
         incr m_count -1
-        set s2_m_check [hf_clock_scan_interval $s1_p1 $m_count months]
+        set s2_m_check [hf_clock_scan_interval $s1_p1 $m_count "months"]
     }
     # interval s1_p1 to s1_p2 counted in m months
-    
+    ns_log Notice "hf_interval_remains_ymdhms(359): m_count $m_count m $m s1_p2 $s1_p1"
     # Calculate interval s1_p2 to s2 in days
     # day_in_sec [expr { 60 * 60 * 24 } ]
     # 86400
@@ -370,9 +371,9 @@ ad_proc -public hf_interval_remains_ymdhms {
     }
     
     # Move interval from s1_p2 to s1_p3
-    set s1_p3 [hf_clock_scan_interval $s1_p2 $d days]
+    set s1_p3 [hf_clock_scan_interval $s1_p2 $d "days"]
     # s1_p3 is less than a day from s2
-    
+    ns_log Notice "hf_interval_remains_ymdhms(375): d $d s1_p3 $s1_p3"
     
     # Calculate interval s1_p3 to s2 in hours
     # hour_in_sec [expr { 60 * 60 } ]
@@ -444,7 +445,7 @@ ad_proc -public hf_interval_remains_ymdhms {
         incr i
     }
     set s2_test [clock scan $s1_test]
-    
+    ns_log Notice "interval_remains_ymdhms: test s2 '$s2_test' from: '$s1_test'"    
     set counter 0
     while { $s2 ne $s2_test && $counter < 30 } {
         set s2_diff [expr { $s2_test - $s2 } ]
@@ -517,8 +518,7 @@ ad_proc -public hf_interval_remains_ymdhms {
         ns_log Notice "debug y $y m $m d $d h $h mm $mm s $s"
         ns_log Notice "interval_remains_ymdhms error: s2 is '$s2' but s2_test is '$s2_test' a difference of ${s2_diff} from s1 '$s1_test'."
         #	error "result audit fails" "error: s2 is $s2 but s2_test is '$s2_test' a difference of ${s2_diff} from: '$s1_test'."
-    }
-    
+    }    
 }
 
 ad_proc -public hf_interval_remains_ymdhms_w_units { 
@@ -528,18 +528,21 @@ ad_proc -public hf_interval_remains_ymdhms_w_units {
     Returns interval_remains_ymdhms values with units.
 } {
     ns_log Notice "hf_interval_remains_ymdhms_w_units starting with $t1 $t2"
-    set units_list [list year month day hour minute second]
-    set v_list [hf_interval_ymdhms $t2 $t1]
+    set units_list [list "year" "month" "day" "hour" "minute" "second"]
+    set v_list [hf_interval_remains_ymdhms $t2 $t1]
     set i 0
     set a ""
     foreach f $units_list {
-        set v_val [lindex $v_list $i]
+        # All units must be negative, or this breaks
+        set v_val [expr { abs ( [lindex $v_list $i] ) } ]
         set unit $f
         if { $v_val > 1 } {
-            append f "s"
+            append unit "s"
         }
+        #        ns_log Notice "hf_interval_remains_ymdhms_w_units: i $i v_val $v_val unit $unit"
         if { $v_val > 0 } {
-            append a "${v_val} #accounts-leger.${unit}#"
+            append a "${v_val} #accounts-leger.${unit}# "
+            #            ns_log Notice "hf_interval_remains_ymdhms_w_units: appending a '$a'"
         }
         incr i
     }
