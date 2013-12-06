@@ -296,7 +296,7 @@ ad_proc -public hf_interval_ymdhms_w_units {
             append unit "s"
         }
         if { $v_val > 0 } {
-            append a "${v_val} #accounts-leger.${unit}#"
+            append a "${v_val} #accounts-ledger.${unit}#"
         }
         incr i
     }
@@ -541,7 +541,7 @@ ad_proc -public hf_interval_remains_ymdhms_w_units {
         }
         #        ns_log Notice "hf_interval_remains_ymdhms_w_units: i $i v_val $v_val unit $unit"
         if { $v_val > 0 } {
-            append a "${v_val} #accounts-leger.${unit}# "
+            append a "${v_val} #accounts-ledger.${unit}# "
             #            ns_log Notice "hf_interval_remains_ymdhms_w_units: appending a '$a'"
         }
         incr i
