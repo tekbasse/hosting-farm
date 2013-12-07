@@ -16,6 +16,7 @@ set sw_admin_p 0
 if { $untrusted_user_id == 0 } {
     # The browser does NOT claim to represent a user that we know about
     set login_url [ad_get_login_url -return]
+    set user_name ""
 } else {
     # The browser claims to represent a user that we know about
     set user_name [person::name -person_id $untrusted_user_id]

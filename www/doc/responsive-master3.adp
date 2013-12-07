@@ -16,14 +16,18 @@
 <multiple name="link">    <link rel="@link.rel;noquote@" href="@link.href;noquote@"<if @link.lang@ not nil and @link.lang@ ne @doc.lang@> lang="@link.lang;noquote@"</if><if @link.title@ not nil> title="@link.title;noquote@"</if><if @link.type@ not nil> type="@link.type;noquote@"</if><if @link.media@ not nil> media="@link.media@"</if>>
 </multiple>
 -->
+<link href="/resources/hosting-farm/hf.css" rel="stylesheet" />
+<!--  Above is a combination of following with latest normal.css
   <link href="/resources/extra-strength-responsive-grids-master/css/grid.css" rel="stylesheet" />
   <link href="/resources/extra-strength-responsive-grids-master/css/main.css" rel="stylesheet" />
+-->
 <!--
 <multiple name="___style"> <style type="@___style.type;noquote@" <if @___style.lang@ not nil and @___style.lang@ ne @doc.lang@> lang="@___style.lang;noquote@"</if><if @___style.title@ not nil> title="@___style.title;noquote@"</if><if @___style.media@ not nil> media="@___style.media@"</if>>@___style.style;noquote@
 </style>
 </multiple>
 -->
 <script type="text/css">
+
 table tr td {
 border: 1px solid #ccc; 
 vertical-align: top;
@@ -36,6 +40,10 @@ vertical-align: top;
 text-align: center;
 
 }
+
+
+
+
 </script>
 
 <multiple name="headscript">   <script type="@headscript.type;noquote@"<if @headscript.src@ not nil> src="@headscript.src;noquote@"</if><if @headscript.charset@ not nil> charset="@headscript.charset;noquote@"</if><if @headscript.defer@ not nil> defer="@headscript.defer;noquote@"</if>><if @headscript.content@ not nil>@headscript.content;noquote@</if></script>
@@ -53,24 +61,21 @@ text-align: center;
   @header;noquote@
 
 <div class="page-wrap">
-
   <section id="main" role="main">
     
     <div class="grid-whole padded">
 <!-- header -->
     </div>
-
-
         
     <if @user_messages:rowcount@ gt 0>
       <div class="grid-whole">
-        <div class="grid-whole m-grid-whole s-grid-whole padded">
-          <div class="content-box">
+        <div class="grid-whole m-grid-whole s-grid-whole padded-sides">
+          <div class="content-box padded-sides">
               <div id="alert-message">
                 <multiple name="user_messages">
                   <div class="alert">
                     <strong>@user_messages.message;noquote@</strong>
-                  </div>
+                  </div> 
                 </multiple>
               </div>
           </div>
@@ -94,13 +99,10 @@ text-align: center;
 <!--
 <img id="resize" src="/resources/extra-strength-responsive-grids-master/img/resize.png" alt="">
 -->
-
-
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 <script>window.jQuery || document.write('<script src="/resources/extra-strength-responsive-grids-master/js/vendor/jquery-1.8.3.min.js"><\/script>')</script>
 <script src="/resources/extra-strength-responsive-grids-master/js/vendor/equalize.min.js"></script>
 <script>
-  
   // smart resize - http://paulirish.com/2009/throttled-smartresize-jquery-event-handler/
   (function($,sr){
  
@@ -141,7 +143,6 @@ text-align: center;
 
   });
 </script>
-
 
 </body>
 </html>
