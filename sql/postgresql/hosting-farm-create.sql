@@ -160,7 +160,7 @@ CREATE TABLE hf_ns_records (
 );
 
 create index hf_ns_records_instance_id_idx on hf_ns_records (instance_id);
-create index hf_ns_records_id_idx on hf_ns_records (ns_id);
+create index hf_ns_records_id_idx on hf_ns_records (id);
 create index hf_ns_records_active_p_idx on hf_ns_records (active_p);
 
 CREATE TABLE hf_data_centers (
@@ -453,7 +453,7 @@ CREATE TABLE hf_ss_map (
  );
 
  create index hf_ss_map_instance_id_idx on hf_ss_map (instance_id);
- create index hf_ss_map_hf_id_idx on hf_ss_map (vh_id);
+ create index hf_ss_map_hf_id_idx on hf_ss_map (hf_id);
  create index hf_ss_map_ss_id_idx on hf_ss_map (ss_id);
 
 -- was database_auth
