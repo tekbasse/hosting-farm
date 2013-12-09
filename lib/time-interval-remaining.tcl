@@ -10,11 +10,14 @@ if { [info exists time1] && [info exists time2] } {
     }
     set switch_arr(second) "default" 
     set switch_arr(minute) "default"
+# test case:
+#set time1 "1386610479"
+#set time2 "1469384818"
 
     set units_list [hf_interval_remains_ymdhms $time1 $time2]
     set units_string [hf_interval_remains_ymdhms_w_units $time1 $time2]
     append images_html "<div class=\"hf_interval_remains\" title=\"${units_string}\">"
-
+    
 
     # image widths ymd(hms): 54 15 2 (2)
     set m_width 15
@@ -22,12 +25,13 @@ if { [info exists time1] && [info exists time2] } {
     set y_px_width [expr { abs( [lindex $units_list 0] * 54. ) } ]
     set div_px_width [expr { $y_px_width + $mdhms_px_width } ]
     # 4 column max width approx 189 px
-    set reduce_factor [expr { ( 244. - $mdhms_px_width ) / ( $y_px_width  ) } ]
+#    set reduce_factor [expr { ( 244. - $mdhms_px_width ) / ( $y_px_width ) } ]
+    set reduce_factor [expr { 189. / ( $mdhms_px_width + $y_px_width ) } ]
     if { $reduce_factor > 1 } {
         set reduce_factor 1.
     }
-    if { [expr { $reduce_factor * $y_px_width + $mdhms_px_width } ] > 188 } {
-        set m_width [expr { int( 15 * 188. / 244. ) } ]
+    if { [expr { $reduce_factor * $y_px_width + $mdhms_px_width } ] > 187 } {
+        set m_width [expr { int( 15 * $reduce_factor ) } ]
     }
     set y_width [expr { int( 54 * $reduce_factor ) } ]
 
