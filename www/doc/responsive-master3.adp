@@ -100,8 +100,8 @@ text-align: center;
 <img id="resize" src="/resources/extra-strength-responsive-grids-master/img/resize.png" alt="">
 -->
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
-<script>window.jQuery || document.write('<script src="/resources/extra-strength-responsive-grids-master/js/vendor/jquery-1.8.3.min.js"><\/script>')</script>
-<script src="/resources/extra-strength-responsive-grids-master/js/vendor/equalize.min.js"></script>
+<script>window.jQuery || document.write('<script src="/resources/esrg/jquery-1.8.3.min.js"><\/script>')</script>
+<script src="/resources/esrg/equalize.min.js"></script>
 <script>
   // smart resize - http://paulirish.com/2009/throttled-smartresize-jquery-event-handler/
   (function($,sr){
