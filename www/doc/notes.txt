@@ -1,0 +1,39 @@
+create a refresh button (circle w/arrow) and a cancel button (red circle w light grey x)
+
+make esrg-ex-N example pages for each content grouping type.
+
+http://jimbobsquarepants.github.io/Responsive/
+
+https://github.com/dfcb/extra-strength-responsive-grids
+
+http://www.responsivegridsystem.com/
+
+http://necolas.github.io/normalize.css/
+
+status cols:
+power/active  
+ on/off/disabled/suspended/interrupted
+
+disabled is an admin/system set state
+a suspend/interrupt state converts to off after user turns off
+a suspend/interrupt state reverts to suspend/interrupt if attempts at start/on are unsuccessful, needing user intervention (alert)
+a disable state is not convertable by user 
+an abandoned/timed-out suspend state converts to disabled after X days/weeks/months
+archived are disabled
+new are off/inactive
+pre-new are off/inactive
+
+activity feedback status:
+face, light, linear graph or numeric index 0 = inactive, 10 = best relative performance
+
+user buttons:
+
+start/stop
+archive, readme, help
+
+face expression intensity from scott.. comic drawing book (get ref, give credit):
+satisfaction , amusement, joy , laugh
+concern, anxious, fear, terror
+dejection, melancholy, sad, grief
+alert, wonder, surprise, shock
+

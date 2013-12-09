@@ -1,15 +1,11 @@
+# defaults
 set title "menu"
 set context [list $title]
-
-#set t1 [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"]
-set t1 [clock seconds]
-set interval_rand [expr { int( rand() * 3600 * 24 * 31 * 12 * 3 ) } ]
-#set interval_rand [expr { round( 3600 * 24 * 31 * 12 * 2.94 ) } ]
-set t2 [expr { $t1 + $interval_rand } ]
 
 # User information and top level navigation links
 #
 set user_id [ad_conn user_id]
+set package_id [ad_conn package_id]
 set untrusted_user_id [ad_conn untrusted_user_id]
 set sw_admin_p 0
 
@@ -23,27 +19,29 @@ if { $untrusted_user_id == 0 } {
     set pvt_home_url [ad_pvt_home]
     set pvt_home_name [_ acs-subsite.Your_Account]
     set logout_url [ad_get_logout_url]
-
     # Site-wide admin link
     set admin_url {}
-
     set sw_admin_p [acs_user::site_wide_admin_p -user_id $untrusted_user_id]
 
 }
+
+# get status info
+#  see as.adp as.tcl for db scenario example
+
 set current_dt [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"]
-#
-# User messages
-#
-util_get_user_messages -multirow user_messages
+#set t1 [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"]
+set t1 [clock seconds]
+set interval_rand [expr { int( rand() * 3600 * 24 * 31 * 12 * 3 ) } ]
+#set interval_rand [expr { round( 3600 * 24 * 31 * 12 * 2.94 ) } ]
+set t2 [expr { $t1 + $interval_rand } ]
 
-set package_id [ad_conn package_id]
 
+# these messages show up as alerts
+# util_user_message -message "This is alert 1"
+# util_user_message -message "This is alert 2"
+util_user_message -html -message "<a href=\"order\">Click here</a> to replenish account."
 
-## make separate list that shows combined heiarchy with a ref
-# then feed the refs into hash_arrays for other info.
-# build this into a four box menu, first box is status summary.
-
-# show username, any alerts
+# build menus
 
 set menu_list [list \
                    [list account Account 0] \
@@ -59,30 +57,22 @@ set menu_list [list \
                    [list user-settings "User Settings" 4] \
                    [list wiki Documentation 4] \
                    ]
-
 foreach m_list $menu_list {
     set index [lindex $m_list 0]
     set menu_title_arr($index) [lindex $m_list 1]
-
 }
-# support includes: forums, file-storage, wiki, tickets/customer-service
-
-# first list is the main menu. lists of lists are 2nd level menus, 
-#  list of lists of lists are third level --if any, and only if necessary
-# list is of single word labels, because it gets parsed by llength etc later.
 set menu_1_list [list news support assets account affiliates feedback]
+# support includes: forums, file-storage, wiki, tickets/customer-service
 set menu_2_list [list support forums wiki ticket-tracker feedback]
 set menu_3_list [list account billing plans user-settings affiliates feedback]
 
-
-
-# html
+#
+# build html
 # 
 set wrap_arr(1,0) {<li>
 }
 set wrap_arr(1,1) {</li>
 }
-
 set wrap_arr(2,0) $wrap_arr(1,0)
 set wrap_arr(3,0) $wrap_arr(1,0)
 set wrap_arr(2,1) $wrap_arr(1,1)
@@ -105,7 +95,4 @@ foreach menu_item $menu_3_list {
 set list_html ""
 append list_html $menu_1_html $menu_2_html $menu_3_html
 
-util_user_message -message "This is alert 1"
-util_user_message -message "this is alert 2"
-util_user_message -html -message "<a href=\"order\">Click here</a> to replenish account."
 
