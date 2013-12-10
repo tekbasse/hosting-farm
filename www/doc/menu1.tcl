@@ -90,7 +90,7 @@ foreach menu_item $menu_2_list {
 }
 set menu_3_html ""
 foreach menu_item $menu_3_list {
-    append menu_3_html $wrap_arr(3,0) "<a class=\"btn\" href=\"$menu_item\">$menu_title_arr($menu_item)</a>" $wrap_arr(3,1)
+    append menu_3_html $wrap_arr(3,0) "<a class=\"btn grid-whole\" href=\"$menu_item\">$menu_title_arr($menu_item)</a>" $wrap_arr(3,1)
 }
 
 # pass to adp
