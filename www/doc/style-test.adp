@@ -7,6 +7,12 @@
   <div class="content-box">
 
     <div class="small">Account Management System</div>
+<div style="font-family: Arial, sans-serif;">abcdefghijklmnopqurstuvwxyz0123456789</div>
+<div style="font-family: Tahoma, sans-serif;">abcdefghijklmnopqurstuvwxyz0123456789</div>
+<div style="font-family: Verdana, Futura, sans-serif;">abcdefghijklmnopqurstuvwxyz0123456789</div>
+<div style="font-family: serif;">abcdefghijklmnopqurstuvwxyz0123456789</div>
+<div style="font-family: Monaco, Consolas, monospace;">abcdefghijklmnopqurstuvwxyz0123456789</div>
+
 
     <div>Welcome @user_name@</div> 
     <div>Resource summary:<br>
