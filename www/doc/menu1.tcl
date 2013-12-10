@@ -81,7 +81,7 @@ set wrap_arr(2,1) $wrap_arr(1,1)
 set wrap_arr(3,1) $wrap_arr(1,1)
 
 set class_html "btn grid-whole"
-set class_html ""
+
 set menu_1_html ""
 foreach menu_item $menu_1_list {
     append menu_1_html $wrap_arr(1,0) "<a class=\"${class_html}\" href=\"$menu_item\">$menu_title_arr($menu_item)</a>" $wrap_arr(1,1)
