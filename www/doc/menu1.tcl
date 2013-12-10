@@ -31,16 +31,18 @@ if { $untrusted_user_id == 0 } {
 set current_dt [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"]
 #set t1 [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"]
 set t1 [clock seconds]
-set interval_rand [expr { int( rand() * 3600 * 24 * 31 * 12 * 3 ) } ]
+set year_1 [expr { 3600 * 24 * 31 * 12 } ]
+set interval_rand [expr { int( rand() * $year_1 * 3 ) } ]
 #set interval_rand [expr { round( 3600 * 24 * 31 * 12 * 2.94 ) } ]
 set t2 [expr { $t1 + $interval_rand } ]
-
+set t2_string [clock format $t2 -format "%Y-%m-%d"]
 
 # these messages show up as alerts
 # util_user_message -message "This is alert 1"
 # util_user_message -message "This is alert 2"
-util_user_message -html -message "<a href=\"order\">Click here</a> to replenish account."
-
+if { $interval_rand < $year_1 } {
+    util_user_message -html -message "Account expires on ${t2_string} <a href=\"order\" class=\"btn-big\">Replenish Account</a>"
+}
 # build menus
 
 set menu_list [list \
@@ -69,9 +71,9 @@ set menu_3_list [list account billing plans user-settings affiliates feedback]
 #
 # build html
 # 
-set wrap_arr(1,0) {<li>
+set wrap_arr(1,0) {<div>
 }
-set wrap_arr(1,1) {</li>
+set wrap_arr(1,1) {</div>
 }
 set wrap_arr(2,0) $wrap_arr(1,0)
 set wrap_arr(3,0) $wrap_arr(1,0)
@@ -80,15 +82,15 @@ set wrap_arr(3,1) $wrap_arr(1,1)
 
 set menu_1_html ""
 foreach menu_item $menu_1_list {
-    append menu_1_html $wrap_arr(1,0) "<a href=\"$menu_item\">$menu_title_arr($menu_item)</a>" $wrap_arr(1,1)
+    append menu_1_html $wrap_arr(1,0) "<a class=\"btn grid-whole\" href=\"$menu_item\">$menu_title_arr($menu_item)</a>" $wrap_arr(1,1)
 }
 set menu_2_html ""
 foreach menu_item $menu_2_list {
-    append menu_2_html $wrap_arr(2,0) "<a href=\"$menu_item\">$menu_title_arr($menu_item)</a>" $wrap_arr(2,1)
+    append menu_2_html $wrap_arr(2,0) "<a class=\"btn\ grid-whole\" href=\"$menu_item\">$menu_title_arr($menu_item)</a>" $wrap_arr(2,1)
 }
 set menu_3_html ""
 foreach menu_item $menu_3_list {
-    append menu_3_html $wrap_arr(3,0) "<a href=\"$menu_item\">$menu_title_arr($menu_item)</a>" $wrap_arr(3,1)
+    append menu_3_html $wrap_arr(3,0) "<a class=\"btn\" href=\"$menu_item\">$menu_title_arr($menu_item)</a>" $wrap_arr(3,1)
 }
 
 # pass to adp

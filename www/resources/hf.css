@@ -660,6 +660,38 @@ following moved to demo area:
 	background: rgba(78,123,197,.2);	
 }
 .content-box p { margin: 0 0 1em; }
+.btn {
+	-moz-box-shadow:inset 0px 1px 0px 0px #ffffff;
+	-webkit-box-shadow:inset 0px 1px 0px 0px #ffffff;
+	box-shadow:inset 0px 1px 0px 0px #ffffff;
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #d9e8ff), color-stop(1, #c4d8f6) );
+	background:-moz-linear-gradient( center top, #d9e8ff 5%, #c4d8f6 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#d9e8ff', endColorstr='#c4d8f6');
+	background-color:#d9e8ff;
+	-moz-border-radius:6px;
+	-webkit-border-radius:6px;
+	border-radius:6px;
+	border:1px solid #c4d8f6;
+	display:inline-block;
+/*	color:#4e7cc5; */
+	font-style: normal;
+/*	font-size:2em;
+	font-family: 'Alfa Slab One', cursive; */
+	padding:.25em .5em;
+/*    margin: .25em .25em; */
+	text-decoration:none;
+	text-shadow:0 1px 0 #ffffff;
+}
+.btn:hover {
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #c4d8f6), color-stop(1, #d9e8ff) );
+	background:-moz-linear-gradient( center top, #c4d8f6 5%, #d9e8ff 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#c4d8f6', endColorstr='#d9e8ff');
+	background-color:#c4d8f6;
+}
+.btn:active {
+	position:relative;
+	top:1px;
+}
 .btn-big {
 	-moz-box-shadow:inset 0px 1px 0px 0px #ffffff;
 	-webkit-box-shadow:inset 0px 1px 0px 0px #ffffff;
@@ -676,8 +708,9 @@ following moved to demo area:
 	color:#4e7cc5;
 	font-size:2em;
 	font-style: normal;
-	font-family: 'Alfa Slab One', cursive;
-	padding:6px 24px;
+/*	font-family: 'Alfa Slab One', cursive; */
+	padding:6px 12px;
+    margin: 2px 4px;
 	text-decoration:none;
 	text-shadow:0 1px 0 #ffffff;
 }

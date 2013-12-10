@@ -18,10 +18,10 @@
 <div class="grid-quarter m-grid-half s-grid-whole padded">
   <div class="content-box">
 
-<p>&nbsp;</p>
-    <ul>
+<div>&nbsp;</div>
+
       @menu_1_html;noquote@
-    </ul>
+
 <div>&nbsp;</div>
 
   </div>
@@ -31,9 +31,9 @@
   <div class="content-box">
  
 <div>&nbsp;</div>
-    <ul>
+
       @menu_2_html;noquote@
-    </ul>
+
 <div>&nbsp;</div>
 
   </div>
@@ -42,9 +42,9 @@
   <div class="content-box">
 
 <div>&nbsp;</div>
-    <ul>
+
       @menu_3_html;noquote@
-    </ul>
+
 <div>&nbsp;</div>
 
   </div>
