@@ -3,19 +3,19 @@
   <property name="context">@context;noquote@</property>
 
 <!-- four colms on large, two cols on medium, stacked on small -->
-<div class="grid-quarter m-grid-half s-grid-whole padded">
-  <div class="content-box padded">
+<div class="l-grid-quarter m-grid-half s-grid-whole padded">
+  <div class="content-box">
 
-    <p>Account Management System</p>
-    <div>Welcome @user_name@</div>
+    <div class="small">Account Management System</div>
+    <div>Welcome @user_name@</div> 
     <div>Resource summary:<br>
-      <include src="/packages/hosting-farm/lib/time-interval-remaining" time1="@t1;noquote@" time2="@t2;noquote@">
-    </div>
+      <include src="/packages/hosting-farm/lib/time-interval-remaining" time1="@t1;noquote@" time2="@t2;noquote@"> 
+    </div> 
     
   </div>
 </div>
 
-<div class="grid-quarter m-grid-half s-grid-whole padded">
+<div class="l-grid-quarter m-grid-half s-grid-whole padded">
   <div class="content-box">
 
 <div>&nbsp;</div>
@@ -27,7 +27,7 @@
   </div>
 </div>
 
-<div class="grid-quarter m-grid-half s-grid-whole padded">
+<div class="l-grid-quarter m-grid-half s-grid-whole padded">
   <div class="content-box">
  
 <div>&nbsp;</div>
@@ -38,7 +38,7 @@
 
   </div>
 </div>
-<div class="grid-quarter m-grid-half s-grid-whole padded">
+<div class="l-grid-quarter m-grid-half s-grid-whole padded">
   <div class="content-box">
 
 <div>&nbsp;</div>

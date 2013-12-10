@@ -69,7 +69,7 @@ text-align: center;
         
     <if @user_messages:rowcount@ gt 0>
       <div class="grid-whole">
-        <div class="grid-whole m-grid-whole s-grid-whole padded-sides">
+        <div class="l-grid-whole m-grid-whole s-grid-whole padded-sides">
           <div class="content-box padded-sides">
               <div id="alert-message">
                 <multiple name="user_messages">
