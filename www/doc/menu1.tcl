@@ -80,7 +80,7 @@ set wrap_arr(3,0) $wrap_arr(1,0)
 set wrap_arr(2,1) $wrap_arr(1,1)
 set wrap_arr(3,1) $wrap_arr(1,1)
 
-set class_html "btn grid-whole"
+set class_html "btn grid-whole padded-sides"
 
 set menu_1_html ""
 foreach menu_item $menu_1_list {

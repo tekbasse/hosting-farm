@@ -7,7 +7,6 @@
   <div class="content-box">
 
     <div class="small">Account Management System</div>
-
     <div>Welcome @user_name@</div> 
     <div>Resource summary:<br>
       <include src="/packages/hosting-farm/lib/time-interval-remaining" time1="@t1;noquote@" time2="@t2;noquote@"> 
