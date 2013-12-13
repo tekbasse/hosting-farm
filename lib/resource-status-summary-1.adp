@@ -1,4 +1,5 @@
       <div>Summary for @current_dt@</div>
+@summary_html;noquote@
       <table style="border: 1px solid #ccc; font-size: small; width: 100%; padding-left: 0; padding-right: 0; margin-left: 0; margin-right: 0;">
   <tr><td>Asset Type</td><td>Quota</td><td>Current sample</td><td>Projected end of interval</td></tr>
   <tr><td>contract</td><td>per asset</td><td>day 27.96</td><td>day 30</td></tr>

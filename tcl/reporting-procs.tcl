@@ -4,7 +4,7 @@ ad_library {
     @creation-date 11 December 2013
 }
 
-ad_proc -private hf_health_html_atts { 
+ad_proc -private hf_health_html { 
     health_score
     {message ""}
     {theme "rock"}
@@ -91,6 +91,7 @@ ad_proc -private hf_health_html_atts {
 }
 
 ad_proc -private hf_asset_summary_status {
+    {customer_ids ""}
     {interval_remaining_ts ""}
     {list_limit ""}
     {now_ts ""}
@@ -102,7 +103,9 @@ ad_proc -private hf_asset_summary_status {
     # # following two options might be alternatives to interval_remaining_ts
     # now_ts                in timestamp seconds
     # interval_length_ts    in timestamp seconds
-
+    if { [llength $customer_ids_list] == 0 } {
+        set customer_ids_list [list ]
+    } 
     # list_limit            limits the number of items returned.
 
     # This is configured as a demo.
