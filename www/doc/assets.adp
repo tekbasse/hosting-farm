@@ -4,6 +4,6 @@
 
     <div>Welcome @user_name@</div> 
     <div>Resource summary:<br>
-      <include src="/packages/hosting-farm/lib/resource-status-summary-1" interval_remaining="@interval_remaining;noquote@" columns="4"> 
+      <include src="/packages/hosting-farm/lib/resource-status-summary-1" interval_remaining="@interval_remaining;noquote@"> 
     </div> 
 

@@ -7,25 +7,31 @@
 
 set asset_stts_smmry_lists [hf_asset_summary_status "" $interval_remaining 5]
 
+set asset_report_lists [list ]
 foreach report_list $asset_stts_smmry_lists {
-    set status_list [lrange $report_list 0 3] 
-    lappend status_list "[lindex $report_list 4] [lindex $report_list 5]"
-    lappend status_list [lrange $report_list 6 7]
-    lappend status_list [hf_health_html [lindex $report_list 8] [lindex $report_list 9] rock 36]
+    set status_list [list ]
+    lappend status_list "<a href=\"[string tolower [lindex $report_list 2]]?label=[lindex $report_list 1]\">[lindex $report_list 0]</a>"
+#    lappend status_list [lindex $report_list 1]
+    lappend status_list [lindex $report_list 2]
+    lappend status_list [lindex $report_list 3]
+    lappend status_list [lindex $report_list 4]
+    lappend status_list [lindex $report_list 5]
+    lappend status_list [lindex $report_list 6]
+    lappend status_list [hf_health_html [lindex $report_list 7] [lindex $report_list 8] rock 36]
     lappend asset_report_lists $status_list
 }
 
-set asset_table_titles [list "label" "name" "type" "metric" "sample" "quota%" "projected" "status"]
+set asset_table_titles [list "name" "type" "metric" "sample" "quota" "projected" "status"]
 set table_att_list [list ]
-set td_att_list [list valign top]
+set td_att_list [list ]
 if { [info exists columns ] } {
     set before_columns_html  {<div class="l-grid-quarter m-grid-half s-grid-whole padded">
-        <div class="content-box">
-        <div>&nbsp;</div>
+  <div class="content-box">
+ <div>&nbsp;</div>
     }
     set after_columns_html { <div>&nbsp;</div>
-        </div>
-        </div>
+  </div>
+</div>
     }
     set arl_length [llength $asset_report_lists]
     set items_per_list [expr { int( $arl_length / $columns ) + 1 } ]
@@ -36,11 +42,14 @@ if { [info exists columns ] } {
         if { [info exists before_columns_html] } {
             append summary_html $before_columns_html
         }
-        set new_report_lists [list ]        
+        set new_report_lists [list ]
         lappend new_report_lists $asset_table_titles
-        lappend new_report_lists [lrange $asset_report_lists $i [expr { $i + $items_per_list } ] ]
+        set column_lists [lrange $asset_report_lists $i [expr { $i + $items_per_list } ] ]
+        foreach row_list $column_lists {
+            lappend new_report_lists $row_list
+        }
         # between_columns_html  if exists, inserts html that goes between each column
-        append summary_html [qss_list_of_lists_to_hmtl $new_report_lists $table_att_list $td_att_list]
+        append summary_html [qss_list_of_lists_to_html_table $new_report_lists $table_att_list $td_att_list]
         if { [info exists after_columns_html] } {
             append summary_html $after_columns_html
         }
@@ -49,5 +58,5 @@ if { [info exists columns ] } {
 } else {
 
     set asset_report_lists [linsert $asset_report_lists 0 $asset_table_titles]
-    set summary_html [qss_list_of_lists_to_html $asset_db_lists $table_att_list $td_att_list]
+    set summary_html [qss_list_of_lists_to_html_table $asset_report_lists $table_att_list $td_att_list]
 }

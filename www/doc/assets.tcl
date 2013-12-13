@@ -28,5 +28,5 @@ if { $untrusted_user_id == 0 } {
 # get status info
 #  see as.adp as.tcl for db scenario example
 
-set interval_remaining [expr { int( rand() * 30 ) } ]
+set interval_remaining [expr { int( [random ] * 30 ) } ]
 
