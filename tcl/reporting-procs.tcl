@@ -91,7 +91,7 @@ ad_proc -private hf_health_html {
 }
 
 ad_proc -private hf_asset_summary_status {
-    {customer_ids ""}
+    {customer_ids_list ""}
     {interval_remaining_ts ""}
     {list_limit ""}
     {now_ts ""}
@@ -141,7 +141,7 @@ ad_proc -private hf_asset_summary_status {
     set random_suffix_list [list net com me info ca us pa es co.uk tv no dk de fr jp cn in org cc biz nu ws bz org.uk tm ms pro mx tw jobs ac io sh eu at nl la fm it co ag pl sc hn mn tk vc pe au ch ru se fi if os so be do hi ho is jo ro un]
     set suffix_count [llength $random_suffix_list ]
     foreach name $random_names {
-        lappend random_names_list "$name.[lindex [expr { int( rand() * $suffix_count + .5 ) } ]"
+        lappend random_names_list "$name.[lindex ${random_suffix_list} [expr { int( rand() * $suffix_count + .5 ) } ]]"
     }
     
     set as_root_lists [list [list DC traffic power other] \
@@ -150,10 +150,11 @@ ad_proc -private hf_asset_summary_status {
                            [list VH storage] \
                            [list SS traffic storage memory]]
     foreach asr_list $as_root_lists {
-        set asr_arr([lindex $asr_list 0]) [lreplace $asr_list 0 0]
+        set i [lindex $asr_list 0]
+        set asr_arr($i) [lreplace $asr_list 0 0]
     }
     set as_type_list [list DC HW VM VH SS]
-    set as_type_count [llength $as_type_lists]
+    set as_type_count [llength $as_type_list]
     
     set quota_lists [list \
                          [list DC traffic 102400000000000] \
@@ -169,7 +170,9 @@ ad_proc -private hf_asset_summary_status {
                          [list SS storage 10000000] \
                          [list SS memory 768000]]
     foreach q_list $quota_lists {
-        set quota_arr("[lindex $q_list 0],[lindex $q_list 1]") [lindex $q_list 2]
+        set i "[lindex $q_list 0],[lindex $q_list 1]"
+        set quota_arr($i) [lindex $q_list 2]
+
     }
     
     
@@ -208,7 +211,8 @@ ad_proc -private hf_asset_summary_status {
             # metric1 metric2 metric..
             foreach as_at $asr_arr($as_type) {
                 # quota_arr(as_type,metric) = quota amount
-                set quota $quota(${as_type},${as_at})
+                set iq "${as_type},${as_at}"
+                set quota $quota_arr($iq)
                 # 16 health scores, lets randomly try to get all cases for demo and testing
                 # only 1/8 are stressfull , 1/8 = 0.125
                 set sample [expr { int( rand() * $quota * 1.125 ) } ]
@@ -221,19 +225,19 @@ ad_proc -private hf_asset_summary_status {
                     # interval_rate = units_per_week / secs_per_week * secs_per_interval_remaining
                     set interval_rate [expr { $weeks_rate * $interval_remaining_ts / 604800. } ]
                     set projected_eop [expr { $sample + $interval_rate } ]
-                    set $projected_eop_html $projected_eop
+                    set projected_eop_html $projected_eop
                     if { $as_at eq "traffic" } {
                         set sample_html [qal_pretty_bytes_iec $sample]
                         set projected_eop_html [qal_pretty_bytes_iec $projected_eop]
                     } else {
-                        set sample_html [qal_pretty_bytes_dec $sammple]
+                        set sample_html [qal_pretty_bytes_dec $sample]
                         set projected_eop_html [qal_pretty_bytes_dec $projected_eop]
                     }
                     set pct_quota_html [format "%d%%"]
                 } else {
                     # not enough history to calculate
-                    set $projected_eop 0
-                    set $projected_eop_html "#accounts-ledger.N_A#"
+                    set projected_eop 0
+                    set projected_eop_html "#accounts-ledger.N_A#"
                 }
                 
                 # calc health score value
@@ -256,14 +260,14 @@ ad_proc -private hf_asset_summary_status {
                 lappend as_reports_list $as_at
                 lappend as_reports_list $sample_html $unit $pct_quota_html $projected_eop_html $health_score $hs_message
                 # as_label as_name as_type metric latest_sample unit percent_quota projected_eop score score_message
-                lappend asset_db_lists $as_report_list
+                lappend asset_db_lists $as_reports_list
             }
         } else {
             # asset not active
             set health_score 0
             set hs_message ""
             lappend as_reports_list "#accounts-ledger.N_A#" "" "" "" "" $health_score "inactive"
-            lappend asset_db_lists $as_report_list
+            lappend asset_db_lists $as_reports_list
         }
     }
     
@@ -277,4 +281,3 @@ ad_proc -private hf_asset_summary_status {
     }
     return $asset_db_sorted_lists
 }
-   

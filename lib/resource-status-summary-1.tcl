@@ -1,7 +1,11 @@
 # hosting-farm/lib/resource-status-summary-1.tcl
 # Returns summary list of status, highest scores first
 
-set asset_stts_smmry_lists [hf_asset_summary_status "" interval_remaining 5]
+# if $columns exists, splits the list into $columns number of columns
+# before_columns_html and after_columns_html  if exists, inserts html that goes between each column
+
+
+set asset_stts_smmry_lists [hf_asset_summary_status "" $interval_remaining 5]
 
 foreach report_list $asset_stts_smmry_lists {
     set status_list [lrange $report_list 0 3] 
@@ -12,22 +16,38 @@ foreach report_list $asset_stts_smmry_lists {
 }
 
 set asset_table_titles [list "label" "name" "type" "metric" "sample" "quota%" "projected" "status"]
-
+set table_att_list [list ]
+set td_att_list [list valign top]
 if { [info exists columns ] } {
+    set before_columns_html  {<div class="l-grid-quarter m-grid-half s-grid-whole padded">
+        <div class="content-box">
+        <div>&nbsp;</div>
+    }
+    set after_columns_html { <div>&nbsp;</div>
+        </div>
+        </div>
+    }
     set arl_length [llength $asset_report_lists]
     set items_per_list [expr { int( $arl_length / $columns ) + 1 } ]
-    set new_report_lists [list ]
+
     set items_per_list_m_1 [expr { $items_per_list - 1 } ]
-    for {set i 0} {$i < $items_per_list} {incr } {
-
+    set summary_html ""
+    for {set i 0} {$i < $items_per_list} {incr i} {
+        if { [info exists before_columns_html] } {
+            append summary_html $before_columns_html
+        }
+        set new_report_lists [list ]        
         lappend new_report_lists $asset_table_titles
-        lappend new_report_lists [lrange $asset_report_lists $i [expr { $i +$items_per_list } ] ]
+        lappend new_report_lists [lrange $asset_report_lists $i [expr { $i + $items_per_list } ] ]
         # between_columns_html  if exists, inserts html that goes between each column
-
+        append summary_html [qss_list_of_lists_to_hmtl $new_report_lists $table_att_list $td_att_list]
+        if { [info exists after_columns_html] } {
+            append summary_html $after_columns_html
+        }
     }
 
 } else {
 
     set asset_report_lists [linsert $asset_report_lists 0 $asset_table_titles]
-    set summary_html [qss_list_of_lists_to_html $asset_db_lists table_att_list td_att_list]
+    set summary_html [qss_list_of_lists_to_html $asset_db_lists $table_att_list $td_att_list]
 }
