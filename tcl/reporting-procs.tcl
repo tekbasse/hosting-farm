@@ -19,14 +19,14 @@ ad_proc -private hf_health_html {
     # 2 not enough monitoring data. alert face 
     # 3 = amusement
     # 4 to 12 = normal range, joy
-    # 13-14 laugh
+    # 13-14 laughter
     # 15 within 10% of limit, anxious
     # 16 overlimit, error, alarm, (alarm notification: shock), error (surprise).
 
     # rock theme names and icons inspired from:
     # "Making Comics: Storytelling secrets of comics, manga and graphic novels by Scott McCloud"
     # http://www.scottmccloud.com/2-print/3-mc/
-    # satisfaction , amusement, joy , laugh
+    # satisfaction , amusement, joy , laughter
     # concern, anxious, fear, terror
     # dejection, melancholy, sad, grief
     # alert, wonder, surprise, shock
@@ -35,7 +35,7 @@ ad_proc -private hf_health_html {
     set health [expr { [f::min 16 [f::max 0 round($health_score) ]] } ]
 
     # set filename first. It might be needed for image dimensions.
-    set health_name_list [list "inactive" "active" "alert" "amusement" "joy" "joy" "joy" "joy" "joy" "joy" "joy" "joy" "joy" "laugh" "anxious" "surprise"]
+    set health_name_list [list "inactive" "active" "alert" "amusement" "joy" "joy" "joy" "joy" "joy" "joy" "joy" "joy" "joy" "laughter" "anxious" "surprise"]
     set icon_name [lindex $health_name_list $health_score]
     set url_dir "/resources/hosting-farm/icons"
     set work_dir [file join [acs_root_dir] www $url_dir]
@@ -75,14 +75,14 @@ ad_proc -private hf_health_html {
     set ratio_w 1
     set ratio_h 1
     if { $width_limit ne "" && $width_limit < $width } {
-        set ratio_w [expr { $width_limit / $width } ]
+        set ratio_w [expr { $width_limit / ( $width * 1.) } ]
         if { $height_limit ne "" && $height_limit < $height } {
-            set ratio_h [expr { $height_limit / $height } ]
+            set ratio_h [expr { $height_limit / ( $height * 1.) } ]
         } 
     }
     set ratio [f::min $ratio_h $ratio_w]
-    set width_new [expr { $width * $ratio } ]
-    set height_new [expr { $height * $ratio } ]
+    set width_new [expr { round( $width * $ratio ) } ]
+    set height_new [expr { round( $height * $ratio ) } ]
 
     set health_html "<img src=\"[file join $url_dir $icon_name]\""
     append health_html " width=\"${width_new}\" height=\"${height_new}\""
@@ -141,8 +141,8 @@ ad_proc -private hf_asset_summary_status {
     set random_suffix_list [list net com me info ca us pa es co.uk tv no dk de fr jp cn in org cc biz nu ws bz org.uk tm ms pro mx tw jobs ac io sh eu at nl la fm it co ag pl sc hn mn tk vc pe au ch ru se fi if os so be do hi ho is jo ro un]
     set suffix_count [llength $random_suffix_list ]
     foreach name $random_names {
-        set tld [lindex $random_suffix_list [expr { int( [random ] * $suffix_count ) } ]]
-        set domain [lindex $random_names [expr { int( [random ] * $names_count ) } ]]
+        set tld [lindex $random_suffix_list [expr { wide( [random ] * $suffix_count ) } ]]
+        set domain [lindex $random_names [expr { wide( [random ] * $names_count ) } ]]
         lappend random_names_list "$domain.$tld"
     }
     set as_root_lists [list [list DC traffic power other] \
@@ -180,21 +180,20 @@ ad_proc -private hf_asset_summary_status {
     # attribute = meter_type = metric
     # as_label as_name as_type 
     set asset_db_lists [list ]
-    set as_count [expr { int( [random ] * 50 ) + 1 } ]
+    set as_count [expr { wide( [random ] * 50 ) + 1 } ]
     for { set i 0} {$i < $as_count} {incr i} {
-        set name_i [expr { int( [random ] * $names_count ) } ]
+        set name_i [expr { wide( [random ] * $names_count ) } ]
         set as_label [lindex $random_names_list $name_i]
         set random_names_list [lreplace $random_names_list $name_i $name_i]
         incr names_count -1
         set as_name $as_label
-        set as_type [lindex $as_type_list [expr { int( [random ] * $as_type_count ) } ]]
+        set as_type [lindex $as_type_list [expr { wide( [random ] * $as_type_count ) } ]]
         #ns_log Notice "hf_asset_summary_status: as_type '$as_type' "
         # as_label as_name as_type
         set as_list [list $as_label $as_name $as_type]
         lappend asset_db_lists $as_list
     }
-    ns_log Notice "hf_asset_summary_status(196): asset_db_lists '$asset_db_lists' "
-    
+#    ns_log Notice "hf_asset_summary_status(196): asset_db_lists '$asset_db_lists' "
     
     
     # for the demo,  manually build a fake list instead of calling a procedure
@@ -209,42 +208,49 @@ ad_proc -private hf_asset_summary_status {
         # asset_list is a list of asset attributes: label, name, type
         set as_type [lindex $asset_list 2]
         # start rolling dice..
-        set active_p [expr { int( [random ] * 16 ) > 1 } ] 
+        set active_p [expr { wide( [random ] * 16 ) > 1 } ] 
         # asset_list =  $as_label $as_name $as_type
-        set as_reports_list $asset_list
-        ns_log Notice "hf_asset_summary_status(209): counter $debug_counter active_p $active_p as_type $as_type as_reports_list,asset_list $as_reports_list"        
+        
         if { $active_p } {
             # sometimes an account is new, so not enough info exists
             # role dice..
-            set history_exists_p [expr { int( [random ] * 16 ) > 1 } ]
+            set history_exists_p [expr { wide( [random ] * 16 ) > 1 } ]
             
             # metric1 metric2 metric..
-            foreach as_at $asr_arr($as_type) {
+            set metric_list $asr_arr($as_type) 
+   #         ns_log Notice "hf_asset_summary_status(221): metric_list '$metric_list' llength [llength $metric_list]"
+            foreach as_at $metric_list {
+                set as_reports_list $asset_list
+  #              ns_log Notice "hf_asset_summary_status(224): counter $debug_counter active_p $active_p as_type $as_type as_reports_list,asset_list $as_reports_list"
 #                ns_log Notice "hf_asset_summary_status(218): as_type $as_type as_at $as_at"
                 # quota_arr(as_type,metric) = quota amount
                 set iq "${as_type},${as_at}"
-                set quota $quota_arr($iq)
+                set quota [expr { wide( $quota_arr($iq) ) } ]
                 # 16 health scores, lets randomly try to get all cases for demo and testing
                 # only 1/8 are stressfull , 1/8 = 0.125
-                set sample [expr { int( [random ] * $quota * 1.125 ) } ]
+                set sample [expr { wide( [random ] * $quota * 1.125 ) } ]
                 set unit "B"
-                set pct_quota [expr { int( 100. * $sample / ( $quota * 1.) ) } ]
+                set pct_quota [expr { wide( 100. * $sample / ( $quota * 1.) ) } ]
                 set pct_quota_html [format "%d%%" $pct_quota]
                 if { $history_exists_p } {
-                    set weeks_rate [expr { int( [random ] * $sample / 3. ) } ]  
+                    set weeks_rate [expr { wide( [random ] * $sample / 3. ) } ]  
                     # convert rate to interval_length
                     # 1 week = 604800 clicks
                     # interval_rate = units_per_week / secs_per_week * secs_per_interval_remaining
                     set interval_rate [expr { $weeks_rate * $interval_remaining_ts / 604800. } ]
                     set projected_eop [expr { $sample + $interval_rate } ]
+#ns_log Notice "hf_asset_summary_status(242): sample $sample pct_quota $pct_quota pct_quota_html $pct_quota_html weeks_rate $weeks_rate interval_rate $interval_rate projected_eop $projected_eop"
                     set projected_eop_html $projected_eop
                     if { $as_at eq "traffic" } {
                         set sample_html [qal_pretty_bytes_iec $sample]
                         set projected_eop_html [qal_pretty_bytes_iec $projected_eop]
+ #                       ns_log Notice "hf_asset_summary_status(247): pretty_bytes_iec calc sample_html $sample_html projected_eop_html $projected_eop_html"
                     } else {
                         set sample_html [qal_pretty_bytes_dec $sample]
                         set projected_eop_html [qal_pretty_bytes_dec $projected_eop]
+ #                       ns_log Notice "hf_asset_summary_status(251): pretty_bytes_dec calc sample_html $sample_html projected_eop_html $projected_eop_html"
                     }
+
                 } else {
                     # not enough history to calculate
                     set projected_eop 0
@@ -259,7 +265,7 @@ ad_proc -private hf_asset_summary_status {
                 
                 # calc health score value
                 # initial health is based on background performance..
-                set health_score [expr { int( [random ] * 11 ) + 1 } ]
+                set health_score [expr { wide( [random ] * 11 ) + 1 } ]
                 set hs_message "#accounts-ledger.${health_score}#"
                 if { $projected_eop > [expr { $quota * 0.9 } ] || $pct_quota > 0.8 } {
                     set health_score 13
@@ -280,14 +286,16 @@ ad_proc -private hf_asset_summary_status {
 #                ns_log Notice "hf_asset_summary_status(273): as_reports_list $as_reports_list"
                 # as_label as_name as_type metric latest_sample unit percent_quota projected_eop score score_message
                 lappend asset_report_lists $as_reports_list
-                ns_log Notice "hf_asset_summary_status(278): as_reports_list $as_reports_list"
+ #               ns_log Notice "hf_asset_summary_status(278): as_reports_list $as_reports_list"
             }
         } else {
             # asset not active
+            set as_reports_list $asset_list
+ #           ns_log Notice "hf_asset_summary_status(290): counter $debug_counter active_p $active_p as_type $as_type as_reports_list,asset_list $as_reports_list"
             set health_score 0
             set hs_message ""
             lappend as_reports_list "#accounts-ledger.N_A#" "" "" "" $health_score "inactive"
-            ns_log Notice "hf_asset_summary_status(282): as_reports_list $as_reports_list"
+#            ns_log Notice "hf_asset_summary_status(282): as_reports_list $as_reports_list"
             lappend asset_report_lists $as_reports_list
         }
     }
@@ -300,6 +308,6 @@ ad_proc -private hf_asset_summary_status {
         incr list_limit -1
         set asset_db_sorted_lists [lrange $asset_db_sorted_lists 0 $list_limit]
     }
-    ns_log Notice "hf_asset_summary_status: asset_db_sorted_lists $asset_db_sorted_lists"
+   # ns_log Notice "hf_asset_summary_status: asset_db_sorted_lists $asset_db_sorted_lists"
     return $asset_db_sorted_lists
 }

@@ -1,11 +1,15 @@
 # hosting-farm/lib/resource-status-summary-1.tcl
 # Returns summary list of status, highest scores first
+# include list_limit to limit the list to that many items
 
 # if $columns exists, splits the list into $columns number of columns
 # before_columns_html and after_columns_html  if exists, inserts html that goes between each column
+if { [info exists list_limit] && $list_limit > 0 } {
+    set asset_stts_smmry_lists [hf_asset_summary_status "" $interval_remaining] $list_limit    
+} else {
+    set asset_stts_smmry_lists [hf_asset_summary_status "" $interval_remaining]
+}
 
-
-set asset_stts_smmry_lists [hf_asset_summary_status "" $interval_remaining 5]
 
 set asset_report_lists [list ]
 foreach report_list $asset_stts_smmry_lists {
