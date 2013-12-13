@@ -152,6 +152,7 @@ ad_proc -private hf_asset_summary_status {
     foreach asr_list $as_root_lists {
         set i [lindex $asr_list 0]
         set asr_arr($i) [lreplace $asr_list 0 0]
+#        ns_log Notice "hf_asset_summary_status: asr_arr($i) '$asr_arr($i)'"
     }
     set as_type_list [list DC HW VM VH SS]
     set as_type_count [llength $as_type_list]
@@ -184,7 +185,8 @@ ad_proc -private hf_asset_summary_status {
     for { set i 1} {$i < $as_count} {incr i} {
         set as_label [lindex $random_names_list $i]
         set as_name $as_label
-        set as_type [lindex $as_type_list [expr { int( rand() * $as_type_count + .99 ) } ]]
+        set as_type [lindex $as_type_list [expr { int( rand() * $as_type_count - .01 ) } ]]
+#ns_log Notice "hf_asset_summary_status: as_type '$as_type' "
         # as_label as_name as_type
         set as_list [list $as_label $as_name $as_type]
         lappend asset_db_lists $as_list
