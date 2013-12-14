@@ -61,7 +61,7 @@ ad_proc -private hf_health_html {
                 set wh_list [ns_gifsize $icon_name]
             } elseif { [string length $extension] > 0 } {
                 # imagemagic \[exec identify -format "%[fx:w]x%[fx:h]" image.jpg\]
-                ns_log Notice "mi_image_atts: icon_pathname '$icon_pathname' dir_work '$dir_work' icon_name '$icon_name' extension '$extension'"
+                ns_log Notice "hf_health_html: icon_pathname '$icon_pathname' dir_work '$dir_work' icon_name '$icon_name' extension '$extension'"
                 #            set response [exec -- /usr/local/bin/gm -identify format $imagepath_name]
                 catch {exec -- /usr/local/bin/gm -identify format $imagepath_name} response
                 # response:
@@ -332,4 +332,125 @@ ad_proc -private hf_asset_summary_status {
     }
    # ns_log Notice "hf_asset_summary_status: asset_db_sorted_lists $asset_db_sorted_lists"
     return $asset_db_sorted_lists
+}
+
+ad_proc -private hf_as_type_html { 
+    as_type
+    {title ""}
+    {theme "hf"}
+    {width_limit ""}
+    {height_limit ""}
+} {
+   Returns html of icon etc representing asset type.
+} {
+    set as_type_list [list DC HW VM VH SS]
+    # make sure $as_type is in range 
+    set as_type_i [lsearch -nocase $as_type_list $as_type]
+    set as_type_html ""
+    if { $as_type_i > -1 } {
+        set as_type [lindex $as_type_list $as_type_i]
+
+        # set filename first. It might be needed for image dimensions.
+        set as_type_name_list [list "Data Center" "Hardware" "Virtual Machine" "Virtual Host" "Software as Service"]
+        set icon_name [lindex $as_type_name_list $as_type_i]
+        set url_dir "/resources/hosting-farm/icons"
+        set work_dir [file join [acs_root_dir] www $url_dir]
+        switch -exact $theme {
+            hf {
+                set extension ".png"
+                set icon_name "[string tolower ${as_type_i}]${extension}"
+                set width 326 
+                set height 326
+            }
+            default {
+                set extension_list [list png jpg gif]
+                set icon_name_glob $icon_name
+                append icon_name_glob {*.{[jJ][pp][gG],[pP][nN][gG],[gG][iI][fF]}}
+                set image_names_list [glob -nocomplain -tails -directory $work_dir -- $icon_name_glob ]
+                # assume only one, or just pick the first in the list anyway..
+                set icon_pathname [lindex $image_names_list 0]
+                set extension [file extension $icon_pathname]
+                set icon_name [file tail $icon_pathname]
+                if { [regexp -nocase -- ".jpg" $extension match] } {
+                    set wh_list [ns_jpegsize $icon_name]
+                } elseif { [regexp -nocase -- ".gif" $extension match] } {
+                    set wh_list [ns_gifsize $icon_name]
+                } elseif { [string length $extension] > 0 } {
+                    # imagemagic \[exec identify -format "%[fx:w]x%[fx:h]" image.jpg\]
+                    ns_log Notice "hf_as_type_html: icon_pathname '$icon_pathname' dir_work '$dir_work' icon_name '$icon_name' extension '$extension'"
+                    #            set response [exec -- /usr/local/bin/gm -identify format $imagepath_name]
+                    catch {exec -- /usr/local/bin/gm -identify format $imagepath_name} response
+                    # response:
+                    #zbf.jpg JPEG 289x289+0+0 DirectClass 8-bit 6.4k 0.008u 0:01
+                    regexp {[^\ ]+[\ ][^\ ]+[\ ]([0-9]+)x([0-9]+)[^0-9].*} $response b width height
+                }
+            }
+        }
+        
+        # fit within limits
+        set ratio_w 1
+        set ratio_h 1
+        if { $width_limit ne "" && $width_limit < $width } {
+            set ratio_w [expr { $width_limit / ( $width * 1.) } ]
+            if { $height_limit ne "" && $height_limit < $height } {
+                set ratio_h [expr { $height_limit / ( $height * 1.) } ]
+            } 
+        }
+        set ratio [f::min $ratio_h $ratio_w]
+        set width_new [expr { round( $width * $ratio ) } ]
+        set height_new [expr { round( $height * $ratio ) } ]
+        
+        set as_type_html "<img src=\"[file join $url_dir $icon_name]\""
+        append as_type_html " width=\"${width_new}\" height=\"${height_new}\""
+        append as_type_html " title=\"${title}\">"
+    }
+    return $as_type_html
+}
+
+ad_proc -private hf_meter_percent_html { 
+    meter_percent
+    {title ""}
+    {fill_color ""}
+    {width "396"}
+    {height "396"}
+} {
+   Returns html of icon etc representing a metered percentage. 
+    Expects 0 to 100 percent. 100 = 100%. The default color 
+    starts as a bluish-gray and becomes more yellow as it approaches 1.
+} {
+    set meter_percent_html ""
+    # make sure meter_percent is a number greater than 0
+    regsub {%} $meter_percent {} meter_percent
+    set meter_percent [string trim $meter_percent]
+    if { $meter_percent >= 0 } {
+        if { $fill_color eq "" } {
+            set hexi_nbr [list 0 1 2 3 4 5 6 7 8 9 a b c d e f]
+            # convert meter to number
+            # base of 666699 to ffffcc
+            set bar_list [list r g b]
+            set min_color_list [list 6 6 9]
+            set max_color_list [list 15 15 12]
+            set i 0
+            foreach bar $bar_list {
+                set min_c [lindex $min_color_list $i]
+                set max_c [lindex $max_color_list $i]
+                ns_log Notice "hf_meter_percent_html: bar $bar min_c $min_c max_c $max_c meter_percent $meter_percent"
+                set color [f::min [expr { int( ( $max_c - $min_c ) * $meter_percent / 100. ) + $min_c } ] 15]
+                set color_h [lindex $hexi_nbr $color]
+                append fill_color $color_h $color_h
+                incr i
+            }
+        }
+        set width_bar [expr { int( $width * $meter_percent / 100 ) } ]
+        if { $width_bar > $width } {
+            # off the chart!
+            # scale width down, so that width_bar becomes width
+            set width_bar $width
+            set width [expr { int( $width * 100. / $meter_percent ) } ]
+        }
+        append meter_percent_html "<div style=\"overflow-x: visible; z-index: 9; border: 2px solid; height: ${height}px; width: ${width}px;\" title=\"$title\">"
+        append meter_percent_html "<div style=\"opacity 0.75; z-index: 10; background-color: #${fill_color}; width: ${width_bar}px; height: ${height}px;\" title=\"$title\"></div>"
+        append meter_percent_html "</div>"
+    }
+    return $meter_percent_html
 }
