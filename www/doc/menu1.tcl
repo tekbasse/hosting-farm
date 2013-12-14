@@ -37,6 +37,8 @@ set interval_rand [expr { int( [random ] * $year_1 * 3 ) } ]
 set t2 [expr { $t1 + $interval_rand } ]
 set t2_string [clock format $t2 -format "%Y-%m-%d"]
 
+set units_list [hf_interval_remains_ymdhms $t1 $t2]
+set interval_remaining [expr { [lindex $units_list 2] * 24 * 3600 + [lindex $units_list 3] * 3600 + [lindex $units_list 4] * 60 + [lindex $units_list 5] } ]
 # these messages show up as alerts
 # util_user_message -message "This is alert 1"
 # util_user_message -message "This is alert 2"

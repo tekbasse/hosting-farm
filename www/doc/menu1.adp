@@ -10,6 +10,10 @@
     <div>Welcome @user_name@</div> 
     <div>Resource summary:<br>
       <include src="/packages/hosting-farm/lib/time-interval-remaining" time1="@t1;noquote@" time2="@t2;noquote@"> 
+        <div class="small padded">
+          <include src="/packages/hosting-farm/lib/resource-status-summary-2" interval_remaining="@interval_remaining;noquote@" list_limit="5"> 
+        </div>
+        <div> &nbsp; </div>
     </div> 
     
   </div>

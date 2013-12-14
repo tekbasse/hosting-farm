@@ -35,7 +35,7 @@ ad_proc -private hf_health_html {
     set health [expr { [f::min 16 [f::max 0 round($health_score) ]] } ]
 
     # set filename first. It might be needed for image dimensions.
-    set health_name_list [list "inactive" "active" "alert" "amusement" "joy" "joy" "joy" "joy" "joy" "joy" "joy" "joy" "joy" "laughter" "anxious" "surprise"]
+    set health_name_list [list "inactive" "active" "alert" "amusement" "joy" "joy" "joy" "joy" "joy" "joy" "joy" "joy" "joy" "laughter" "anxiety" "surprise"]
     set icon_name [lindex $health_name_list $health_score]
     set url_dir "/resources/hosting-farm/icons"
     set work_dir [file join [acs_root_dir] www $url_dir]
@@ -86,7 +86,7 @@ ad_proc -private hf_health_html {
 
     set health_html "<img src=\"[file join $url_dir $icon_name]\""
     append health_html " width=\"${width_new}\" height=\"${height_new}\""
-    append health_html " alt=\"#accounts-ledger.${health_score}#\" title=\"#accounts-ledger.${health_score}#\">"
+    append health_html " alt=\"#accounts-ledger.${health_score}#\" title=\"#accounts-ledger.${health_score}#: $message\">"
     return $health_html
 }
 
@@ -231,7 +231,8 @@ ad_proc -private hf_asset_summary_status {
                 set sample [expr { wide( [random ] * $quota * 1.125 ) } ]
                 set unit "B"
                 set pct_quota [expr { wide( 100. * $sample / ( $quota * 1.) ) } ]
-                set pct_quota_html [format "%d%%" $pct_quota]
+#                set pct_quota_html [format "%d%%" $pct_quota]
+                set pct_quota_html $pct_quota
                 if { $history_exists_p } {
                     set weeks_rate [expr { wide( [random ] * $sample / 3. ) } ]  
                     # convert rate to interval_length
@@ -242,23 +243,34 @@ ad_proc -private hf_asset_summary_status {
 #ns_log Notice "hf_asset_summary_status(242): sample $sample pct_quota $pct_quota pct_quota_html $pct_quota_html weeks_rate $weeks_rate interval_rate $interval_rate projected_eop $projected_eop"
                     set projected_eop_html $projected_eop
                     if { $as_at eq "traffic" } {
-                        set sample_html [qal_pretty_bytes_iec $sample]
-                        set projected_eop_html [qal_pretty_bytes_iec $projected_eop]
+                        set sample_html $sample
+#                        set sample_html [qal_pretty_bytes_iec $sample]
+#                        set projected_eop_html [qal_pretty_bytes_iec $projected_eop]
+                        set projected_eop_html $projected_eop
  #                       ns_log Notice "hf_asset_summary_status(247): pretty_bytes_iec calc sample_html $sample_html projected_eop_html $projected_eop_html"
                     } else {
-                        set sample_html [qal_pretty_bytes_dec $sample]
-                        set projected_eop_html [qal_pretty_bytes_dec $projected_eop]
+#                        set sample_html [qal_pretty_bytes_dec $sample]
+                        set sample_html $sample
+#                        set projected_eop_html [qal_pretty_bytes_dec $projected_eop]
+                        set projected_eop_html $projected_eop
  #                       ns_log Notice "hf_asset_summary_status(251): pretty_bytes_dec calc sample_html $sample_html projected_eop_html $projected_eop_html"
                     }
 
                 } else {
                     # not enough history to calculate
                     set projected_eop 0
-                    set projected_eop_html "#accounts-ledger.N_A#"
+# These values could be set to N/A, since it is too early to make projections,
+# but that causes problems with sorting the results.
+# So, we make a projection based on existing values and assume change is negligible. 
+#                    set projected_eop_html "#accounts-ledger.N_A#"
+                    # let's use e/2 just for the heck of it..
+                    set projected_eop_html [expr { $sample * 1.35914 } ]
                     if { $as_at eq "traffic" } {
-                        set sample_html [qal_pretty_bytes_iec $sample]
+#                        set sample_html [qal_pretty_bytes_iec $sample]
+                        set sample_html $sample
                     } else {
-                        set sample_html [qal_pretty_bytes_dec $sample]
+#                        set sample_html [qal_pretty_bytes_dec $sample]
+                        set sample_html $sample
                     }
 
                 }
@@ -267,7 +279,7 @@ ad_proc -private hf_asset_summary_status {
                 # initial health is based on background performance..
                 set health_score [expr { wide( [random ] * 11 ) + 1 } ]
                 set hs_message "#accounts-ledger.${health_score}#"
-                if { $projected_eop > [expr { $quota * 0.9 } ] || $pct_quota > 0.8 } {
+                if { $projected_eop > [expr { $quota * 0.9 } ] || $pct_quota > 80 } {
                     set health_score 13
                     set hs_message "Near quota limit."
                 }
@@ -275,7 +287,7 @@ ad_proc -private hf_asset_summary_status {
                     set health_score 14
                     set hs_message "May be over quota before end of term."
                 }
-                if { $pct_quota > 1 } {
+                if { $pct_quota > 100 } {
                     set health_score 15
                     set hs_message "Over quota."
                 }
@@ -294,7 +306,7 @@ ad_proc -private hf_asset_summary_status {
  #           ns_log Notice "hf_asset_summary_status(290): counter $debug_counter active_p $active_p as_type $as_type as_reports_list,asset_list $as_reports_list"
             set health_score 0
             set hs_message ""
-            lappend as_reports_list "#accounts-ledger.N_A#" "" "" "" $health_score "inactive"
+            lappend as_reports_list "#accounts-ledger.N_A#" "0" "0" "0" $health_score "inactive"
 #            ns_log Notice "hf_asset_summary_status(282): as_reports_list $as_reports_list"
             lappend asset_report_lists $as_reports_list
         }
@@ -304,11 +316,13 @@ ad_proc -private hf_asset_summary_status {
     # reportdb asset_label as_type as_attribute monitor_label portions_count health report_id
     # for quota monitoring, portions_count is count per last two weeks.
 
+    # qal_pretty_* numbers get processed after the proc is returned, otherwise sorts get complciated.
     # secondary sorts
-#### separate the units and % sign.. actually pass whole numbers
-#, so that final integer/real number sorting can be passed to the user after the proc is complete.
-    # then presort by projected value, followed by presorting.
-    # which means that the qal_pretty_* numbers get processed after the proc is done. not here.
+    # as_label as_name as_type metric latest_sample percent_quota projected_eop score score_message
+    set asset_report_lists [lsort -real -index 6 -increasing $asset_report_lists]
+    set asset_report_lists [lsort -integer -index 5 -decreasing $asset_report_lists]
+    # then presort by projected value, followed by quota
+
 
     # primary sort
     set asset_db_sorted_lists [lsort -integer -index 7 -decreasing $asset_report_lists]

@@ -1,15 +1,18 @@
 # hosting-farm/lib/resource-status-summary-1.tcl
 # Returns summary list of status, highest scores first
-# include list_limit to limit the list to that many items
 
-# if $columns exists, splits the list into $columns number of columns
+# Include 'list_limit' to limit the list to that many items.
+
+# If 'columns' exists, splits the list into $columns number of columns.
 # before_columns_html and after_columns_html  if exists, inserts html that goes between each column
+
+
 if { [info exists list_limit] && $list_limit > 0 } {
-    set asset_stts_smmry_lists [hf_asset_summary_status "" $interval_remaining] $list_limit    
+    set asset_stts_smmry_lists [hf_asset_summary_status "" $interval_remaining $list_limit]
 } else {
     set asset_stts_smmry_lists [hf_asset_summary_status "" $interval_remaining]
 }
-
+# as_label as_name as_type metric latest_sample percent_quota projected_eop score score_message
 
 set asset_report_lists [list ]
 foreach report_list $asset_stts_smmry_lists {
@@ -17,10 +20,21 @@ foreach report_list $asset_stts_smmry_lists {
     lappend status_list "<a href=\"[string tolower [lindex $report_list 2]]?label=[lindex $report_list 1]\">[lindex $report_list 0]</a>"
 #    lappend status_list [lindex $report_list 1]
     lappend status_list [lindex $report_list 2]
-    lappend status_list [lindex $report_list 3]
-    lappend status_list [lindex $report_list 4]
-    lappend status_list [lindex $report_list 5]
-    lappend status_list [lindex $report_list 6]
+    set metric [lindex $report_list 3]
+    lappend status_list $metric
+    set sample [lindex $report_list 4]
+    set projected_eop [lindex $report_list 6]
+    if { $metric eq "traffic" } {
+        set sample [qal_pretty_bytes_iec $sample]
+        set projected_eop [qal_pretty_bytes_iec $projected_eop]
+    } else {
+        set sample [qal_pretty_bytes_dec $sample]
+        set projected_eop [qal_pretty_bytes_dec $projected_eop]
+    }
+    lappend status_list $sample
+    lappend status_list [format "%d%%" [lindex $report_list 5]]
+    lappend status_list $projected_eop
+
     lappend status_list [hf_health_html [lindex $report_list 7] [lindex $report_list 8] rock 36]
     lappend asset_report_lists $status_list
 }
@@ -28,14 +42,38 @@ foreach report_list $asset_stts_smmry_lists {
 set asset_table_titles [list "name" "type" "metric" "sample" "quota" "projected" "status"]
 set table_att_list [list ]
 set td_att_list [list ]
-if { [info exists columns ] } {
-    set before_columns_html  {<div class="l-grid-quarter m-grid-half s-grid-whole padded">
-  <div class="content-box">
- <div>&nbsp;</div>
-    }
-    set after_columns_html { <div>&nbsp;</div>
-  </div>
-</div>
+if { [info exists columns ]} {
+    switch -exact -- $columns {
+        4 {
+            set before_columns_html  {<div class="l-grid-quarter m-grid-half s-grid-whole">
+                <div class="content-box">
+                <div>&nbsp;</div>
+            }
+            set after_columns_html { <div>&nbsp;</div>
+                </div>
+                </div>
+            }
+        }
+        3 {
+            set before_columns_html  {<div class="l-grid-third m-half s-grid-whole padded">
+                <div class="content-box">
+                <div>&nbsp;</div>
+            }
+            set after_columns_html { <div>&nbsp;</div>
+                </div>
+                </div>
+            }
+        }
+        2 {
+            set before_columns_html  {<div class="l-grid-half m-grid-whole s-grid-whole padded">
+                <div class="content-box">
+                <div>&nbsp;</div>
+            }
+            set after_columns_html { <div>&nbsp;</div>
+                </div>
+                </div>
+            }
+        }
     }
     set arl_length [llength $asset_report_lists]
     set items_per_list [expr { int( $arl_length / $columns ) + 1 } ]
@@ -60,7 +98,7 @@ if { [info exists columns ] } {
     }
 
 } else {
-
+# grid-whole padded
     set asset_report_lists [linsert $asset_report_lists 0 $asset_table_titles]
     set summary_html [qss_list_of_lists_to_html_table $asset_report_lists $table_att_list $td_att_list]
 }
