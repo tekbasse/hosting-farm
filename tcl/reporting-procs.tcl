@@ -303,7 +303,15 @@ ad_proc -private hf_asset_summary_status {
     # report db built from hf_monitor_config_n_control, monitor_log, hf_monitor_status
     # reportdb asset_label as_type as_attribute monitor_label portions_count health report_id
     # for quota monitoring, portions_count is count per last two weeks.
-    set asset_db_sorted_lists [lsort -index 7 -decreasing $asset_report_lists]
+
+    # secondary sorts
+#### separate the units and % sign.. actually pass whole numbers
+#, so that final integer/real number sorting can be passed to the user after the proc is complete.
+    # then presort by projected value, followed by presorting.
+    # which means that the qal_pretty_* numbers get processed after the proc is done. not here.
+
+    # primary sort
+    set asset_db_sorted_lists [lsort -integer -index 7 -decreasing $asset_report_lists]
     if { $list_limit ne "" } {
         incr list_limit -1
         set asset_db_sorted_lists [lrange $asset_db_sorted_lists 0 $list_limit]
