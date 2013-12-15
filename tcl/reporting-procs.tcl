@@ -413,15 +413,16 @@ ad_proc -private hf_meter_percent_html {
     {fill_color ""}
     {width "396"}
     {height "396"}
+    {max_percent ""}
 } {
    Returns html of icon etc representing a metered percentage. 
     Expects 0 to 100 percent. 100 = 100%. The default color 
     starts as a bluish-gray and becomes more yellow as it approaches 1.
+    If max_percent is provided, then width represents the point of max value. This is useful for
+    aligning multiple meters with the same meter box size.
 } {
     set meter_percent_html ""
     # make sure meter_percent is a number greater than 0
-    regsub {%} $meter_percent {} meter_percent
-    set meter_percent [string trim $meter_percent]
     if { $meter_percent >= 0 } {
         if { $fill_color eq "" } {
             set hexi_nbr [list 0 1 2 3 4 5 6 7 8 9 a b c d e f]
@@ -441,7 +442,8 @@ ad_proc -private hf_meter_percent_html {
                 incr i
             }
         }
-        set width_bar [expr { int( $width * $meter_percent / 100 ) } ]
+        set width_bar [expr { round( 100. * $width / ( $max_percent * 1. ) ) } ]
+######        set width_bar [expr { int( $width * $meter_percent / 100 ) } ]
         if { $width_bar > $width } {
             # off the chart!
             # scale width down, so that width_bar becomes width

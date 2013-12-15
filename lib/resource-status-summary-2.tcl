@@ -86,6 +86,10 @@ if { [info exists columns ] } {
         # was:  "name" "type" "metric" "sample" "quota" "projected" "status"
         # dropping sample, projected
         set asset_report_new_lists [list ]
+        set max_quota 100
+        foreach report_list $asset_report_lists {
+            set max_quota [f::max [regsub -all { %} [lindex $report_list 4] ] $max_quota]
+        }
         foreach report_list $asset_report_lists {
             set report_new_list [list]
             set name [lindex $report_list 0]
@@ -94,8 +98,9 @@ if { [info exists columns ] } {
             # metric
             lappend report_new_list [lindex $report_list 2]
             # quota
-            set quota [lindex $report_list 4]
-            lappend report_new_list [hf_meter_percent_html $quota "$quota %" "" 120 35]
+            set quota_html [lindex $report_list 4]
+            set quota [regsub { %} $quota_html {} quota]
+            lappend report_new_list [hf_meter_percent_html $quota "$quota %" "" 120 35 $max_quota]
             # status
             lappend report_new_list [lindex $report_list 6]
             lappend asset_report_new_lists $report_new_list
