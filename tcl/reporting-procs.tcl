@@ -423,8 +423,8 @@ ad_proc -private hf_meter_percent_html {
     meter_percent
     {title ""}
     {fill_color ""}
-    {width "396"}
-    {height "396"}
+    {width "392"}
+    {height "392"}
     {max_percent "100"}
 } {
    Returns html of icon etc representing a metered percentage. 

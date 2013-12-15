@@ -12,7 +12,7 @@
 </if>
 <h5>Renewal Countdown</h5>
     <include src="/packages/hosting-farm/lib/time-interval-remaining" time1="@t1;noquote@" time2="@t2;noquote@"> 
-<h5>Resource Usage and Status Summary:</h5>
+<h5>Summary <br>Resource, Usage, Status:</h5>
     <include src="/packages/hosting-farm/lib/resource-status-summary-2" interval_remaining="@interval_remaining;noquote@" list_limit="3"> 
     <div> &nbsp; </div>
     

@@ -97,7 +97,8 @@ if { [info exists columns ] } {
             set type [lindex $report_list 1]
             lappend report_new_list [hf_as_type_html $type $name hf 35]
             # metric
-            lappend report_new_list [lindex $report_list 2]
+            set metric [lindex $report_list 2]
+            lappend report_new_list "<img src=\"/hosting-farm/resources/icons/hf-${metric}.png\" width=\"35\" height=\"35\" title=\"$metric\">"
             # quota
             set quota_html [lindex $report_list 4]
             regsub -all -- {[ %]} $quota_html {} quota
