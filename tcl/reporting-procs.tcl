@@ -228,7 +228,7 @@ ad_proc -private hf_asset_summary_status {
                 set quota [expr { wide( $quota_arr($iq) ) } ]
                 # 16 health scores, lets randomly try to get all cases for demo and testing
                 # only 1/8 are stressfull , 1/8 = 0.125
-                set sample [expr { wide( [random ] * $quota * 1.325 ) } ]
+                set sample [expr { wide( sqrt( [random ] * [random ] ) * $quota * 1.325 ) } ]
                 set unit "B"
                 set pct_quota [expr { wide( 100. * $sample / ( $quota * 1.) ) } ]
 #                set pct_quota_html [format "%d%%" $pct_quota]
@@ -435,7 +435,7 @@ ad_proc -private hf_meter_percent_html {
 } {
     set meter_percent_html ""
     # make sure meter_percent is a number greater than 0
-    ns_log Notice "hf_meter_percent_html(438): max_percent '$max_percent' meter_percent '$meter_percent' fill_color '$fill_color'"
+#    ns_log Notice "hf_meter_percent_html(438): max_percent '$max_percent' meter_percent '$meter_percent' fill_color '$fill_color'"
     if { $meter_percent >= 0 } {
         if { $fill_color eq "" } {
             set hexi_nbr [list 0 1 2 3 4 5 6 7 8 9 a b c d e f]

@@ -493,7 +493,7 @@ code,kbd,pre,samp{font-family:monospace, serif;_font-family:'courier new', monos
 pre{white-space:pre-wrap;word-wrap:break-word;}
 q{quotes:none;}
 q:before,q:after{content:none;}
-small{font-size:80%;}
+small2{font-size: .5em;}
 sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline;}
 sup{top:-.5em;}
 sub{bottom:-.25em;}
@@ -662,6 +662,16 @@ following moved to demo area:
 	position:relative;
 	top:1px;
 }
+.btn-big:hover {
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #c4d8f6), color-stop(1, #d9e8ff) );
+	background:-moz-linear-gradient( center top, #c4d8f6 5%, #d9e8ff 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#c4d8f6', endColorstr='#d9e8ff');
+	background-color:#c4d8f6;
+}
+.btn-big:active {
+	position:relative;
+	top:1px;
+}
 .btn-big {
 	-moz-box-shadow:inset 0px 1px 0px 0px #ffffff;
 	-webkit-box-shadow:inset 0px 1px 0px 0px #ffffff;
@@ -679,20 +689,10 @@ following moved to demo area:
 	font-size:2em;
 	font-style: normal;
 /*	font-family: 'Alfa Slab One', cursive; */
-	padding:6px 12px;
+	padding:3px 12px;
     margin: 2px 4px; 
 	text-decoration:none;
 	text-shadow:0 1px 0 #ffffff;
-}
-.btn-big:hover {
-	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #c4d8f6), color-stop(1, #d9e8ff) );
-	background:-moz-linear-gradient( center top, #c4d8f6 5%, #d9e8ff 100% );
-	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#c4d8f6', endColorstr='#d9e8ff');
-	background-color:#c4d8f6;
-}
-.btn-big:active {
-	position:relative;
-	top:1px;
 }
 .content-box-cta {background: #a82121;color: #fff; }
 .content-box-cta a, .content-box-cta a:visited {color: #fff;font-weight: bold; }
@@ -707,9 +707,11 @@ following moved to demo area:
 #alert-message .alert {
   background-color : #ff0; 
 /*  margin-left : 0; */
+  padding-top : 4px;
+  padding-bottom: 4px;
   padding-left : 2px;  
-  margin-top : 3px;
-  margin-bottom : 3px;
+  margin-top : 1px;
+  margin-bottom : 1px;
   border : none; 
 }
 

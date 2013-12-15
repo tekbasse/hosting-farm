@@ -4,17 +4,17 @@
 
 <!-- four colms on large, two cols on medium, stacked on small -->
 <div class="l-grid-quarter m-grid-half s-grid-whole padded">
-  <div class="content-box">
+  <div class="content-box padded-sides">
 
-    <div class="small">Account Management System</div>
-    <div>Welcome @user_name@</div> 
-    <div>Resource summary:<br>
-      <include src="/packages/hosting-farm/lib/time-interval-remaining" time1="@t1;noquote@" time2="@t2;noquote@"> 
-        <div class="small padded">
-          <include src="/packages/hosting-farm/lib/resource-status-summary-2" interval_remaining="@interval_remaining;noquote@" list_limit="5"> 
-        </div>
-        <div> &nbsp; </div>
-    </div> 
+    <h5>Account Management System</h5>
+<if @user_name@ not nil>
+    <div>Welcome, @user_name@</div> 
+</if>
+<h5>Renewal Countdown</h5>
+    <include src="/packages/hosting-farm/lib/time-interval-remaining" time1="@t1;noquote@" time2="@t2;noquote@"> 
+<h5>Resource Usage and Status Summary:</h5>
+    <include src="/packages/hosting-farm/lib/resource-status-summary-2" interval_remaining="@interval_remaining;noquote@" list_limit="3"> 
+    <div> &nbsp; </div>
     
   </div>
 </div>
