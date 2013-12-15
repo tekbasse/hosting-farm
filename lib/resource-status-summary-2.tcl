@@ -88,7 +88,8 @@ if { [info exists columns ] } {
         set asset_report_new_lists [list ]
         set max_quota 100
         foreach report_list $asset_report_lists {
-            set max_quota [f::max [regsub -all { %} [lindex $report_list 4] ] $max_quota]
+            regsub -all -- {[ %]} [lindex $report_list 4] {} quota_test
+            set max_quota [f::max $quota_test $max_quota]
         }
         foreach report_list $asset_report_lists {
             set report_new_list [list]
@@ -99,22 +100,27 @@ if { [info exists columns ] } {
             lappend report_new_list [lindex $report_list 2]
             # quota
             set quota_html [lindex $report_list 4]
-            set quota [regsub { %} $quota_html {} quota]
-            lappend report_new_list [hf_meter_percent_html $quota "$quota %" "" 120 35 $max_quota]
+            regsub -all -- {[ %]} $quota_html {} quota
             # status
-            lappend report_new_list [lindex $report_list 6]
+            set status [lindex $report_list 6]
+            set score_message [lindex $report_list 7]
+            lappend report_new_list [hf_meter_percent_html $quota "$quota %" "" 80 35 $max_quota]
+            lappend report_new_list $status
             lappend asset_report_new_lists $report_new_list
         }
         set td_att_compact_list [list [lindex $td_att_list 0] [lindex $td_att_list 2] [lindex $td_att_list 4] [lindex $td_att_list 6]]
         #following is not compact enough.
 #        set summary_html [qss_list_of_lists_to_html_table $asset_report_new_lists $table_att_list $td_att_compact_list]
-        set summary_html ""
+        set summary_html "<table>"
         foreach item $asset_report_new_lists {
-            append summary_html "[lindex $item 0]<br>"
-            append summary_html "<div class=\"grid-third\">[lindex $item 1]</div>"
-            append summary_html "<div class=\"grid-third\" style=\"text-align: right;\">[lindex $item 2]</div>"
-            append summary_html "<div class=\"grid-third\">[lindex $item 3]</div>"
+            append summary_html "<tr>"
+            append summary_html "<td>[lindex $item 0]</td>"
+            append summary_html "<td>[lindex $item 1]</td>"
+            append summary_html "<td>[lindex $item 2]</td>"
+            append summary_html "<td>[lindex $item 3]</td>"
+            append summary_html "</tr>"
         }
+        append summary_html "</table>"
     } else {
         set asset_report_lists [linsert $asset_report_lists 0 $asset_table_titles]
         set summary_html [qss_list_of_lists_to_html_table $asset_report_lists $table_att_list $td_att_list]

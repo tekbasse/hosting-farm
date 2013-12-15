@@ -228,7 +228,7 @@ ad_proc -private hf_asset_summary_status {
                 set quota [expr { wide( $quota_arr($iq) ) } ]
                 # 16 health scores, lets randomly try to get all cases for demo and testing
                 # only 1/8 are stressfull , 1/8 = 0.125
-                set sample [expr { wide( [random ] * $quota * 1.125 ) } ]
+                set sample [expr { wide( [random ] * $quota * 1.325 ) } ]
                 set unit "B"
                 set pct_quota [expr { wide( 100. * $sample / ( $quota * 1.) ) } ]
 #                set pct_quota_html [format "%d%%" $pct_quota]
@@ -343,22 +343,22 @@ ad_proc -private hf_as_type_html {
 } {
    Returns html of icon etc representing asset type.
 } {
-    set as_type_list [list DC HW VM VH SS]
+    set as_type_abbrev_list [list DC HW VM VH SS]
     # make sure $as_type is in range 
-    set as_type_i [lsearch -nocase $as_type_list $as_type]
+    set as_type_i [lsearch -nocase $as_type_abbrev_list $as_type]
     set as_type_html ""
     if { $as_type_i > -1 } {
-        set as_type [lindex $as_type_list $as_type_i]
-
+        set as_type [lindex $as_type_abbrev_list $as_type_i]
         # set filename first. It might be needed for image dimensions.
         set as_type_name_list [list "Data Center" "Hardware" "Virtual Machine" "Virtual Host" "Software as Service"]
-        set icon_name [lindex $as_type_name_list $as_type_i]
+        # short circuiting.. by using as_type_abbrev_list instead
+        set icon_name $as_type
         set url_dir "/resources/hosting-farm/icons"
         set work_dir [file join [acs_root_dir] www $url_dir]
         switch -exact $theme {
             hf {
                 set extension ".png"
-                set icon_name "[string tolower ${as_type_i}]${extension}"
+                set icon_name "[string tolower ${as_type}]${extension}"
                 set width 326 
                 set height 326
             }
@@ -399,10 +399,22 @@ ad_proc -private hf_as_type_html {
         set ratio [f::min $ratio_h $ratio_w]
         set width_new [expr { round( $width * $ratio ) } ]
         set height_new [expr { round( $height * $ratio ) } ]
-        
-        set as_type_html "<img src=\"[file join $url_dir $icon_name]\""
+
+        set as_type_html ""
+        set title_is_html_p 0
+        # if title contains an A tag, let's expand it around the image.
+        if { [regexp -nocase {<a href=[\"]?([^\"]+)[\"]?>([^\<]+)</a>} $title title_html url title ] } {
+            set title_is_html_p 1
+            append as_type_html "<a href=\"$url\" title=\"$title\">"
+        }
+
+       
+        append as_type_html "<img src=\"[file join $url_dir $icon_name]\""
         append as_type_html " width=\"${width_new}\" height=\"${height_new}\""
         append as_type_html " title=\"${title}\">"
+        if { $title_is_html_p } {
+            append as_type_html "</a>"
+        }
     }
     return $as_type_html
 }
@@ -413,7 +425,7 @@ ad_proc -private hf_meter_percent_html {
     {fill_color ""}
     {width "396"}
     {height "396"}
-    {max_percent ""}
+    {max_percent "100"}
 } {
    Returns html of icon etc representing a metered percentage. 
     Expects 0 to 100 percent. 100 = 100%. The default color 
@@ -423,6 +435,7 @@ ad_proc -private hf_meter_percent_html {
 } {
     set meter_percent_html ""
     # make sure meter_percent is a number greater than 0
+    ns_log Notice "hf_meter_percent_html(438): max_percent '$max_percent' meter_percent '$meter_percent' fill_color '$fill_color'"
     if { $meter_percent >= 0 } {
         if { $fill_color eq "" } {
             set hexi_nbr [list 0 1 2 3 4 5 6 7 8 9 a b c d e f]
@@ -435,24 +448,33 @@ ad_proc -private hf_meter_percent_html {
             foreach bar $bar_list {
                 set min_c [lindex $min_color_list $i]
                 set max_c [lindex $max_color_list $i]
-                ns_log Notice "hf_meter_percent_html: bar $bar min_c $min_c max_c $max_c meter_percent $meter_percent"
+#                ns_log Notice "hf_meter_percent_html: bar $bar min_c $min_c max_c $max_c meter_percent $meter_percent"
                 set color [f::min [expr { int( ( $max_c - $min_c ) * $meter_percent / 100. ) + $min_c } ] 15]
                 set color_h [lindex $hexi_nbr $color]
                 append fill_color $color_h $color_h
                 incr i
             }
         }
-        set width_bar [expr { round( 100. * $width / ( $max_percent * 1. ) ) } ]
-######        set width_bar [expr { int( $width * $meter_percent / 100 ) } ]
-        if { $width_bar > $width } {
-            # off the chart!
-            # scale width down, so that width_bar becomes width
-            set width_bar $width
-            set width [expr { int( $width * 100. / $meter_percent ) } ]
+        if { $max_percent ne "100" } {
+#            ns_log Notice "hf_meter_percent_html(458): max_percent '$max_percent' meter_percent '$meter_percent' fill_color '$fill_color'"
+            set ratio [expr { 100. / ( $max_percent * 1. ) } ]
+        } else {
+            set ratio 1.
         }
-        append meter_percent_html "<div style=\"overflow-x: visible; z-index: 9; border: 2px solid; height: ${height}px; width: ${width}px;\" title=\"$title\">"
-        append meter_percent_html "<div style=\"opacity 0.75; z-index: 10; background-color: #${fill_color}; width: ${width_bar}px; height: ${height}px;\" title=\"$title\"></div>"
-        append meter_percent_html "</div>"
+        set width_box [expr { int( $width * $ratio ) } ]
+        set width_bar [expr { round( $meter_percent * $width / $max_percent ) } ]
+ #          ns_log Notice "hf_meter_percent_html(466): max_percent '$max_percent' meter_percent '$meter_percent' width '$width' width_box '$width_box' width_bar '$width_bar'"
+        # box without borders
+        append meter_percent_html "\n<div style=\"z-index: 5; width: ${width}px; height: ${height}px;\" title=\"$title\">"
+
+        # bar
+        append meter_percent_html "<div style=\"z-index: 7; background-color: #${fill_color}; width: ${width_bar}px; height: ${height}px;\">"
+        # bordered box
+        set height_box [expr { $height - 4 } ]
+        append meter_percent_html "<div style=\"overflow-x: visible; z-index: 9; border: 2px solid; width: ${width_box}px; height: ${height_box}px;\">"
+
+        # close box divs
+        append meter_percent_html "</div></div></div>"
     }
     return $meter_percent_html
 }
