@@ -478,3 +478,109 @@ ad_proc -private hf_meter_percent_html {
     }
     return $meter_percent_html
 }
+
+ad_proc -private hf_pagination_by_items {
+    item_count
+    items_per_page
+    first_item_displayed
+} {
+    returns a list of 3 pagination components, the first is a list of page_number and start_row pairs for pages before the current page, the second contains page_number and start_row for the current page, and the third is the same value pair for pages after the current page.  See hosting-farm/lib/paginiation-bar for an implementation example. 
+} {
+    # based on ecds_pagination_by_items
+    if { $items_per_page > 0 && $item_count > 0 && $first_item_displayed > 0 && $first_item_displayed <= $item_count } {
+        set bar_list [list]
+        set end_page [expr { ( $item_count + $items_per_page - 1 ) / $items_per_page } ]
+
+        set current_page [expr { ( $first_item_displayed + $items_per_page - 1 ) / $items_per_page } ]
+
+        # first row of current page \[expr { (( $current_page - 1)  * $items_per_page ) + 1 } \]
+
+        # create bar_list with no pages beyond end_page
+
+        if { $item_count > [expr { $items_per_page * 81 } ] } {
+            # use exponential page referencing
+            set relative_step 0
+            set next_bar_list [list]
+            set prev_bar_list [list]
+            # 0.69314718056 = log(2)  
+            set max_search_points [expr { int( ( log( $end_page ) / 0.69314718056 ) + 1 ) } ]
+            for {set exponent 0} { $exponent <= $max_search_points } { incr exponent 1 } {
+                # exponent refers to a page, relative_step refers to a relative row
+                set relative_step_row [expr { int( pow( 2, $exponent ) ) } ]
+                set relative_step_page $relative_step_row
+                lappend next_bar_list $relative_step_page
+                set prev_bar_list [linsert $prev_bar_list 0 [expr { -1 * $relative_step_page } ]]
+            }
+
+            # template_bar_list and relative_bar_list contain page numbers
+            set template_bar_list [concat $prev_bar_list 0 $next_bar_list]
+            set relative_bar_list [lsort -unique -increasing -integer $template_bar_list]
+            
+            # translalte bar_list relative values to absolute rows
+            foreach {relative_page} $relative_bar_list {
+                set new_page [expr { int ( $relative_page + $current_page ) } ]
+                if { $new_page < $end_page } {
+                    lappend bar_list $new_page 
+                }
+            }
+
+        } elseif {  $item_count > [expr { $items_per_page * 10 } ] } {
+            # use linear, stepped page referencing
+
+            set next_bar_list [list 1 2 3 4 5]
+            set prev_bar_list [list -5 -4 -3 -2 -1]
+            set template_bar_list [concat $prev_bar_list 0 $next_bar_list]
+            set relative_bar_list [lsort -unique -increasing -integer $template_bar_list]
+            # translalte bar_list relative values to absolute rows
+            foreach {relative_page} $relative_bar_list {
+                set new_page [expr { int ( $relative_page + $current_page ) } ]
+                if { $new_page < $end_page } {
+                    lappend bar_list $new_page 
+                }
+            }
+            # add absolute page references
+            for {set page_number 10} { $page_number <= $end_page } { incr page_number 10 } {
+                lappend bar_list $page_number
+                set bar_list [linsert $bar_list 0 [expr { -1 * $page_number } ] ]
+            }
+
+        } else {
+            # use complete page reference list
+            for {set page_number 1} { $page_number <= $end_page } { incr page_number 1 } {
+                lappend bar_list $page_number
+            }
+        }
+
+        # add absolute reference for first page, last page
+        lappend bar_list $end_page
+        set bar_list [linsert $bar_list 0 1]
+
+        # clean up list
+        # now we need to sort and remove any remaining nonpositive integers and duplicates
+        set filtered_bar_list [lsort -unique -increasing -integer [lsearch -all -glob -inline $bar_list {[0-9]*} ]]
+        # delete any cases of page zero
+        set zero_index [lsearch $filtered_bar_list 0]
+        set bar_list [lreplace $filtered_bar_list $zero_index $zero_index]
+
+        # generate list of lists for code in ecommerce/lib
+        set prev_bar_list_pair [list]
+        set current_bar_list_pair [list]
+        set next_bar_list_pair [list]
+        foreach page $bar_list {
+            set start_item [expr { ( ( $page - 1 ) * $items_per_page ) + 1 } ]
+            if { $page < $current_page } {
+                lappend prev_bar_list_pair $page $start_item
+            } elseif { $page eq $current_page } {
+                lappend current_bar_list_pair $page $start_item
+            } elseif { $page > $current_page } {
+                lappend next_bar_list_pair $page $start_item
+            }
+        }
+        set bar_list_set [list $prev_bar_list_pair $current_bar_list_pair $next_bar_list_pair]
+    } else {
+        ns_log Warning "hf_pagination_by_items: parameter value(s) out of bounds for base_url $base_url $item_count $items_per_page $first_item_displayed"
+    }
+
+    return $bar_list_set
+}
+
