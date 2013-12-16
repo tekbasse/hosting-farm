@@ -1,16 +1,29 @@
 # hosting-farm/lib/resource-status-summary-1.tcl
-# Returns summary list of status, highest scores first
-
-if { ![info exists compact_p] } {
-    set compact_p 1
-}
-
-# This is a compact version of resource-stat-summary-1
+# Returns summary list of assets with status, highest scores first
 
 # Include 'list_limit' to limit the list to that many items.
 
 # If 'columns' exists, splits the list into $columns number of columns.
 # before_columns_html and after_columns_html  if exists, inserts html that goes between each column
+
+if { ![info exists compact_p] } {
+    set compact_p 1
+}
+
+# General flow:
+# get table as list_of_lists
+# sort
+# paginate
+# process list_limit
+# show_sort UI
+#     columns, column_order, and cell data vary between compact_p vs. default, keep in mind with sort UI
+
+# show_pagination UI
+# output.. compact_p vs. regular, according to row_count, columns, column_order and cell data
+
+
+
+
 
 ### following from table-sort
 
