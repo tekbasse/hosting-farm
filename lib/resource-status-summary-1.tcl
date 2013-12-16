@@ -1,6 +1,12 @@
 # hosting-farm/lib/resource-status-summary-1.tcl
 # Returns summary list of status, highest scores first
 
+if { ![info exists compact_p] } {
+    set compact_p 1
+}
+
+# This is a compact version of resource-stat-summary-1
+
 # Include 'list_limit' to limit the list to that many items.
 
 # If 'columns' exists, splits the list into $columns number of columns.
@@ -303,7 +309,7 @@ set table2_html [qss_list_of_lists_to_html_table $table2_lists $table2_atts_list
 
 
 
-# following from: resource-status-summary-2
+## following from resource-status-summary-2.tcl
 
 if { [info exists list_limit] && $list_limit > 0 } {
     set asset_stts_smmry_lists [hf_asset_summary_status "" $interval_remaining $list_limit]
@@ -332,46 +338,21 @@ foreach report_list $asset_stts_smmry_lists {
     lappend status_list $sample
     lappend status_list [format "%d%%" [lindex $report_list 5]]
     lappend status_list $projected_eop
-
-    lappend status_list [hf_health_html [lindex $report_list 7] [lindex $report_list 8] rock 36]
+    lappend status_list "([lindex $report_list 7]) [lindex $report_list 8]"
     lappend asset_report_lists $status_list
 }
 
 set asset_table_titles [list "name" "type" "metric" "sample" "quota" "projected" "status"]
 set table_att_list [list ]
 set td_att_list [list ]
-if { [info exists columns ]} {
-    switch -exact -- $columns {
-        4 {
-            set before_columns_html  {<div class="l-grid-quarter m-grid-half s-grid-whole">
-                <div class="content-box">
-                <div>&nbsp;</div>
-            }
-            set after_columns_html { <div>&nbsp;</div>
-                </div>
-                </div>
-            }
-        }
-        3 {
-            set before_columns_html  {<div class="l-grid-third m-half s-grid-whole padded">
-                <div class="content-box">
-                <div>&nbsp;</div>
-            }
-            set after_columns_html { <div>&nbsp;</div>
-                </div>
-                </div>
-            }
-        }
-        2 {
-            set before_columns_html  {<div class="l-grid-half m-grid-whole s-grid-whole padded">
-                <div class="content-box">
-                <div>&nbsp;</div>
-            }
-            set after_columns_html { <div>&nbsp;</div>
-                </div>
-                </div>
-            }
-        }
+if { [info exists columns ] } {
+    set before_columns_html  {<div class="l-grid-quarter m-grid-half s-grid-whole padded">
+  <div class="content-box">
+ <div>&nbsp;</div>
+    }
+    set after_columns_html { <div>&nbsp;</div>
+  </div>
+</div>
     }
     set arl_length [llength $asset_report_lists]
     set items_per_list [expr { int( $arl_length / $columns ) + 1 } ]
@@ -396,7 +377,53 @@ if { [info exists columns ]} {
     }
 
 } else {
-# grid-whole padded
-    set asset_report_lists [linsert $asset_report_lists 0 $asset_table_titles]
-    set summary_html [qss_list_of_lists_to_html_table $asset_report_lists $table_att_list $td_att_list]
+
+    if { $compact_p } {
+        
+        # was:  "name" "type" "metric" "sample" "quota" "projected" "status"
+        # dropping sample, projected
+        set asset_report_new_lists [list ]
+        set max_quota 100
+        foreach report_list $asset_report_lists {
+            regsub -all -- {[ %]} [lindex $report_list 4] {} quota_test
+            set max_quota [f::max $quota_test $max_quota]
+        }
+        foreach report_list $asset_report_lists {
+            set report_new_list [list]
+            set name [lindex $report_list 0]
+            set type [lindex $report_list 1]
+            lappend report_new_list [hf_as_type_html $type $name hf 35]
+            # metric
+            set metric [lindex $report_list 2]
+            lappend report_new_list "<img src=\"/hosting-farm/resources/icons/hf-${metric}.png\" width=\"35\" height=\"35\" title=\"$metric\">"
+            # quota
+            set quota_html [lindex $report_list 4]
+            regsub -all -- {[ %]} $quota_html {} quota
+            # status
+            set status [lindex $report_list 6]
+            set score_message [lindex $report_list 7]
+            lappend report_new_list [hf_meter_percent_html $quota "$quota %" "" 80 35 $max_quota]
+            lappend report_new_list $status
+            lappend asset_report_new_lists $report_new_list
+        }
+        set td_att_compact_list [list [lindex $td_att_list 0] [lindex $td_att_list 2] [lindex $td_att_list 4] [lindex $td_att_list 6]]
+        #following is not compact enough.
+#        set summary_html [qss_list_of_lists_to_html_table $asset_report_new_lists $table_att_list $td_att_compact_list]
+        set summary_html "<table>"
+        foreach item $asset_report_new_lists {
+            append summary_html "<tr>"
+            append summary_html "<td>[lindex $item 0]</td>"
+            append summary_html "<td>[lindex $item 1]</td>"
+            append summary_html "<td>[lindex $item 2]</td>"
+            append summary_html "<td>[lindex $item 3]</td>"
+            append summary_html "</tr>"
+        }
+        append summary_html "</table>"
+    } else {
+        set asset_report_lists [linsert $asset_report_lists 0 $asset_table_titles]
+        set summary_html [qss_list_of_lists_to_html_table $asset_report_lists $table_att_list $td_att_list]
+    }
+
+
 }
+
