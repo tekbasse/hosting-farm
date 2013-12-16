@@ -1,4 +1,4 @@
-# generate list of lists for code in ecommerce/lib
+# generate list of lists for code in hosting-farm/lib
 
 # @param base_url is url for page (required)
 # @param item_count (required)
