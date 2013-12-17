@@ -1,5 +1,7 @@
 # hosting-farm/lib/resource-status-summary-1.tcl
 # Returns summary list of assets with status, highest scores first
+# This version requires the entire table to be loaded for processing.
+# TODO: make another version that uses pg's select limit and offset.. to scale well.
 
 # Include 'list_limit' to limit the list to that many items.
 
@@ -22,6 +24,14 @@ if { ![info exists compact_p] } {
 # output.. compact_p vs. regular, according to row_count, columns, column_order and cell data
 
 
+# query the data. For now, 
+
+if { [info exists list_limit] && $list_limit > 0 && [info exists list_start] && $list_offset > 0 } {
+    set asset_stts_smmry_lists [hf_asset_summary_status "" $interval_remaining $list_limit "" "" $list_offset]
+} else {
+    set asset_stts_smmry_lists [hf_asset_summary_status "" $interval_remaining]
+}
+# as_label as_name as_type metric latest_sample percent_quota projected_eop score score_message
 
 
 
@@ -31,7 +41,8 @@ if { ![info exists compact_p] } {
 # this is rough in code that sorts a table of info by column, and adds more functions to each row.
 # This code will be used to generate more useful page sort UI for tables using qss_* functions
 
-set table_lists [list [list a b c d e f] [list b c a d e f a] [list a b c a b c a] [list a b c a c d b ] [list a b c f e d g]]
+#set table_lists [list [list a b c d e f] [list b c a d e f a] [list a b c a b c a] [list a b c a c d b ] [list a b c f e d g]]
+set table_lists $asset_stts_smmry_lists
 
 # ================================================
 # Sort Table Columns
@@ -42,11 +53,14 @@ set table_lists [list [list a b c d e f] [list b c a d e f a] [list a b c a b c 
 # ================================================
 set table_cols_count [llength [lindex $table_lists 0]]
 set table_index_last [expr { $table_cols_count - 1 } ]
-set table_titles_list [list "Item&nbsp;ID" "Title" "Status" "Description" "Due&nbsp;Date" "Creation&nbsp;Date"]
-ns_log Notice "hf_table_sort.tcl(12): table_cols_count $table_cols_count table_index_last $table_index_last "
+#set table_titles_list [list "Item&nbsp;ID" "Title" "Status" "Description" "Due&nbsp;Date" "Creation&nbsp;Date"]
+set table_titles_list [list "Label" "Name" "Type" "Metric" "Reading" "Quota" "Projected" "Health Score" "Message"]
+# as_label as_name as_type metric latest_sample percent_quota projected_eop score score_message
+ns_log Notice "resource-status-summary-1(12): table_cols_count $table_cols_count table_index_last $table_index_last "
 
 # defaults and inputs
-set sort_type_list [list "-integer" "-ascii" "-ascii" "-ascii" "-ascii" "-ascii" "-ascii"]
+#set sort_type_list [list "-integer" "-ascii" "-ascii" "-ascii" "-ascii" "-ascii" "-ascii"]
+set sort_type_list [list "-ascii" "-dictionary" "-ascii" "-ascii" "-real" "-real" "-real" "-integer" "-ascii"]
 set sort_stack_list [lrange [list 0 1 2 3 4 5 6 7 8 9 10] 0 $table_index_last ]
 set sort_order_list [list ]
 set sort_rev_order_list [list ]
@@ -319,17 +333,12 @@ if { $table_row_count > 3 } {
 
 # this builds the html table and assigns it to table2_html
 set table2_html [qss_list_of_lists_to_html_table $table2_lists $table2_atts_list $cell_table_sorted_lists]
-
+# add table2_html to adp output
+append summary_html $table2_html
 
 
 ## following from resource-status-summary-2.tcl
 
-if { [info exists list_limit] && $list_limit > 0 } {
-    set asset_stts_smmry_lists [hf_asset_summary_status "" $interval_remaining $list_limit]
-} else {
-    set asset_stts_smmry_lists [hf_asset_summary_status "" $interval_remaining]
-}
-# as_label as_name as_type metric latest_sample percent_quota projected_eop score score_message
 
 set asset_report_lists [list ]
 foreach report_list $asset_stts_smmry_lists {

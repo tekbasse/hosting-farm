@@ -96,6 +96,7 @@ ad_proc -private hf_asset_summary_status {
     {list_limit ""}
     {now_ts ""}
     {interval_length_ts ""}
+    {list_offset ""}
 } {
     Returns summary list of status, highest scores first. Ordered lists are: asset_label asset_name asset_type metric latest_sample unit percent_quota projected_eop score score_message
 } {
@@ -103,11 +104,12 @@ ad_proc -private hf_asset_summary_status {
     # # following two options might be alternatives to interval_remaining_ts
     # now_ts                in timestamp seconds
     # interval_length_ts    in timestamp seconds
+
     if { [llength $customer_ids_list] == 0 } {
         set customer_ids_list [list ]
     } 
     # list_limit            limits the number of items returned.
-
+    # list_offset           where to begin in the list
     # This is configured as a demo.
     # A release version would require user_id, customer_ids_list..
     
@@ -328,8 +330,14 @@ ad_proc -private hf_asset_summary_status {
     set asset_db_sorted_lists [lsort -integer -index 7 -decreasing $asset_report_lists]
     if { $list_limit ne "" } {
         incr list_limit -1
-        set asset_db_sorted_lists [lrange $asset_db_sorted_lists 0 $list_limit]
+    } else {
+        set list_limit "end"
     }
+    if { $list_offset eq "" } {
+        set list_offset 0
+    }
+    set asset_db_sorted_lists [lrange $asset_db_sorted_lists $list_offset $list_limit]
+    
    # ns_log Notice "hf_asset_summary_status: asset_db_sorted_lists $asset_db_sorted_lists"
     return $asset_db_sorted_lists
 }
