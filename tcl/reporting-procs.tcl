@@ -4,6 +4,17 @@ ad_library {
     @creation-date 11 December 2013
 }
 
+ad_proc -private hf_peek_pop_stack {
+    ref_list
+} {
+    returns the first value in a list, and removes the value from the same referenced list.
+} {
+    upvar $ref_list the_list
+    set last_out [lindex $the_list end]
+    set the_list [lrange $the_list 0 end-1]
+    return $last_out
+}
+
 ad_proc -private hf_health_html { 
     health_score
     {message ""}
@@ -136,6 +147,21 @@ ad_proc -private hf_asset_summary_status {
     # SS Storage 10.00 MB 2.37 MB 3.25 MB
     # SS Memory 768.00 KB 537.00 KB 580.00 KB
     
+    if { $list_limit ne "" } {
+        # do nothing here
+    } else {
+        # generate a set of pseudo random list of numbers.. that changes about every 10 minutes.
+        set random [expr { wide( [clock seconds] / 360 ) }] 
+        set i 0
+        set random_list [list ]
+        while { $i < 1000 } {
+            set random [expr { wide( fmod( $random * 38629 , 279470273 ) * 71 ) } ]
+            lappend random_list [expr { srand($random) } ]
+            incr i
+        }
+#        ns_log Notice "random_list $random_list"
+    }
+
     # following from hipsteripsum.me
     set random_names [list Umami gastropub authentic keytar Church-key Brooklyn four loko yr VHS craft beer hoodie Shoreditch gluten-free food truck squid seitan disrupt synth you probably havent heard of them Hoodie beard polaroid single-origin coffee skateboard organic irony plaid XOXO ethical IPhone squid photo booth irony street art lomo gastropub bitters literally kogi Bicycle rights PBR small batch deep ab.v post-ironic Vice photo booth Mustache Portland selvage Vice yr YOLO Banksy slow-carb Odd Future cred Shabby chic Blue Bottle pop-up XOXO cray locavore sartorial deep v butcher readymade gluten-free]
     set names_count [llength $random_names]
@@ -143,10 +169,16 @@ ad_proc -private hf_asset_summary_status {
     set random_suffix_list [list net com me info ca us pa es co.uk tv no dk de fr jp cn in org cc biz nu ws bz org.uk tm ms pro mx tw jobs ac io sh eu at nl la fm it co ag pl sc hn mn tk vc pe au ch ru se fi if os so be do hi ho is jo ro un]
     set suffix_count [llength $random_suffix_list ]
     foreach name $random_names {
-        set tld [lindex $random_suffix_list [expr { wide( [random ] * $suffix_count ) } ]]
-        set domain [lindex $random_names [expr { wide( [random ] * $names_count ) } ]]
+        if { $list_limit ne "" } {
+            set tld [lindex $random_suffix_list [expr { wide( [random ] * $suffix_count ) } ]]
+            set domain [lindex $random_names [expr { wide( [random ] * $names_count ) } ]]
+        } else {
+            set tld [lindex $random_suffix_list [expr { wide( [hf_peek_pop_stack random_list ] * $suffix_count ) } ]]
+            set domain [lindex $random_names [expr { wide( [hf_peek_pop_stack random_list ] * $names_count ) } ]]
+        }
         lappend random_names_list "$domain.$tld"
     }
+    set random_names_list_2 [lsort -unique $random_names_list]
     set as_root_lists [list [list DC traffic power other] \
                            [list HW traffic storage] \
                            [list VM traffic storage memory] \
@@ -187,27 +219,24 @@ ad_proc -private hf_asset_summary_status {
     } else {
         # let's use a consistent random thread, vary the seed periodically
         # so that there is some continuity between pages
-        set seed [expr { wide ( [clock seconds] / 360 ) } ]
-        set as_count [expr { wide( srand($seed) * 50 ) + 1 } ]
-        set random $as_count
+        set as_count [expr { wide ( [hf_peek_pop_stack random_list] * 50 ) + 1 } ]
     }
 
     for { set i 0} {$i < $as_count} {incr i} {
         if { $list_limit ne "" } {
             set name_i [expr { wide( [random ] * $names_count ) } ]
         } else {
-            set name_i [expr { wide ( srand($random) * $name_count ) } ]
-            set random $name_i
+            set name_i [expr { wide ( [hf_peek_pop_stack random_list] * $names_count ) } ]
         }
         set as_label [lindex $random_names_list $name_i]
+        # remove as_label from list
         set random_names_list [lreplace $random_names_list $name_i $name_i]
         incr names_count -1
         set as_name $as_label
         if { $list_limit ne "" } { 
             set as_type [lindex $as_type_list [expr { wide( [random ] * $as_type_count ) } ]]
         } else {
-            set random [expr { wide( [srand($random) ] * $as_type_count ) } ]
-            set as_type [lindex $as_type_list $random]
+            set as_type [lindex $as_type_list [expr { wide( [hf_peek_pop_stack random_list] * $as_type_count ) } ]]
         }
         #ns_log Notice "hf_asset_summary_status: as_type '$as_type' "
         # as_label as_name as_type
@@ -232,8 +261,7 @@ ad_proc -private hf_asset_summary_status {
         if { $list_limit ne "" } {
             set active_p [expr { wide( [random ] * 16 ) > 1 } ] 
         } else {
-            set random [expr { wide( srand($random) * 16 ) } ]
-            set active_p [expr { $random > 1 } ] 
+            set active_p [expr { wide( [hf_peek_pop_stack random_list] * 16 ) > 1 } ] 
         }
         # asset_list =  $as_label $as_name $as_type
         
@@ -243,8 +271,7 @@ ad_proc -private hf_asset_summary_status {
             if { $list_limit ne "" } {
                 set history_exists_p [expr { wide( [random ] * 16 ) > 1 } ]
             } else {
-                set random [expr { wide( srand($random) * 16 ) } ]
-                set history_exists_p [expr { $random > 1 } ]
+                set history_exists_p [expr { wide( [hf_peek_pop_stack random_list] * 16 ) > 1 } ]
             }
             # metric1 metric2 metric..
             set metric_list $asr_arr($as_type) 
@@ -258,13 +285,21 @@ ad_proc -private hf_asset_summary_status {
                 set quota [expr { wide( $quota_arr($iq) ) } ]
                 # 16 health scores, lets randomly try to get all cases for demo and testing
                 # only 1/8 are stressfull , 1/8 = 0.125
-                set sample [expr { wide( sqrt( [random ] * [random ] ) * $quota * 1.325 ) } ]
+                if { $list_limit ne "" } {
+                    set sample [expr { wide( sqrt( [random ] * [random ] ) * $quota * 1.325 ) } ]
+                } else {
+                    set sample [expr { wide( sqrt( [hf_peek_pop_stack random_list] * [random ] ) * $quota * 1.325 ) } ]
+                }
                 set unit "B"
                 set pct_quota [expr { wide( 100. * $sample / ( $quota * 1.) ) } ]
 #                set pct_quota_html [format "%d%%" $pct_quota]
                 set pct_quota_html $pct_quota
                 if { $history_exists_p } {
-                    set weeks_rate [expr { wide( [random ] * $sample / 3. ) } ]  
+                    if { $list_limit ne "" } {
+                        set weeks_rate [expr { wide( [random ] * $sample / 3. ) } ]  
+                    } else {
+                        set weeks_rate [expr { wide( [hf_peek_pop_stack random_list] * $sample / 3. ) } ]  
+                    }
                     # convert rate to interval_length
                     # 1 week = 604800 clicks
                     # interval_rate = units_per_week / secs_per_week * secs_per_interval_remaining
@@ -347,15 +382,19 @@ ad_proc -private hf_asset_summary_status {
     # for quota monitoring, portions_count is count per last two weeks.
 
     # qal_pretty_* numbers get processed after the proc is returned, otherwise sorts get complciated.
-    # secondary sorts
-    # as_label as_name as_type metric latest_sample percent_quota projected_eop score score_message
-    set asset_report_lists [lsort -real -index 6 -increasing $asset_report_lists]
-    set asset_report_lists [lsort -integer -index 5 -decreasing $asset_report_lists]
-    # then presort by projected value, followed by quota
+    if { $list_limit ne "" } {
+        # secondary sorts
+        # as_label as_name as_type metric latest_sample percent_quota projected_eop score score_message
+        set asset_report_lists [lsort -real -index 6 -increasing $asset_report_lists]
+        set asset_report_lists [lsort -integer -index 5 -decreasing $asset_report_lists]
+        # then presort by projected value, followed by quota
+        # primary sort
+        set asset_db_sorted_lists [lsort -integer -index 7 -decreasing $asset_report_lists]
+    } {
+        # don't sort here.. waste of time..
+        set asset_db_sorted_lists $asset_report_lists
+    }
 
-
-    # primary sort
-    set asset_db_sorted_lists [lsort -integer -index 7 -decreasing $asset_report_lists]
     if { $list_limit ne "" } {
         incr list_limit -1
     } else {

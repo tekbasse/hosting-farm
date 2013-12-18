@@ -34,9 +34,9 @@ if { [info exists list_limit] && $list_limit > 0 && [info exists list_start] && 
 # as_label as_name as_type metric latest_sample percent_quota projected_eop score score_message
 
 
-
-### following from table-sort
-
+# =============================
+# following from table-sort
+# =============================
 
 # this is rough in code that sorts a table of info by column, and adds more functions to each row.
 # This code will be used to generate more useful page sort UI for tables using qss_* functions
@@ -61,54 +61,55 @@ ns_log Notice "resource-status-summary-1(12): table_cols_count $table_cols_count
 # defaults and inputs
 #set sort_type_list [list "-integer" "-ascii" "-ascii" "-ascii" "-ascii" "-ascii" "-ascii"]
 set sort_type_list [list "-ascii" "-dictionary" "-ascii" "-ascii" "-real" "-real" "-real" "-integer" "-ascii"]
-set sort_stack_list [lrange [list 0 1 2 3 4 5 6 7 8 9 10] 0 $table_index_last ]
+set i 0
+set sort_stack_list [list ]
+while { $i < $table_cols_count } {
+    lappend sort_stack_list $i
+    incr i
+}
+#set sort_stack_list [lrange [list 0 1 2 3 4 5 6 7 8 9 10] 0 $table_index_last ]
 set sort_order_list [list ]
 set sort_rev_order_list [list ]
 set table_sorted_lists $table_lists
-set form_posted [qf_get_inputs_as_array input_array]
-ns_log Notice "hf_table_sort.tcl(26): form_posted $form_posted"
 
 # Sort table?
-if { [info exists input_array(s)] } {
+if { [info exists s] } {
     # Sort table
-    ns_log Notice "hf_table_sort.tcl(29): input_array(s) $input_array(s)"
     # A sort order has been requested
     # Validate sort order, because it is user input via web
-    regsub -all -- {[^\-0-9a]} $input_array(s) {} sort_order_scalar
-    ns_log Notice "hf_table_sort.tcl(30): sort_order_scalar $sort_order_scalar"
+    regsub -all -- {[^\-0-9a]} $s {} sort_order_scalar
+    ns_log Notice "resource-status-summary-1.tcl(30): sort_order_scalar $sort_order_scalar"
     set sort_order_list [split $sort_order_scalar a]
     set sort_order_list [lrange $sort_order_list 0 $table_index_last]
     # Has a sort order change been requested?
-    if { [info exists input_array(p)] } {
-        ns_log Notice "hf_table_sort.tcl(32): sort_order_list '$sort_order_list' input_array(p) $input_array(p)"
+    if { [info exists p] } {
         # new primary sort requested
         # validate user input, fail silently
-        regsub -all -- {[^\-0-9]+} $input_array(p) {} primary_sort_col_new
+        regsub -all -- {[^\-0-9]+} $p {} primary_sort_col_new
         set primary_sort_col_pos [expr { abs( $primary_sort_col_new ) } ]
-        ns_log Notice "hf_table_sort.tcl(35): primary_sort_col_new $primary_sort_col_new"
+        ns_log Notice "resource-status-summary-1.tcl(35): primary_sort_col_new $primary_sort_col_new"
         if { $primary_sort_col_new ne "" && $primary_sort_col_pos < $table_cols_count } {
-            ns_log Notice "hf_table_sort.tcl(44): primary_sort_col_new $primary_sort_col_new primary_sort_col_pos $primary_sort_col_pos"
+            ns_log Notice "resource-status-summary-1.tcl(44): primary_sort_col_new $primary_sort_col_new primary_sort_col_pos $primary_sort_col_pos"
             # modify sort_order_list
             set sort_order_new_list [list $primary_sort_col_new]
             foreach ii $sort_order_list {
                 if { [expr { abs($ii) } ] ne $primary_sort_col_pos } {
                     lappend sort_order_new_list $ii
-                    ns_log Notice "hf_table_sort.tcl(46): ii '$ii' sort_order_new_list '$sort_order_new_list'"
+                    ns_log Notice "resource-status-summary-1.tcl(46): ii '$ii' sort_order_new_list '$sort_order_new_list'"
                 }
             }
             set sort_order_list $sort_order_new_list
-            ns_log Notice "hf_table_sort.tcl(48): end if primary_sort_col_new.. "
+            ns_log Notice "resource-status-summary-1.tcl(48): end if primary_sort_col_new.. "
         }
-        ns_log Notice "hf_table_sort.tcl(49): end if input_array(p).. "
     }
 
-    ns_log Notice "hf_table_sort.tcl(52): sort_order_scalar '$sort_order_scalar' sort_order_list '$sort_order_list'"
+    ns_log Notice "resource-status-summary-1.tcl(52): sort_order_scalar '$sort_order_scalar' sort_order_list '$sort_order_list'"
     # Create a reverse index list for index countdown
     set sort_rev_order_list [lsort -integer -decreasing [lrange $sort_stack_list 0 [expr { [llength $sort_order_list] - 1 } ] ] ]
-    ns_log Notice "hf_table_sort.tcl(53): sort_rev_order_list '$sort_rev_order_list' "
+    ns_log Notice "resource-status-summary-1.tcl(53): sort_rev_order_list '$sort_rev_order_list' "
     foreach ii $sort_rev_order_list {
         set col2sort [lindex $sort_order_list $ii]
-        ns_log Notice "hf_table_sort.tcl(54): ii $ii col2sort '$col2sort' llength col2sort [llength $col2sort] sort_rev_order_list '$sort_rev_order_list' sort_order_list '$sort_order_list'"
+        ns_log Notice "resource-status-summary-1.tcl(54): ii $ii col2sort '$col2sort' llength col2sort [llength $col2sort] sort_rev_order_list '$sort_rev_order_list' sort_order_list '$sort_order_list'"
         if { [string range $col2sort 0 0] eq "-" } {
             set col2sort_wo_sign [string range $col2sort 1 end]
             set sort_order "-decreasing"
@@ -124,7 +125,7 @@ if { [info exists input_array(s)] } {
             set table_sorted_lists [lsort -ascii $sort_order -index $col2sort_wo_sign $table_sorted_lists]
             ns_log Notice "hf_table_sort(83): lsort fell back to sort_type -ascii due to error: $result"
         }
-        ns_log Notice "hf_table_sort.tcl(66): lsort $sort_type $sort_order -index $col2sort_wo_sign table_sorted_lists"
+        ns_log Notice "resource-status-summary-1.tcl(66): lsort $sort_type $sort_order -index $col2sort_wo_sign table_sorted_lists"
         
     }
 } 
@@ -140,8 +141,9 @@ foreach sort_i $sort_order_list {
     append s_urlcoded a
 }
 set s_urlcoded [string range $s_urlcoded 0 end-1]
-set text_asc "^"
-set text_desc "v"
+### The following two values should be context sensitive, changing depending on sort type.
+set text_asc "A"
+set text_desc "Z"
 set title_asc "ascending"
 set title_desc "descending"
 set table_titles_w_links_list [list ]
@@ -151,15 +153,15 @@ foreach title $table_titles_list {
     # For now, just inactivate the left most sort link that was most recently pressed (if it has been)
     set title_new $title
     if { $primary_sort_col eq "" || ( $primary_sort_col ne "" && $column_count ne [expr { abs($primary_sort_col) } ] ) } {
-        ns_log Notice "hf_table_sort.tcl(104): column_count $column_count s_urlcoded '$s_urlcoded'"
+        ns_log Notice "resource-status-summary-1.tcl(104): column_count $column_count s_urlcoded '$s_urlcoded'"
         append title_new " (<a href=\"$url?s=${s_urlcoded}&p=${column_count}\" title=\"${title_asc}\">${text_asc}</a>:<a href=\"$url?s=${s_urlcoded}&p=-${column_count}\" title=\"${title_desc}\">${text_desc}</a>)"
     } else {
         if { [string range $s_urlcoded 0 0] eq "-" } {
-            ns_log Notice "hf_table_sort.tcl(105): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
+            ns_log Notice "resource-status-summary-1.tcl(105): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
             # decreasing primary sort chosen last, no need to make the link active
             append title_new " (<a href=\"$url?s=${s_urlcoded}&p=${column_count}\" title=\"${title_asc}\">${text_asc}</a>:${text_desc})"
         } else {
-            ns_log Notice "hf_table_sort.tcl(106): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
+            ns_log Notice "resource-status-summary-1.tcl(106): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
             # increasing primary sort chosen last, no need to make the link active
             append title_new " (${text_asc}:<a href=\"$url?s=${s_urlcoded}&p=-${column_count}\" title=\"${title_desc}\">${text_desc}</a>)"
         }
@@ -204,7 +206,7 @@ foreach table_row_list $table_sorted_lists {
     # Confirm that all columns have been accounted for.
     set table_row_new_cols [llength $table_row_new]
     if { $table_row_new_cols != $table_cols_count } {
-        ns_log Notice "hf_table_sort.tcl(71): table_row_new has ${table_row_new_cols} instead of ${table_cols_count} columns."
+        ns_log Notice "resource-status-summary-1.tcl(71): table_row_new has ${table_row_new_cols} instead of ${table_cols_count} columns."
     }
     # Append new row to new table
     lappend table_col_sorted_lists $table_row_new
@@ -368,7 +370,7 @@ set asset_table_titles [list "name" "type" "metric" "sample" "quota" "projected"
 set table_att_list [list ]
 set td_att_list [list ]
 if { [info exists columns ] } {
-    set before_columns_html  {<div class="l-grid-quarter m-grid-half s-grid-whole padded">
+    set before_columns_html  {<div class="l-grid-half m-grid-whole s-grid-whole padded">
   <div class="content-box">
  <div>&nbsp;</div>
     }
@@ -387,7 +389,7 @@ if { [info exists columns ] } {
         }
         set new_report_lists [list ]
         lappend new_report_lists $asset_table_titles
-        set column_lists [lrange $asset_report_lists $i [expr { $i + $items_per_list } ] ]
+        set column_lists [lrange $asset_report_lists [expr { $i * $items_per_list } ] [expr { $i * $items_per_list + $items_per_list_m_1 } ] ]
         foreach row_list $column_lists {
             lappend new_report_lists $row_list
         }
