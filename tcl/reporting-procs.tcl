@@ -182,14 +182,33 @@ ad_proc -private hf_asset_summary_status {
     # attribute = meter_type = metric
     # as_label as_name as_type 
     set asset_db_lists [list ]
-    set as_count [expr { wide( [random ] * 50 ) + 1 } ]
+    if { $list_limit ne "" } {
+        set as_count [expr { wide( [random ] * 50 ) + 1 } ]
+    } else {
+        # let's use a consistent random thread, vary the seed periodically
+        # so that there is some continuity between pages
+        set seed [expr { wide ( [clock seconds] / 360 ) } ]
+        set as_count [expr { wide( srand($seed) * 50 ) + 1 } ]
+        set random $as_count
+    }
+
     for { set i 0} {$i < $as_count} {incr i} {
-        set name_i [expr { wide( [random ] * $names_count ) } ]
+        if { $list_limit ne "" } {
+            set name_i [expr { wide( [random ] * $names_count ) } ]
+        } else {
+            set name_i [expr { wide ( srand($random) * $name_count ) } ]
+            set random $name_i
+        }
         set as_label [lindex $random_names_list $name_i]
         set random_names_list [lreplace $random_names_list $name_i $name_i]
         incr names_count -1
         set as_name $as_label
-        set as_type [lindex $as_type_list [expr { wide( [random ] * $as_type_count ) } ]]
+        if { $list_limit ne "" } { 
+            set as_type [lindex $as_type_list [expr { wide( [random ] * $as_type_count ) } ]]
+        } else {
+            set random [expr { wide( [srand($random) ] * $as_type_count ) } ]
+            set as_type [lindex $as_type_list $random]
+        }
         #ns_log Notice "hf_asset_summary_status: as_type '$as_type' "
         # as_label as_name as_type
         set as_list [list $as_label $as_name $as_type]
@@ -210,14 +229,23 @@ ad_proc -private hf_asset_summary_status {
         # asset_list is a list of asset attributes: label, name, type
         set as_type [lindex $asset_list 2]
         # start rolling dice..
-        set active_p [expr { wide( [random ] * 16 ) > 1 } ] 
+        if { $list_limit ne "" } {
+            set active_p [expr { wide( [random ] * 16 ) > 1 } ] 
+        } else {
+            set random [expr { wide( srand($random) * 16 ) } ]
+            set active_p [expr { $random > 1 } ] 
+        }
         # asset_list =  $as_label $as_name $as_type
         
         if { $active_p } {
             # sometimes an account is new, so not enough info exists
             # role dice..
-            set history_exists_p [expr { wide( [random ] * 16 ) > 1 } ]
-            
+            if { $list_limit ne "" } {
+                set history_exists_p [expr { wide( [random ] * 16 ) > 1 } ]
+            } else {
+                set random [expr { wide( srand($random) * 16 ) } ]
+                set history_exists_p [expr { $random > 1 } ]
+            }
             # metric1 metric2 metric..
             set metric_list $asr_arr($as_type) 
    #         ns_log Notice "hf_asset_summary_status(221): metric_list '$metric_list' llength [llength $metric_list]"
