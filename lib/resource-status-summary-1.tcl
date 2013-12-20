@@ -240,7 +240,7 @@ foreach row_list $table_col_sorted_lists {
 
 
 # ================================================
-# Formatting code
+# 5. Format output -- compact_p vs. regular etc.
 # Add attributes to the TABLE tag
 set table2_atts_list [list border 1 cellspacing 0 cellpadding 2]
 
