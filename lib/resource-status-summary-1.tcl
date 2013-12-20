@@ -3,10 +3,20 @@
 # This version requires the entire table to be loaded for processing.
 # TODO: make another version that uses pg's select limit and offset.. to scale well.
 
-# Include 'list_limit' to limit the list to that many items.
-# Include 'list_offset' to offset the list to start at some point other than the first item.
-# If 'columns' exists, splits the list into $columns number of columns.
-# before_columns_html and after_columns_html  if exists, inserts html that goes between each column
+# REQUIRED:
+# @param base_url            url for building page links
+# @param item_count          number of items
+# @param items_per_page      number of items per page
+# @param this_start_row      start row (item number) for this page
+
+
+# OPTIONAL:
+# @param separator            html used between page numbers, defaults to &nbsp;
+# @param list_limit           limits the list to that many items.
+# @param list_offset          offset the list to start at some point other than the first item.
+# @param columns              splits the list into $columns number of columns.
+# @param before_columns_html  inserts html that goes between each column
+# @param after_columns_html   ditto
 
 # General process flow:
 # 1. Get table as list_of_lists
@@ -41,7 +51,7 @@ set table_index_last [expr { $table_cols_count - 1 } ]
 #set table_titles_list [list "Item&nbsp;ID" "Title" "Status" "Description" "Due&nbsp;Date" "Creation&nbsp;Date"]
 set table_titles_list [list "Label" "Name" "Type" "Metric" "Reading" "Quota" "Projected" "Health Score" "Message"]
 # as_label as_name as_type metric latest_sample percent_quota projected_eop score score_message
-ns_log Notice "resource-status-summary-1(45): table_cols_count $table_cols_count table_index_last $table_index_last "
+#ns_log Notice "resource-status-summary-1(45): table_cols_count $table_cols_count table_index_last $table_index_last "
 
 # defaults and inputs
 set sort_type_list [list "-ascii" "-dictionary" "-ascii" "-ascii" "-real" "-real" "-real" "-integer" "-ascii"]
@@ -67,11 +77,13 @@ if { [info exists s] } {
     # Primary sort column is listed first, followed by secondary sort etc.
 
     # Validate sort order, because it is user input via web
+    # $s' first check and change to sort_order_scalar
     regsub -all -- {[^\-0-9a]} $s {} sort_order_scalar
-    ns_log Notice "resource-status-summary-1.tcl(73): sort_order_scalar $sort_order_scalar"
+    # ns_log Notice "resource-status-summary-1.tcl(73): sort_order_scalar $sort_order_scalar"
+    # Converting sort_order_scalar to a list
     set sort_order_list [split $sort_order_scalar a]
     set sort_order_list [lrange $sort_order_list 0 $table_index_last]
-
+    
     # Has a sort order change been requested?
     if { [info exists p] } {
         # new primary sort requested
@@ -79,30 +91,34 @@ if { [info exists s] } {
         # Since this is the first time used as a primary, additional validation and processing is required.
         # validate user input, fail silently
         regsub -all -- {[^\-0-9]+} $p {} primary_sort_col_new
+        # primary_sort_col_pos = primary sort column's position
+        # primary_sort_col_new = a negative or positive column position. 
         set primary_sort_col_pos [expr { abs( $primary_sort_col_new ) } ]
-        ns_log Notice "resource-status-summary-1.tcl(85): primary_sort_col_new $primary_sort_col_new"
+        # ns_log Notice "resource-status-summary-1.tcl(85): primary_sort_col_new $primary_sort_col_new"
         if { $primary_sort_col_new ne "" && $primary_sort_col_pos < $table_cols_count } {
-            ns_log Notice "resource-status-summary-1.tcl(87): primary_sort_col_new $primary_sort_col_new primary_sort_col_pos $primary_sort_col_pos"
+            # ns_log Notice "resource-status-summary-1.tcl(87): primary_sort_col_new $primary_sort_col_new primary_sort_col_pos $primary_sort_col_pos"
             # modify sort_order_list
             set sort_order_new_list [list $primary_sort_col_new]
             foreach ii $sort_order_list {
                 if { [expr { abs($ii) } ] ne $primary_sort_col_pos } {
                     lappend sort_order_new_list $ii
-                    ns_log Notice "resource-status-summary-1.tcl(93): ii '$ii' sort_order_new_list '$sort_order_new_list'"
+                    # ns_log Notice "resource-status-summary-1.tcl(93): ii '$ii' sort_order_new_list '$sort_order_new_list'"
                 }
             }
             set sort_order_list $sort_order_new_list
-            ns_log Notice "resource-status-summary-1.tcl(97): end if primary_sort_col_new.. "
+            # ns_log Notice "resource-status-summary-1.tcl(97): end if primary_sort_col_new.. "
         }
     }
 
-    ns_log Notice "resource-status-summary-1.tcl(101): sort_order_scalar '$sort_order_scalar' sort_order_list '$sort_order_list'"
-    # Create a reverse index list for index countdown
+    # ns_log Notice "resource-status-summary-1.tcl(101): sort_order_scalar '$sort_order_scalar' sort_order_list '$sort_order_list'"
+    # Create a reverse index list for index countdown, because primary sort is last, secondary sort is second to last..
+    # sort_stack_list 0 1 2 3..
     set sort_rev_order_list [lsort -integer -decreasing [lrange $sort_stack_list 0 [expr { [llength $sort_order_list] - 1 } ] ] ]
-    ns_log Notice "resource-status-summary-1.tcl(104): sort_rev_order_list '$sort_rev_order_list' "
+    # sort_rev_order_list ..3 2 1 0
+    #ns_log Notice "resource-status-summary-1.tcl(104): sort_rev_order_list '$sort_rev_order_list' "
     foreach ii $sort_rev_order_list {
         set col2sort [lindex $sort_order_list $ii]
-        ns_log Notice "resource-status-summary-1.tcl(107): ii $ii col2sort '$col2sort' llength col2sort [llength $col2sort] sort_rev_order_list '$sort_rev_order_list' sort_order_list '$sort_order_list'"
+        # ns_log Notice "resource-status-summary-1.tcl(107): ii $ii col2sort '$col2sort' llength col2sort [llength $col2sort] sort_rev_order_list '$sort_rev_order_list' sort_order_list '$sort_order_list'"
         if { [string range $col2sort 0 0] eq "-" } {
             set col2sort_wo_sign [string range $col2sort 1 end]
             set sort_order "-decreasing"
@@ -111,15 +127,17 @@ if { [info exists s] } {
             set sort_order "-increasing"
         }
         set sort_type [lindex $sort_type_list $col2sort_wo_sign]
-        # Putting following lsort in a catch statement so that if the sort errors, default to -ascii sort.
+        # Following lsort is in a catch statement so that if the sort errors, it defaults to ascii sort.
         # Sort table_lists by column number $col2sort_wo_sign, where 0 is left most column
+
+#### This is a good place to build a customized sort UI.
+        
         if {[catch { set table_sorted_lists [lsort $sort_type $sort_order -index $col2sort_wo_sign $table_sorted_lists] } result]} {
             # lsort errored, probably due to bad sort_type. Fall back to -ascii sort_type, or fail..
             set table_sorted_lists [lsort -ascii $sort_order -index $col2sort_wo_sign $table_sorted_lists]
-            ns_log Notice "hf_table_sort(121): lsort fell back to sort_type -ascii due to error: $result"
+            ns_log Notice "resource-status-summary-1(121): lsort fell back to sort_type -ascii due to error: $result"
         }
-        ns_log Notice "resource-status-summary-1.tcl(123): lsort $sort_type $sort_order -index $col2sort_wo_sign table_sorted_lists"
-        
+        #ns_log Notice "resource-status-summary-1.tcl(123): lsort $sort_type $sort_order -index $col2sort_wo_sign table_sorted_lists"
     }
 } 
 
@@ -127,7 +145,35 @@ if { [info exists s] } {
 # 3. Pagination_bar -- calcs including list_limit and list_offset, build UI
 # ================================================
 
+if { ![info exists separator] } {
+    set separator "&nbsp;"
+}
 
+set bar_list_set [hf_pagination_by_items $item_count $items_per_page $this_start_row]
+set prev_bar [list]
+set next_bar [list]
+
+set prev_bar_list [lindex $bar_list_set 0]
+foreach {page_num start_row} $prev_bar_list {
+    lappend prev_bar " <a href=\"${base_url}${start_row}\">${page_num}</a> "
+} 
+set prev_bar [join $prev_bar $separator]
+
+set current_bar_list [lindex $bar_list_set 1]
+set current_bar "[lindex $current_bar_list 0]"
+
+set next_bar_list [lindex $bar_list_set 2]
+foreach {page_num start_row} $next_bar_list {
+    lappend next_bar " <a href=\"${base_url}${start_row}\">${page_num}</a> "
+}
+set next_bar [join $next_bar $separator]
+
+append summary_html [join "<p>Jump to:" $prev_bar " &nbsp; [" $current_bar "] &nbsp; " $next_bar "</p>\n"]
+
+#### Add a list of asset names below this. Using:
+# $prev_bar_list
+# $current_bar_list
+# $next_bar_list
 
 # ================================================
 # 4. Sort UI -- build
@@ -145,6 +191,8 @@ set s_urlcoded [string range $s_urlcoded 0 end-1]
 ### The following two values should be context sensitive, changing depending on sort type.
 set text_asc "A"
 set text_desc "Z"
+set nbr_asc "1"
+set nbr_desc "9"
 set title_asc "ascending"
 set title_desc "descending"
 set table_titles_w_links_list [list ]
@@ -154,15 +202,15 @@ foreach title $table_titles_list {
     # For now, just inactivate the left most sort link that was most recently pressed (if it has been)
     set title_new $title
     if { $primary_sort_col eq "" || ( $primary_sort_col ne "" && $column_count ne [expr { abs($primary_sort_col) } ] ) } {
-        ns_log Notice "resource-status-summary-1.tcl(150): column_count $column_count s_urlcoded '$s_urlcoded'"
+        # ns_log Notice "resource-status-summary-1.tcl(150): column_count $column_count s_urlcoded '$s_urlcoded'"
         append title_new " (<a href=\"$url?s=${s_urlcoded}&p=${column_count}\" title=\"${title_asc}\">${text_asc}</a>:<a href=\"$url?s=${s_urlcoded}&p=-${column_count}\" title=\"${title_desc}\">${text_desc}</a>)"
     } else {
         if { [string range $s_urlcoded 0 0] eq "-" } {
-            ns_log Notice "resource-status-summary-1.tcl(154): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
+            # ns_log Notice "resource-status-summary-1.tcl(154): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
             # decreasing primary sort chosen last, no need to make the link active
             append title_new " (<a href=\"$url?s=${s_urlcoded}&p=${column_count}\" title=\"${title_asc}\">${text_asc}</a>:${text_desc})"
         } else {
-            ns_log Notice "resource-status-summary-1.tcl(158): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
+            # ns_log Notice "resource-status-summary-1.tcl(158): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
             # increasing primary sort chosen last, no need to make the link active
             append title_new " (${text_asc}:<a href=\"$url?s=${s_urlcoded}&p=-${column_count}\" title=\"${title_desc}\">${text_desc}</a>)"
         }
@@ -207,7 +255,7 @@ foreach table_row_list $table_sorted_lists {
     # Confirm that all columns have been accounted for.
     set table_row_new_cols [llength $table_row_new]
     if { $table_row_new_cols != $table_cols_count } {
-        ns_log Notice "resource-status-summary-1.tcl(203): table_row_new has ${table_row_new_cols} instead of ${table_cols_count} columns."
+        ns_log Notice "resource-status-summary-1.tcl(203): Warning: table_row_new has ${table_row_new_cols} instead of ${table_cols_count} columns."
     }
     # Append new row to new table
     lappend table_col_sorted_lists $table_row_new
