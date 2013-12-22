@@ -32,6 +32,14 @@
 # ================================================
 # don't process list_offset or list_limit here.
 set asset_stts_smmry_lists [hf_asset_summary_status "" $interval_remaining]
+### for demo, setting item_count here
+set item_count [llength $asset_stts_smmry_lists]
+set items_per_page 12
+set base_url assets
+if { ![info exists this_start_row] } {
+    set this_start_row 1
+}
+
 # columns:
 # as_label as_name as_type metric latest_sample percent_quota projected_eop score score_message
 
@@ -166,7 +174,7 @@ foreach {page_num start_row} $next_bar_list {
 }
 set next_bar [join $next_bar $separator]
 
-append summary_html [join "<p>Jump to:" $prev_bar " &nbsp; [" $current_bar "] &nbsp; " $next_bar "</p>\n"]
+append summary_html "<p>Jump to:" $prev_bar " &nbsp; (" $current_bar ") &nbsp; " $next_bar "</p>\n"
 
 #### Add a list of asset names below this. Using:
 # $prev_bar_list
@@ -325,7 +333,7 @@ foreach title $table_titles_list {
     # Title row TD formats in title_td_attrs_list
     # even row TD attributes in even_row_list
     # odd row TD attributes in odd_row_list
-    if { $column_tpe eq "integer" ||$column_type eq "real" } {
+    if { $column_type eq "integer" ||$column_type eq "real" } {
         lappend title_td_attrs_list [list valign top align right]
         # Value is a number, so right justify
         lappend even_row_list [list valign top align right]
