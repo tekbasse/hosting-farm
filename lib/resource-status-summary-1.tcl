@@ -129,8 +129,6 @@ if { [info exists s] } {
         set sort_type [lindex $sort_type_list $col2sort_wo_sign]
         # Following lsort is in a catch statement so that if the sort errors, it defaults to ascii sort.
         # Sort table_lists by column number $col2sort_wo_sign, where 0 is left most column
-
-#### This is a good place to build a customized sort UI.
         
         if {[catch { set table_sorted_lists [lsort $sort_type $sort_order -index $col2sort_wo_sign $table_sorted_lists] } result]} {
             # lsort errored, probably due to bad sort_type. Fall back to -ascii sort_type, or fail..
@@ -188,31 +186,44 @@ foreach sort_i $sort_order_list {
     append s_urlcoded a
 }
 set s_urlcoded [string range $s_urlcoded 0 end-1]
-### The following two values should be context sensitive, changing depending on sort type.
+# Sort's abbreviated title should be context sensitive, changing depending on sort type.
+# sort_type_list is indexed by sort_column nbr (0...)
+
 set text_asc "A"
 set text_desc "Z"
 set nbr_asc "1"
 set nbr_desc "9"
-set title_asc "ascending"
-set title_desc "descending"
+set title_asc "increasing"
+set title_desc "decreasing"
+
 set table_titles_w_links_list [list ]
 set column_count 0
-set primary_sort_col [lindex $sort_order_list 0]
+set primary_sort_col [lindex $sort_order_list $column_count]
+
 foreach title $table_titles_list {
+    # figure out column data type for sort button (text or nbr) (column order not changed yet)
+    set column_type [string range [lindex $sort_type_list $column_count] 1 end]
+    if { $column_type eq "integer" || $column_type eq "real" } {
+        set abbrev_asc $nbr_asc
+        set abbrev_desc $nbr_desc
+    } else {
+        set abbrev_asc $text_asc
+        set abbrev_desc $text_desc
+    }
     # For now, just inactivate the left most sort link that was most recently pressed (if it has been)
     set title_new $title
     if { $primary_sort_col eq "" || ( $primary_sort_col ne "" && $column_count ne [expr { abs($primary_sort_col) } ] ) } {
         # ns_log Notice "resource-status-summary-1.tcl(150): column_count $column_count s_urlcoded '$s_urlcoded'"
-        append title_new " (<a href=\"$url?s=${s_urlcoded}&p=${column_count}\" title=\"${title_asc}\">${text_asc}</a>:<a href=\"$url?s=${s_urlcoded}&p=-${column_count}\" title=\"${title_desc}\">${text_desc}</a>)"
+        append title_new " (<a href=\"$url?s=${s_urlcoded}&p=${column_count}\" title=\"${title_asc}\">${abbrev_asc}</a>:<a href=\"$url?s=${s_urlcoded}&p=-${column_count}\" title=\"${title_desc}\">${abbrev_desc}</a>)"
     } else {
         if { [string range $s_urlcoded 0 0] eq "-" } {
             # ns_log Notice "resource-status-summary-1.tcl(154): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
             # decreasing primary sort chosen last, no need to make the link active
-            append title_new " (<a href=\"$url?s=${s_urlcoded}&p=${column_count}\" title=\"${title_asc}\">${text_asc}</a>:${text_desc})"
+            append title_new " (<a href=\"$url?s=${s_urlcoded}&p=${column_count}\" title=\"${title_asc}\">${abbrev_asc}</a>:${abbrev_desc})"
         } else {
             # ns_log Notice "resource-status-summary-1.tcl(158): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
             # increasing primary sort chosen last, no need to make the link active
-            append title_new " (${text_asc}:<a href=\"$url?s=${s_urlcoded}&p=-${column_count}\" title=\"${title_desc}\">${text_desc}</a>)"
+            append title_new " (${abbrev_asc}:<a href=\"$url?s=${s_urlcoded}&p=-${column_count}\" title=\"${title_desc}\">${abbrev_desc}</a>)"
         }
     }
     lappend table_titles_w_links_list $title_new
@@ -226,7 +237,6 @@ set table_sorted_lists [linsert $table_sorted_lists 0 [lrange $table_titles_list
 # Result: table_sorted_lists
 # Number of sorted columns:
 set sort_cols_count [llength $sort_order_list]
-
 
 
 # ================================================
@@ -262,30 +272,33 @@ foreach table_row_list $table_sorted_lists {
 }
 
 # ================================================
-# Add UI Options column to table
-
-set table2_lists [list ]
-set row_count 0
-foreach row_list $table_col_sorted_lists {
-    set new_row_list $row_list
-    if { $row_count > 0 } {
+# Add UI Options column to table?
+# Not at this time. Keep here in case a variant needs the code at some point.
+if { 0 } {
+    set table2_lists [list ]
+    set row_count 0
+    foreach row_list $table_col_sorted_lists {
         set new_row_list $row_list
-        set item_id [string trim [lindex $row_list 0]]
-        set view   "<a href=\"viewa?item_id=$item_id\">view</a>"
-        set edit   "<a href=\"edita?item_id=$item_id\">edit</a>"
-        set delete "<a href=\"deletea?item_id=$item_id\">delete</a>"
-        set options_col "$view $edit $delete"
-    } else {
-        # First row is a title row. Add title
-        set options_col "Options"
+        if { $row_count > 0 } {
+            set new_row_list $row_list
+            set item_id [string trim [lindex $row_list 0]]
+            set view   "<a href=\"viewa?item_id=$item_id\">view</a>"
+            set edit   "<a href=\"edita?item_id=$item_id\">edit</a>"
+            set delete "<a href=\"deletea?item_id=$item_id\">delete</a>"
+            set options_col "$view $edit $delete"
+        } else {
+            # First row is a title row. Add title
+            set options_col "Options"
+        }
+        lappend new_row_list $options_col
+        
+        # Add the revised row to the new table
+        lappend table2_lists $new_row_list
+        incr row_count
     }
-    lappend new_row_list $options_col
-
-    # Add the revised row to the new table
-    lappend table2_lists $new_row_list
-    incr row_count
+} else {
+    set table2_lists $table_col_sorted_lists
 }
-
 
 # ================================================
 # 5. Format output -- compact_p vs. regular etc.
@@ -297,24 +310,33 @@ set cell_formating_list [list ]
 # Let's try to get fancy, have the rows alternate color after the first row, 
 # and have the sorted columns slightly lighter in color to highlight them
 # base alternating row colors:
-set color_even_row "#cccccc"
-set color_odd_row "#ccffcc"
+set color_even_row "#ccc"
+set color_odd_row "#cfc"
 # sorted column colors
-set color_even_scol "#dddddd"
-set color_odd_scol "#ddffdd"
+set color_even_scol "#ddd"
+set color_odd_scol "#dfd"
 
-# Set the default title row TD formats before columns sorted:
-# Title row TD formats
-set title_td_attrs_list [list [list valign top align right bgcolor #ffffff]\
-         [list valign top bgcolor #ffffff]\
-         [list valign top bgcolor #ffffff]\
-         [list valign top bgcolor #ffffff]\
-         [list valign top bgcolor #ffffff]\
-         [list valign top bgcolor #ffffff]\
-         [list valign top bgcolor #ffffff]]
-# The first column is an index number, so right justify the values
-set even_row_list [list [list valign top align right] [list valign top] [list valign top] [list valign top] [list valign top] [list valign top] [list valign top]]
-set odd_row_list [list [list valign top align right] [list valign top] [list valign top] [list valign top] [list valign top] [list valign top] [list valign top]]
+# Set the default title row and column TD formats before columns sorted:
+
+set title_td_attrs_list [list ]
+set column_nbr 0
+foreach title $table_titles_list {
+    set column_type [string range [lindex $sort_type_list $column_nbr] 1 end]
+    # Title row TD formats in title_td_attrs_list
+    # even row TD attributes in even_row_list
+    # odd row TD attributes in odd_row_list
+    if { $column_tpe eq "integer" ||$column_type eq "real" } {
+        lappend title_td_attrs_list [list valign top align right]
+        # Value is a number, so right justify
+        lappend even_row_list [list valign top align right]
+        lappend odd_row_list [list valign top align right]
+    } else {
+        lappend title_td_attrs_list [list valign top]
+        lappend even_row_list [list valign top]
+        lappend odd_row_list [list valign top]
+    }
+    incr column_nbr
+}
 set cell_table_lists [list $title_td_attrs_list $odd_row_list $even_row_list]
 
 # Rebuild the even/odd rows adding the colors
