@@ -653,7 +653,7 @@ ad_proc -private hf_pagination_by_items {
         }
         set bar_list_set [list $prev_bar_list_pair $current_bar_list_pair $next_bar_list_pair]
     } else {
-        ns_log Warning "hf_pagination_by_items: parameter value(s) out of bounds for base_url $base_url $item_count $items_per_page $first_item_displayed"
+        ns_log Warning "hf_pagination_by_items: parameter value(s) out of bounds for $item_count $items_per_page $first_item_displayed"
     }
 
     return $bar_list_set
