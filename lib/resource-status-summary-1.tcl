@@ -39,12 +39,12 @@ set items_per_page 12
 if { ![info exists base_url] } {
     set base_url [ad_conn url]
 }
-if { ![info exists base_url] } {
-    set base_url [ns_conn url]
-}
-if { ![info exists base_url] } {
-    set base_url [ad_conn path_url]
-}
+#if { ![info exists base_url] } {
+#    set base_url [ns_conn url]
+#}
+#if { ![info exists base_url] } {
+#    set base_url [ad_conn path_url]
+#}
 
 set this_start_row_exists_p [info exists this_start_row]
 set s_exists_p [info exists s]
@@ -176,6 +176,11 @@ if { $s_exists_p && $s ne "" } {
     set s_url_add ""
 }
 
+# Sanity check 
+if { $this_start_row > $item_count } {
+    set this_start_row $item_count
+}
+
 set bar_list_set [hf_pagination_by_items $item_count $items_per_page $this_start_row]
 set prev_bar [list]
 set next_bar [list]
@@ -194,16 +199,7 @@ foreach {page_num start_row} $next_bar_list {
     lappend next_bar " <a href=\"${base_url}?this_start_row=${start_row}${s_url_add}\">${page_num}</a> "
 }
 set next_bar [join $next_bar $separator]
-# Following moved to ADP:
-# Don't show the pagination bar if pagination has no options.
-#if { $prev_bar ne "" || $next_bar ne "" } {
-#    append nav_html "<p>Jump to:" $prev_bar " &nbsp; (" $current_bar ") &nbsp; " $next_bar "</p>\n"
-#}
 
-#### Add a list of asset names below this. Using:
-# $prev_bar_list
-# $current_bar_list
-# $next_bar_list
 
 # add start_row to sort_urls.
 if { $this_start_row_exists_p } {
@@ -271,9 +267,21 @@ foreach title $table_titles_list {
 }
 set table_titles_list $table_titles_w_links_list
 
+# Begin building the paginated table here. Table rows have been sorted.
 # Add Row of Titles to Table
-set table_sorted_lists [linsert $table_sorted_lists 0 [lrange $table_titles_list 0 $table_index_last]]
-
+#set table_sorted_lists [linsert $table_sorted_lists 0 [lrange $table_titles_list 0 $table_index_last]]
+set table_paged_sorted_lists [list ]
+lappend table_paged_sorted_lists [lrange $table_titles_list 0 $table_index_last]
+set lindex_start [expr { $this_start_row - 1 } ]
+set lindex_last [expr { $item_count - 1 } ]
+set last_row [expr { $lindex_start + $items_per_page - 1 } ]
+if { $lindex_last < $last_row } {
+    set last_row $lindex_last
+}
+for { set row_num $lindex_start } { $row_num <= $last_row } {incr row_num} {
+    lappend table_paged_sorted_lists [lindex $table_sorted_lists $row_num]
+}
+set table_sorted_lists $table_paged_sorted_lists
 # Result: table_sorted_lists
 # Number of sorted columns:
 set sort_cols_count [llength $sort_order_list]
