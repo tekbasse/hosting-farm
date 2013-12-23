@@ -193,16 +193,41 @@ set next_bar [list]
 
 set prev_bar_list [lindex $bar_list_set 0]
 foreach {page_num start_row} $prev_bar_list {
-    lappend prev_bar " <a href=\"${base_url}?this_start_row=${start_row}${s_url_add}\">${page_num}</a> "
+    if { $s eq "" } {
+        set page_ref $page_num
+    } else {
+        set item_index [expr { ( $start_row - 1 ) } ]
+        set primary_sort_field_val [lindex [lindex $table_sorted_lists $item_index] $col2sort_wo_sign]
+        set page_ref [qf_abbreviate $primary_sort_field_val 4]
+    }
+    lappend prev_bar " <a href=\"${base_url}?this_start_row=${start_row}${s_url_add}\">${page_ref}</a> "    
 } 
 set prev_bar [join $prev_bar $separator]
 
 set current_bar_list [lindex $bar_list_set 1]
-set current_bar "[lindex $current_bar_list 0]"
+set page_num [lindex $current_bar_list 0]
+set start_row [lindex $current_bar_list 1]
+if { $s eq "" } {
+    set page_ref $page_num
+} else {
+    set item_index [expr { ( $start_row - 1 ) } ]
+    set primary_sort_field_val [lindex [lindex $table_sorted_lists $item_index] $col2sort_wo_sign]
+    set page_ref [qf_abbreviate $primary_sort_field_val 4]
+}
+
+#set current_bar "[lindex $current_bar_list 0]"
+set current_bar $page_ref
 
 set next_bar_list [lindex $bar_list_set 2]
 foreach {page_num start_row} $next_bar_list {
-    lappend next_bar " <a href=\"${base_url}?this_start_row=${start_row}${s_url_add}\">${page_num}</a> "
+    if { $s eq "" } {
+        set page_ref $page_num
+    } else {
+        set item_index [expr { ( $page_num - 1 ) * $items_per_page + 1 } ]
+        set primary_sort_field_val [lindex [lindex $table_sorted_lists $item_index] $col2sort_wo_sign]
+        set page_ref [qf_abbreviate $primary_sort_field_val 4]
+    }
+    lappend next_bar " <a href=\"${base_url}?this_start_row=${start_row}${s_url_add}\">${page_ref}</a> "
 }
 set next_bar [join $next_bar $separator]
 
