@@ -4,13 +4,13 @@
 # TODO: make another version that uses pg's select limit and offset.. to scale well.
 
 # REQUIRED:
-# @param base_url            url for building page links
 # @param item_count          number of items
 # @param items_per_page      number of items per page
 # @param this_start_row      start row (item number) for this page
 
 
 # OPTIONAL:
+# @param base_url             url for building page links
 # @param separator            html used between page numbers, defaults to &nbsp;
 # @param list_limit           limits the list to that many items.
 # @param list_offset          offset the list to start at some point other than the first item.
@@ -25,7 +25,8 @@
 # 4. Sort UI -- build
 #     columns, column_order, and cell data vary between compact_p vs. default, keep in mind with sort UI
 # 5. Format output -- compact_p vs. regular
-
+set nav_html ""
+set page_html ""
 
 # ================================================
 # 1. Get table as list_of_lists
@@ -35,7 +36,7 @@ set asset_stts_smmry_lists [hf_asset_summary_status "" $interval_remaining]
 ### for demo, setting item_count here
 set item_count [llength $asset_stts_smmry_lists]
 set items_per_page 12
-set base_url assets
+set base_url [ns_conn url]
 if { ![info exists this_start_row] } {
     set this_start_row 1
 }
@@ -92,32 +93,35 @@ if { [info exists s] } {
     set sort_order_list [split $sort_order_scalar a]
     set sort_order_list [lrange $sort_order_list 0 $table_index_last]
     
-    # Has a sort order change been requested?
-    if { [info exists p] } {
-        # new primary sort requested
-        # This is a similar reference to $s, but only one integer.
-        # Since this is the first time used as a primary, additional validation and processing is required.
-        # validate user input, fail silently
-        regsub -all -- {[^\-0-9]+} $p {} primary_sort_col_new
-        # primary_sort_col_pos = primary sort column's position
-        # primary_sort_col_new = a negative or positive column position. 
-        set primary_sort_col_pos [expr { abs( $primary_sort_col_new ) } ]
-        # ns_log Notice "resource-status-summary-1.tcl(85): primary_sort_col_new $primary_sort_col_new"
-        if { $primary_sort_col_new ne "" && $primary_sort_col_pos < $table_cols_count } {
-            # ns_log Notice "resource-status-summary-1.tcl(87): primary_sort_col_new $primary_sort_col_new primary_sort_col_pos $primary_sort_col_pos"
-            # modify sort_order_list
-            set sort_order_new_list [list $primary_sort_col_new]
-            foreach ii $sort_order_list {
-                if { [expr { abs($ii) } ] ne $primary_sort_col_pos } {
-                    lappend sort_order_new_list $ii
-                    # ns_log Notice "resource-status-summary-1.tcl(93): ii '$ii' sort_order_new_list '$sort_order_new_list'"
-                }
-            }
-            set sort_order_list $sort_order_new_list
-            # ns_log Notice "resource-status-summary-1.tcl(97): end if primary_sort_col_new.. "
-        }
-    }
+}
 
+# Has a sort order change been requested?
+if { [info exists p] } {
+    # new primary sort requested
+    # This is a similar reference to $s, but only one integer.
+    # Since this is the first time used as a primary, additional validation and processing is required.
+    # validate user input, fail silently
+    regsub -all -- {[^\-0-9]+} $p {} primary_sort_col_new
+    # primary_sort_col_pos = primary sort column's position
+    # primary_sort_col_new = a negative or positive column position. 
+    set primary_sort_col_pos [expr { abs( $primary_sort_col_new ) } ]
+    # ns_log Notice "resource-status-summary-1.tcl(85): primary_sort_col_new $primary_sort_col_new"
+    if { $primary_sort_col_new ne "" && $primary_sort_col_pos < $table_cols_count } {
+        # ns_log Notice "resource-status-summary-1.tcl(87): primary_sort_col_new $primary_sort_col_new primary_sort_col_pos $primary_sort_col_pos"
+        # modify sort_order_list
+        set sort_order_new_list [list $primary_sort_col_new]
+        foreach ii $sort_order_list {
+            if { [expr { abs($ii) } ] ne $primary_sort_col_pos } {
+                lappend sort_order_new_list $ii
+                # ns_log Notice "resource-status-summary-1.tcl(93): ii '$ii' sort_order_new_list '$sort_order_new_list'"
+            }
+        }
+        set sort_order_list $sort_order_new_list
+        # ns_log Notice "resource-status-summary-1.tcl(97): end if primary_sort_col_new.. "
+    }
+}
+
+if { [info exists s] || [info exists p] } {
     # ns_log Notice "resource-status-summary-1.tcl(101): sort_order_scalar '$sort_order_scalar' sort_order_list '$sort_order_list'"
     # Create a reverse index list for index countdown, because primary sort is last, secondary sort is second to last..
     # sort_stack_list 0 1 2 3..
@@ -145,12 +149,17 @@ if { [info exists s] } {
         }
         #ns_log Notice "resource-status-summary-1.tcl(123): lsort $sort_type $sort_order -index $col2sort_wo_sign table_sorted_lists"
     }
-} 
+}
 
 # ================================================
 # 3. Pagination_bar -- calcs including list_limit and list_offset, build UI
 # ================================================
-
+# if $s exists, addid to to pagination urls.
+if { [info exists s] } {
+    set s_url_add "&s=$s"
+} else {
+    set s_url_add ""
+}
 if { ![info exists separator] } {
     set separator "&nbsp;"
 }
@@ -161,7 +170,7 @@ set next_bar [list]
 
 set prev_bar_list [lindex $bar_list_set 0]
 foreach {page_num start_row} $prev_bar_list {
-    lappend prev_bar " <a href=\"${base_url}${start_row}\">${page_num}</a> "
+    lappend prev_bar " <a href=\"${base_url}?this_start_row=${start_row}${s_url_add}\">${page_num}</a> "
 } 
 set prev_bar [join $prev_bar $separator]
 
@@ -170,23 +179,33 @@ set current_bar "[lindex $current_bar_list 0]"
 
 set next_bar_list [lindex $bar_list_set 2]
 foreach {page_num start_row} $next_bar_list {
-    lappend next_bar " <a href=\"${base_url}${start_row}\">${page_num}</a> "
+    lappend next_bar " <a href=\"${base_url}?this_start_row=${start_row}${s_url_add}\">${page_num}</a> "
 }
 set next_bar [join $next_bar $separator]
-
-append summary_html "<p>Jump to:" $prev_bar " &nbsp; (" $current_bar ") &nbsp; " $next_bar "</p>\n"
+# Following moved to ADP:
+# Don't show the pagination bar if pagination has no options.
+#if { $prev_bar ne "" || $next_bar ne "" } {
+#    append nav_html "<p>Jump to:" $prev_bar " &nbsp; (" $current_bar ") &nbsp; " $next_bar "</p>\n"
+#}
 
 #### Add a list of asset names below this. Using:
 # $prev_bar_list
 # $current_bar_list
 # $next_bar_list
 
+# add start_row to sort_urls.
+if { [info exists this_start_row ] } {
+    set page_url_add "&this_start_row=${this_start_row}"
+} else {
+    set page_url_add ""
+}
+
 # ================================================
 # 4. Sort UI -- build
 # ================================================
 
 # Add the sort links to the titles.
-set url [ad_conn url]
+
 # urlcode sort_order_list
 set s_urlcoded ""
 foreach sort_i $sort_order_list {
@@ -194,6 +213,7 @@ foreach sort_i $sort_order_list {
     append s_urlcoded a
 }
 set s_urlcoded [string range $s_urlcoded 0 end-1]
+
 # Sort's abbreviated title should be context sensitive, changing depending on sort type.
 # sort_type_list is indexed by sort_column nbr (0...)
 
@@ -222,16 +242,16 @@ foreach title $table_titles_list {
     set title_new $title
     if { $primary_sort_col eq "" || ( $primary_sort_col ne "" && $column_count ne [expr { abs($primary_sort_col) } ] ) } {
         # ns_log Notice "resource-status-summary-1.tcl(150): column_count $column_count s_urlcoded '$s_urlcoded'"
-        append title_new " (<a href=\"$url?s=${s_urlcoded}&p=${column_count}\" title=\"${title_asc}\">${abbrev_asc}</a>:<a href=\"$url?s=${s_urlcoded}&p=-${column_count}\" title=\"${title_desc}\">${abbrev_desc}</a>)"
+        append title_new " (<a href=\"$base_url?s=${s_urlcoded}&p=${column_count}${page_url_add}\" title=\"${title_asc}\">${abbrev_asc}</a>:<a href=\"$base_url?s=${s_urlcoded}&p=-${column_count}${page_url_add}\" title=\"${title_desc}\">${abbrev_desc}</a>)"
     } else {
         if { [string range $s_urlcoded 0 0] eq "-" } {
             # ns_log Notice "resource-status-summary-1.tcl(154): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
             # decreasing primary sort chosen last, no need to make the link active
-            append title_new " (<a href=\"$url?s=${s_urlcoded}&p=${column_count}\" title=\"${title_asc}\">${abbrev_asc}</a>:${abbrev_desc})"
+            append title_new " (<a href=\"$base_url?s=${s_urlcoded}&p=${column_count}${page_url_add}\" title=\"${title_asc}\">${abbrev_asc}</a>:${abbrev_desc})"
         } else {
             # ns_log Notice "resource-status-summary-1.tcl(158): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
             # increasing primary sort chosen last, no need to make the link active
-            append title_new " (${abbrev_asc}:<a href=\"$url?s=${s_urlcoded}&p=-${column_count}\" title=\"${title_desc}\">${abbrev_desc}</a>)"
+            append title_new " (${abbrev_asc}:<a href=\"$base_url?s=${s_urlcoded}&p=-${column_count}${page_url_add}\" title=\"${title_desc}\">${abbrev_desc}</a>)"
         }
     }
     lappend table_titles_w_links_list $title_new
@@ -415,7 +435,7 @@ if { $table_row_count > 3 } {
 # this builds the html table and assigns it to table2_html
 set table2_html [qss_list_of_lists_to_html_table $table2_lists $table2_atts_list $cell_table_sorted_lists]
 # add table2_html to adp output
-append summary_html $table2_html
+append page_html $table2_html
 
 
 ## following from resource-status-summary-2.tcl
@@ -448,37 +468,40 @@ foreach report_list $asset_stts_smmry_lists {
 set asset_table_titles [list "name" "type" "metric" "sample" "quota" "projected" "status"]
 set table_att_list [list ]
 set td_att_list [list ]
-if { [info exists columns] && $columns > 1 } {
-    set before_columns_html  {<div class="l-grid-half m-grid-whole s-grid-whole padded">
-  <div class="content-box">
- <div>&nbsp;</div>
-    }
-    set after_columns_html { <div>&nbsp;</div>
-  </div>
-</div>
-    }
-    set arl_length [llength $asset_report_lists]
-    set items_per_list [expr { int( $arl_length / $columns ) + 1 } ]
-
-    set items_per_list_m_1 [expr { $items_per_list - 1 } ]
-    set summary_html ""
-    for {set i 0} {$i < $columns} {incr i} {
-        if { [info exists before_columns_html] } {
-            append summary_html $before_columns_html
+# ignore columns option for now
+if { 0 } {
+    if { [info exists columns] && $columns > 1 } {
+        set before_columns_html  {<div class="l-grid-half m-grid-whole s-grid-whole padded">
+            <div class="content-box">
+            <div>&nbsp;</div>
         }
-        set new_report_lists [list ]
-        lappend new_report_lists $asset_table_titles
-        set column_lists [lrange $asset_report_lists [expr { $i * $items_per_list } ] [expr { $i * $items_per_list + $items_per_list_m_1 } ] ]
-        foreach row_list $column_lists {
-            lappend new_report_lists $row_list
+        set after_columns_html { <div>&nbsp;</div>
+            </div>
+            </div>
         }
-        # between_columns_html  if exists, inserts html that goes between each column
-        append summary_html [qss_list_of_lists_to_html_table $new_report_lists $table_att_list $td_att_list]
-        if { [info exists after_columns_html] } {
-            append summary_html $after_columns_html
+        set arl_length [llength $asset_report_lists]
+        set items_per_list [expr { int( $arl_length / $columns ) + 1 } ]
+        
+        set items_per_list_m_1 [expr { $items_per_list - 1 } ]
+        
+        for {set i 0} {$i < $columns} {incr i} {
+            if { [info exists before_columns_html] } {
+                append page_html $before_columns_html
+            }
+            set new_report_lists [list ]
+            lappend new_report_lists $asset_table_titles
+            set column_lists [lrange $asset_report_lists [expr { $i * $items_per_list } ] [expr { $i * $items_per_list + $items_per_list_m_1 } ] ]
+            foreach row_list $column_lists {
+                lappend new_report_lists $row_list
+            }
+            # between_columns_html  if exists, inserts html that goes between each column
+            append page_html [qss_list_of_lists_to_html_table $new_report_lists $table_att_list $td_att_list]
+            if { [info exists after_columns_html] } {
+                append page_html $after_columns_html
+            }
         }
+        
     }
-
 } else {
 
 
@@ -512,20 +535,20 @@ if { [info exists compact_p] && $compact_p } {
         }
         set td_att_compact_list [list [lindex $td_att_list 0] [lindex $td_att_list 2] [lindex $td_att_list 4] [lindex $td_att_list 6]]
         #following is not compact enough.
-#        set summary_html [qss_list_of_lists_to_html_table $asset_report_new_lists $table_att_list $td_att_compact_list]
-        set summary_html "<table>"
+#        set page_html [qss_list_of_lists_to_html_table $asset_report_new_lists $table_att_list $td_att_compact_list]
+        set page_html "<table>"
         foreach item $asset_report_new_lists {
-            append summary_html "<tr>"
-            append summary_html "<td>[lindex $item 0]</td>"
-            append summary_html "<td>[lindex $item 1]</td>"
-            append summary_html "<td>[lindex $item 2]</td>"
-            append summary_html "<td>[lindex $item 3]</td>"
-            append summary_html "</tr>"
+            append page_html "<tr>"
+            append page_html "<td>[lindex $item 0]</td>"
+            append page_html "<td>[lindex $item 1]</td>"
+            append page_html "<td>[lindex $item 2]</td>"
+            append page_html "<td>[lindex $item 3]</td>"
+            append page_html "</tr>"
         }
-        append summary_html "</table>"
+        append page_html "</table>"
     } else {
         set asset_report_lists [linsert $asset_report_lists 0 $asset_table_titles]
-        set summary_html [qss_list_of_lists_to_html_table $asset_report_lists $table_att_list $td_att_list]
+#        set page_html [qss_list_of_lists_to_html_table $asset_report_lists $table_att_list $td_att_list]
     }
 
 
