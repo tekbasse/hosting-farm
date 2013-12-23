@@ -37,8 +37,14 @@ set asset_stts_smmry_lists [hf_asset_summary_status "" $interval_remaining]
 set item_count [llength $asset_stts_smmry_lists]
 set items_per_page 12
 set base_url [ns_conn url]
-if { ![info exists this_start_row] } {
+set this_start_row_exists_p [info exists this_start_row]
+set s_exists_p [info exists s]
+set p_exists_p [info exists p]
+if { !$this_start_row_exists_p || ( $this_start_row_exists_p && ![qf_is_natural_number $this_start_row] ) } {
     set this_start_row 1
+}
+if { ![info exists separator] } {
+    set separator "&nbsp;"
 }
 
 # columns:
@@ -76,7 +82,7 @@ set sort_rev_order_list [list ]
 set table_sorted_lists $table_lists
 
 # Sort table?
-if { [info exists s] } {
+if { $s_exists_p && $s ne "" } {
     # Sort table
     # A sort order has been requested
     # $s is in the form of a string of integers delimited by the letter a. 
@@ -96,7 +102,7 @@ if { [info exists s] } {
 }
 
 # Has a sort order change been requested?
-if { [info exists p] } {
+if { $p_exists_p && $p ne "" } {
     # new primary sort requested
     # This is a similar reference to $s, but only one integer.
     # Since this is the first time used as a primary, additional validation and processing is required.
@@ -121,7 +127,7 @@ if { [info exists p] } {
     }
 }
 
-if { [info exists s] || [info exists p] } {
+if { ( $s_exists_p && $s ne "" ) || ( $p_exists_p && $p ne "" ) } {
     # ns_log Notice "resource-status-summary-1.tcl(101): sort_order_scalar '$sort_order_scalar' sort_order_list '$sort_order_list'"
     # Create a reverse index list for index countdown, because primary sort is last, secondary sort is second to last..
     # sort_stack_list 0 1 2 3..
@@ -155,13 +161,10 @@ if { [info exists s] || [info exists p] } {
 # 3. Pagination_bar -- calcs including list_limit and list_offset, build UI
 # ================================================
 # if $s exists, addid to to pagination urls.
-if { [info exists s] } {
+if { $s_exists_p && $s ne "" } {
     set s_url_add "&s=$s"
 } else {
     set s_url_add ""
-}
-if { ![info exists separator] } {
-    set separator "&nbsp;"
 }
 
 set bar_list_set [hf_pagination_by_items $item_count $items_per_page $this_start_row]
@@ -194,7 +197,7 @@ set next_bar [join $next_bar $separator]
 # $next_bar_list
 
 # add start_row to sort_urls.
-if { [info exists this_start_row ] } {
+if { $this_start_row_exists_p } {
     set page_url_add "&this_start_row=${this_start_row}"
 } else {
     set page_url_add ""
