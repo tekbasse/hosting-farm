@@ -202,6 +202,9 @@ foreach {page_num start_row} $prev_bar_list {
         set item_index [expr { ( $start_row - 1 ) } ]
         set primary_sort_field_val [lindex [lindex $table_sorted_lists $item_index] $col2sort_wo_sign]
         set page_ref [qf_abbreviate [lang::util::localize $primary_sort_field_val] 4]
+        if { $page_ref eq "" } {
+            set page_ref $page_num
+        }
     }
     lappend prev_bar " <a href=\"${base_url}?this_start_row=${start_row}${s_url_add}\">${page_ref}</a> "    
 } 
@@ -216,6 +219,9 @@ if { $s eq "" } {
     set item_index [expr { ( $start_row - 1 ) } ]
     set primary_sort_field_val [lindex [lindex $table_sorted_lists $item_index] $col2sort_wo_sign]
     set page_ref [qf_abbreviate [lang::util::localize $primary_sort_field_val] 4]
+    if { $page_ref eq "" } {
+        set page_ref $page_num
+    }
 }
 
 #set current_bar "[lindex $current_bar_list 0]"
@@ -229,6 +235,9 @@ foreach {page_num start_row} $next_bar_list {
         set item_index [expr { ( $page_num - 1 ) * $items_per_page + 1 } ]
         set primary_sort_field_val [lindex [lindex $table_sorted_lists $item_index] $col2sort_wo_sign]
         set page_ref [qf_abbreviate [lang::util::localize $primary_sort_field_val] 4]
+        if { $page_ref eq "" } {
+            set page_ref $page_num
+        }
     }
     lappend next_bar " <a href=\"${base_url}?this_start_row=${start_row}${s_url_add}\">${page_ref}</a> "
 }
@@ -275,6 +284,7 @@ foreach title $table_titles_list {
     }
     # For now, just inactivate the left most sort link that was most recently pressed (if it has been)
     set title_new $title
+    append title_new "<div class=\"small2\">"
     if { $primary_sort_col eq "" || ( $primary_sort_col ne "" && $column_count ne [expr { abs($primary_sort_col) } ] ) } {
         # ns_log Notice "resource-status-summary-1.tcl(150): column_count $column_count s_urlcoded '$s_urlcoded'"
         append title_new " (<a href=\"$base_url?s=${s_urlcoded}&p=${column_count}${page_url_add}\" title=\"${title_asc}\">${abbrev_asc}</a>:<a href=\"$base_url?s=${s_urlcoded}&p=-${column_count}${page_url_add}\" title=\"${title_desc}\">${abbrev_desc}</a>)"
@@ -282,12 +292,14 @@ foreach title $table_titles_list {
         if { [string range $s_urlcoded 0 0] eq "-" } {
             # ns_log Notice "resource-status-summary-1.tcl(154): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
             # decreasing primary sort chosen last, no need to make the link active
+            
             append title_new " (<a href=\"$base_url?s=${s_urlcoded}&p=${column_count}${page_url_add}\" title=\"${title_asc}\">${abbrev_asc}</a>:${abbrev_desc})"
         } else {
             # ns_log Notice "resource-status-summary-1.tcl(158): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
             # increasing primary sort chosen last, no need to make the link active
             append title_new " (${abbrev_asc}:<a href=\"$base_url?s=${s_urlcoded}&p=-${column_count}${page_url_add}\" title=\"${title_desc}\">${abbrev_desc}</a>)"
         }
+        append title_new "</div>"
     }
     lappend table_titles_w_links_list $title_new
     incr column_count
