@@ -36,14 +36,8 @@ set input_array(this_start_row) ""
 
 set form_posted [qf_get_inputs_as_array input_array]
 if { $form_posted } {
-    if { $input_array(s) ne "" } {
         set s $input_array(s)
-    }
-    if { $input_array(p) ne "" } {
         set p $input_array(p)
-    }
-    if { $input_array(this_start_row) ne "" } {
         set this_start_row $input_array(this_start_row)
-    }
 }
 
