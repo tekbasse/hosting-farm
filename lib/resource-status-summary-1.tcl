@@ -73,7 +73,10 @@ set table_lists $asset_stts_smmry_lists
 set table_cols_count [llength [lindex $table_lists 0]]
 set table_index_last [expr { $table_cols_count - 1 } ]
 #set table_titles_list [list "Item&nbsp;ID" "Title" "Status" "Description" "Due&nbsp;Date" "Creation&nbsp;Date"]
-set table_titles_list [list "Label" "Name" "Type" "Metric" "Reading" "Quota" "Projected" "Health Score" "Message"]
+# Replace #hosting-farm.Metric# with #acs-subsite.parameters# ?
+# Replace #hosting-farm.Health_Score# with acs-subsite.status ?
+# Replace #accounts-ledger.Amount# with #hosting-farm.Sample# ?
+set table_titles_list [list "#acs-lang.Label#" "#accounts-ledger.Name#" "#accounts-ledger.Type#" "#hosting-farm.Metric#" "#accounts-ledger.Amount#" "#hosting-farm.Quota#" "#hosting-farm.Projected#" "#hosting-farm.Health_Score#" "#accounts-ledger.Message#"]
 # as_label as_name as_type metric latest_sample percent_quota projected_eop score score_message
 #ns_log Notice "resource-status-summary-1(45): table_cols_count $table_cols_count table_index_last $table_index_last "
 
@@ -198,7 +201,7 @@ foreach {page_num start_row} $prev_bar_list {
     } else {
         set item_index [expr { ( $start_row - 1 ) } ]
         set primary_sort_field_val [lindex [lindex $table_sorted_lists $item_index] $col2sort_wo_sign]
-        set page_ref [qf_abbreviate $primary_sort_field_val 4]
+        set page_ref [qf_abbreviate [lang::util::localize $primary_sort_field_val] 4]
     }
     lappend prev_bar " <a href=\"${base_url}?this_start_row=${start_row}${s_url_add}\">${page_ref}</a> "    
 } 
@@ -212,7 +215,7 @@ if { $s eq "" } {
 } else {
     set item_index [expr { ( $start_row - 1 ) } ]
     set primary_sort_field_val [lindex [lindex $table_sorted_lists $item_index] $col2sort_wo_sign]
-    set page_ref [qf_abbreviate $primary_sort_field_val 4]
+    set page_ref [qf_abbreviate [lang::util::localize $primary_sort_field_val] 4]
 }
 
 #set current_bar "[lindex $current_bar_list 0]"
@@ -225,7 +228,7 @@ foreach {page_num start_row} $next_bar_list {
     } else {
         set item_index [expr { ( $page_num - 1 ) * $items_per_page + 1 } ]
         set primary_sort_field_val [lindex [lindex $table_sorted_lists $item_index] $col2sort_wo_sign]
-        set page_ref [qf_abbreviate $primary_sort_field_val 4]
+        set page_ref [qf_abbreviate [lang::util::localize $primary_sort_field_val] 4]
     }
     lappend next_bar " <a href=\"${base_url}?this_start_row=${start_row}${s_url_add}\">${page_ref}</a> "
 }
@@ -251,8 +254,10 @@ set text_asc "A"
 set text_desc "Z"
 set nbr_asc "1"
 set nbr_desc "9"
-set title_asc "increasing"
-set title_desc "decreasing"
+# increasing
+set title_asc "#acs-templating.ascending_order#"
+# decreasing
+set title_desc "#acs-templating.descending_order#"
 
 set table_titles_w_links_list [list ]
 set column_count 0
@@ -507,7 +512,7 @@ foreach report_list $asset_stts_smmry_lists {
     lappend asset_report_lists $status_list
 }
 
-set asset_table_titles [list "name" "type" "metric" "sample" "quota" "projected" "status"]
+set asset_table_titles [list "#accounts-ledger.Name#" "#accounts-ledger.Type#" "#hosting-farm.Metric#" "#accounts-ledger.Amount#" "#hosting-farm.Quota#" "#hosting-farm.Projected#" "#acs-subsite.status#"]
 set table_att_list [list ]
 set td_att_list [list ]
 # ignore columns option for now

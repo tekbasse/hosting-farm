@@ -2,4 +2,8 @@
 <message_catalog package_key="hosting-farm" locale="en_US" charset="ISO-8859-1">
   <msg key="server_farm">server farm</msg>
   <msg key="Server_farm">Server Farm</msg>
+  <msg key="Metric">Metric</msg>
+  <msg key="Quota">Quota</msg>
+  <msg key="Projected">Projected</msg>
+  <msg key="Health_Score">Health Score</msg>
 </message_catalog>
