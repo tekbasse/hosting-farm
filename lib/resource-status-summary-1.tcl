@@ -36,7 +36,16 @@ set asset_stts_smmry_lists [hf_asset_summary_status "" $interval_remaining]
 ### for demo, setting item_count here
 set item_count [llength $asset_stts_smmry_lists]
 set items_per_page 12
-set base_url [ns_conn url]
+if { ![info exists base_url] } {
+    set base_url [ad_conn url]
+}
+if { ![info exists base_url] } {
+    set base_url [ns_conn url]
+}
+if { ![info exists base_url] } {
+    set base_url [ad_conn path_url]
+}
+
 set this_start_row_exists_p [info exists this_start_row]
 set s_exists_p [info exists s]
 set p_exists_p [info exists p]
