@@ -35,9 +35,10 @@ set input_array(p) ""
 set input_array(this_start_row) ""
 
 set form_posted [qf_get_inputs_as_array input_array]
-if { $form_posted } {
-        set s $input_array(s)
-        set p $input_array(p)
-        set this_start_row $input_array(this_start_row)
-}
+
+set s $input_array(s)
+set p $input_array(p)
+set this_start_row $input_array(this_start_row)
+
+# s, p, and this_start_row always exist, which simplifies the include tag that is called.
 
