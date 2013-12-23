@@ -154,7 +154,7 @@ ad_proc -private hf_asset_summary_status {
         set random [expr { wide( [clock seconds] / 360 ) }] 
         set i 0
         set random_list [list ]
-        while { $i < 1000 } {
+        while { $i < 10000 } {
             set random [expr { wide( fmod( $random * 38629 , 279470273 ) * 71 ) } ]
             lappend random_list [expr { srand($random) } ]
             incr i
@@ -163,10 +163,10 @@ ad_proc -private hf_asset_summary_status {
     }
 
     # following from hipsteripsum.me
-    set random_names [list Umami gastropub authentic keytar Church-key Brooklyn four loko yr VHS craft beer hoodie Shoreditch gluten-free food truck squid seitan disrupt synth you probably havent heard of them Hoodie beard polaroid single-origin coffee skateboard organic irony plaid XOXO ethical IPhone squid photo booth irony street art lomo gastropub bitters literally kogi Bicycle rights PBR small batch deep ab.v post-ironic Vice photo booth Mustache Portland selvage Vice yr YOLO Banksy slow-carb Odd Future cred Shabby chic Blue Bottle pop-up XOXO cray locavore sartorial deep v butcher readymade gluten-free]
+    set random_names [list Umami gastropub authentic keytar Church-key Brooklyn four loko yr VHS craft beer hoodie Shoreditch gluten-free food truck squid seitan disrupt synth you probably havent heard of them Hoodie beard polaroid single-origin coffee skateboard organic irony plaid XOXO ethical IPhone squid photo booth irony street art lomo gastropub bitters literally kogi Bicycle rights PBR small batch deep ab.v post-ironic Vice photo booth Mustache Portland selvage Vice yr YOLO Banksy slow-carb Odd Future cred Shabby chic Blue Bottle pop-up XOXO cray locavore sartorial deep v butcher readymade gluten-free hub center socialhub sportshub businesshub mediahub musichub newshub designhub healthhubhub Umamihub gastropubhub authentichub keytarhub Church-keyhub Brooklynhub fourhub lokohub yrhub VHShub crafthub beerhub hoodiehub Shoreditchhub gluten-freehub foodhub truckhub squidhub seitanhub disrupthub synthhub youhub probablyhub haventhub heardhub ofhub themhub Hoodiehub beardhub polaroidhub single-originhub coffeehub skateboardhub organichub ironyhub plaidhub XOXOhub ethicalhub IPhonehub squidhub photohub boothhub ironyhub streethub arthub lomohub gastropubhub bittershub literallyhub kogihub Bicyclehub rightshub PBRhub smallhub batchhub deephub ab.vhub post-ironichub Vicehub photohub boothhub Mustachehub Portlandhub selvagehub Vicehub yrhub YOLOhub Banksyhub slow-carbhub Oddhub Futurehub credhub Shabbyhub chichub Bluehub Bottlehub pop-uphub XOXOhub crayhub locavorehub sartorialhub deephub vhub butcherhub readymadehub gluten-freehub hubhubub centerhubub Umamiub gastropubub authenticub keytarub Church-keyub Brooklynub fourub lokoub yrub VHSub craftub beerub hoodieub Shoreditchub gluten-freeub foodub truckub squidub seitanub disruptub synthub youub probablyub haventub heardub ofub themub Hoodieub beardub polaroidub single-originub coffeeub skateboardub organicub ironyub plaidub XOXOub ethicalub IPhoneub squidub photoub boothub ironyub streetub artub lomoub gastropubub bittersub literallyub kogiub Bicycleub rightsub PBRub smallub batchub deepub ab.vub post-ironicub Viceub photoub boothub Mustacheub Portlandub selvageub Viceub yrub YOLOub Banksyub slow-carbub Oddub Futureub credub Shabbyub chicub Blueub Bottleub pop-upub XOXOub crayub locavoreub sartorialub deepub vub butcherub readymadeub gluten-freeub hubub centerub socialhubub sportshubub businesshubub mediahubub musichubub newshubub designhubub healthhubhubub Umamihubub gastropubhubub authentichubub keytarhubub Church-keyhubub Brooklynhubub fourhubub lokohub]
     set names_count [llength $random_names]
     set random_names_list [list ]
-    set random_suffix_list [list net com me info ca us pa es co.uk tv no dk de fr jp cn in org cc biz nu ws bz org.uk tm ms pro mx tw jobs ac io sh eu at nl la fm it co ag pl sc hn mn tk vc pe au ch ru se fi if os so be do hi ho is jo ro un]
+    set random_suffix_list [list net com me info ca us pa es co.uk tv no dk de fr jp cn in org cc biz nu ws bz org.uk tm ms pro mx tw jobs ac io sh eu at nl la fm it co ag pl sc hn mn tk vc pe au ch ru se fi if os so be do hi ho is jo ro un cae use pae ese co.uke tve noe dke dee fre jpe cne ine orge cce bize nue wse bze org.uke tme mse proe mxe twe jobse ace ioe she eue ate nle lae fme ite coe age ple sce hne mne tke vce pee aue che rue see fie ife ose soe bee doe hie hoe ise joe roe yunz netz comz mez infoz caz usz paz esz co.ukz tvz noz dkz dez frz jpz cnz inz orgz ccz bizz nuz wsz bzz org.ukz tmz msz proz mxz twz jobsz acz ioz shz euz atz nlz laz fmz itz coz agz plz scz hnz mnz tkz vcz pez auz chz ruz sez fiz ifz osz soz bez doz hiz hoz isz joz roz unz caez usez paez esez co.ukez tvez noez dkez deez frez jpez cnez inez orgez ccez bizez nuez wsez bzez org.ukez tmez msez net comq meq infoq caq usq paq esq co.ukq tvq noq dkq deq frq jpq cnq inq orgq ccq bizq nuq wsq bzq org.ukq tmq msq proq mxq twq jobsq acq ioq shq euq atq nlq laq fmq itq coq agq plq scq hnq mnq tkq vcq peq auq chq ruq seq fiq ifq osq soq beq doq hiq hoq isq joq roq unq]
     set suffix_count [llength $random_suffix_list ]
     foreach name $random_names {
         if { $list_limit ne "" } {
@@ -219,7 +219,7 @@ ad_proc -private hf_asset_summary_status {
     } else {
         # let's use a consistent random thread, vary the seed periodically
         # so that there is some continuity between pages
-        set as_count [expr { wide ( [hf_peek_pop_stack random_list] * 50 ) + 1 } ]
+        set as_count [expr { wide ( [hf_peek_pop_stack random_list] * 1000 ) + 1 } ]
     }
 
     for { set i 0} {$i < $as_count} {incr i} {

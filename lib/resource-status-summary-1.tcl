@@ -170,11 +170,17 @@ if { ( $s_exists_p && $s ne "" ) || ( $p_exists_p && $p ne "" ) } {
 # 3. Pagination_bar -- calcs including list_limit and list_offset, build UI
 # ================================================
 # if $s exists, addid to to pagination urls.
-if { $s_exists_p && $s ne "" } {
-    set s_url_add "&s=$s"
-} else {
-    set s_url_add ""
+
+# Add the sort links to the titles.
+
+# urlcode sort_order_list
+set s_urlcoded ""
+foreach sort_i $sort_order_list {
+    append s_urlcoded $sort_i
+    append s_urlcoded a
 }
+set s_urlcoded [string range $s_urlcoded 0 end-1]
+set s_url_add "&s=${s_urlcoded}"
 
 # Sanity check 
 if { $this_start_row > $item_count } {
@@ -212,15 +218,6 @@ if { $this_start_row_exists_p } {
 # 4. Sort UI -- build
 # ================================================
 
-# Add the sort links to the titles.
-
-# urlcode sort_order_list
-set s_urlcoded ""
-foreach sort_i $sort_order_list {
-    append s_urlcoded $sort_i
-    append s_urlcoded a
-}
-set s_urlcoded [string range $s_urlcoded 0 end-1]
 
 # Sort's abbreviated title should be context sensitive, changing depending on sort type.
 # sort_type_list is indexed by sort_column nbr (0...)
