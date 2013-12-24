@@ -3,13 +3,13 @@
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
 <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
 <!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
-
-<html<if @doc.lang@ not nil> lang="@doc.lang;noquote@"</if>>
-
 <head>
+  <if @doc.charset@ not nil><meta charset="@doc.charset@"></if>
     <title<if @doc.title_lang@ not nil and @doc.title_lang@ ne @doc.lang@> lang="@doc.title_lang;noquote@"</if>>@doc.title;noquote@</title>
+
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=device-width">
+
 <!--
 <multiple name="meta">    <meta<if @meta.http_equiv@ not nil> http-equiv="@meta.http_equiv;noquote@"</if><if @meta.name@ not nil> name="@meta.name;noquote@"</if><if @meta.scheme@ not nil> scheme="@meta.scheme;noquote@"</if><if @meta.lang@ not nil and @meta.lang@ ne @doc.lang@> lang="@meta.lang;noquote@"</if> content="@meta.content@">
 </multiple>
@@ -38,11 +38,25 @@ border: 1px solid #ccc;
 vertical-align: top;
 text-align: center;
 }
+table tr td .rightj {
+vertical-align: top;
+text-align: right;
+}
 
 table tr td .sort {
-vertical-align: top;
-text-align: center;
 font-size: .25 em;
+}
+table tr td .oddrow {
+background-color: #cfc;
+}
+table tr td .evenrow {
+background-color: #ccc;
+}
+table tr td .oddlight {
+background-color: #dfd;
+}
+table tr td .evenlight {
+background-color: #ddd
 }
 
 </script>
@@ -57,7 +71,7 @@ font-size: .25 em;
       <script src="js/vendor/respond.min.js"></script>
   <![endif]-->
 </head>
-<body<if @body.class@ not nil> class="@body.class;noquote@"</if><if @body.id@ not nil> id="@body.id;noquote@"</if><if @event_handlers@ not nil>@event_handlers;noquote@</if>>
+<body<if @body.class@ not nil> class="@body.class;noquote@"</if><if @body.id@ not nil> id="@body.id;noquote@"</if><if @doc.lang@ not nil> lang="@doc.lang;noquote@"</if><if @event_handlers@ not nil>@event_handlers;noquote@</if>>
 
   @header;noquote@
 

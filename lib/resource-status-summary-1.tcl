@@ -183,7 +183,7 @@ foreach sort_i $sort_order_list {
     append s_urlcoded a
 }
 set s_urlcoded [string range $s_urlcoded 0 end-1]
-set s_url_add "&s=${s_urlcoded}"
+set s_url_add "&amp;s=${s_urlcoded}"
 
 # Sanity check 
 if { $this_start_row > $item_count } {
@@ -246,7 +246,7 @@ set next_bar [join $next_bar $separator]
 
 # add start_row to sort_urls.
 if { $this_start_row_exists_p } {
-    set page_url_add "&this_start_row=${this_start_row}"
+    set page_url_add "&amp;this_start_row=${this_start_row}"
 } else {
     set page_url_add ""
 }
@@ -287,20 +287,20 @@ foreach title $table_titles_list {
     append title_new "<span class=\"small2\">"
     if { $primary_sort_col eq "" || ( $primary_sort_col ne "" && $column_count ne [expr { abs($primary_sort_col) } ] ) } {
         # ns_log Notice "resource-status-summary-1.tcl(150): column_count $column_count s_urlcoded '$s_urlcoded'"
-        append title_new " (<a href=\"$base_url?s=${s_urlcoded}&p=${column_count}${page_url_add}\" title=\"${title_asc}\">${abbrev_asc}</a>:<a href=\"$base_url?s=${s_urlcoded}&p=-${column_count}${page_url_add}\" title=\"${title_desc}\">${abbrev_desc}</a>)"
+        append title_new " (<a href=\"$base_url?s=${s_urlcoded}&amp;p=${column_count}${page_url_add}\" title=\"${title_asc}\">${abbrev_asc}</a>:<a href=\"$base_url?s=${s_urlcoded}&amp;p=-${column_count}${page_url_add}\" title=\"${title_desc}\">${abbrev_desc}</a>)"
     } else {
         if { [string range $s_urlcoded 0 0] eq "-" } {
             # ns_log Notice "resource-status-summary-1.tcl(154): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
             # decreasing primary sort chosen last, no need to make the link active
             
-            append title_new " (<a href=\"$base_url?s=${s_urlcoded}&p=${column_count}${page_url_add}\" title=\"${title_asc}\">${abbrev_asc}</a>:${abbrev_desc})"
+            append title_new " (<a href=\"$base_url?s=${s_urlcoded}&amp;p=${column_count}${page_url_add}\" title=\"${title_asc}\">${abbrev_asc}</a>:${abbrev_desc})"
         } else {
             # ns_log Notice "resource-status-summary-1.tcl(158): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
             # increasing primary sort chosen last, no need to make the link active
-            append title_new " (${abbrev_asc}:<a href=\"$base_url?s=${s_urlcoded}&p=-${column_count}${page_url_add}\" title=\"${title_desc}\">${abbrev_desc}</a>)"
+            append title_new " (${abbrev_asc}:<a href=\"$base_url?s=${s_urlcoded}&amp;p=-${column_count}${page_url_add}\" title=\"${title_desc}\">${abbrev_desc}</a>)"
         }
-        append title_new "</span>"
     }
+    append title_new "</span>"
     lappend table_titles_w_links_list $title_new
     incr column_count
 }
@@ -390,18 +390,19 @@ if { 0 } {
 # ================================================
 # 5. Format output -- compact_p vs. regular etc.
 # Add attributes to the TABLE tag
-set table2_atts_list [list border 1 cellspacing 0 cellpadding 2]
+#set table2_atts_list [list border 1 cellspacing 0 cellpadding 2]
+set table2_atts_list [list ]
 
 # Add cell formatting to TD tags
 set cell_formating_list [list ]
 # Let's try to get fancy, have the rows alternate color after the first row, 
 # and have the sorted columns slightly lighter in color to highlight them
 # base alternating row colors:
-set color_even_row "#ccc"
-set color_odd_row "#cfc"
+set color_even_row "evenrow"
+set color_odd_row "oddrow"
 # sorted column colors
-set color_even_scol "#ddd"
-set color_odd_scol "#dfd"
+set color_even_scol "evenlight"
+set color_odd_scol "oddlight"
 
 # Set the default title row and column TD formats before columns sorted:
 
@@ -413,14 +414,14 @@ foreach title $table_titles_list {
     # even row TD attributes in even_row_list
     # odd row TD attributes in odd_row_list
     if { $column_type eq "integer" ||$column_type eq "real" } {
-        lappend title_td_attrs_list [list valign top align right]
+        lappend title_td_attrs_list [list class rightj]
         # Value is a number, so right justify
-        lappend even_row_list [list valign top align right]
-        lappend odd_row_list [list valign top align right]
+        lappend even_row_list [list class rightj]
+        lappend odd_row_list [list class rightj]
     } else {
-        lappend title_td_attrs_list [list valign top]
-        lappend even_row_list [list valign top]
-        lappend odd_row_list [list valign top]
+        lappend title_td_attrs_list [list ]
+        lappend even_row_list [list ]
+        lappend odd_row_list [list ]
     }
     incr column_nbr
 }
@@ -444,10 +445,21 @@ foreach td_row_list $cell_table_lists {
         if { $row_count > 0 } {
             # add the appropriate background color
             if { [f::even_p $row_count] } {
-                lappend cell_format_list bgcolor $color_even_scol
+                set color $color_even_scol
             } else {
-                lappend cell_format_list bgcolor $color_odd_scol
+                set color $color_odd_scol
             }
+            set class_pos [lsearch -exact $cell_format_list "class"]
+            if { $class_pos > -1 } {
+                # combine the class values instead of appending more attributes
+                incr class_pos
+                set attr_value [lindex $cell_format_list $class_pos]
+                set new_attr_value $attr_value
+                append new_attr_value " $color"
+                set cell_format_list [lreplace $cell_format_list $class_pos $class_pos $new_attr_value]
+            } else {
+                lappend cell_format_list class $color
+            }            
         }
         lappend td_row_new $cell_format_list
         # Blank the reference instead of removing it, or the $ii reference won't work. lsearch is slower
@@ -460,9 +472,20 @@ foreach td_row_list $cell_table_lists {
             if { $row_count > 0 } {
                 # add the appropriate background color
                 if { [f::even_p $row_count] } {
-                    lappend cell_format_list bgcolor $color_even_row
+                    set color $color_even_row
                 } else {
-                    lappend cell_format_list bgcolor $color_odd_row
+                    set color $color_odd_row
+                }
+                set class_pos [lsearch -exact $cell_format_list "class"]
+                if { $class_pos > -1 } {
+                    # combine the class values instead of appending more attributes
+                    incr class_pos
+                    set attr_value [lindex $cell_format_list $class_pos]
+                    set new_attr_value $attr_value
+                    append new_attr_value " $color"
+                    set cell_format_list [lreplace $cell_format_list $class_pos $class_pos $new_attr_value]
+                } else {
+                    lappend cell_format_list class $color
                 }
             }
             # Add unsorted column to row
@@ -546,7 +569,7 @@ if { 0 } {
         for {set i 0} {$i < $columns} {incr i} {
             if { [info exists before_columns_html] } {
                 append page_html $before_columns_html
-            }
+           }
             set new_report_lists [list ]
             lappend new_report_lists $asset_table_titles
             set column_lists [lrange $asset_report_lists [expr { $i * $items_per_list } ] [expr { $i * $items_per_list + $items_per_list_m_1 } ] ]

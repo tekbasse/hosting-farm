@@ -122,9 +122,9 @@ if {[template::util::is_nil doc(charset)]} {
     set doc(charset) [ns_config ns/parameters OutputCharset [ad_conn charset]]
 }
 
-template::head::add_meta \
-    -content "text/html; charset=$doc(charset)" \
-    -http_equiv "content-type"
+#template::head::add_meta \
+#    -content "text/html; charset=$doc(charset)" \
+#    -http_equiv "content-type"
 
 # The document language is always set from [ad_conn lang] which by default 
 # returns the language setting for the current user.  This is probably
