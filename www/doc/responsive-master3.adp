@@ -32,17 +32,18 @@ table tr td {
 border: 1px solid #ccc; 
 vertical-align: top;
 text-align: right;
-
 }
 table tr td .ctr {
 border: 1px solid #ccc; 
 vertical-align: top;
 text-align: center;
-
 }
 
-
-
+table tr td .sort {
+vertical-align: top;
+text-align: center;
+font-size: .25 em;
+}
 
 </script>
 

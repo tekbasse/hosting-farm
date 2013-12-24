@@ -284,7 +284,7 @@ foreach title $table_titles_list {
     }
     # For now, just inactivate the left most sort link that was most recently pressed (if it has been)
     set title_new $title
-    append title_new "<div class=\"small2\">"
+    append title_new "<span class=\"small2\">"
     if { $primary_sort_col eq "" || ( $primary_sort_col ne "" && $column_count ne [expr { abs($primary_sort_col) } ] ) } {
         # ns_log Notice "resource-status-summary-1.tcl(150): column_count $column_count s_urlcoded '$s_urlcoded'"
         append title_new " (<a href=\"$base_url?s=${s_urlcoded}&p=${column_count}${page_url_add}\" title=\"${title_asc}\">${abbrev_asc}</a>:<a href=\"$base_url?s=${s_urlcoded}&p=-${column_count}${page_url_add}\" title=\"${title_desc}\">${abbrev_desc}</a>)"
@@ -299,7 +299,7 @@ foreach title $table_titles_list {
             # increasing primary sort chosen last, no need to make the link active
             append title_new " (${abbrev_asc}:<a href=\"$base_url?s=${s_urlcoded}&p=-${column_count}${page_url_add}\" title=\"${title_desc}\">${abbrev_desc}</a>)"
         }
-        append title_new "</div>"
+        append title_new "</span>"
     }
     lappend table_titles_w_links_list $title_new
     incr column_count

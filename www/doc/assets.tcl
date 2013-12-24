@@ -30,7 +30,7 @@ if { $untrusted_user_id == 0 } {
 
 set interval_remaining [expr { int( [random ] * 30 ) } ]
 
-set input_array(s) ""
+set input_array(s) "-7"
 set input_array(p) ""
 set input_array(this_start_row) ""
 
