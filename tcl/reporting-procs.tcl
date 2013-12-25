@@ -154,7 +154,7 @@ ad_proc -private hf_asset_summary_status {
         set random [expr { wide( [clock seconds] / 360 ) }] 
         set i 0
         set random_list [list ]
-        while { $i < 10000 } {
+        while { $i < 20000 } {
             set random [expr { wide( fmod( $random * 38629 , 279470273 ) * 71 ) } ]
             lappend random_list [expr { srand($random) } ]
             incr i
