@@ -7,7 +7,7 @@
   <if @doc.charset@ not nil><meta charset="@doc.charset@"></if>
     <title<if @doc.title_lang@ not nil and @doc.title_lang@ ne @doc.lang@> lang="@doc.title_lang;noquote@"</if>>@doc.title;noquote@</title>
 
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<!--   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> -->
   <meta name="viewport" content="width=device-width">
 
 <!--
@@ -26,8 +26,8 @@
 </style>
 </multiple>
 -->
-<script type="text/css">
-
+<!-- <script type="text/css"> </script> -->
+<style>
 table tr td {
 border: 1px solid #ccc; 
 vertical-align: top;
@@ -58,8 +58,8 @@ background-color: #dfd;
 table tr td .evenlight {
 background-color: #ddd
 }
+</style>
 
-</script>
 
 <multiple name="headscript">   <script type="@headscript.type;noquote@"<if @headscript.src@ not nil> src="@headscript.src;noquote@"</if><if @headscript.charset@ not nil> charset="@headscript.charset;noquote@"</if><if @headscript.defer@ not nil> defer="@headscript.defer;noquote@"</if>><if @headscript.content@ not nil>@headscript.content;noquote@</if></script>
 
