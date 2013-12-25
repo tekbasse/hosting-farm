@@ -29,34 +29,33 @@
 <!-- <script type="text/css"> </script> -->
 <style>
 table tr td {
-border: 1px solid #ccc; 
-vertical-align: top;
-text-align: right;
+  border: 1px solid #999; 
+  vertical-align: top;
 }
-table tr td .ctr {
-border: 1px solid #ccc; 
-vertical-align: top;
-text-align: center;
+table tr td.ctr {
+  border: 1px solid #ccc; 
+  vertical-align: top;
+  text-align: center;
 }
-table tr td .rightj {
-vertical-align: top;
-text-align: right;
+table tr td.rightj {
+  vertical-align: top;
+  text-align: right;
 }
 
-table tr td .sort {
-font-size: .25 em;
+table tr td span.sort {
+  font-size: .25 em;
 }
-table tr td .oddrow {
-background-color: #cfc;
+table tr td.oddrow {
+  background-color: #cfc;
 }
-table tr td .evenrow {
-background-color: #ccc;
+table tr td.evenrow {
+  background-color: #ccc;
 }
-table tr td .oddlight {
-background-color: #dfd;
+table tr td.oddlight {
+  background-color: #dfd;
 }
-table tr td .evenlight {
-background-color: #ddd
+table tr td.evenlight {
+  background-color: #ddd
 }
 </style>
 
