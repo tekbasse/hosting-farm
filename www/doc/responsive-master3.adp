@@ -26,39 +26,12 @@
 </style>
 </multiple>
 -->
+<if @css_style@ not nil>
 <!-- <script type="text/css"> </script> -->
 <style>
-table tr td {
-  border: 1px solid #999; 
-  vertical-align: top;
-}
-table tr td.ctr {
-  border: 1px solid #ccc; 
-  vertical-align: top;
-  text-align: center;
-}
-table tr td.rightj {
-  vertical-align: top;
-  text-align: right;
-}
-
-table tr td span.sort {
-  font-size: .25 em;
-}
-table tr td.oddrow {
-  background-color: #cfc;
-}
-table tr td.evenrow {
-  background-color: #ccc;
-}
-table tr td.oddlight {
-  background-color: #dfd;
-}
-table tr td.evenlight {
-  background-color: #ddd
-}
+@css_style;noquote@
 </style>
-
+</if>
 
 <multiple name="headscript">   <script type="@headscript.type;noquote@"<if @headscript.src@ not nil> src="@headscript.src;noquote@"</if><if @headscript.charset@ not nil> charset="@headscript.charset;noquote@"</if><if @headscript.defer@ not nil> defer="@headscript.defer;noquote@"</if>><if @headscript.content@ not nil>@headscript.content;noquote@</if></script>
 
@@ -97,7 +70,7 @@ table tr td.evenlight {
       </div>
     </if>
     
-    <div class="grid-whole equalize"><!-- 3 -->
+    <div class="grid-whole"><!-- 3 -->
 
 <slave>
 

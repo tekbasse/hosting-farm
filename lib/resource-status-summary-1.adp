@@ -1,5 +1,6 @@
-<div class="l-grid-third m-grid-fourth s-grid-whole padded">
-  <div class="content-box">
+<!-- grid base is 12, so grid-2 is one sixth -->
+<div class="l-grid-2 m-grid-whole s-grid-whole">
+  <div class="content-box padded">
     <div>&nbsp;</div>
 
 <if @prev_bar@ or @next_bar@ not nil>
@@ -11,10 +12,10 @@
   </div>
 </div>
 
-<div class="l-grid-two-thirds m-grid-three-fourths s-grid-whole padded">
-            <div class="content-box">
-            <div>&nbsp;</div>
-@page_html;noquote@
-<div>&nbsp;</div>
-            </div>
-            </div>
+<div class="l-grid-10 m-grid-whole s-grid-whole">
+  <div class="content-box padded">
+    <div>&nbsp;</div>
+    @page_html;noquote@
+    <div>&nbsp;</div>
+  </div>
+</div>

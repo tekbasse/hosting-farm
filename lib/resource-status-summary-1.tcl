@@ -201,7 +201,7 @@ foreach {page_num start_row} $prev_bar_list {
     } else {
         set item_index [expr { ( $start_row - 1 ) } ]
         set primary_sort_field_val [lindex [lindex $table_sorted_lists $item_index] $col2sort_wo_sign]
-        set page_ref [qf_abbreviate [lang::util::localize $primary_sort_field_val] 4]
+        set page_ref [qf_abbreviate [lang::util::localize $primary_sort_field_val] 10]
         if { $page_ref eq "" } {
             set page_ref $page_num
         }
@@ -218,7 +218,7 @@ if { $s eq "" } {
 } else {
     set item_index [expr { ( $start_row - 1 ) } ]
     set primary_sort_field_val [lindex [lindex $table_sorted_lists $item_index] $col2sort_wo_sign]
-    set page_ref [qf_abbreviate [lang::util::localize $primary_sort_field_val] 4]
+    set page_ref [qf_abbreviate [lang::util::localize $primary_sort_field_val] 10]
     if { $page_ref eq "" } {
         set page_ref $page_num
     }
@@ -234,7 +234,7 @@ foreach {page_num start_row} $next_bar_list {
     } else {
         set item_index [expr { ( $page_num - 1 ) * $items_per_page + 1 } ]
         set primary_sort_field_val [lindex [lindex $table_sorted_lists $item_index] $col2sort_wo_sign]
-        set page_ref [qf_abbreviate [lang::util::localize $primary_sort_field_val] 4]
+        set page_ref [qf_abbreviate [lang::util::localize $primary_sort_field_val] 10]
         if { $page_ref eq "" } {
             set page_ref $page_num
         }
@@ -272,6 +272,27 @@ set table_titles_w_links_list [list ]
 set column_count 0
 set primary_sort_col [lindex $sort_order_list $column_count]
 
+# column_sort_decreases_list tells which columns are sorted in decreasing order.
+set column_sort_decreases_list [list ]
+set column_sorted_list [list ]
+for {set i 0} {$i < $table_cols_count} {incr i} {
+    lappend column_sort_decreases_list 0
+    lappend column_sorted_list 0
+}
+foreach sort_i $sort_order_list {
+    if { [string range $sort_i 0 0] eq "-" } {
+        set col_sort_i [string range $sort_i 1 end]
+        set decreasing_p 1
+    } else {
+        set col_sort_i $sort_i
+        set decreasing_p 0
+    }
+    if { $decreasing_p } {
+        set column_sort_decreases_list [lreplace $column_sort_decreases_list $col_sort_i $col_sort_i $decreasing_p]
+    }
+    set column_sorted_list [lreplace $column_sorted_list $col_sort_i $col_sort_i 1]
+}
+
 foreach title $table_titles_list {
     # figure out column data type for sort button (text or nbr) (column order not changed yet)
     set column_type [string range [lindex $sort_type_list $column_count] 1 end]
@@ -282,22 +303,52 @@ foreach title $table_titles_list {
         set abbrev_asc $text_asc
         set abbrev_desc $text_desc
     }
+    # is column sort decreasing? If so, let's reverse the order of column's sort links.
+    set decreasing_p [lindex $column_sort_decreases_list $column_count]
+    set column_sorted_p [lindex $column_sorted_list $column_count]
+    if { $column_sorted_p } {
+        set sort_link_delim "<br>"
+    } else {
+        set sort_link_delim ":"
+    }
+    # sort button should be active if an available choice, and inactive if already chosen (primary sort case)
+    # sorted columns should reflect existing sort case, so if column is sorted descending integer, then 9:1 not 1:9.
+    # sorted columnns should be aligned vertically to mimmick column value orientation.
+
     # For now, just inactivate the left most sort link that was most recently pressed (if it has been)
     set title_new $title
-    append title_new "<span class=\"small2\">"
+    append title_new "<span class=\"sort\">"
     if { $primary_sort_col eq "" || ( $primary_sort_col ne "" && $column_count ne [expr { abs($primary_sort_col) } ] ) } {
+        
         # ns_log Notice "resource-status-summary-1.tcl(150): column_count $column_count s_urlcoded '$s_urlcoded'"
-        append title_new " (<a href=\"$base_url?s=${s_urlcoded}&amp;p=${column_count}${page_url_add}\" title=\"${title_asc}\">${abbrev_asc}</a>:<a href=\"$base_url?s=${s_urlcoded}&amp;p=-${column_count}${page_url_add}\" title=\"${title_desc}\">${abbrev_desc}</a>)"
+        set sort_top "<a href=\"$base_url?s=${s_urlcoded}&amp;p=${column_count}${page_url_add}\" title=\"${title_asc}\">${abbrev_asc}</a>"
+        set sort_bottom "<a href=\"$base_url?s=${s_urlcoded}&amp;p=-${column_count}${page_url_add}\" title=\"${title_desc}\">${abbrev_desc}</a>"
+        if { $decreasing_p } {
+            append title_new " (${sort_bottom}${sort_link_delim}${sort_top})"
+        } else {
+            append title_new " (${sort_top}${sort_link_delim}${sort_bottom})"
+        }
     } else {
         if { [string range $s_urlcoded 0 0] eq "-" } {
             # ns_log Notice "resource-status-summary-1.tcl(154): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
             # decreasing primary sort chosen last, no need to make the link active
-            
-            append title_new " (<a href=\"$base_url?s=${s_urlcoded}&amp;p=${column_count}${page_url_add}\" title=\"${title_asc}\">${abbrev_asc}</a>:${abbrev_desc})"
+            set sort_top "<a href=\"$base_url?s=${s_urlcoded}&amp;p=${column_count}${page_url_add}\" title=\"${title_asc}\">${abbrev_asc}</a>"
+            set sort_bottom ${abbrev_desc}
+            if { $decreasing_p } {
+                append title_new " (${sort_bottom}${sort_link_delim}${sort_top})"
+            } else {
+                append title_new " (${sort_top}${sort_link_delim}${sort_bottom})"
+            }
         } else {
             # ns_log Notice "resource-status-summary-1.tcl(158): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
             # increasing primary sort chosen last, no need to make the link active
-            append title_new " (${abbrev_asc}:<a href=\"$base_url?s=${s_urlcoded}&amp;p=-${column_count}${page_url_add}\" title=\"${title_desc}\">${abbrev_desc}</a>)"
+            set sort_top ${abbrev_asc}
+            set sort_bottom "<a href=\"$base_url?s=${s_urlcoded}&amp;p=-${column_count}${page_url_add}\" title=\"${title_desc}\">${abbrev_desc}</a>"
+            if { $decreasing_p } {
+                append title_new " (${sort_bottom}${sort_link_delim}${sort_top})"
+            } else {
+                append title_new " (${sort_top}${sort_link_delim}${sort_bottom})"
+            }
         }
     }
     append title_new "</span>"
@@ -416,12 +467,12 @@ foreach title $table_titles_list {
     if { $column_type eq "integer" ||$column_type eq "real" } {
         lappend title_td_attrs_list [list class rightj]
         # Value is a number, so right justify
-        lappend even_row_list [list class rightj]
-        lappend odd_row_list [list class rightj]
+        lappend even_row_list [list class "rightj smallest"]
+        lappend odd_row_list [list class "rightj smallest"]
     } else {
         lappend title_td_attrs_list [list ]
-        lappend even_row_list [list ]
-        lappend odd_row_list [list ]
+        lappend even_row_list [list class smallest]
+        lappend odd_row_list [list class smallest]
     }
     incr column_nbr
 }

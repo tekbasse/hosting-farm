@@ -332,6 +332,37 @@ textarea {
 /**
  * Remove most spacing between table cells.
  */
+table tr td {
+  vertical-align: top;
+}
+
+table tr td.ctr {
+  text-align: center;
+}
+table tr td.rightj {
+  text-align: right;
+}
+table tr td.border1 {
+  border: 1px solid #999; 
+}
+table tr td.smallest {
+  font-size: 80%;
+}
+table tr td span.sort {
+  font-size: 80%;
+}
+table tr td.oddrow {
+  background-color: #cfc;
+}
+table tr td.evenrow {
+  background-color: #ccc;
+}
+table tr td.oddlight {
+  background-color: #dfd;
+}
+table tr td.evenlight {
+  background-color: #ddd
+}
 
 table {
     border-collapse: collapse;
@@ -350,7 +381,7 @@ table {
 .grid-9,.grid-three-quarters{width:75%}
 .grid-10{width:83.33333%}
 .grid-11{width:91.66667%}
-.grid-12,.grid-whole{width:100%}
+.grid-12,.grid-whole,.whole{width:100%}
 .padded{padding:0.5em}
 .padded-left{padding-left:0.5em}
 .padded-right{padding-right:0.5em}
@@ -545,10 +576,6 @@ img{max-width:100%!important;}
 p,h2,h3{orphans:3;widows:3;}
 h2,h3{page-break-after:avoid;}
 }
-
-
-
-
 
 h1,h2,h3,h4,h5,h6 { line-height: 1.2; margin: 0; }
 h1 {
