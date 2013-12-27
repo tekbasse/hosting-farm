@@ -525,8 +525,8 @@ pre{white-space:pre-wrap;word-wrap:break-word;}
 q{quotes:none;}
 q:before,q:after{content:none;}
 small2{top:-.5em;font-size:30%;line-height:0;position:relative;vertical-align:top;}
-.subscript{font-size:70%;vertical-align: sub; margin-left: -0.1em;}
-.superscript{font-size:70%;vertical-align: super; }
+.sortedlast{font-family: monospace, san-serif; font-size:70%;vertical-align: sub; margin-left: -0.63em; background-color: #eef;} 
+.sortedfirst{font-family: monospace, san-serif; font-size:70%;vertical-align: super; background-color: #eef;}
 sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline;}
 sup{top:-.5em;}
 sub{bottom:-.25em;}

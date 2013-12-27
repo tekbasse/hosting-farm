@@ -306,34 +306,41 @@ foreach title $table_titles_list {
     # is column sort decreasing? If so, let's reverse the order of column's sort links.
     set decreasing_p [lindex $column_sort_decreases_list $column_count]
     set column_sorted_p [lindex $column_sorted_list $column_count]
-    if { $column_sorted_p } {
-        set sort_link_delim "</span> <span class=\"small2\">"
-    } else {
-        set sort_link_delim ":"
-    }
+#    if { $column_sorted_p } {
+        set sort_link_delim ""
+#    } else {
+#        set sort_link_delim ":"
+#    }
     # sort button should be active if an available choice, and inactive if already chosen (primary sort case)
     # sorted columns should reflect existing sort case, so if column is sorted descending integer, then 9:1 not 1:9.
     # sorted columnns should be aligned vertically to mimmick column value orientation.
 
     # For now, just inactivate the left most sort link that was most recently pressed (if it has been)
     set title_new $title
-    append title_new "<div style=\"width: .7em;\"><span class=\"small2\">"
+    append title_new "<div style=\"width: .7em; text-align: center; border: 1px solid #999; background-color: #eef;\">"
     if { $primary_sort_col eq "" || ( $primary_sort_col ne "" && $column_count ne [expr { abs($primary_sort_col) } ] ) } {
         
         # ns_log Notice "resource-status-summary-1.tcl(150): column_count $column_count s_urlcoded '$s_urlcoded'"
-        set sort_top "<a href=\"$base_url?s=${s_urlcoded}&amp;p=${column_count}${page_url_add}\" title=\"${title_asc}\">${abbrev_asc}</a>"
-        set sort_bottom "<a href=\"$base_url?s=${s_urlcoded}&amp;p=-${column_count}${page_url_add}\" title=\"${title_desc}\">${abbrev_desc}</a>"
+        if { $decreasing_p } {
+            # reverse class styles
+            set sort_top "<a href=\"$base_url?s=${s_urlcoded}&amp;p=${column_count}${page_url_add}\" title=\"${title_asc}\" class=\"sortedlast\">${abbrev_asc}</a>"
+            set sort_bottom "<a href=\"$base_url?s=${s_urlcoded}&amp;p=-${column_count}${page_url_add}\" title=\"${title_desc}\" class=\"sortedfirst\">${abbrev_desc}</a>"
+
+        } else {
+            set sort_top "<a href=\"$base_url?s=${s_urlcoded}&amp;p=${column_count}${page_url_add}\" title=\"${title_asc}\" class=\"sortedfirst\">${abbrev_asc}</a>"
+            set sort_bottom "<a href=\"$base_url?s=${s_urlcoded}&amp;p=-${column_count}${page_url_add}\" title=\"${title_desc}\" class=\"sortedlast\">${abbrev_desc}</a>"
+        }
     } else {
-        if { [string range $s_urlcoded 0 0] eq "-" } {
+        if { $decreasing_p } {
             # ns_log Notice "resource-status-summary-1.tcl(154): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
             # decreasing primary sort chosen last, no need to make the link active
-            set sort_top "<a href=\"$base_url?s=${s_urlcoded}&amp;p=${column_count}${page_url_add}\" title=\"${title_asc}\">${abbrev_asc}</a>"
-            set sort_bottom ${abbrev_desc}
+            set sort_top "<a href=\"$base_url?s=${s_urlcoded}&amp;p=${column_count}${page_url_add}\" title=\"${title_asc}\" class=\"sortedlast\">${abbrev_asc}</a>"
+            set sort_bottom "<span class=\"sortedfirst\">${abbrev_desc}</span>"
         } else {
             # ns_log Notice "resource-status-summary-1.tcl(158): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
             # increasing primary sort chosen last, no need to make the link active
-            set sort_top ${abbrev_asc}
-            set sort_bottom "<a href=\"$base_url?s=${s_urlcoded}&amp;p=-${column_count}${page_url_add}\" title=\"${title_desc}\">${abbrev_desc}</a>"
+            set sort_top "<span class=\"sortedfirst\">${abbrev_asc}</span>"
+            set sort_bottom "<a href=\"$base_url?s=${s_urlcoded}&amp;p=-${column_count}${page_url_add}\" title=\"${title_desc}\" class=\"sortedlast\">${abbrev_desc}</a>"
         }
     }
     if { $decreasing_p } {
@@ -341,7 +348,8 @@ foreach title $table_titles_list {
     } else {
         append title_new "${sort_top}${sort_link_delim}${sort_bottom}"
     }
-    append title_new "</span></div>"
+#        append title_new "${sort_top}${sort_link_delim}${sort_bottom}"
+    append title_new "</div>"
     lappend table_titles_w_links_list $title_new
     incr column_count
 }
