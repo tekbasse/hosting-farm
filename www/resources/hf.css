@@ -527,6 +527,7 @@ q:before,q:after{content:none;}
 small2{top:-.5em;font-size:30%;line-height:0;position:relative;vertical-align:top;}
 .sortedlast{font-family: monospace, san-serif; font-size:70%;vertical-align: sub; margin-left: -0.63em; background-color: #eef;} 
 .sortedfirst{font-family: monospace, san-serif; font-size:70%;vertical-align: super; background-color: #eef;}
+.unsorted{font-family: monospace, san-serif; font-size:70%;vertical-align: normal; background-color: #eef;}
 sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline;}
 sup{top:-.5em;}
 sub{bottom:-.25em;}

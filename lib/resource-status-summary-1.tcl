@@ -317,18 +317,24 @@ foreach title $table_titles_list {
 
     # For now, just inactivate the left most sort link that was most recently pressed (if it has been)
     set title_new $title
-    append title_new "<div style=\"width: .7em; text-align: center; border: 1px solid #999; background-color: #eef;\">"
-    if { $primary_sort_col eq "" || ( $primary_sort_col ne "" && $column_count ne [expr { abs($primary_sort_col) } ] ) } {
-        
-        # ns_log Notice "resource-status-summary-1.tcl(150): column_count $column_count s_urlcoded '$s_urlcoded'"
-        if { $decreasing_p } {
-            # reverse class styles
-            set sort_top "<a href=\"$base_url?s=${s_urlcoded}&amp;p=${column_count}${page_url_add}\" title=\"${title_asc}\" class=\"sortedlast\">${abbrev_asc}</a>"
-            set sort_bottom "<a href=\"$base_url?s=${s_urlcoded}&amp;p=-${column_count}${page_url_add}\" title=\"${title_desc}\" class=\"sortedfirst\">${abbrev_desc}</a>"
 
+
+    if { $primary_sort_col eq "" || ( $primary_sort_col ne "" && $column_count ne [expr { abs($primary_sort_col) } ] ) } {
+        if { $column_sorted_p } {
+        # ns_log Notice "resource-status-summary-1.tcl(150): column_count $column_count s_urlcoded '$s_urlcoded'"
+            if { $decreasing_p } {
+                # reverse class styles
+                set sort_top "<a href=\"$base_url?s=${s_urlcoded}&amp;p=${column_count}${page_url_add}\" title=\"${title_asc}\" class=\"sortedlast\">${abbrev_asc}</a>"
+                set sort_bottom "<a href=\"$base_url?s=${s_urlcoded}&amp;p=-${column_count}${page_url_add}\" title=\"${title_desc}\" class=\"sortedfirst\">${abbrev_desc}</a>"
+            } else {
+                set sort_top "<a href=\"$base_url?s=${s_urlcoded}&amp;p=${column_count}${page_url_add}\" title=\"${title_asc}\" class=\"sortedfirst\">${abbrev_asc}</a>"
+                set sort_bottom "<a href=\"$base_url?s=${s_urlcoded}&amp;p=-${column_count}${page_url_add}\" title=\"${title_desc}\" class=\"sortedlast\">${abbrev_desc}</a>"
+            }
         } else {
-            set sort_top "<a href=\"$base_url?s=${s_urlcoded}&amp;p=${column_count}${page_url_add}\" title=\"${title_asc}\" class=\"sortedfirst\">${abbrev_asc}</a>"
-            set sort_bottom "<a href=\"$base_url?s=${s_urlcoded}&amp;p=-${column_count}${page_url_add}\" title=\"${title_desc}\" class=\"sortedlast\">${abbrev_desc}</a>"
+            # Don't align sort order vertically.. just use normal horizontal alignment
+                set sort_top "<a href=\"$base_url?s=${s_urlcoded}&amp;p=${column_count}${page_url_add}\" title=\"${title_asc}\" class=\"unsorted\">${abbrev_asc}</a>"
+                set sort_bottom "<a href=\"$base_url?s=${s_urlcoded}&amp;p=-${column_count}${page_url_add}\" title=\"${title_desc}\" class=\"unsorted\">${abbrev_desc}</a>"
+                set sort_link_delim ":"
         }
     } else {
         if { $decreasing_p } {
@@ -342,6 +348,11 @@ foreach title $table_titles_list {
             set sort_top "<span class=\"sortedfirst\">${abbrev_asc}</span>"
             set sort_bottom "<a href=\"$base_url?s=${s_urlcoded}&amp;p=-${column_count}${page_url_add}\" title=\"${title_desc}\" class=\"sortedlast\">${abbrev_desc}</a>"
         }
+    }
+    if { $column_sorted_p } {
+        append title_new "<div style=\"width: .7em; text-align: center; border: 1px solid #999; background-color: #eef;\">"
+    } else {
+        append title_new "<div style=\"width: 1.6em; text-align: center; border: 1px solid #999; background-color: #eef;\">"
     }
     if { $decreasing_p } {
         append title_new "${sort_bottom}${sort_link_delim}${sort_top}"
