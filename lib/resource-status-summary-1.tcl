@@ -414,22 +414,22 @@ foreach row_list $table_sorted_lists {
 }
 
 # Add Row of Titles to Table
-#set table_sorted_lists [linsert $table_sorted_lists 0 [lrange $table_titles_list 0 $table_index_last]]
-
 set table_sorted_lists [linsert $table_formatted_lists 0 [lrange $table_titles_list 0 $table_index_last]]
 
 # To remove a column from display:
-# 1. Remove the column reference from sort_stack_list (and sort_rev_order_list if it were used..)
+# 1. Blank the column reference from sort_stack_list (and sort_rev_order_list if it were used..)
 #    where  sort_stack_list is a sequential list: 0 1 2 3..
-# 2. Remove the column reference from table_titles_list:
+#    Don't remove the reference, or later column tracking for unsorted removals will break.
+# 2. Reset table_cols_count
+# Following additional requirements are for the compact_p option:
+# 3. Remove the column reference from table_titles_list
 #    set table_titles_list \[list "#acs-lang.Label#" "#accounts-ledger.Name#" "#accounts-ledger.Type#" "#hosting-farm.Metric#" "#accounts-ledger.Amount#" "#hosting-farm.Quota#" "#hosting-farm.Projected#" "#hosting-farm.Health_Score#" "#accounts-ledger.Message#"]
-# 3. Reset table_cols_count
 
-# Remove column: Name ref 1 (use it as the asset reference for links)
-#set sort_stack_list [lreplace $sort_stack_list 1 1]
+# Blank the column reference: Name ref 1
+set sort_stack_list [lreplace $sort_stack_list 1 1 ""]
 #set sort_rev_order_list [lsort -integer -decreasing [lrange $sort_stack_list 0 [expr { [llength $sort_order_list] - 1 } ] ] ]
 #set table_titles_list [lreplace $table_titles_list 1 1]
-#incr table_cols_count -1
+incr table_cols_count -1
 
 # ================================================
 
@@ -443,7 +443,7 @@ set table_col_sorted_lists [list ]
 # Rebuild the table, one row at a time, adding the primary, secondary etc. columns in order
 foreach table_row_list $table_sorted_lists {
     set table_row_new [list ]
-    # Track the rows that aren't sorted
+    # Track the columns that aren't sorted
     set unsorted_list $sort_stack_list
     foreach ii $sort_order_list {
         set ii_pos [expr { abs( $ii ) } ]
@@ -572,7 +572,7 @@ foreach td_row_list $cell_table_lists {
             }            
         }
         lappend td_row_new $cell_format_list
-        # Blank the reference instead of removing it, or the $ii reference won't work. lsearch is slower
+        # Blank the reference instead of removing it, or the $ii_pos reference won't work. lsearch is slower
         set unsorted_list [lreplace $unsorted_list $ii_pos $ii_pos ""]
     }
     # Now that the sorted columns are added to the row, add the remaining columns
