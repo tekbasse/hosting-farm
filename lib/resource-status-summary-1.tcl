@@ -352,7 +352,7 @@ foreach title $table_titles_list {
     if { $column_sorted_p } {
         append title_new "<div style=\"width: .7em; text-align: center; border: 1px solid #999; background-color: #eef;\">"
     } else {
-        append title_new "<div style=\"width: 1.6em; text-align: center; border: 1px solid #999; background-color: #eef; line-height: 70%;\">"
+        append title_new "<div style=\"width: 1.6em; text-align: center; border: 1px solid #999; background-color: #eef; line-height: 75%;\">"
     }
     if { $decreasing_p } {
         append title_new "${sort_bottom}${sort_link_delim}${sort_top}"
@@ -629,120 +629,4 @@ set table2_html [qss_list_of_lists_to_html_table $table2_lists $table2_atts_list
 # add table2_html to adp output
 append page_html $table2_html
 
-
-## following from resource-status-summary-2.tcl
-# basically is for compact_p case, because page_html and nav_html have been built above.
-
-set asset_report_lists [list ]
-foreach report_list $asset_stts_smmry_lists {
-    set status_list [list ]
-    lappend status_list "<a href=\"[string tolower [lindex $report_list 2]]?name=[lindex $report_list 0]\">[lindex $report_list 1]</a>"
-#    lappend status_list [lindex $report_list 1]
-    lappend status_list [lindex $report_list 2]
-    set metric [lindex $report_list 3]
-    lappend status_list $metric
-    set sample [lindex $report_list 4]
-    set projected_eop [lindex $report_list 6]
-    if { $metric eq "traffic" } {
-        set sample [qal_pretty_bytes_iec $sample]
-        set projected_eop [qal_pretty_bytes_iec $projected_eop]
-    } else {
-        set sample [qal_pretty_bytes_dec $sample]
-        set projected_eop [qal_pretty_bytes_dec $projected_eop]
-    }
-    lappend status_list $sample
-    lappend status_list [format "%d%%" [lindex $report_list 5]]
-    lappend status_list $projected_eop
-    lappend status_list "([lindex $report_list 7]) [lindex $report_list 8]"
-    lappend asset_report_lists $status_list
-}
-
-set asset_table_titles [list "#accounts-ledger.Name#" "#accounts-ledger.Type#" "#hosting-farm.Metric#" "#accounts-ledger.Amount#" "#hosting-farm.Quota#" "#hosting-farm.Projected#" "#acs-subsite.status#"]
-set table_att_list [list ]
-set td_att_list [list ]
-# ignore columns option for now
-if { 0 } {
-    if { [info exists columns] && $columns > 1 } {
-        set before_columns_html  {<div class="l-grid-half m-grid-whole s-grid-whole padded">
-            <div class="content-box">
-            <div>&nbsp;</div>
-        }
-        set after_columns_html { <div>&nbsp;</div>
-            </div>
-            </div>
-        }
-        set arl_length [llength $asset_report_lists]
-        set items_per_list [expr { int( $arl_length / $columns ) + 1 } ]
-        
-        set items_per_list_m_1 [expr { $items_per_list - 1 } ]
-        
-        for {set i 0} {$i < $columns} {incr i} {
-            if { [info exists before_columns_html] } {
-                append page_html $before_columns_html
-           }
-            set new_report_lists [list ]
-            lappend new_report_lists $asset_table_titles
-            set column_lists [lrange $asset_report_lists [expr { $i * $items_per_list } ] [expr { $i * $items_per_list + $items_per_list_m_1 } ] ]
-            foreach row_list $column_lists {
-                lappend new_report_lists $row_list
-            }
-            # between_columns_html  if exists, inserts html that goes between each column
-            append page_html [qss_list_of_lists_to_html_table $new_report_lists $table_att_list $td_att_list]
-            if { [info exists after_columns_html] } {
-                append page_html $after_columns_html
-            }
-        }
-        
-    }
-} else {
-
-
-    if { [info exists compact_p] && $compact_p } {
-        
-        # was:  "name" "type" "metric" "sample" "quota" "projected" "status"
-        # dropping sample, projected
-        set asset_report_new_lists [list ]
-        set max_quota 100
-        foreach report_list $asset_report_lists {
-            regsub -all -- {[ %]} [lindex $report_list 4] {} quota_test
-            set max_quota [f::max $quota_test $max_quota]
-        }
-        foreach report_list $asset_report_lists {
-            set report_new_list [list]
-            set name [lindex $report_list 0]
-            set type [lindex $report_list 1]
-            lappend report_new_list [hf_as_type_html $type $name hf 35]
-            # metric
-            set metric [lindex $report_list 2]
-            lappend report_new_list "<img src=\"/hosting-farm/resources/icons/hf-${metric}.png\" width=\"35\" height=\"35\" title=\"$metric\">"
-            # quota
-            set quota_html [lindex $report_list 4]
-            regsub -all -- {[ %]} $quota_html {} quota
-            # status
-            set status [lindex $report_list 6]
-            set score_message [lindex $report_list 7]
-            lappend report_new_list [hf_meter_percent_html $quota "$quota %" "" 80 35 $max_quota]
-            lappend report_new_list $status
-            lappend asset_report_new_lists $report_new_list
-        }
-        set td_att_compact_list [list [lindex $td_att_list 0] [lindex $td_att_list 2] [lindex $td_att_list 4] [lindex $td_att_list 6]]
-        #following is not compact enough.
-#        set page_html [qss_list_of_lists_to_html_table $asset_report_new_lists $table_att_list $td_att_compact_list]
-        set page_html "<table>"
-        foreach item $asset_report_new_lists {
-            append page_html "<tr>"
-            append page_html "<td>[lindex $item 0]</td>"
-            append page_html "<td>[lindex $item 1]</td>"
-            append page_html "<td>[lindex $item 2]</td>"
-            append page_html "<td>[lindex $item 3]</td>"
-            append page_html "</tr>"
-        }
-        append page_html "</table>"
-    } else {
-        set asset_report_lists [linsert $asset_report_lists 0 $asset_table_titles]
-#        set page_html [qss_list_of_lists_to_html_table $asset_report_lists $table_att_list $td_att_list]
-    }
-
-
-}
 
