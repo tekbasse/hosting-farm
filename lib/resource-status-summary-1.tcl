@@ -367,10 +367,8 @@ foreach title $table_titles_list {
 set table_titles_list $table_titles_w_links_list
 
 # Begin building the paginated table here. Table rows have been sorted.
-# Add Row of Titles to Table
-#set table_sorted_lists [linsert $table_sorted_lists 0 [lrange $table_titles_list 0 $table_index_last]]
+
 set table_paged_sorted_lists [list ]
-lappend table_paged_sorted_lists [lrange $table_titles_list 0 $table_index_last]
 set lindex_start [expr { $this_start_row - 1 } ]
 set lindex_last [expr { $item_count - 1 } ]
 set last_row [expr { $lindex_start + $items_per_page - 1 } ]
@@ -384,6 +382,57 @@ set table_sorted_lists $table_paged_sorted_lists
 # Result: table_sorted_lists
 # Number of sorted columns:
 set sort_cols_count [llength $sort_order_list]
+
+# ================================================
+# Display customizations
+
+# loop through display table rows, formatting data
+set table_formated_lists [list ]
+foreach row_list $table_sorted_lists {
+      # label name type metric amount quota projected health_score message
+    set label [lindex $row_list 0]
+    set name [lindex $row_list 1]
+    set type [lindex $row_list 2]
+    set metric [lindex $row_list 3]
+    set amount [lindex $row_list 4]
+    set quota [lindex $row_list 5]
+    set projected [lindex $row_list 6]
+    set health_score [lindex $row_list 7]
+    set message [lindex $row_list 8]
+    set label2 "<a href=\"[string tolower $type]?name=$name\">$label</a>"
+    if { $metric eq "traffic" } {
+        set amount2 [qal_pretty_bytes_iec $amount]
+        set projected2 [qal_pretty_bytes_iec $projected]
+    } else {
+        set amount2 [qal_pretty_bytes_dec $amount]
+        set projected2 [qal_pretty_bytes_dec $projected]
+    }
+    set quota2 [format "%d%%" $quota]
+    # keep row_new_list same length as row_list.. or subsequent sort related references break. 
+    set row_new_list [list $label2 $name $type $metric $amount2 $quota2 $projected2 $health_score $message]
+    lappend table_formatted_lists $row_new_list
+}
+
+# Add Row of Titles to Table
+#set table_sorted_lists [linsert $table_sorted_lists 0 [lrange $table_titles_list 0 $table_index_last]]
+
+set table_sorted_lists [linsert $table_formatted_lists 0 [lrange $table_titles_list 0 $table_index_last]]
+
+# To remove a column from display:
+# 1. Remove the column reference from sort_stack_list (and sort_rev_order_list if it were used..)
+#    where  sort_stack_list is a sequential list: 0 1 2 3..
+# 2. Remove the column reference from table_titles_list:
+#    set table_titles_list \[list "#acs-lang.Label#" "#accounts-ledger.Name#" "#accounts-ledger.Type#" "#hosting-farm.Metric#" "#accounts-ledger.Amount#" "#hosting-farm.Quota#" "#hosting-farm.Projected#" "#hosting-farm.Health_Score#" "#accounts-ledger.Message#"]
+# 3. Reset table_cols_count
+
+# Remove column: Name ref 1 (use it as the asset reference for links)
+#set sort_stack_list [lreplace $sort_stack_list 1 1]
+#set sort_rev_order_list [lsort -integer -decreasing [lrange $sort_stack_list 0 [expr { [llength $sort_order_list] - 1 } ] ] ]
+#set table_titles_list [lreplace $table_titles_list 1 1]
+#incr table_cols_count -1
+
+# ================================================
+
 
 
 # ================================================
@@ -403,6 +452,7 @@ foreach table_row_list $table_sorted_lists {
         set unsorted_list [lreplace $unsorted_list $ii_pos $ii_pos ""]
     }
     # Now that the sorted columns are added to the row, add the remaining columns
+
     foreach ui $unsorted_list {
         if { $ui ne "" } {
             # Add unsorted column to row
@@ -581,12 +631,12 @@ append page_html $table2_html
 
 
 ## following from resource-status-summary-2.tcl
-
+# basically is for compact_p case, because page_html and nav_html have been built above.
 
 set asset_report_lists [list ]
 foreach report_list $asset_stts_smmry_lists {
     set status_list [list ]
-    lappend status_list "<a href=\"[string tolower [lindex $report_list 2]]?label=[lindex $report_list 1]\">[lindex $report_list 0]</a>"
+    lappend status_list "<a href=\"[string tolower [lindex $report_list 2]]?name=[lindex $report_list 0]\">[lindex $report_list 1]</a>"
 #    lappend status_list [lindex $report_list 1]
     lappend status_list [lindex $report_list 2]
     set metric [lindex $report_list 3]
@@ -647,7 +697,7 @@ if { 0 } {
 } else {
 
 
-if { [info exists compact_p] && $compact_p } {
+    if { [info exists compact_p] && $compact_p } {
         
         # was:  "name" "type" "metric" "sample" "quota" "projected" "status"
         # dropping sample, projected
