@@ -306,11 +306,7 @@ foreach title $table_titles_list {
     # is column sort decreasing? If so, let's reverse the order of column's sort links.
     set decreasing_p [lindex $column_sort_decreases_list $column_count]
     set column_sorted_p [lindex $column_sorted_list $column_count]
-#    if { $column_sorted_p } {
-        set sort_link_delim ""
-#    } else {
-#        set sort_link_delim ":"
-#    }
+    set sort_link_delim ""
     # sort button should be active if an available choice, and inactive if already chosen (primary sort case)
     # sorted columns should reflect existing sort case, so if column is sorted descending integer, then 9:1 not 1:9.
     # sorted columnns should be aligned vertically to mimmick column value orientation.
@@ -359,7 +355,6 @@ foreach title $table_titles_list {
     } else {
         append title_new "${sort_top}${sort_link_delim}${sort_bottom}"
     }
-#        append title_new "${sort_top}${sort_link_delim}${sort_bottom}"
     append title_new "</div>"
     lappend table_titles_w_links_list $title_new
     incr column_count
@@ -501,7 +496,7 @@ if { 0 } {
 # 5. Format output -- compact_p vs. regular etc.
 # Add attributes to the TABLE tag
 #set table2_atts_list [list border 1 cellspacing 0 cellpadding 2]
-set table2_atts_list [list ]
+set table2_atts_list [list style "grid-whole"]
 
 # Add cell formatting to TD tags
 set cell_formating_list [list ]
@@ -524,14 +519,14 @@ foreach title $table_titles_list {
     # even row TD attributes in even_row_list
     # odd row TD attributes in odd_row_list
     if { $column_type eq "integer" ||$column_type eq "real" } {
-        lappend title_td_attrs_list [list class rightj]
+        lappend title_td_attrs_list [list class "rightj border1"]
         # Value is a number, so right justify
-        lappend even_row_list [list class "rightj smallest"]
-        lappend odd_row_list [list class "rightj smallest"]
+        lappend even_row_list [list class "rightj smallest border1"]
+        lappend odd_row_list [list class "rightj smallest border1"]
     } else {
-        lappend title_td_attrs_list [list ]
-        lappend even_row_list [list class smallest]
-        lappend odd_row_list [list class smallest]
+        lappend title_td_attrs_list [list class "border1"]
+        lappend even_row_list [list class "smallest border1"]
+        lappend odd_row_list [list class "smallest border1"]
     }
     incr column_nbr
 }
