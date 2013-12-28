@@ -348,7 +348,7 @@ foreach title $table_titles_list {
     if { $column_sorted_p } {
         append title_new "<div style=\"width: .7em; text-align: center; border: 1px solid #999; background-color: #eef;\">"
     } else {
-        append title_new "<div style=\"width: 1.6em; text-align: center; border: 1px solid #999; background-color: #eef; line-height: 75%;\">"
+        append title_new "<div style=\"width: 1.6em; text-align: center; border: 1px solid #999; background-color: #eef; line-height: 90%;\">"
     }
     if { $decreasing_p } {
         append title_new "${sort_bottom}${sort_link_delim}${sort_top}"
