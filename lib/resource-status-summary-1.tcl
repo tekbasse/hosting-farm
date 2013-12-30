@@ -496,7 +496,7 @@ if { 0 } {
 # 5. Format output -- compact_p vs. regular etc.
 # Add attributes to the TABLE tag
 #set table2_atts_list [list border 1 cellspacing 0 cellpadding 2]
-set table2_atts_list [list style "grid-whole"]
+set table2_atts_list [list style "background-color: #cec;"]
 
 # Add cell formatting to TD tags
 set cell_formating_list [list ]
