@@ -1863,9 +1863,11 @@ ad_proc -private hf_ip_read {
     set user_id [ad_conn user_id]
     
     ##code
-    # get asset_id via a new proc hf_id_of_ip_id
-    # check permissions
-    # if ok, get ip data
+    ## to check permissions here, would require:
+    ## get asset_id via a new proc hf_id_of_ip_id, but that would return multiple asset_ids (VMs + machine etc).
+    ## checking permissions  would require hf_ids_of_ip_id.. and that would be slow for large sets
+    ## hf_ip_read/write etc should only be called from within a private proc. and is publically available via inet services anyway..
+    # get ip data
 }
 
 ad_proc -private hf_ip_write {
