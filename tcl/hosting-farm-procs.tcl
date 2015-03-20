@@ -1433,6 +1433,7 @@ ad_proc -private hf_asset_types {
 
 ad_proc -private hf_asset_halt {
     asset_id
+    {instance_id ""}
 } {
     Halts the operation of an asset, such as service, vm, vhost etc
 } {
@@ -1444,18 +1445,22 @@ ad_proc -private hf_asset_halt {
         set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
-    # determine customer_id of asset (s/b an existing proc)
-
+    # determine customer_id of asset
+    set asset_stats_list [hf_asset_stats $asset_id $instance_id $user_id]
+    set customer_id [lindex $asset_stats_list 17]
+    
     set admin_p [hf_permission_p $user_id $customer_id technical admin $instance_id]
+    if { $admin_p } {
+        # determine asset_type
+        set asset_type_id [lindex $asset_stats_list 2]
+   
+       ## process via tcl switch
+       ##    add priority value
+       ##    add to operations stack that is listened to by an ad_scheduled_proc procedure working in short interval cycles
 
-    # determine asset_type (make this a proc.. or check to see if exists for a proc.. reading asset table)
-
-    # via sql
-
-    # process via tcl switch
-    #    add priority value
-    #    add to operations stack that is listened to by an ad_scheduled_proc procedure working in short interval cycles
+    }
     # return 1 if has permission.
+    return $admin_p
 }
 
 # Would be nice to be able to pass attributes via upvar array, but db_ procs do not have feature to quote array references
