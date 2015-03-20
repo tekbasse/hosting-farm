@@ -1436,15 +1436,22 @@ ad_proc -private hf_asset_halt {
 } {
     Halts the operation of an asset, such as service, vm, vhost etc
 } {
+    ##code
+
+    # check permission
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
-    
-    ##code
-    # check permission
-    # determine asset_type
+    # determine customer_id of asset (s/b an existing proc)
+
+    set admin_p [hf_permission_p $user_id $customer_id technical admin $instance_id]
+
+    # determine asset_type (make this a proc.. or check to see if exists for a proc.. reading asset table)
+
+    # via sql
+
     # process via tcl switch
     #    add priority value
     #    add to operations stack that is listened to by an ad_scheduled_proc procedure working in short interval cycles
