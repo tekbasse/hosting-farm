@@ -2,6 +2,11 @@ ad_library {
 
     misc API for hosting-farm
     @creation-date 5 June 2013
+    @Copyright (c) 2014 Benjamin Brink
+    @license GNU General Public License 3, see project home or http://www.gnu.org/licenses/gpl-3.0.en.html
+    @project home: http://github.com/tekbasse/hosting-farm
+    @address: po box 20, Marylhurst, OR 97036-0020 usa
+    @email: tekbasse@yahoo.com
 
     # UI for one click (web-based) installers
       # installers install/update/monitor/activate/de-activate software, ie hosted service (hs) or software as a service (ss)

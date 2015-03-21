@@ -2,6 +2,12 @@ ad_library {
 
     misc date-time procedures..
     @creation-date 4 December 2013
+    @Copyright (c) 2014 Benjamin Brink
+    @license GNU General Public License 3, see project home or http://www.gnu.org/licenses/gpl-3.0.en.html
+    @project home: http://github.com/tekbasse/hosting-farm
+    @address: po box 20, Marylhurst, OR 97036-0020 usa
+    @email: tekbasse@yahoo.com
+
     see: http://wiki.tcl.tk/39012 for interval_*ymdhms procs discussion
 }
 
