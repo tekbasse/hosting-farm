@@ -33,15 +33,15 @@ ad_proc -private hf_log_create {
                 ns_log Notice "hf_log_create.451: user_id ''"
                 set user_id [ad_conn user_id]
             }
-            set id [db_nextval qaf_id_seq]
+            set id [db_nextval hf_sched_id_seq]
             set trashed_p 0
             set nowts [dt_systime -gmt 1]
             set action_code [qf_abbreviate $action_code 38]
             set action_title [qf_abbreviate $action_title 78]
-            db_dml qaf_process_log_create { insert into qaf_process_log
+            db_dml hf_process_log_create { insert into hf_process_log
                 (id,asset_id,instance_id,user_id,trashed_p,name,title,created,last_modified,log_entry)
                 values (:id,:asset_id,:instance_id,:user_id,:trashed_p,:action_code,:action_title,:nowts,:nowts,:entry_text) }
-            ns_log Notice "hf_log_create.46: posting to qaf_process_log: action_code ${action_code} action_title ${action_title} '$entry_text'"
+            ns_log Notice "hf_log_create.46: posting to hf_process_log: action_code ${action_code} action_title ${action_title} '$entry_text'"
         } else {
             ns_log Warning "hf_log_create.48: attempt to post an empty log message has been ignored."
         }
@@ -77,15 +77,15 @@ ad_proc -public hf_log_read {
         set return_lol [list ]
         set last_viewed ""
         set alert_msg_count 0
-        set viewing_history_p [db_0or1row qaf_process_log_viewed_last { select last_viewed from qaf_process_log_viewed where instance_id = :instance_id and asset_id = :asset_id and user_id = :user_id } ]
+        set viewing_history_p [db_0or1row hf_process_log_viewed_last { select last_viewed from hf_process_log_viewed where instance_id = :instance_id and asset_id = :asset_id and user_id = :user_id } ]
         # set new view history time
         if { $viewing_history_p } {
 
             set last_viewed [string range $last_viewed 0 18]
             if { $last_viewed ne "" } {
                 
-                set entries_lol [db_list_of_lists qaf_process_log_read_new { 
-                    select id, name, title, log_entry, last_modified from qaf_process_log 
+                set entries_lol [db_list_of_lists hf_process_log_read_new { 
+                    select id, name, title, log_entry, last_modified from hf_process_log 
                     where instance_id = :instance_id and asset_id =:asset_id and last_modified > :last_viewed order by last_modified desc } ]
                 
                 ns_log Notice "hf_log_read.80: last_viewed ${last_viewed}  entries_lol $entries_lol"
@@ -105,8 +105,8 @@ ad_proc -public hf_log_read {
             }
             
             set max_old [expr { $max_old + $alert_msg_count } ]
-            set entries_lol [db_list_of_lists qaf_process_log_read_one { 
-                select id, name, title, log_entry, last_modified from qaf_process_log 
+            set entries_lol [db_list_of_lists hf_process_log_read_one { 
+                select id, name, title, log_entry, last_modified from hf_process_log 
                 where instance_id = :instance_id and asset_id =:asset_id order by last_modified desc limit :max_old } ]
             foreach row [lrange $entries_lol $alert_msg_count end] {
                 set message_txt [lindex $row 2]
@@ -118,11 +118,11 @@ ad_proc -public hf_log_read {
             }
             
             # last_modified ne "", so update
-            db_dml qaf_process_log_viewed_update { update qaf_process_log_viewed set last_viewed = :nowts where instance_id = :instance_id and asset_id = :asset_id and user_id = :user_id }
+            db_dml hf_process_log_viewed_update { update hf_process_log_viewed set last_viewed = :nowts where instance_id = :instance_id and asset_id = :asset_id and user_id = :user_id }
         } else {
             # create history
-            set id [db_nextval qaf_id_seq]
-            db_dml qaf_process_log_viewed_create { insert into qaf_process_log_viewed
+            set id [db_nextval hf_sched_id_seq]
+            db_dml hf_process_log_viewed_create { insert into hf_process_log_viewed
                 ( id, instance_id, user_id, asset_id, last_viewed )
                 values ( :id, :instance_id, :user_id, :asset_id, :nowts ) }
         }

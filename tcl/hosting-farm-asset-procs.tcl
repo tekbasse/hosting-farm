@@ -321,7 +321,7 @@ ad_proc -public hf_asset_create {
         } else {
             set asset_id_exists_p 0
         }
-        set asset_id [db_nextval hf_asset_id_seq]
+        set asset_id [db_nextval hf_id_seq]
         if { $template_id eq "" } {
             set template_id $asset_id
         }
@@ -523,7 +523,7 @@ ad_proc -public hf_asset_write {
         if { $asset_exists_p } {
             set old_asset_id $asset_id
             set label hf_asset_label_from_id $old_asset_id
-            set new_asset_id [db_nextval hf_asset_id_seq]
+            set new_asset_id [db_nextval hf_id_seq]
             ns_log Notice "hf_asset_write: hf_asset_create id '$asset_id' template_id '$template_id' name '$name' instance_id '$instance_id' user_id '$user_id'"
             db_transaction {
                 db_dml hf_asset_create { insert into hf_assets
