@@ -1,4 +1,4 @@
-<master src="/www/responsive-master">
+<master src="/packages/hosting-farm/www/doc/responsive-master3">
   <property name="title">@title;noquote@</property>
   <property name="context">@context;noquote@</property>
 
