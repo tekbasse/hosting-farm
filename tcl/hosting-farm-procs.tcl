@@ -1458,7 +1458,14 @@ ad_proc -private hf_asset_halt {
     if { $admin_p } {
         # determine asset_type
         set asset_type_id [lindex $asset_stats_list 2]
-   
+	if { $time_stop_eq "" } {
+	    # set times_stop to now
+	    set time_stop [dt_systime -gmt 1]
+	}
+	ns_log Notice "hf_asset_halt id ${asset_id}' of type '${asset_type_id}'"
+	db_dml hf_asset_id_halt { update hf_assets
+	    set
+	}
        ## process via tcl switch
        ##    add priority value
        ##    add to operations stack that is listened to by an ad_scheduled_proc procedure working in short interval cycles
