@@ -1467,17 +1467,19 @@ ad_proc -private hf_asset_halt {
 	db_dml hf_asset_id_halt { update hf_assets
 	    set time_stop = :time_stop where time_stop is null and asset_id = :asset_id 
 	}
+	#    set a priority for use with hf process stack
 	set priority [lindex $asset_stats_list 9]
 	if { $priority eq "" } {
 	    # triage_priority
 	    set priority [lindex $asset_stats_list 12]
 	}
-       ## process via tcl switch
-       ##    add priority value
-       ##    add to operations stack that is listened to by an ad_scheduled_proc procedure working in short interval cycles
-	## consider changing hf_assets.publish_p op_status monitor_p
-	switch -exact -- $asset_type_id {
-
+	
+	set proc_name [db_1row hf_asset_type_halt_proc_get { 
+	    select halt_proc from hf_asset_type where id = :asset_type_id and instance_id = :instance_id
+	}
+	if { $proc_name ne "" } {
+	    ##    add to operations stack that is listened to by an ad_scheduled_proc procedure working in short interval cycles
+	    hf::schedule_add $proc_name $asset_id $user_id $instance_id $priority
 	}
     }
     # return 1 if has permission.

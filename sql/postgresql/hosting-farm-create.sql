@@ -30,6 +30,9 @@ CREATE TABLE hf_asset_type (
    label                   varchar(40),
    -- aka one_line_description
    title                   varchar(85),
+   -- length of *_proc limited by hf_sched_proc_stack.proc_name
+   halt_proc               varchar(40),
+   start_proc              varchar(40),
    description             text
 );
 
