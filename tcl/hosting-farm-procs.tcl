@@ -1451,6 +1451,7 @@ ad_proc -private hf_asset_halt {
     }
     set user_id [ad_conn user_id]
     # determine customer_id of asset
+    # name,title,asset_type_id,keywords,description,template_p,templated_p,trashed_p,trashed_by,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,flags
     set asset_stats_list [hf_asset_stats $asset_id $instance_id $user_id]
     set customer_id [lindex $asset_stats_list 17]
     
@@ -1466,10 +1467,18 @@ ad_proc -private hf_asset_halt {
 	db_dml hf_asset_id_halt { update hf_assets
 	    set time_stop = :time_stop where time_stop is null and asset_id = :asset_id 
 	}
+	set priority [lindex $asset_stats_list 9]
+	if { $priority eq "" } {
+	    # triage_priority
+	    set priority [lindex $asset_stats_list 12]
+	}
        ## process via tcl switch
        ##    add priority value
        ##    add to operations stack that is listened to by an ad_scheduled_proc procedure working in short interval cycles
+	## consider changing hf_assets.publish_p op_status monitor_p
+	switch -exact -- $asset_type_id {
 
+	}
     }
     # return 1 if has permission.
     return $admin_p
