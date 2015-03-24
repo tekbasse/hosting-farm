@@ -1458,13 +1458,13 @@ ad_proc -private hf_asset_halt {
     if { $admin_p } {
         # determine asset_type
         set asset_type_id [lindex $asset_stats_list 2]
-	if { $time_stop_eq "" } {
+	if { $time_stop eq "" } {
 	    # set times_stop to now
 	    set time_stop [dt_systime -gmt 1]
 	}
 	ns_log Notice "hf_asset_halt id ${asset_id}' of type '${asset_type_id}'"
 	db_dml hf_asset_id_halt { update hf_assets
-	    set
+	    set time_stop = :time_stop where time_stop is null and asset_id = :asset_id 
 	}
        ## process via tcl switch
        ##    add priority value
