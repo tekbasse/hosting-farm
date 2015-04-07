@@ -586,3 +586,34 @@ create index hf_monitor_freq_dist_curves_instance_id_idx on hf_monitor_freq_dist
 create index hf_monitor_freq_dist_curves_monitor_id_idx on hf_monitor_freq_dist_curves (monitor_id);
 create index hf_monitor_freq_dist_curves_analysis_id_idx on hf_monitor_freq_dist_curves (analysis_id);
 
+CREATE TABLE hf_calls (
+    instance_id integer not null,
+    id integer not null,
+    -- system api call name
+    proc_name varchar(40) not null,
+    -- in order of increasing specificity to allow for system-wide exceptions
+    asset_type_id varchar(24),
+    asset_template_id integer,
+    asset_id integer
+    -- permissions always uses asset_id
+);
+
+create index hf_calls_instance_id_idx on hf_calls (instance_id);
+create index hf_calls_proc_name on hf_calls (proc_name);
+create index hf_calls_asset_type_id on hf_calls (asset_type_id);
+create index hf_calls_asset_templ_id on hf_calls (asset_template_id);
+create index hf_calls_asset_id on hf_calls (asset_id);
+
+-- Assigns a role permission to make a call, and
+-- answers question: what roles are allowed to make call?
+CREATE TABLE hf_call_role_map (
+       instance_id integer not null,
+       -- hf_calls.proc_id
+       call_id integer not null,
+       role_id integer not null
+);
+
+create index hf_call_role_map_instance_id_idx on hf_call_role_map (instance_id);
+create index hf_call_role_map_call_id_idx on hf_call_role_map (call_id);
+create index hf_call_role_map_role_id_idx on hf_call_role_map (role_id);
+

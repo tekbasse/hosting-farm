@@ -3,6 +3,19 @@
 -- @author Benjamin Brink
 -- @license GNU GENERAL PUBLIC LICENSE, Version 3
 --
+drop index hf_calls_instance_id_idx;
+drop index hf_calls_proc_name;
+drop index hf_calls_asset_type_id;
+drop index hf_calls_asset_templ_id;
+drop index hf_calls_asset_id;
+
+DROP TABLE hf_calls;
+
+drop index hf_call_role_map_role_id_idx;
+drop index hf_call_role_map_call_id_idx;
+drop index hf_call_role_map_instance_id_idx;
+
+DROP TABLE hf_call_role_map;
 
 drop index hf_monitor_freq_dist_curves_analysis_id_idx; 
 drop index hf_monitor_freq_dist_curves_monitor_id_idx;
