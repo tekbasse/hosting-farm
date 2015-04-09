@@ -590,8 +590,10 @@ CREATE TABLE hf_calls (
     instance_id integer not null,
     id integer not null,
     -- system api call name
+    -- the api grabs asset specific values, then updates db and makes systems calls as needed
     proc_name varchar(40) not null,
     -- in order of increasing specificity to allow for system-wide exceptions
+    -- of calling another proc for a more specific asset
     asset_type_id varchar(24),
     asset_template_id integer,
     asset_id integer
