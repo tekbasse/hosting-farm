@@ -122,7 +122,7 @@ ad_proc -private hf_asset_create_from_asset_template {
 
     # customer_id of asset_id doesn't matter, because this may a copy of another's asset or template.
     set read_p [hf_permission_p $user_id "" published read $instance_id]
-    set create_p [hf_permission_p $user_id $customer_id customer_assets create $instance_id]
+    set create_p [hf_permission_p $user_id $customer_id assets create $instance_id]
     set status $create_p
     if { $create_p } {
         set asset_list [hf_asset_read $instance_id $asset_id]

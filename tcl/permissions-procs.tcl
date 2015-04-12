@@ -48,7 +48,7 @@ ad_proc -public hf_active_asset_ids_for_customer {
         set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
-    set read_p [hf_permission_p $user_id $customer_id customer_assets read $instance_id]
+    set read_p [hf_permission_p $user_id $customer_id assets read $instance_id]
     set asset_ids_list [list ]
     if { $read_p } {
         set asset_ids_list [db_list asset_ids_for_customer_get "select id from hf_assets where instance_id = :instance_id and qal_customer_id = :customer_id and time_stop > current_timestamp and not (trashed_p = '1') and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc"]
@@ -519,7 +519,6 @@ ad_proc -private hf_permission_p {
     A privilege is the same as in permission::permission_p (read/write/create/admin).
     Default property_labels consist of:
       assets, 
-      customer_assets, 
       permissions_roles, 
       permissions_privileges, 
       permissions_properties, and
