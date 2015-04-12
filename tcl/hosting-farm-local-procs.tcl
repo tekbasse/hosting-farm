@@ -1,0 +1,66 @@
+ad_library {
+
+    example localize API for hosting-farm ( /local/bin )
+    @creation-date 11 April 2015
+    @Copyright (c) 2014 Benjamin Brink
+    @license GNU General Public License 3, see project home or http://www.gnu.org/licenses/gpl-3.0.en.html
+    @project home: http://github.com/tekbasse/hosting-farm
+    @address: po box 20, Marylhurst, OR 97036-0020 usa
+    @email: tekbasse@yahoo.com
+}
+
+ad_proc -private hf_asset_halt_example {
+    asset_id
+    {instance_id ""}
+} {
+    Halts the operation of an asset, such as service, vm, vhost etc
+} {
+    ##code
+
+    # check permission
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    set user_id [ad_conn user_id]
+    # determine customer_id of asset
+    # name,title,asset_type_id,keywords,description,template_p,templated_p,trashed_p,trashed_by,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,flags
+    set asset_stats_list [hf_asset_stats $asset_id $instance_id $user_id]
+    set customer_id [lindex $asset_stats_list 17]
+    
+    set admin_p [hf_permission_p $user_id $customer_id technical admin $instance_id]
+    if { $admin_p } {
+        # determine asset_type
+        set asset_type_id [lindex $asset_stats_list 2]
+
+	# set asset attributes so that remaining code can use them for any nonlocal api calls.
+	
+
+	if { $time_stop eq "" } {
+	    # set times_stop to now
+	    set time_stop [dt_systime -gmt 1]
+	}
+	ns_log Notice "hf_asset_halt id ${asset_id}' of type '${asset_type_id}'"
+	db_dml hf_asset_id_halt { update hf_assets
+	    set time_stop = :time_stop where time_stop is null and asset_id = :asset_id 
+	}
+	#    set a priority for use with hf process stack
+	set priority [lindex $asset_stats_list 9]
+	if { $priority eq "" } {
+	    # triage_priority
+	    set priority [lindex $asset_stats_list 12]
+	}
+	
+	set proc_name [db_1row hf_asset_type_halt_proc_get { 
+	    select halt_proc from hf_asset_type where id = :asset_type_id and instance_id = :instance_id
+	}
+	if { $proc_name ne "" } {
+	    ##    add to operations stack that is listened to by an ad_scheduled_proc procedure working in short interval cycles
+	    hf::schedule_add $proc_name $asset_id $user_id $instance_id $priority
+	}
+    }
+    # return 1 if has permission.
+    return $admin_p
+}
+
+

@@ -1436,57 +1436,6 @@ ad_proc -private hf_asset_types {
 }
 
 
-ad_proc -private hf_asset_halt {
-    asset_id
-    {instance_id ""}
-} {
-    Halts the operation of an asset, such as service, vm, vhost etc
-} {
-    ##code
-
-    # check permission
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set user_id [ad_conn user_id]
-    # determine customer_id of asset
-    # name,title,asset_type_id,keywords,description,template_p,templated_p,trashed_p,trashed_by,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,flags
-    set asset_stats_list [hf_asset_stats $asset_id $instance_id $user_id]
-    set customer_id [lindex $asset_stats_list 17]
-    
-    set admin_p [hf_permission_p $user_id $customer_id technical admin $instance_id]
-    if { $admin_p } {
-        # determine asset_type
-        set asset_type_id [lindex $asset_stats_list 2]
-	if { $time_stop eq "" } {
-	    # set times_stop to now
-	    set time_stop [dt_systime -gmt 1]
-	}
-	ns_log Notice "hf_asset_halt id ${asset_id}' of type '${asset_type_id}'"
-	db_dml hf_asset_id_halt { update hf_assets
-	    set time_stop = :time_stop where time_stop is null and asset_id = :asset_id 
-	}
-	#    set a priority for use with hf process stack
-	set priority [lindex $asset_stats_list 9]
-	if { $priority eq "" } {
-	    # triage_priority
-	    set priority [lindex $asset_stats_list 12]
-	}
-	
-	set proc_name [db_1row hf_asset_type_halt_proc_get { 
-	    select halt_proc from hf_asset_type where id = :asset_type_id and instance_id = :instance_id
-	}
-	if { $proc_name ne "" } {
-	    ##    add to operations stack that is listened to by an ad_scheduled_proc procedure working in short interval cycles
-	    hf::schedule_add $proc_name $asset_id $user_id $instance_id $priority
-	}
-    }
-    # return 1 if has permission.
-    return $admin_p
-}
-
-# Would be nice to be able to pass attributes via upvar array, but db_ procs do not have feature to quote array references
 
 ad_proc -private hf_dc_read {
     {dc_id ""}
@@ -1739,13 +1688,13 @@ ad_proc -private hf_vm_write {
     last_modified
     created
     vm_domain_name
-	vm_ip_id
-	vm_ni_id
-	vm_ns_id
-	vm_type_id
-	vm_resource_path
-	vm_mount_union
-	vm_details
+    vm_ip_id
+    vm_ni_id
+    vm_ns_id
+    vm_type_id
+    vm_resource_path
+    vm_mount_union
+    vm_details
 } {
     writes or creates an vm asset_type_id. If asset_id (vm_id) is blank, a new one is created. The new asset_id is returned if successful, otherwise empty string is returned.
 } {
@@ -1837,19 +1786,19 @@ ad_proc -private hf_ss_write {
     user_id
     last_modified
     created
-	ss_server_name
-	ss_service_name
-	ss_daemon_ref
-	ss_protocol
-	ss_port
-	ss_ua_id
-	ss_ss_type
-	ss_ss_subtype
-	ss_ss_undersubtype
-	ss_ss_ultrasubtype
-	ss_config_uri
-	ss_memory_bytes
-	ss_details
+    ss_server_name
+    ss_service_name
+    ss_daemon_ref
+    ss_protocol
+    ss_port
+    ss_ua_id
+    ss_ss_type
+    ss_ss_subtype
+    ss_ss_undersubtype
+    ss_ss_ultrasubtype
+    ss_config_uri
+    ss_memory_bytes
+    ss_details
 } {
     writes or creates an ss asset_type_id. If asset_id (ss_id) is blank, a new one is created. The new asset_id is returned if successful, otherwise empty string is returned.
 } {
