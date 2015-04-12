@@ -8,8 +8,8 @@ ad_library {
     @address: po box 20, Marylhurst, OR 97036-0020 usa
     @email: tekbasse@yahoo.com
 }
-
-ad_proc -private hf_asset_halt_example {
+# begin all procs here with hfl_ for hflocal.
+ad_proc -private hfl_asset_halt_example {
     asset_id
     {instance_id ""}
 } {

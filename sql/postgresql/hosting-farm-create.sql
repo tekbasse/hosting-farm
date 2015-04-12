@@ -25,6 +25,7 @@ CREATE TABLE hf_asset_type (
     -- virtual_machine
     -- virtual_host
     -- xref with hf_assets.asset_type
+    -- expects dc, hw, vm, vh, hs, ss, ns, ot etc.
    id                      varchar(24),
    -- aka feature.short_name
    label                   varchar(40),

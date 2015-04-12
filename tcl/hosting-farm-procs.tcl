@@ -297,7 +297,51 @@ ad_proc -private hf_assets_w_detail {
 # API for various asset types:
 #   in each case, add ecds-pagination bar when displaying. defaults to all allowed by user permissions
 
+ad_proc -private hf_asset_do {
+    asset_id
+    hf_local_call_id
+    {instance_id ""}
+} {
+    process hf_local_call_id on asset_id
+} {
+    # check permission passed to executable
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    set user_id [ad_conn user_id]
+    set now [dt_systime -gmt 1]
+    set asset_stats_list [hf_asset_stats $asset_id $instance_id]
+    # name, title, asset_type_id, keywords, description, template_p, templated_p, trashed_p, trashed_by, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, instance_id, user_id, last_modified, created, flags
+    set asset_type_id [lindex $asset_stats_list 2]
+    set asset_template_p [lindex $asset_stats_list 5]
+    set asset_templated_p [lindex $asset_stats_list 6]
+    set asset_template_id [lindex $asset_stats_list 23]
 
+    set template_ids_name_list [db_list_of_lists hf_calls_read_asset_type_choices { select asset_template_id, asset_id, proc_name from hf_calls where instance_id =:instance_id and asset_type_id =:id } ]
+    
+    set counter_max [llength $template_ids_name_list ]
+    set counter 0
+    ## first check all asset_ids   REDO following
+    while { $proc_name eq "" && $counter < $counter_max } {
+	set choice_list [lindex $template_ids_name_list $counter]
+	set c_asset_template_id [lindex $choice_list 0]
+	set c_asset_id [lindex $choice_list 1]
+	if { $c_asset_id eq $asset_id } {
+	    set proc_name [lindex $choice_list 2]
+	} elseif { $asset_template_id eq $c_asset_template_id } {
+	    set proc_name [lindex $choice_list 2]
+	} elseif { }
+    }
+    ##  then all template_ids, then go with asset_type_id (there's only one)
+
+    if { $proc_name ne "" } {
+	##    add to operations stack that is listened to by an ad_scheduled_proc procedure working in short interval cycles
+	hf::schedule_add $proc_name $asset_id $user_id $instance_id $priority
+    }
+  
+
+}
 ## make procs that return the asset objects given one or more asset ids.
 # info tables: 
 ad_proc -private hf_dcs {
