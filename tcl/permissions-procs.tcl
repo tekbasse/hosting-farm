@@ -511,6 +511,30 @@ ad_proc -private hf_permission_p {
     {instance_id ""} 
 } {
     Checks for permission  in place of permission::permission_p within hosting-farm package.
+
+    Permissions works like this: 
+ 
+    Each asset is associated with an id (asset_id). 
+    Each asset_id is associated with a customer (customer_id).
+    A privilege is the same as in permission::permission_p (read/write/create/admin)
+    Default property_labels consist of:
+      assets, 
+      customer_assets, 
+      permissions_roles, 
+      permissions_privileges, 
+      permissions_properties, and
+      published
+    Each role is assigned privileges on property_labels. Default privilege is none.
+    Default roles consist of:
+      technical_contact
+      technical_staff
+      billing_contact
+      billing_staff
+      primary_contact
+      primary_staff
+      site_developer
+    Each asset is associated with a customer, and each user assigned roles.
+    We just have to confirm that one of the roles of user_id assigned by customer_id can do priviledge on customer's property_label
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
