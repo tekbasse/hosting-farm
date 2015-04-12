@@ -11,6 +11,7 @@ ad_library {
 # begin all procs here with hfl_ for hflocal.
 ad_proc -private hfl_asset_halt_example {
     asset_id
+    {user_id ""}
     {instance_id ""}
 } {
     Halts the operation of an asset, such as service, vm, vhost etc
@@ -22,14 +23,17 @@ ad_proc -private hfl_asset_halt_example {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
+    if { $user_id eq "" } {
+        # set user_id package_id
+        set user_id [ad_conn user_id]
+    }
 
-    set user_id [ad_conn user_id]
     # determine customer_id of asset
     # name,title,asset_type_id,keywords,description,template_p,templated_p,trashed_p,trashed_by,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,flags
     set asset_stats_list [hf_asset_stats $asset_id $instance_id $user_id]
     set customer_id [lindex $asset_stats_list 17]
     
-    set admin_p [hf_permission_p $user_id $customer_id technical admin $instance_id]
+    set admin_p [hf_permission_p $user_id $customer_id assets admin $instance_id]
     if { $admin_p } {
         # determine asset_type
         set asset_type_id [lindex $asset_stats_list 2]

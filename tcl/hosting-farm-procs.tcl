@@ -1411,14 +1411,14 @@ ad_proc -private hf_asset_type_write {
     {id ""}
     {instance_id ""}
 } {
-    creates or writes asset type, if id is blank, returns id of new asset type; otherwise returns 1 if id exists and db updated. Requires hf technical admin permission.
+    creates or writes asset type, if id is blank, returns id of new asset type; otherwise returns 1 if id exists and db updated. 
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
-    set admin_p [hf_permission_p $user_id "" technical admin $instance_id]
+    set admin_p [hf_permission_p $user_id "" assets write $instance_id]
     set asset_type_id ""
     set return_val $admin_p
     if { $admin_p } {
