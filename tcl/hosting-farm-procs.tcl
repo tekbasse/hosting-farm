@@ -310,7 +310,6 @@ ad_proc -private hf_asset_do {
         set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
-    set now [dt_systime -gmt 1]
     set asset_stats_list [hf_asset_stats $asset_id $instance_id]
     # name, title, asset_type_id, keywords, description, template_p, templated_p, trashed_p, trashed_by, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, instance_id, user_id, last_modified, created, flags
     set asset_type_id [lindex $asset_stats_list 2]
@@ -323,21 +322,34 @@ ad_proc -private hf_asset_do {
     set counter_max [llength $template_ids_name_list ]
     set counter 0
     ## first check all asset_ids   REDO following
+    set proc_name_template ""
+    set proc_name_type ""
     while { $proc_name eq "" && $counter < $counter_max } {
 	set choice_list [lindex $template_ids_name_list $counter]
 	set c_asset_template_id [lindex $choice_list 0]
 	set c_asset_id [lindex $choice_list 1]
+	# each of these if's should only be true a maximimum of once.
 	if { $c_asset_id eq $asset_id } {
 	    set proc_name [lindex $choice_list 2]
 	} elseif { $asset_template_id eq $c_asset_template_id } {
-	    set proc_name [lindex $choice_list 2]
-	} elseif { }
+	    #  then all template_ids, 
+	    set proc_name_template [lindex $choice_list 2]
+	} elseif { $c_asset_id eq "" && $c_asset_template_id eq "" } {
+	    # then go with asset_type_id 
+	    set proc_name_type  [lindex $choice_list 2]
+	}
     }
-    ##  then all template_ids, then go with asset_type_id (there's only one)
+    if { $proc_name eq "" } {
+	if { $proc_name_template ne "" } {
+	    set proc_name $proc_name_template
+	} elseif { $proc_name_type ne "" } {
+	    set proc_name $proc_name_type
+	}
+    }
 
     if { $proc_name ne "" } {
 	##    add to operations stack that is listened to by an ad_scheduled_proc procedure working in short interval cycles
-	hf::schedule_add $proc_name $asset_id $user_id $instance_id $priority
+	hf::schedule_add $proc_name [list $asset_id $user_id $instance_id] $user_id $instance_id $priority
     }
   
 

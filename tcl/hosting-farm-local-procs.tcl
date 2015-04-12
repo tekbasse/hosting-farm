@@ -22,6 +22,7 @@ ad_proc -private hfl_asset_halt_example {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
+
     set user_id [ad_conn user_id]
     # determine customer_id of asset
     # name,title,asset_type_id,keywords,description,template_p,templated_p,trashed_p,trashed_by,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,flags
@@ -34,15 +35,12 @@ ad_proc -private hfl_asset_halt_example {
         set asset_type_id [lindex $asset_stats_list 2]
 
 	# set asset attributes so that remaining code can use them for any nonlocal api calls.
+	set now [dt_systime -gmt 1]
+	## read properties of asset_id for halting.
 	
-
-	if { $time_stop eq "" } {
-	    # set times_stop to now
-	    set time_stop [dt_systime -gmt 1]
-	}
 	ns_log Notice "hf_asset_halt id ${asset_id}' of type '${asset_type_id}'"
 	db_dml hf_asset_id_halt { update hf_assets
-	    set time_stop = :time_stop where time_stop is null and asset_id = :asset_id 
+	    set time_stop = :now where time_stop is null and asset_id = :asset_id 
 	}
 	#    set a priority for use with hf process stack
 	set priority [lindex $asset_stats_list 9]
@@ -54,12 +52,8 @@ ad_proc -private hfl_asset_halt_example {
 	set proc_name [db_1row hf_asset_type_halt_proc_get { 
 	    select halt_proc from hf_asset_type where id = :asset_type_id and instance_id = :instance_id
 	}
-	if { $proc_name ne "" } {
-	    ##    add to operations stack that is listened to by an ad_scheduled_proc procedure working in short interval cycles
-	    hf::schedule_add $proc_name $asset_id $user_id $instance_id $priority
-	}
     }
-    # return 1 if has permission.
+    # return 1 if successful (at least has permission)
     return $admin_p
 }
 
