@@ -21,7 +21,7 @@ email: tekbasse@yahoo.com</pre>
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </pre>
-<p><a href="dfcb.github.io/extra-strength-responsive-grids/">Extra Strength Responsive Grids</a> parts copyright 2013 by John Polacek of <a href="http://opensource.draftfcb.net/">Draftfcb Open Source</a> under Dual MIT & GPL license.
+<p><a href="http://dfcb.github.io/extra-strength-responsive-grids/">Extra Strength Responsive Grids</a> parts copyright 2013 by John Polacek of <a href="http://opensource.draftfcb.net/">Draftfcb Open Source</a> under Dual MIT & GPL license.
 </p>
 <h3>introduction</h3>
 <p>
