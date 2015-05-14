@@ -62,7 +62,7 @@ ad_proc -private hf::schedule_do {
                 # set proc_list lindex combo from sched_list
                 lassign $sched_list id proc_name user_id instance_id priority order_time started_time
                 # package_id can vary with each entry
-
+                
                 set allowed_procs [parameter::get -parameter ScheduledProcsAllowed -package_id $instance_id]
                 # added comma and period to "split" to screen external/private references and poorly formatted lists
                 set allowed_procs_list [split $allowed_procs " ,."]
@@ -77,7 +77,7 @@ ad_proc -private hf::schedule_do {
                         db_dml hf_sched_proc_stack_started {
                             update hf_sched_proc_stack set started_time =:nowts where id =:id
                         }
-
+                        
                         set proc_list [list $proc_name]
                         set args_lists [db_list_of_lists hf_sched_proc_args_read_s { select arg_value, arg_number from hf_sched_proc_args where stack_id =:id order by arg_number asc} ]
                         foreach arg_list $args_lists {
@@ -96,7 +96,6 @@ ad_proc -private hf::schedule_do {
                             # inform user of error
                             set scenario_tid [lindex [lindex $args_lists 0] 0]
                             hf_log_create $scenario_tid "#hosting-farm.process#" "error" "id ${id} Message: ${this_err_text}" $user_id $instance_id
-                            }
                         } else {
                             set dur_sec [expr { [clock seconds] - $start_sec } ]
                             # part of while loop so that remaining processes are re-prioritized with any new ones:
@@ -104,8 +103,9 @@ ad_proc -private hf::schedule_do {
                             set nowts [dt_systime -gmt 1]
                             set success_p 1
                             db_dml hf_sched_proc_stack_write {
-                                update hf_sched_proc_stack set proc_out =:calc_value, completed_time=:nowts, process_seconds=:dur_sec where id = :id }
-                                ns_log Notice "hf::schedule_do.83: id $id completed in circa ${dur_sec} seconds."
+                                update hf_sched_proc_stack set proc_out =:calc_value, completed_time=:nowts, process_seconds=:dur_sec where id = :id 
+                            }
+                            ns_log Notice "hf::schedule_do.83: id $id completed in circa ${dur_sec} seconds."
                         }
                         # Alert user that job is done?  
                         # util_user_message doesn't accept user_id instance_id, only session_id
