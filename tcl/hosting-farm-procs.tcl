@@ -1445,7 +1445,7 @@ ad_proc -private hf_asset_type_write {
 
 
 ad_proc -private hf_asset_type_read {
-    id_list
+    type_id_list
     {instance_id ""}
 } {
     returns an existing asset_type in a list of lists: {label1, title1, description1} {labelN, titleN, descriptionN} or blank list if none found. Bad id's are ignored.
@@ -1456,7 +1456,7 @@ ad_proc -private hf_asset_type_read {
     }
     # validate/filter the asset_type_id_list for nonqualifying reference types
     set new_as_type_id_list [list ]
-    foreach asset_type_id $id_list {
+    foreach asset_type_id $type_id_list {
         if { [ad_var_type_check_number_p $asset_type_id] } {
             lappend new_as_type_id_list $asset_type_id
         }
@@ -1933,7 +1933,14 @@ ad_proc -private hf_ip_write {
     set user_id [ad_conn user_id]
     
     ###code
-    # ip_id is part of hf_virtual_machines otherwise hf_asset_ip_map
+    # get asset_id_type
+    set asset_stats_list [hf_asset_stats $asset_id $instance_id]
+    set asset_type_id [lindex $asset_stats_list 2]
+    if { $asset_type_id eq "vm" } {
+        # write to hf_virtual_machines (ip_id,vm_id) and hf_ip_addresses
+    } elseif { $asset_type_id ne "" } {
+        # write to hf_asset_ip_map (asset_id,ip_id) and hf_ip_addresses
+    }
     # if ip_id exists but not found asset_id or vm_id, then fail
 }
 
