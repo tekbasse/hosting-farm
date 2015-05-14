@@ -63,6 +63,12 @@ drop index hf_ss_map_instance_id_idx;
 
 DROP TABLE hf_ss_map;
 
+drop index hf_asset_ip_map_instance_id_idx;
+drop index hf_asset_ip_map_asset_id_idx;
+drop index hf_asset_ip_map_ip_id_idx;
+
+DROP TABLE hf_asset_ip_map;
+
 drop index hf_vm_vh_map_vh_id_idx;
 drop index hf_vm_vh_map_vm_id_idx;
 drop index hf_vm_vh_map_instance_id_idx;

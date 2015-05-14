@@ -1808,7 +1808,7 @@ ad_proc -private hf_ss_read {
         set return_list $attribute_list
         # get, append remaining detail
         # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
-        set ss_detail_listt [db_list hf_ss_detail_get "select server_name, service_name, ss_type, ss_subtype, ss_undersubtype, ss_ultrasubtype, daemon_ref, protocol, port, ua_id, config_uri, memory_bytes, details from hf_services where instance_id =:instance_id and ss_id =:ss_id"]
+        set ss_detail_list [db_list hf_ss_detail_get "select server_name, service_name, ss_type, ss_subtype, ss_undersubtype, ss_ultrasubtype, daemon_ref, protocol, port, ua_id, config_uri, memory_bytes, details from hf_services where instance_id =:instance_id and ss_id =:ss_id"]
         foreach ss_att_list $ss_detail_list {
             lappend return_list $ss_att_list
         }
@@ -1894,7 +1894,37 @@ ad_proc -private hf_ip_read {
     ip_id
     {instance_id ""}
 } {
-    reads full detail of one asset's ip. This is not redundant to hf_ips. This accepts only 1 id and includes all attributes (no summary counts)
+    reads full detail of one ip address: ipv4_addr ipv4_status ipv6_addr ipv6_status. This is not redundant to hf_ips. This accepts only 1 id and includes all attributes (no summary counts)
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    set user_id [ad_conn user_id]
+    # to check permissions here, would require:
+    # get asset_id via a new proc hf_id_of_ip_id, but that would return multiple asset_ids (VMs + machine etc).
+    # checking permissions  would require hf_ids_of_ip_id.. and that would be slow for large sets
+    # hf_ip_read/write etc should only be called from within a private proc. and is publically available via inet services anyway..
+
+    # get ip data
+    set return_list [list ]
+    set ip_detail_list [db_list hf_ip_detail_get "select ipv4_addr, ipv4_status, ipv6_addr, ipv6_status from hf_ip_addresses where instance_id =:instance_id and ip_id =:ip_id"]
+    foreach ip_att_list $ip_detail_list {
+        lappend return_list $ip_att_list
+    }
+    return $return_list
+}
+
+ad_proc -private hf_ip_write {
+    asset_id
+    ip_id
+    ipv4_addr
+    ipv4_status
+    ipv6_addr
+    ipv6_status
+    {instance_id ""}
+} {
+    writes or creates an ip asset_type_id. If ip_id is blank, a new one is created, and the new ip_id returned. The ip_id is returned if successful, otherwise 0 is returned. 
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -1902,28 +1932,9 @@ ad_proc -private hf_ip_read {
     }
     set user_id [ad_conn user_id]
     
-    ##code
-    ## to check permissions here, would require:
-    ## get asset_id via a new proc hf_id_of_ip_id, but that would return multiple asset_ids (VMs + machine etc).
-    ## checking permissions  would require hf_ids_of_ip_id.. and that would be slow for large sets
-    ## hf_ip_read/write etc should only be called from within a private proc. and is publically available via inet services anyway..
-    # get ip data
-}
-
-ad_proc -private hf_ip_write {
-    args
-    {instance_id ""}
-} {
-    writes or creates an ip asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise 0 is returned.
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    ##code
+    ###code
+    # ip_id is part of hf_virtual_machines otherwise hf_asset_ip_map
+    # if ip_id exists but not found asset_id or vm_id, then fail
 }
 
 ad_proc -private hf_ni_read {

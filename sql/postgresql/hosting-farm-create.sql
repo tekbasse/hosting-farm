@@ -445,6 +445,19 @@ create index hf_vm_vh_map_instance_id_idx on hf_vm_vh_map (instance_id);
 create index hf_vm_vh_map_vm_id_idx on hf_vm_vh_map (vm_id);
 create index hf_vm_vh_map_vh_id_idx on hf_vm_vh_map (vh_id);
 
+-- id_ip map is a catch all for ip addresses not assigned to 
+-- virtual machines
+CREATE TABLE hf_asset_ip_map (
+    instance_id     integer,
+    asset_id        integer,
+    ip_id           integer
+);
+
+create index hf_asset_ip_map_instance_id_idx on hf_asset_ip_map (instance_id);
+create index hf_asset_ip_map_asset_id_idx on hf_asset_ip_map (asset_id);
+create index hf_asset_ip_map_ip_id_idx on hf_asset_ip_map (ip_id);
+
+
 -- This map connects a service with all assets and subassets it is composed of.
 -- For example, 
 -- ss may be a server on a vm accepting requests for all or a portion of the vm's vhosts and vm
