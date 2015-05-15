@@ -1915,6 +1915,27 @@ ad_proc -private hf_ip_read {
     return $return_list
 }
 
+ad_proc -private hf_ip_id_exists {
+    ip_id_q
+    {instance_id ""}
+} {
+    Checks if ip_id in hf_ip_addresses exists. 1 true, 0 false
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+
+    set ip_id_exists_p 0
+    if { [ad_var_type_check_number_p $ip_id] } {
+        db_0or1row ip_id_exists_q "select ip_id from hf_ip_addresses where instance_id =:instance_id and ip_id = :ip_id_q"
+        if { $ip_id ne "" && $ip_id > 0 } {
+            set ip_id_exists_p 1
+        }
+    }
+    return $ip_id_exists_p
+}
+
 ad_proc -private hf_ip_write {
     asset_id
     ip_id
@@ -1924,24 +1945,59 @@ ad_proc -private hf_ip_write {
     ipv6_status
     {instance_id ""}
 } {
-    writes or creates an ip asset_type_id. If ip_id is blank, a new one is created, and the new ip_id returned. The ip_id is returned if successful, otherwise 0 is returned. 
+    writes or creates an ip asset_type_id. If ip_id is blank, a new one is created, and the new ip_id returned. The ip_id is returned if successful, otherwise 0 is returned. Does not check for address collisions.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
-    
+    set return_id 0
+
     ###code
-    # get asset_id_type
-    set asset_stats_list [hf_asset_stats $asset_id $instance_id]
-    set asset_type_id [lindex $asset_stats_list 2]
-    if { $asset_type_id eq "vm" } {
-        # write to hf_virtual_machines (ip_id,vm_id) and hf_ip_addresses
-    } elseif { $asset_type_id ne "" } {
-        # write to hf_asset_ip_map (asset_id,ip_id) and hf_ip_addresses
+    # validate for db
+    # ipv4_status and ipv6_status must be integers
+    # length of ipv4_addr must be less than 16
+    # length of ipv6_addr must be less than 40
+    if { [qf_is_natural_number $ipv4_status] && [qf_is_natural_number $ipv6_status] && [string length $ipv4_addr] < 16 && [string length $ipv6_addr] < 40 } {
+
+        if { [hf_asset_id_exists $asset_id "" $instance_id] } {
+            # if ip_id exists but not found asset_id or vm_id, then fail
+            # write/create to hf_virtual_machines (ip_id,vm_id) and hf_ip_addresses
+            if { [hf_ip_id_exists $ip_id] } {
+                #write/update
+                db_dml ip_address_write2vm {update hf_ip_addresses
+                    set ipv4_addr =:ipv4_addr, ipv4_status=:ipv4_status, ipv6_addr=:ipv6_addr, ipv6_status=:ipv6_status where instance_id =:instance_id and id=:ip_id
+                }
+            } else {
+                #create/insert
+
+                # get asset_id_type
+                set asset_stats_list [hf_asset_stats $asset_id $instance_id]
+                set asset_type_id [lindex $asset_stats_list 2]
+                set ip_id [db_nextval hf_id_seq]
+                db_transaction {
+                    if { $asset_type_id eq "vm" } {
+                        db_dml ip_address_write2vm { update hf_virtual_machines
+                            set ip_id=:ip_id where instance_id=:instance_id,vm_id =:asset_id
+                        } 
+                    } elseif { $asset_type_id ne "" } {
+                        # write/create to hf_asset_ip_map (asset_id,ip_id) and hf_ip_addresses
+                        db_dml ip_address_write2ip_map { insert into hf_asset_ip_map
+                            (instance_id,asset_id,ip_id) 
+                            values (:instance_id,:asset_id,:ip_id) 
+                        }    
+                    }
+                    db_dml hf_ip_addresses_create {insert into hf_ip_addresses
+                        (instance_id,ip_id,ipv4_addr,ipv4_status,ipv6_addr,ipv6_status) 
+                        values (:instance_id,:ip_id,:ipv4_addr,:ipv4_status,:ipv6_addr,:ipv6_status)
+                    }
+                } 
+            }
+        }
     }
-    # if ip_id exists but not found asset_id or vm_id, then fail
+
+    return $return_id
 }
 
 ad_proc -private hf_ni_read {
