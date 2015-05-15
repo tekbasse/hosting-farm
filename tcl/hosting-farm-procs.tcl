@@ -1908,9 +1908,8 @@ ad_proc -private hf_ip_read {
 
     # get ip data
     set return_list [list ]
-    set ip_detail_list [db_list hf_ip_detail_get "select ipv4_addr, ipv4_status, ipv6_addr, ipv6_status from hf_ip_addresses where instance_id =:instance_id and ip_id =:ip_id"]
-    foreach ip_att_list $ip_detail_list {
-        lappend return_list $ip_att_list
+    if { [qf_is_natural_number $ip_id ] } {
+        set return_list [db_list hf_ip_detail_get "select ipv4_addr, ipv4_status, ipv6_addr, ipv6_status from hf_ip_addresses where instance_id =:instance_id and ip_id =:ip_id"]
     }
     return $return_list
 }
@@ -1954,7 +1953,6 @@ ad_proc -private hf_ip_write {
     set user_id [ad_conn user_id]
     set return_id 0
 
-    ###code
     # validate for db
     # ipv4_status and ipv6_status must be integers
     # length of ipv4_addr must be less than 16
@@ -2001,26 +1999,33 @@ ad_proc -private hf_ip_write {
 }
 
 ad_proc -private hf_ni_read {
-    {ni_id_list ""}
+    {ni_id ""}
     {instance_id ""}
 } {
-    reads full detail of one ni. This is not redundant to hf_nis. This accepts only 1 id and includes all attributes (no summary counts)
+    reads full detail of one ni. This is not redundant to hf_nis. This accepts only 1 ns_id and includes all attributes (no summary counts):  os_dev_ref, ipv4_addr_range, ipv6_addr_range, bia_mac_address, ul_mac_address
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
+    set return_list [list ]
+    if { [qf_is_natural_number $ni_id] } {
+       set return_list [db_list hf_network_interfaces_read1 "select os_dev_ref, bia_mac_address, ul_mac_address, ipv4_addr_range, ipv6_addr_range from hf_network_interfaces where instance_id=:instance_id and ni_id =:ni_id"]
     }
-    ##code
+    return $return_list
 }
 
 ad_proc -private hf_ni_write {
-    args
+    asset_id
+    ni_id
+    os_dev_ref
+    bia_mac_address
+    ul_mac_address
+    ipv4_addr_range
+    ipv6_addr_range
     {instance_id ""}
 } {
-    writes or creates an ip asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
+    writes or creates an ni for an asset_id. If ni_id is empty, a new one is created, and the new ni_id returned. The ni_id is returned if successful, otherwise 0 is returned.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -2029,14 +2034,35 @@ ad_proc -private hf_ni_write {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    ##code
+    ###code
+    set return_ni_id 0
+
+    # check permissions, get customer_id of asset
+    if { [qf_is_natural_number $asset_id] && [qf_is_natural_number $instance_id ] } {
+        set customer_id [hf_customer_id_of_asset_id $asset_id]
+        set admin_p [hf_permission_p $user_id $customer_id assets admin $instance_id]
+        if { $admin_p } {
+            
+            # validate
+            if { [string length $os_dev_ref] < 21 && [string length $bia_mac_address] < 21 && [string length $ul_mac_address] < 21 && [string length $ipv4_addr_range] < 21 && [string length $ipv6_addr_range] < 51 } {
+                # does asset_id exist?
+                
+                # include linkage to hf_asset and maybe
+                # if hf_hardware one is defined, use hw_ni_map for extras
+                # if hf_asset is used and a dc, use dc_ni_map for others
+                # if hf_virtual_machines is used and not same id, reject
+                # if hf_vhosts is used and not same id, reject
+            }
+        }
+    }
+    return $return_ni_id
 }
 
 ad_proc -private hf_os_read {
     {os_id_list ""}
     {instance_id ""}
 } {
-    description
+    reads full detail of one os. 
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
