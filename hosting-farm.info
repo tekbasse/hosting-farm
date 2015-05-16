@@ -15,8 +15,8 @@
         <release-date>2013-01-08</release-date>
         <description format="text/plain">A web interface for a hosting farm system made by a hosting farm company for system admins and their customers.</description>
         <license>GNU Gpl 3.0 or higher</license>
-        <license_url>http://www.gnu.org/licenses/gpl.txt</license_url>
-        <maturity>0</maturity>
+        <license url="http://www.gnu.org/licenses/gpl.txt">GPL3</license>
+        <maturity>-1</maturity>
         <package_instance_name>hosting farm</package_instance_name>
 
         <provides url="hosting-farm" version="0.238"/>
