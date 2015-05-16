@@ -1935,6 +1935,27 @@ ad_proc -private hf_ip_id_exists {
     return $ip_id_exists_p
 }
 
+ad_proc -private hf_ni_id_exists {
+    ni_id_q
+    {instance_id ""}
+} {
+    Checks if ni_id in hf_network_interfaces exists. 1 true, 0 false
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+
+    set ni_id_exists_p 0
+    if { [ad_var_type_check_number_p $ni_id] } {
+        db_0or1row ni_id_exists_q "select ni_id from hf_network_interfaces where instance_id =:instance_id and ni_id = :ni_id_q"
+        if { $ni_id ne "" && $ni_id > 0 } {
+            set ni_id_exists_p 1
+        }
+    }
+    return $ni_id_exists_p
+}
+
 ad_proc -private hf_ip_write {
     asset_id
     ip_id
@@ -1950,51 +1971,61 @@ ad_proc -private hf_ip_write {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    set user_id [ad_conn user_id]
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
     set return_id 0
 
-    # validate for db
-    # ipv4_status and ipv6_status must be integers
-    # length of ipv4_addr must be less than 16
-    # length of ipv6_addr must be less than 40
-    if { [qf_is_natural_number $ipv4_status] && [qf_is_natural_number $ipv6_status] && [string length $ipv4_addr] < 16 && [string length $ipv6_addr] < 40 } {
+    # check permissions, get customer_id of asset
+    if { [qf_is_natural_number $asset_id] && [qf_is_natural_number $instance_id ] } {
+        set customer_id [hf_customer_id_of_asset_id $asset_id]
+        set admin_p [hf_permission_p $user_id $customer_id assets admin $instance_id]
+        if { $admin_p } {
 
-        if { [hf_asset_id_exists $asset_id "" $instance_id] } {
-            # if ip_id exists but not found asset_id or vm_id, then fail
-            # write/create to hf_virtual_machines (ip_id,vm_id) and hf_ip_addresses
-            if { [hf_ip_id_exists $ip_id] } {
-                #write/update
-                db_dml ip_address_write2vm {update hf_ip_addresses
-                    set ipv4_addr =:ipv4_addr, ipv4_status=:ipv4_status, ipv6_addr=:ipv6_addr, ipv6_status=:ipv6_status where instance_id =:instance_id and id=:ip_id
-                }
-            } else {
-                #create/insert
+            # validate for db
+            # ipv4_status and ipv6_status must be integers
+            # length of ipv4_addr must be less than 16
+            # length of ipv6_addr must be less than 40
+            if { [qf_is_natural_number $ipv4_status] && [qf_is_natural_number $ipv6_status] && [string length $ipv4_addr] < 16 && [string length $ipv6_addr] < 40 } {
 
-                # get asset_id_type
-                set asset_stats_list [hf_asset_stats $asset_id $instance_id]
-                set asset_type_id [lindex $asset_stats_list 2]
-                set ip_id [db_nextval hf_id_seq]
-                db_transaction {
-                    if { $asset_type_id eq "vm" } {
-                        db_dml ip_address_write2vm { update hf_virtual_machines
-                            set ip_id=:ip_id where instance_id=:instance_id,vm_id =:asset_id
+                if { [hf_asset_id_exists $asset_id "" $instance_id] } {
+                    # if ip_id exists but not found asset_id or vm_id, then fail
+                    # write/create to hf_virtual_machines (ip_id,vm_id) and hf_ip_addresses
+                    if { [hf_ip_id_exists $ip_id] } {
+                        #write/update
+                        db_dml ip_address_write2vm {update hf_ip_addresses
+                            set ipv4_addr =:ipv4_addr, ipv4_status=:ipv4_status, ipv6_addr=:ipv6_addr, ipv6_status=:ipv6_status where instance_id =:instance_id and id=:ip_id
+                        }
+                    } else {
+                        #create/insert
+
+                        # get asset_id_type
+                        set asset_stats_list [hf_asset_stats $asset_id $instance_id]
+                        set asset_type_id [lindex $asset_stats_list 2]
+                        set ip_id [db_nextval hf_id_seq]
+                        db_transaction {
+                            if { $asset_type_id eq "vm" } {
+                                db_dml ip_address_write2vm { update hf_virtual_machines
+                                    set ip_id=:ip_id where instance_id=:instance_id,vm_id =:asset_id
+                                } 
+                            } elseif { $asset_type_id ne "" } {
+                                # write/create to hf_asset_ip_map (asset_id,ip_id) and hf_ip_addresses
+                                db_dml ip_address_write2ip_map { insert into hf_asset_ip_map
+                                    (instance_id,asset_id,ip_id) 
+                                    values (:instance_id,:asset_id,:ip_id) 
+                                }    
+                            }
+                            db_dml hf_ip_addresses_create {insert into hf_ip_addresses
+                                (instance_id,ip_id,ipv4_addr,ipv4_status,ipv6_addr,ipv6_status) 
+                                values (:instance_id,:ip_id,:ipv4_addr,:ipv4_status,:ipv6_addr,:ipv6_status)
+                            }
+                            set return_id $ip_id
                         } 
-                    } elseif { $asset_type_id ne "" } {
-                        # write/create to hf_asset_ip_map (asset_id,ip_id) and hf_ip_addresses
-                        db_dml ip_address_write2ip_map { insert into hf_asset_ip_map
-                            (instance_id,asset_id,ip_id) 
-                            values (:instance_id,:asset_id,:ip_id) 
-                        }    
                     }
-                    db_dml hf_ip_addresses_create {insert into hf_ip_addresses
-                        (instance_id,ip_id,ipv4_addr,ipv4_status,ipv6_addr,ipv6_status) 
-                        values (:instance_id,:ip_id,:ipv4_addr,:ipv4_status,:ipv6_addr,:ipv6_status)
-                    }
-                } 
+                }
             }
         }
     }
-
     return $return_id
 }
 
@@ -2046,12 +2077,66 @@ ad_proc -private hf_ni_write {
             # validate
             if { [string length $os_dev_ref] < 21 && [string length $bia_mac_address] < 21 && [string length $ul_mac_address] < 21 && [string length $ipv4_addr_range] < 21 && [string length $ipv6_addr_range] < 51 } {
                 # does asset_id exist?
-                
-                # include linkage to hf_asset and maybe
-                # if hf_hardware one is defined, use hw_ni_map for extras
-                # if hf_asset is used and a dc, use dc_ni_map for others
-                # if hf_virtual_machines is used and not same id, reject
-                # if hf_vhosts is used and not same id, reject
+                if { [hf_asset_id_exists $asset_id "" $instance_id] } {
+                    # if asset_id not found, then fail
+                    if { [hf_ni_id_exists $ni_id] } {
+                        #write/update (assume link to an asset_id already exists)
+                        db_dml network_interfaces_write2 {update hf_network_interfaces
+                            set os_dev_ref=:os_dev_ref, bia_mac_address=:bia_mac_address, ul_mac_address=:ul_mac_address, ipv4_addr_range=:ipv4_addr_range, ipv6_addr_range=:ipv6_addr_range 
+                            where instance_id =:instance_id and ni_id=:ni_id
+                        }
+                    } else {
+                        #create/insert
+
+                        # get asset_id_type
+                        set asset_stats_list [hf_asset_stats $asset_id $instance_id]
+                        set asset_type_id [lindex $asset_stats_list 2]
+                        set asset_ni_id [lindex $asset_stats_list 15]
+
+                        # include linkage to hf_asset and maybe
+                        # if hf_hardware one is defined, use hw_ni_map for extras
+                        # if hf_asset is used and a dc, use dc_ni_map for others
+
+                        switch -exact -- $asset_type_id {
+                            vm {
+                                # if hf_virtual_machines.ni_id exists and hf_assets.ni_id exists, reject
+                                set vm_stats_list [hf_vm_read $asset_id $instance_id]
+                                set vm_ni_id [lindex $vm_stats_list 17]
+                                if { $vm_ni_id ne "" || $asset_ni_id ne "" } {
+                                db_transaction {
+                                    set ni_id [db_nextval hf_id_seq]
+                                    # for now, these should be the same in both places? or remove ni_id from hf_virtual_machines.. as duplicate.
+                                    db_dml update_asset_ni_id_1 { update hf_assets set ni_id=:ni_id where instance_id =:instance_id and id=:asset_id }
+                                    db_dml update_hf_vm_ni_id_1 { update hf_virtual_machines set ni_id=:ni_id where instance_id=:instance_id and vm_id=:asset_id }
+                                    db_dml { insert into hf_network_interfaces 
+                                        (instance_id,ni_id,os_dev_ref,bia_mac_address,ul_mac_address,ipv4_addr_range,ipv6_addr_range)
+                                        values (:instance_id,ni_id,:os_dev_ref,:bia_mac_address,:ul_mac_address,:ipv4_addr_range,:ipv6_addr_range)
+                                    }
+                                    
+                                }
+                            }
+####
+ 
+                            if { $asset_type_id eq "vm" } {
+                                db_dml ip_address_write2vm { update hf_virtual_machines
+                                    set ip_id=:ip_id where instance_id=:instance_id,vm_id =:asset_id
+                                } 
+                            } elseif { $asset_type_id ne "" } {
+                                # write/create to hf_asset_ip_map (asset_id,ip_id) and hf_ip_addresses
+                                db_dml ip_address_write2ip_map { insert into hf_asset_ip_map
+                                    (instance_id,asset_id,ip_id) 
+                                    values (:instance_id,:asset_id,:ip_id) 
+                                }    
+                            }
+                            db_dml hf_ip_addresses_create {insert into hf_ip_addresses
+                                (instance_id,ip_id,ipv4_addr,ipv4_status,ipv6_addr,ipv6_status) 
+                                values (:instance_id,:ip_id,:ipv4_addr,:ipv4_status,:ipv6_addr,:ipv6_status)
+                            }
+                            set return_id $ip_id
+                        } 
+                    }
+
+
             }
         }
     }
