@@ -492,7 +492,7 @@ ad_proc -private hf_nis {
     {inactives_included_p 0}
 } {
     returns an ordered list of lists of an asset's network interfaces and their properties: 
-    asset_id, asset_id_type, ni_id, os_dev_ref, ipv4_addr_range, ipv6_addr_range, bia_mac_address, ul_mac_address
+    asset_id, asset_type_id, ni_id, os_dev_ref, ipv4_addr_range, ipv6_addr_range, bia_mac_address, ul_mac_address
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -502,7 +502,7 @@ ad_proc -private hf_nis {
     # asset_id can be dc, vm, or  hw
     # by limiting ni to direct connections helps keep context with ui
 
-    # use hf_assets_w_detail to get valid asset_id, asset_id_type
+    # use hf_assets_w_detail to get valid asset_id, asset_type_id
     set asset_detail_lists [hf_assets_w_detail $instance_id $customer_id_list "" $inactives_included_p "" "" ""]
     set asset_id_list_arr(dc) [list ]
     set asset_id_list_arr(hw) [list ]
@@ -515,13 +515,13 @@ ad_proc -private hf_nis {
     }
     
     set ni_detail_lists [list ]
-    # foreach asset_id_type_list, query db 
+    # foreach asset_type_id_list, query db 
 
     if { [llength $asset_id_list_arr(dc)] > 0 } {
         # dc
         #  hf_dc_ni_map.instance_id, dc_id, ni_id
         #  hf_network_interfaces.instance_id, ni_id, os_dev_ref, ipv4_addr_range, ipv6_addr_range, bia_mac_address, ul_mac_address
-        set asset_lists [db_list_of_lists hf_dc_nis_get "select dc.dc_id, 'dc' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_dc_ni_map dc, hf_network_interfaces ni where dc.instance_id = ni.instance_id and dc.instance_id =:instance_id and dc.ni_id = ni.ni_id and ni.ni_id in (select ni_id from hf_dc_ni_map where instance_id =:instance_id and dc_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(dc)])"]
+        set asset_lists [db_list_of_lists hf_dc_nis_get "select dc.dc_id, 'dc' as asset_type_id, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_dc_ni_map dc, hf_network_interfaces ni where dc.instance_id = ni.instance_id and dc.instance_id =:instance_id and dc.ni_id = ni.ni_id and ni.ni_id in (select ni_id from hf_dc_ni_map where instance_id =:instance_id and dc_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(dc)])"]
         foreach asset_ni_list $asset_lists {
             lappend ni_detail_lists $asset_ni_list
         }
@@ -530,7 +530,7 @@ ad_proc -private hf_nis {
     if { [llength $asset_id_list(hw)] > 0 } {
         #  hf_hw_ni_map.instance_id, hw_id, ni_id
         #  hf_hardware.instance_id, hw_id, system_name, backup_sys, ni_id, os_id, description, details
-        set asset_lists [db_list_of_lists hf_hw_nis_get "select hw.hw_id, 'hw' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_hw_ni_map hw, hf_network_interfaces ni where hw.instance_id = ni.instance_id and hw.instance_id =:instance_id and hw.ni_id = ni.ni_id and ni.ni_id in (select ni_id from hf_hw_ni_map where instance_id =:instance_id and hw_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(hw)])"]
+        set asset_lists [db_list_of_lists hf_hw_nis_get "select hw.hw_id, 'hw' as asset_type_id, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_hw_ni_map hw, hf_network_interfaces ni where hw.instance_id = ni.instance_id and hw.instance_id =:instance_id and hw.ni_id = ni.ni_id and ni.ni_id in (select ni_id from hf_hw_ni_map where instance_id =:instance_id and hw_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(hw)])"]
         foreach asset_ni_list $asset_lists {
             lappend ni_detail_lists $asset_ni_list
         }
@@ -540,7 +540,7 @@ ad_proc -private hf_nis {
     if { [llength $asset_id_list(vm)] > 0 } {
         # vm
         # hf_virtual_machines instance_id, vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details
-        set asset_lists [db_list_of_lists hf_vm_nis_get "select vm.hw_id, 'vm' as asset_id_type, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_virtual_machines vm, hf_network_interfaces ni where ni.ni_id = vm.ni_id and ni.ni_id in (select ni_id from hf_virtual_machines where instance_id =:instance_id and vm_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(vm)])"]
+        set asset_lists [db_list_of_lists hf_vm_nis_get "select vm.hw_id, 'vm' as asset_type_id, ni.ni_id, ni.os_dev_ref, ni.ipv4_addr_range, ni.ipv6_addr_range, ni.bia_mac_address, ni.ul_mac_address from hf_virtual_machines vm, hf_network_interfaces ni where ni.ni_id = vm.ni_id and ni.ni_id in (select ni_id from hf_virtual_machines where instance_id =:instance_id and vm_id in ([template::util::tcl_to_sql_list $asset_id_list_arr(vm)])"]
         foreach asset_ni_list $asset_lists {
             lappend ni_detail_lists $asset_ni_list
         }
@@ -626,7 +626,7 @@ ad_proc -private hf_asset_type_ua_ids {
         set vm_id_list [db_list hf_vm_get_vm_ids "select vm_id from hf_hw_vm_map where instance_id =:instance_id and hw_ic in ([template::util::tcl_to_sql_list $hw_id_list])"]
         
         # get all direct vm's available to user
-        # vm is an asset_id_type, so direct vm's are in: asset_id_list_arr(vm) 
+        # vm is an asset_type_id, so direct vm's are in: asset_id_list_arr(vm) 
         
         # build list of list using collected vm_id's
         foreach vm_id $vm_id_list {
@@ -713,7 +713,7 @@ ad_proc -private hf_vms_basic {
         set vm_id_list [db_list hf_vm_get_vm_ids "select vm_id from hf_hw_vm_map where instance_id =:instance_id and hw_ic in ([template::util::tcl_to_sql_list $hw_id_list])"]
         
         # get all direct vm's available to user
-        # vm is an asset_id_type, so direct vm's are in: asset_id_list_arr(vm)
+        # vm is an asset_type_id, so direct vm's are in: asset_id_list_arr(vm)
         
         # build list of list using collected vm_id's
         foreach vm_id $vm_id_list {
@@ -1999,7 +1999,7 @@ ad_proc -private hf_ip_write {
                     } else {
                         #create/insert
 
-                        # get asset_id_type
+                        # get asset_type_id
                         set asset_stats_list [hf_asset_stats $asset_id $instance_id]
                         set asset_type_id [lindex $asset_stats_list 2]
                         set ip_id [db_nextval hf_id_seq]
@@ -2067,7 +2067,6 @@ ad_proc -private hf_ni_write {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    ###code
     set return_ni_id 0
 
     # check permissions, get customer_id of asset
@@ -2099,7 +2098,7 @@ ad_proc -private hf_ni_write {
                                 values (:instance_id,ni_id,:os_dev_ref,:bia_mac_address,:ul_mac_address,:ipv4_addr_range,:ipv6_addr_range)
                             }
                             #create linkages
-                            # get asset_id_type
+                            # get asset_type_id
                             set asset_stats_list [hf_asset_stats $asset_id $instance_id]
                             set asset_type_id [lindex $asset_stats_list 2]
                             set asset_ni_id [lindex $asset_stats_list 15]
@@ -2151,19 +2150,28 @@ ad_proc -private hf_ni_write {
                                         }
                                     }
                                 }
-                                dc { 
-                                    #  create hf_hw_ni_map
-                                    db_dml { insert into hf_hw_ni_map (instance_id,hw_id,ni_id)
-                                        values (:instance_id,:hw_id,:ni_id)
+                                dc {
+                                    if { $asset_ni_id eq "" } {
+                                        db_dml update_asset_ni_id_3 { update hf_assets set ni_id=:ni_id where instance_id =:instance_id and id=:asset_id }
+                                    } else {
+                                        #  create hf_dc_ni_map
+                                        db_dml { insert into hf_dc_ni_map (instance_id,dc_id,ni_id)
+                                            values (:instance_id,:dc_id,:ni_id)
+                                        }
                                     }
-}
+                                }
                                 default {
-                                    db_dml update_asset_ni_id_3 { update hf_assets set ni_id=:ni_id where instance_id =:instance_id and id=:asset_id }
+                                    if { $asset_ni_id eq "" } {
+                                        db_dml update_asset_ni_id_4 { update hf_assets set ni_id=:ni_id where instance_id =:instance_id and id=:asset_id }
+                                    } else {
+                                        # no additional ones allowed
+                                        set return_ni_id 0
+                                        ns_log Warning "hf_ni_write(2170): Refused request to add a second network_interface to ${asset_type_id} with asset_id '$asset_id'."
+                                    }
                                 }
                             }
                             # previous brace is end of switch
                         }
-
                     }
                     # end db_transaction
                 }
