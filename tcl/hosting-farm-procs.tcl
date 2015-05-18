@@ -2079,82 +2079,94 @@ ad_proc -private hf_ni_write {
             # validate
             if { [string length $os_dev_ref] < 21 && [string length $bia_mac_address] < 21 && [string length $ul_mac_address] < 21 && [string length $ipv4_addr_range] < 21 && [string length $ipv6_addr_range] < 51 } {
                 # does asset_id exist?
-		# if asset_id not found, then fail
+                # if asset_id not found, then fail
                 if { [hf_asset_id_exists $asset_id "" $instance_id] } {
-                    if { [hf_ni_id_exists $ni_id] } {
-                        #write/update (assume link to an asset_id already exists)
-                        db_dml network_interfaces_write2 {update hf_network_interfaces
-                            set os_dev_ref=:os_dev_ref, bia_mac_address=:bia_mac_address, ul_mac_address=:ul_mac_address, ipv4_addr_range=:ipv4_addr_range, ipv6_addr_range=:ipv6_addr_range 
-                            where instance_id =:instance_id and ni_id=:ni_id
+                    db_transaction { 
+                        set hf_ni_id_exists_p [hf_ni_id_exists $ni_id]
+                        set return_ni_id $ni_id
+                        if { $hf_ni_id_exists_p } {
+                            # update existing record
+                            db_dml network_interfaces_write2 {update hf_network_interfaces
+                                set os_dev_ref=:os_dev_ref, bia_mac_address=:bia_mac_address, ul_mac_address=:ul_mac_address, ipv4_addr_range=:ipv4_addr_range, ipv6_addr_range=:ipv6_addr_range 
+                                where instance_id =:instance_id and ni_id=:ni_id
+                            }
+                        } else {
+                            # create new ni_id, hf_network_interfaces record
+                            set ni_id [db_nextval hf_id_seq]
+                            set return_ni_id $ni_id
+                            db_dml { insert into hf_network_interfaces 
+                                (instance_id,ni_id,os_dev_ref,bia_mac_address,ul_mac_address,ipv4_addr_range,ipv6_addr_range)
+                                values (:instance_id,ni_id,:os_dev_ref,:bia_mac_address,:ul_mac_address,:ipv4_addr_range,:ipv6_addr_range)
+                            }
+                            #create linkages
+                            # get asset_id_type
+                            set asset_stats_list [hf_asset_stats $asset_id $instance_id]
+                            set asset_type_id [lindex $asset_stats_list 2]
+                            set asset_ni_id [lindex $asset_stats_list 15]
+
+                            # include linkage to hf_asset and maybe
+                            # if hf_hardware one is defined, use hw_ni_map for extras
+                            # if hf_asset is used and a dc, use dc_ni_map for others
+
+
+                            switch -exact -- $asset_type_id {
+                                vm {
+                                    # hf_virtual_machines.ni_id and chf_assets.ni_id should be same and not exist
+                                    set vm_stats_list [hf_vm_read $asset_id $instance_id]
+                                    set vm_ni_id [lindex $vm_stats_list 17]
+                                    if { $vm_ni_id eq "" || $asset_ni_id eq "" } {
+                                        # assume blank
+                                        if { $vm_ni_id ne $asset_ni_id } {
+                                            # for debugging purposes, signal if both are not blank and same (shouldn't happen)
+                                            ns_log Warning "hf_ni_write(2120): vm_ni_id ne asset_ni_id, vm_ni_id '${vm_ni_id}', asset_ni_id '${asset_ni_id}' This ni_id is now orphaned in hf_virtual_machines."
+                                        }
+                                        # For now, these should be same in both places.
+                                        # See note in sql/postgresql/hosting-farm-create.sql
+                                        # to remove ni_id from hf_virtual_machines as duplicate.
+                                        db_dml update_asset_ni_id_1 { update hf_assets set ni_id=:ni_id where instance_id =:instance_id and id=:asset_id }
+                                        db_dml update_hf_vm_ni_id_1 { update hf_virtual_machines set ni_id=:ni_id where instance_id=:instance_id and vm_id=:asset_id }
+                                    } else {
+                                        set return_ni_id 0
+                                        ns_log Warning "hf_ni_write(2130): Refused request to add a second network_interface to vm/asset_id '$asset_id'."
+                                    }
+                                }
+                                hw {
+                                    # if hf_hardware.ni_id exists and hf_assets.ni_id exists, use hf_hw_ni_map
+                                    set hw_stats_list [hf_hw_read $asset_id $instance_id]
+                                    set hw_ni_id [lindex $hw_stats_list 17]
+                                    if { $hw_ni_id eq "" || $asset_ni_id eq "" } {
+                                        if { $hw_ni_id ne $asset_ni_id } {
+                                            # for debugging purposes, signal if both are not blank and same (shouldn't happen)
+                                            ns_log Warning "hf_ni_write(2140): hw_ni_id ne asset_ni_id, hw_ni_id '${hw_ni_id}', asset_ni_id '${asset_ni_id}' This ni_id is now orphaned in hf_hardware."
+                                        }
+                                        # For now, these should be same in both places.
+                                        # See note in sql/postgresql/hosting-farm-create.sql
+                                        # to remove ni_id from hf_hardware as duplicate.
+                                        db_dml update_asset_ni_id_2 { update hf_assets set ni_id=:ni_id where instance_id =:instance_id and id=:asset_id }
+                                        db_dml update_hf_hw_ni_id_1 { update hf_hardware set ni_id=:ni_id where instance_id=:instance_id and hw_id=:asset_id }
+                                    } else {
+                                        #  create hf_hw_ni_map
+                                        db_dml { insert into hf_hw_ni_map (instance_id,hw_id,ni_id)
+                                            values (:instance_id,:hw_id,:ni_id)
+                                        }
+                                    }
+                                }
+                                dc { 
+                                    #  create hf_hw_ni_map
+                                    db_dml { insert into hf_hw_ni_map (instance_id,hw_id,ni_id)
+                                        values (:instance_id,:hw_id,:ni_id)
+                                    }
+}
+                                default {
+                                    db_dml update_asset_ni_id_3 { update hf_assets set ni_id=:ni_id where instance_id =:instance_id and id=:asset_id }
+                                }
+                            }
+                            # previous brace is end of switch
                         }
-                    } else {
-                        #create/insert
 
-                        # get asset_id_type
-                        set asset_stats_list [hf_asset_stats $asset_id $instance_id]
-                        set asset_type_id [lindex $asset_stats_list 2]
-                        set asset_ni_id [lindex $asset_stats_list 15]
-
-                        # include linkage to hf_asset and maybe
-                        # if hf_hardware one is defined, use hw_ni_map for extras
-                        # if hf_asset is used and a dc, use dc_ni_map for others
-
-                        switch -exact -- $asset_type_id {
-                            vm {
-                                # hf_virtual_machines.ni_id and chf_assets.ni_id should be same and not exist
-                                set vm_stats_list [hf_vm_read $asset_id $instance_id]
-                                set vm_ni_id [lindex $vm_stats_list 17]
-                                if { $vm_ni_id eq "" || $asset_ni_id eq "" } {
-				    if { $vm_ni_id ne $asset_ni_id } {
-					# for debugging purposes, signal if both are not blank and same (shouldn't happen)
-					ns_log Warning "hf_ni_write(2110): vm_ni_id ne asset_ni_id, vm_ni_id '${vm_ni_id}', asset_ni_id '${asset_ni_id}'"
-				    }
-				    db_transaction {
-					set ni_id [db_nextval hf_id_seq]
-					# For now, these should be same in both places.
-					# See note in sql/postgresql/hosting-farm-create.sql
-					# to remove ni_id from hf_virtual_machines as duplicate.
-					db_dml update_asset_ni_id_1 { update hf_assets set ni_id=:ni_id where instance_id =:instance_id and id=:asset_id }
-					db_dml update_hf_vm_ni_id_1 { update hf_virtual_machines set ni_id=:ni_id where instance_id=:instance_id and vm_id=:asset_id }
-					db_dml { insert into hf_network_interfaces 
-					    (instance_id,ni_id,os_dev_ref,bia_mac_address,ul_mac_address,ipv4_addr_range,ipv6_addr_range)
-					    values (:instance_id,ni_id,:os_dev_ref,:bia_mac_address,:ul_mac_address,:ipv4_addr_range,:ipv6_addr_range)
-					}
-				    }
-				}
-			    }
-			    hw {
-                                # if hf_hardware.ni_id exists and hf_assets.ni_id exists, reject
-                                set vm_stats_list [hf_vm_read $asset_id $instance_id]
-                                set vm_ni_id [lindex $vm_stats_list 17]
-                                if { $vm_ni_id eq "" || $asset_ni_id eq "" } {
-				    if { $vm_ni_id ne $asset_ni_id } {
-					# for debugging purposes, signal if both are not blank and same (shouldn't happen)
-					ns_log Warning "hf_ni_write(2110): vm_ni_id ne asset_ni_id, vm_ni_id '${vm_ni_id}', asset_ni_id '${asset_ni_id}'"
-				    }
-				    db_transaction {
-					set ni_id [db_nextval hf_id_seq]
-					# For now, these should be same in both places.
-					# See note in sql/postgresql/hosting-farm-create.sql
-					# to remove ni_id from hf_virtual_machines as duplicate.
-					db_dml update_asset_ni_id_1 { update hf_assets set ni_id=:ni_id where instance_id =:instance_id and id=:asset_id }
-					db_dml update_hf_vm_ni_id_1 { update hf_virtual_machines set ni_id=:ni_id where instance_id=:instance_id and vm_id=:asset_id }
-					db_dml { insert into hf_network_interfaces 
-					    (instance_id,ni_id,os_dev_ref,bia_mac_address,ul_mac_address,ipv4_addr_range,ipv6_addr_range)
-					    values (:instance_id,ni_id,:os_dev_ref,:bia_mac_address,:ul_mac_address,:ipv4_addr_range,:ipv6_addr_range)
-					}
-				    }
-				}
-
-			    }
-			    dc { }
-			    default {
-				db_dml update_asset_ni_id_2 { update hf_assets set ni_id=:ni_id where instance_id =:instance_id and id=:asset_id }
-			    }
-                        }
-			# previous brace is end of switch
                     }
-		}
+                    # end db_transaction
+                }
             }
         }
     }
