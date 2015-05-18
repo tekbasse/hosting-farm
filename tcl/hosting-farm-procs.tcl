@@ -2056,7 +2056,9 @@ ad_proc -private hf_ni_write {
     ipv6_addr_range
     {instance_id ""}
 } {
-    writes or creates an ni for an asset_id. If ni_id is empty, a new one is created, and the new ni_id returned. The ni_id is returned if successful, otherwise 0 is returned.
+    Writes or creates an network interface for an asset_id.
+    If ni_id is empty, a new one is created, and the new ni_id returned.
+    The ni_id is returned if successful, otherwise 0 is returned.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -2077,8 +2079,8 @@ ad_proc -private hf_ni_write {
             # validate
             if { [string length $os_dev_ref] < 21 && [string length $bia_mac_address] < 21 && [string length $ul_mac_address] < 21 && [string length $ipv4_addr_range] < 21 && [string length $ipv6_addr_range] < 51 } {
                 # does asset_id exist?
+		# if asset_id not found, then fail
                 if { [hf_asset_id_exists $asset_id "" $instance_id] } {
-                    # if asset_id not found, then fail
                     if { [hf_ni_id_exists $ni_id] } {
                         #write/update (assume link to an asset_id already exists)
                         db_dml network_interfaces_write2 {update hf_network_interfaces
@@ -2099,44 +2101,60 @@ ad_proc -private hf_ni_write {
 
                         switch -exact -- $asset_type_id {
                             vm {
-                                # if hf_virtual_machines.ni_id exists and hf_assets.ni_id exists, reject
+                                # hf_virtual_machines.ni_id and chf_assets.ni_id should be same and not exist
                                 set vm_stats_list [hf_vm_read $asset_id $instance_id]
                                 set vm_ni_id [lindex $vm_stats_list 17]
-                                if { $vm_ni_id ne "" || $asset_ni_id ne "" } {
-                                db_transaction {
-                                    set ni_id [db_nextval hf_id_seq]
-                                    # for now, these should be the same in both places? or remove ni_id from hf_virtual_machines.. as duplicate.
-                                    db_dml update_asset_ni_id_1 { update hf_assets set ni_id=:ni_id where instance_id =:instance_id and id=:asset_id }
-                                    db_dml update_hf_vm_ni_id_1 { update hf_virtual_machines set ni_id=:ni_id where instance_id=:instance_id and vm_id=:asset_id }
-                                    db_dml { insert into hf_network_interfaces 
-                                        (instance_id,ni_id,os_dev_ref,bia_mac_address,ul_mac_address,ipv4_addr_range,ipv6_addr_range)
-                                        values (:instance_id,ni_id,:os_dev_ref,:bia_mac_address,:ul_mac_address,:ipv4_addr_range,:ipv6_addr_range)
-                                    }
-                                    
-                                }
-                            }
-####
- 
-                            if { $asset_type_id eq "vm" } {
-                                db_dml ip_address_write2vm { update hf_virtual_machines
-                                    set ip_id=:ip_id where instance_id=:instance_id,vm_id =:asset_id
-                                } 
-                            } elseif { $asset_type_id ne "" } {
-                                # write/create to hf_asset_ip_map (asset_id,ip_id) and hf_ip_addresses
-                                db_dml ip_address_write2ip_map { insert into hf_asset_ip_map
-                                    (instance_id,asset_id,ip_id) 
-                                    values (:instance_id,:asset_id,:ip_id) 
-                                }    
-                            }
-                            db_dml hf_ip_addresses_create {insert into hf_ip_addresses
-                                (instance_id,ip_id,ipv4_addr,ipv4_status,ipv6_addr,ipv6_status) 
-                                values (:instance_id,:ip_id,:ipv4_addr,:ipv4_status,:ipv6_addr,:ipv6_status)
-                            }
-                            set return_id $ip_id
-                        } 
+                                if { $vm_ni_id eq "" || $asset_ni_id eq "" } {
+				    if { $vm_ni_id ne $asset_ni_id } {
+					# for debugging purposes, signal if both are not blank and same (shouldn't happen)
+					ns_log Warning "hf_ni_write(2110): vm_ni_id ne asset_ni_id, vm_ni_id '${vm_ni_id}', asset_ni_id '${asset_ni_id}'"
+				    }
+				    db_transaction {
+					set ni_id [db_nextval hf_id_seq]
+					# For now, these should be same in both places.
+					# See note in sql/postgresql/hosting-farm-create.sql
+					# to remove ni_id from hf_virtual_machines as duplicate.
+					db_dml update_asset_ni_id_1 { update hf_assets set ni_id=:ni_id where instance_id =:instance_id and id=:asset_id }
+					db_dml update_hf_vm_ni_id_1 { update hf_virtual_machines set ni_id=:ni_id where instance_id=:instance_id and vm_id=:asset_id }
+					db_dml { insert into hf_network_interfaces 
+					    (instance_id,ni_id,os_dev_ref,bia_mac_address,ul_mac_address,ipv4_addr_range,ipv6_addr_range)
+					    values (:instance_id,ni_id,:os_dev_ref,:bia_mac_address,:ul_mac_address,:ipv4_addr_range,:ipv6_addr_range)
+					}
+				    }
+				}
+			    }
+			    hw {
+                                # if hf_hardware.ni_id exists and hf_assets.ni_id exists, reject
+                                set vm_stats_list [hf_vm_read $asset_id $instance_id]
+                                set vm_ni_id [lindex $vm_stats_list 17]
+                                if { $vm_ni_id eq "" || $asset_ni_id eq "" } {
+				    if { $vm_ni_id ne $asset_ni_id } {
+					# for debugging purposes, signal if both are not blank and same (shouldn't happen)
+					ns_log Warning "hf_ni_write(2110): vm_ni_id ne asset_ni_id, vm_ni_id '${vm_ni_id}', asset_ni_id '${asset_ni_id}'"
+				    }
+				    db_transaction {
+					set ni_id [db_nextval hf_id_seq]
+					# For now, these should be same in both places.
+					# See note in sql/postgresql/hosting-farm-create.sql
+					# to remove ni_id from hf_virtual_machines as duplicate.
+					db_dml update_asset_ni_id_1 { update hf_assets set ni_id=:ni_id where instance_id =:instance_id and id=:asset_id }
+					db_dml update_hf_vm_ni_id_1 { update hf_virtual_machines set ni_id=:ni_id where instance_id=:instance_id and vm_id=:asset_id }
+					db_dml { insert into hf_network_interfaces 
+					    (instance_id,ni_id,os_dev_ref,bia_mac_address,ul_mac_address,ipv4_addr_range,ipv6_addr_range)
+					    values (:instance_id,ni_id,:os_dev_ref,:bia_mac_address,:ul_mac_address,:ipv4_addr_range,:ipv6_addr_range)
+					}
+				    }
+				}
+
+			    }
+			    dc { }
+			    default {
+				db_dml update_asset_ni_id_2 { update hf_assets set ni_id=:ni_id where instance_id =:instance_id and id=:asset_id }
+			    }
+                        }
+			# previous brace is end of switch
                     }
-
-
+		}
             }
         }
     }
