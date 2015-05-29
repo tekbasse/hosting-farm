@@ -2194,6 +2194,18 @@ ad_proc -private hf_os_read {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
+    # hf_operating_systems (
+    #instance_id         integer,
+    #os_id               integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+    #-- server.fsys
+    #label               varchar(20),
+    #brand               varchar(80),
+    #version             varchar(300),
+    #kernel              varchar(300),
+    #orphaned_p          varchar(1),
+    #requires_upgrade_p  varchar(1),
+    #description         text
+
     ##code
 }
 
