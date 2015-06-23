@@ -2185,43 +2185,60 @@ ad_proc -private hf_os_read {
     {os_id_list ""}
     {instance_id ""}
 } {
-    reads full detail of one os. 
+    reads full detail of OSes; if os_id_list is blank, returns all records. os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description
 } {
+    set ost_lists [list ]
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
+    if { $os_id_list eq "" } {
+	set os_lists [db_list_of_lists hf_os_read hf_operating_systems { select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description, where instance_id =:instance_id } ]
+    } else {
+	set filtered_ids_list [list ]
+	foreach os_id $os_id_list {
+	    if { [qf_is_natural_number $os_id] } {
+		lappend filtered_ids_list $os_id
+	    }
+	}
+	set os_lists [db_list_of_lists hf_os_read hf_operating_systems "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id and os_id in ([template_::util::tcl_to_sql_list $filtered_ids_list])" ]
+	
     }
-    # hf_operating_systems (
-    #instance_id         integer,
-    #os_id               integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
-    #-- server.fsys
-    #label               varchar(20),
-    #brand               varchar(80),
-    #version             varchar(300),
-    #kernel              varchar(300),
-    #orphaned_p          varchar(1),
-    #requires_upgrade_p  varchar(1),
-    #description         text
-
-    ##code
+    return $os_lists
 }
 
 ad_proc -private hf_os_write {
-    args
+    os_id
+    label
+    brand
+    version
+    kernel
+    orphaned_p
+    requires_upgrade_p
+    description 
     {instance_id ""}
 } {
-    writes or creates an os asset_type_id. If asset_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise -1 is returned.
+    writes or creates an os asset_type_id. If os_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise 0 is returned.
 } {
+    set success_p 0
+    set os_exists_p 0
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
+    if { ![qf_is_natural_number $os_id] } {
+	set os_id ""
     }
+    if { $os_id ne "" } {
+	set os_exists_p [db_0or1row check_os_id_exists "select os_id as os_id_db from hf_operating_systems where os_id=:os_id"]
+    }
+    if { $os_exists_p } {
+	# update existing record
+
+    } else {
+	# insert new record
+    }
+	
     ##code
 }
 
