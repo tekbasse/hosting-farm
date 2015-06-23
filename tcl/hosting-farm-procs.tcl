@@ -2187,7 +2187,7 @@ ad_proc -private hf_os_read {
 } {
     reads full detail of OSes; if os_id_list is blank, returns all records. os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description
 } {
-    set ost_lists [list ]
+    set new_os_lists [list ]
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
@@ -2202,9 +2202,24 @@ ad_proc -private hf_os_read {
 	    }
 	}
 	set os_lists [db_list_of_lists hf_os_read hf_operating_systems "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id and os_id in ([template_::util::tcl_to_sql_list $filtered_ids_list])" ]
-	
+	# set all *_p values as either 1 or 0
+	# this should already be handled via hf_os_write,
+	#  but in case data is imported.. code expects consistency.
+	set new_os_lists [list ]
+	foreach os_list $os_lists {
+	    set new_list $os_list
+	    set orphaned_p [lindex $os_list 5]
+	    set requires_upgrade_p [lindex $os_list 6]
+	    if { $orphaned_p ne "1" } {
+		set new_list [linsert $new_list 5 "0"]
+	    }
+	    if { $requires_upgrade_p ne "1" } {
+		set new_list [linsert $new_list 6 "0"]
+	    }
+	    lappend new_os_lists $new_list
+	}
     }
-    return $os_lists
+    return $new_os_lists
 }
 
 ad_proc -private hf_os_write {
@@ -2232,14 +2247,35 @@ ad_proc -private hf_os_write {
     if { $os_id ne "" } {
 	set os_exists_p [db_0or1row check_os_id_exists "select os_id as os_id_db from hf_operating_systems where os_id=:os_id"]
     }
+    # filter data to limits
+    set label [string range $label 0 19]
+    set brand [string range $brand 0 79]
+    set version [string range $version 0 299]
+    set kernel [string range $kernel 0 299]
+    if { $orphaned_p ne "1" } {
+	set orphaned_p 0
+    }
+    if { $requires_upgrade_p ne "1" } {
+	set requires_upgrade_p 0
+    }
+    
     if { $os_exists_p } {
 	# update existing record
-
+	#	set os_lists [db_list_of_lists hf_os_read hf_operating_systems "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id and os_id in ([template_::util::tcl_to_sql_list $filtered_ids_list])" ]
+	db_dml hf_os_update {
+	    update hf_operating_systems set label=:label, brand=:brand, version=:version, kernel=:kernel, orphaned_p=:orphaned_p, requires_upgrade_p=:requires_upgrade_p,description=:description,instance_id=:instance_id where os_id=:os_id
+	}
+	set success_p 1
     } else {
 	# insert new record
+	set os_id [db_nextval hf_id_seq]
+	db_dml hf_os_insert {
+	    insert into hf_operating_systems (label,brand,version,kernel,orphaned_p,requires_upgrade_p,description,instance_id,os_id )
+	    values (:label,:brand,:version,:kernel,:orphaned_p,:requires_upgrade_p,:description,:instance_id,:os_id)
+	}
+	set success_p 1
     }
-	
-    ##code
+    return $success_p
 }
 
 
