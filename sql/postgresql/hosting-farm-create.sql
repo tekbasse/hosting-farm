@@ -154,8 +154,10 @@ create index hf_asset_type_features_id_idx on hf_asset_type_features (id);
 create index hf_asset_type_features_asset_type_id_idx on hf_asset_type_features (asset_type_id);
 create index hf_asset_type_features_label_idx on hf_asset_type_features (label);
 
+-- domain name recods, one per asset_id
 CREATE TABLE hf_ns_records (
        instance_id integer,
+       -- ns_id
        id          integer not null DEFAULT nextval ( 'hf_id_seq' ),
        -- should be validated before allowed to go live.
        active_p    integer,

@@ -1344,7 +1344,7 @@ ad_proc -private hf_sss {
 
     # add hf_services detail to asset_return_list
     # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
-    set attr_list [db_list_of_lists hf_services_getv2 "select ss_id server_name service_name ss_type ss_subtype ss_undersubtype ss_ultrasubtype daemon_ref protocol port ua_id config_uri memory_bytes details from hf_services where instance_id =:instance_id and ss_id in ([template::util::tcl_to_sql_list $ss_ids_list]) or ss_id in ([template_::util::tcl_to_sql_list $filtered_ids_list])"]
+    set attr_list [db_list_of_lists hf_services_getv2 "select ss_id server_name service_name ss_type ss_subtype ss_undersubtype ss_ultrasubtype daemon_ref protocol port ua_id config_uri memory_bytes details from hf_services where instance_id =:instance_id and ss_id in ([template::util::tcl_to_sql_list $ss_ids_list]) or ss_id in ([template::util::tcl_to_sql_list $filtered_ids_list])"]
     # build hash array of attr_list
     for a1_list $attr_list {
         set ss_id [lindex $a1_list 0]
@@ -1396,7 +1396,7 @@ ad_proc -private hf_asset_features {
 
     # hf_asset_type_features.instance_id feature_id asset_type_id label feature_type publish_p title description
     # hf_asset_feature_map.instance_id asset_id feature_id
-    set feature_list [db_list_of_lists hf_asset_type_features_get "select asset_type_id, feature_id, label, feature_type, publish_p, title, description from from hf_asset_type_features where instance_id =:instance_id and asset_type_id in ([template_::util::tcl_to_sql_list $new_as_type_id_list])"]
+    set feature_list [db_list_of_lists hf_asset_type_features_get "select asset_type_id, feature_id, label, feature_type, publish_p, title, description from from hf_asset_type_features where instance_id =:instance_id and asset_type_id in ([template::util::tcl_to_sql_list $new_as_type_id_list])"]
     return $feature_list
 }
 
@@ -2193,7 +2193,7 @@ ad_proc -private hf_os_read {
         set instance_id [ad_conn package_id]
     }
     if { $os_id_list eq "" } {
-	set os_lists [db_list_of_lists hf_os_read hf_operating_systems { select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description, where instance_id =:instance_id } ]
+	set os_lists [db_list_of_lists hf_os_read_inst hf_operating_systems { select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description, where instance_id =:instance_id } ]
     } else {
 	set filtered_ids_list [list ]
 	foreach os_id $os_id_list {
@@ -2201,23 +2201,23 @@ ad_proc -private hf_os_read {
 		lappend filtered_ids_list $os_id
 	    }
 	}
-	set os_lists [db_list_of_lists hf_os_read hf_operating_systems "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id and os_id in ([template_::util::tcl_to_sql_list $filtered_ids_list])" ]
-	# set all *_p values as either 1 or 0
-	# this should already be handled via hf_os_write,
-	#  but in case data is imported.. code expects consistency.
-	set new_os_lists [list ]
-	foreach os_list $os_lists {
-	    set new_list $os_list
-	    set orphaned_p [lindex $os_list 5]
-	    set requires_upgrade_p [lindex $os_list 6]
-	    if { $orphaned_p ne "1" } {
-		set new_list [linsert $new_list 5 "0"]
-	    }
-	    if { $requires_upgrade_p ne "1" } {
-		set new_list [linsert $new_list 6 "0"]
-	    }
-	    lappend new_os_lists $new_list
+	set os_lists [db_list_of_lists hf_os_read_some hf_operating_systems "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id and os_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
+    }
+    # set all *_p values as either 1 or 0
+    # this should already be handled via hf_os_write,
+    #  but in case data is imported.. code expects consistency.
+    set new_os_lists [list ]
+    foreach os_list $os_lists {
+	set new_list $os_list
+	set orphaned_p [lindex $os_list 5]
+	set requires_upgrade_p [lindex $os_list 6]
+	if { $orphaned_p ne "1" } {
+	    set new_list [linsert $new_list 5 "0"]
 	}
+	if { $requires_upgrade_p ne "1" } {
+	    set new_list [linsert $new_list 6 "0"]
+	}
+	lappend new_os_lists $new_list
     }
     return $new_os_lists
 }
@@ -2261,7 +2261,7 @@ ad_proc -private hf_os_write {
     
     if { $os_exists_p } {
 	# update existing record
-	#	set os_lists [db_list_of_lists hf_os_read hf_operating_systems "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id and os_id in ([template_::util::tcl_to_sql_list $filtered_ids_list])" ]
+	#	set os_lists [db_list_of_lists hf_os_read hf_operating_systems "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id and os_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
 	db_dml hf_os_update {
 	    update hf_operating_systems set label=:label, brand=:brand, version=:version, kernel=:kernel, orphaned_p=:orphaned_p, requires_upgrade_p=:requires_upgrade_p,description=:description,instance_id=:instance_id where os_id=:os_id
 	}
@@ -2280,18 +2280,34 @@ ad_proc -private hf_os_write {
 
 
 ad_proc -private hf_ns_read {
-    {vm_id_list ""}
+    {ns_id_list ""}
     {instance_id ""}
 } {
-    reads full detail of one ns. This is not redundant to hf_nss. This accepts only 1 id and includes all attributes (no summary counts)
+    reads full detail of domain records.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
+    if { $ns_id_list eq "" } {
+	set ns_lists [db_list_of_lists hf_dns_read_inst hf_ns_records { select id, active_p, name_record from hf_ns_records where instance_id=:instance_id } ]
+    } else {
+	set filtered_ids_list [list ]
+	foreach ns_id $ns_id_list {
+	    if { [qf_is_natural_number $ns_id] } {
+		lappend filtered_ids_list $ns_id
+	    }
+	}
+	set ns_lists [db_list_of_lists hf_dns_read_some hf_ns_records { select id, active_p, name_reacord from hf_ns_records where instance_id=:instance_id and ns_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
+    # TABLE hf_ns_records (
+    #   instance_id integer,
+    #   -- ns_id
+    #   id          integer not null DEFAULT nextval ( 'hf_id_seq' ),
+    #   -- should be validated before allowed to go live.
+    #   active_p    integer,
+    #   -- DNS records to be added to domain name service
+    #   name_record text
+    
     ##code
 }
 
