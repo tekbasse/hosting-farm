@@ -2193,7 +2193,7 @@ ad_proc -private hf_os_read {
         set instance_id [ad_conn package_id]
     }
     if { $os_id_list eq "" } {
-	set os_lists [db_list_of_lists hf_os_read_inst hf_operating_systems { select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description, where instance_id =:instance_id } ]
+	set os_lists [db_list_of_lists hf_os_read_inst { select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id } ]
     } else {
 	set filtered_ids_list [list ]
 	foreach os_id $os_id_list {
@@ -2201,7 +2201,7 @@ ad_proc -private hf_os_read {
 		lappend filtered_ids_list $os_id
 	    }
 	}
-	set os_lists [db_list_of_lists hf_os_read_some hf_operating_systems "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id and os_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
+	set os_lists [db_list_of_lists hf_os_read_some "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id and os_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
     }
     # set all *_p values as either 1 or 0
     # this should already be handled via hf_os_write,
@@ -2261,7 +2261,7 @@ ad_proc -private hf_os_write {
     
     if { $os_exists_p } {
 	# update existing record
-	#	set os_lists [db_list_of_lists hf_os_read hf_operating_systems "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id and os_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
+	#	set os_lists [db_list_of_lists hf_os_read "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id and os_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
 	db_dml hf_os_update {
 	    update hf_operating_systems set label=:label, brand=:brand, version=:version, kernel=:kernel, orphaned_p=:orphaned_p, requires_upgrade_p=:requires_upgrade_p,description=:description,instance_id=:instance_id where os_id=:os_id
 	}
@@ -2290,15 +2290,17 @@ ad_proc -private hf_ns_read {
         set instance_id [ad_conn package_id]
     }
     if { $ns_id_list eq "" } {
-	set ns_lists [db_list_of_lists hf_dns_read_inst hf_ns_records { select id, active_p, name_record from hf_ns_records where instance_id=:instance_id } ]
+        set ns_lists [db_list_of_lists hf_dns_read_inst { select id, active_p, name_record from hf_ns_records where instance_id=:instance_id } ]
     } else {
-	set filtered_ids_list [list ]
-	foreach ns_id $ns_id_list {
-	    if { [qf_is_natural_number $ns_id] } {
-		lappend filtered_ids_list $ns_id
-	    }
-	}
-	set ns_lists [db_list_of_lists hf_dns_read_some hf_ns_records { select id, active_p, name_reacord from hf_ns_records where instance_id=:instance_id and ns_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
+        set filtered_ids_list [list ]
+        foreach ns_id $ns_id_list {
+            if { [qf_is_natural_number $ns_id] } {
+                lappend filtered_ids_list $ns_id
+            }
+        }
+        set ns_lists [db_list_of_lists hf_dns_read_some "select id, active_p, name_record from hf_ns_records where instance_id=:instance_id and ns_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
+    }
+
     # TABLE hf_ns_records (
     #   instance_id integer,
     #   -- ns_id
