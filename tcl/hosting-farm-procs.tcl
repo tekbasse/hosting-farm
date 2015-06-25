@@ -2289,6 +2289,7 @@ ad_proc -private hf_ns_read {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
+    set ns_lists [list ]
     if { $ns_id_list eq "" } {
         set ns_lists [db_list_of_lists hf_dns_read_inst { select id, active_p, name_record from hf_ns_records where instance_id=:instance_id } ]
     } else {
@@ -2300,7 +2301,33 @@ ad_proc -private hf_ns_read {
         }
         set ns_lists [db_list_of_lists hf_dns_read_some "select id, active_p, name_record from hf_ns_records where instance_id=:instance_id and ns_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
     }
+    # set all *_p values as either 1 or 0
+    # this should already be handled via hf_os_write,
+    #  but in case data is imported.. code expects consistency.
+    set new_ns_lists [list ]
+    foreach ns_list $ns_lists {
+	set new_list $ns_list
+	set orphaned_p [lindex $ns_list 5]
+	set requires_upgrade_p [lindex $ns_list 6]
+	if { $orphaned_p ne "1" } {
+	    set new_list [linsert $new_list 5 "0"]
+	}
+	if { $requires_upgrade_p ne "1" } {
+	    set new_list [linsert $new_list 6 "0"]
+	}
+	lappend new_ns_lists $new_list
+    }
+    return $new_ns_lists
+}
 
+ad_proc -private hf_ns_write {
+    ns_id
+    name_record
+    active_p
+    {instance_id ""}
+} {
+    writes or creates an ns_id. If ns_id is blank, a new one is created, and the new ns_id returned. The ns_id is returned if successful, otherwise 0 is returned.
+} {
     # TABLE hf_ns_records (
     #   instance_id integer,
     #   -- ns_id
@@ -2309,24 +2336,38 @@ ad_proc -private hf_ns_read {
     #   active_p    integer,
     #   -- DNS records to be added to domain name service
     #   name_record text
-    
-    ##code
-}
-
-ad_proc -private hf_ns_write {
-    args
-    {instance_id ""}
-} {
-    writes or creates an ns_id. If ns_id is blank, a new one is created, and the new ns_id returned. The ns_id is returned if successful, otherwise -1 is returned.
-} {
+    set success_p 0
+    set ns_exists_p 0
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
+    if { ![qf_is_natural_number $ns_id] } {
+	set ns_id ""
     }
-    ##code
+    if { $ns_id ne "" } {
+	set ns_exists_p [db_0or1row check_ns_id_exists "select id as ns_id_db from hf_ns_records where id=:ns_id"]
+    }
+    # filter data to limits
+    if { $active_p ne "1" } {
+	set active_p 0
+    }
+    if { $ns_exists_p } {
+	# update existing record
+	db_dml hf_ns_update {
+	    update hf_ns_records set name_record=:name_record, active_p=:active_p,instance_id=:instance_id where id=:ns_id
+	}
+	set success_p 1
+    } else {
+	# insert new record
+	set ns_id [db_nextval hf_id_seq]
+	db_dml hf_ns_insert {
+	    insert into hf_ns_records (active_p,name_record,instance_id,id)
+	    values (:active_p,:name_record,:instance_id,:ns_id)
+	}
+	set success_p 1
+    }
+    return $success_p
 }
 
 
