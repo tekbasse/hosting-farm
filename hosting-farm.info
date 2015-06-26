@@ -23,7 +23,7 @@
         <requires url="accounts-receivables" version="0.001"/>
         <requires url="accounts-ledger" version="0.001"/>
         <requires url="accounts-finance" version="0.001"/>
-        <requires url="q-forms" version="0.001"/>
+        <requires url="q-forms" version="0.048"/>
         <requires url="q-wiki" version="0.001"/>
 
         <callbacks>

@@ -2375,33 +2375,123 @@ ad_proc -private hf_vm_quota_read {
     {plan_id_list ""}
     {instance_id ""}
 } {
-    description
+    Given plan_id_list, returns list of list of: plan_id description base_storage base_traffic base_memory base_sku over_storage_sku over_traffic_sku over_memory_sku storage_unit traffic_unit memory_unit qemu_memory status_id vm_type max_domain private_vps.
+    If plan_id_list is blank, returns all.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
+    set vmq_lists [list ]
+    if { $plan_id_list eq "" } {
+        set vmq_lists [db_list_of_lists hf_dvmq_read_inst { select plan_id, description, base_storage, base_traffic, base_memory, base_sku, over_storage_sku, over_traffic_sku, over_memory_sku, storage_unit, traffic_unit, memory_unit, qemu_memory, status_id, vm_type, max_domain, private_vps from hf_vm_quotas where instance_id=:instance_id } ]
+    } else {
+        set filtered_ids_list [list ]
+        foreach plan_id $plan_id_list {
+            if { [qf_is_natural_number $plan_id] } {
+                lappend filtered_ids_list $plan_id
+            }
+        }
+        set vmq_lists [db_list_of_lists hf_dvmq_read_some "select plan_id, description, base_storage, base_traffic, base_memory, base_sku, over_storage_sku, over_traffic_sku, over_memory_sku, storage_unit, traffic_unit, memory_unit, qemu_memory, status_id, vm_type, max_domain, private_vps from hf_vm_quotas where instance_id=:instance_id and plan_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
     }
-    ##code
-    # hf_vm_quotas.instance_id plan_id description base_storage base_traffic base_memory base_sku over_storage_sku over_traffic_sku over_memory_sku storage_unit traffic_unit memory_unit qemu_memory status_id vm_type max_domain private_vps
+    return $vmq_lists
 }
 
 ad_proc -private hf_vm_quota_write {
-    args
+    plan_id
+    description
+    base_storage
+    base_traffic
+    base_memory
+    base_sku
+    over_storage_sku
+    over_traffic_sku
+    over_memory_sku
+    storage_unit
+    traffic_unit
+    memory_unit
+    qemu_memory
+    status_id
+    vm_type
+    max_domain
+    private_vps
     {instance_id ""}
 } {
-    writes or creates a vm_quota. If id is blank, a new one is created, and the new id returned. id is returned if successful, otherwise -1 is returned.
+    writes or creates a vm_quota. If id is blank, a new one is created, and the new id returned. id is returned if successful, otherwise 0 is returned.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
     ##code
+    set success_p 0
+    set vmq_exists_p 0
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { ![qf_is_natural_number $plan_id] } {
+	set plan_id ""
+    }
+    if { $plan_id ne "" } {
+	set vmq_exists_p [db_0or1row check_plan_id_exists "select id as plan_id_db from hf_vm_quotas where id=:plan_id"]
+    }
+    # filter data to limits
+    set description [string range $description 0 39]
+    if { ![qf_is_integer $base_storage] } {
+	set base_storage -1
+    }
+    if { ![qf_is_integer $base_traffic] } {
+	set base_traffic -1
+    }
+    if { ![qf_is_integer $base_memory] } {
+	set base_memory -1
+    }
+    set base_sku [string range $base_sku 0 39]
+    set over_storage_sku [string range $over_storage_sku 0 39]
+    set over_traffic_sku [string range $over_traffic_sku 0 39]
+    set over_memory_sku [string range $over_memory_sku 0 39]
+    if { ![qf_is_integer $storage_unit] } {
+	set storage_unit -1
+    }
+    if { ![qf_is_integer $traffic_unit] } {
+	set traffic_unit -1
+    }
+    if { ![qf_is_integer $memory_unit] } {
+	set memory_unit -1
+    }
+    if { ![qf_is_integer $qemu_memory] } {
+	set qemu_memory -1
+    }
+    if { ![qf_is_integer $status_id] } {
+	set status_id -1
+    }
+    if { ![qf_is_integer $vm_type] } {
+	set vm_type -1
+    }
+    if { ![qf_is_integer $max_domain] } {
+	set max_domain -1
+    }
+    if { $private_vps ne "1" } {
+	set private_vps "0"
+    }
+    # hf_vm_quotas.instance_id plan_id description base_storage base_traffic base_memory base_sku over_storage_sku over_traffic_sku over_memory_sku storage_unit traffic_unit memory_unit qemu_memory status_id vm_type max_domain private_vps
+    if { $vmq_exists_p } {
+	# update existing record
+	db_dml hf_vmq_update {
+	    update hf_vmq_records set description:=description, base_storage=:base_storage, base_traffic=:base_traffic, base_memory=:base_memory, base_sku=:base_sku, over_storage_sku=:over_storage_sku, over_traffic_sku=:over_traffic_sku, over_memory_sku=:over_memory_sku, storage_unit=:storage_unit, traffic_unit=:traffic_unit, memory_unit=:memory_unit, qemu_memory=:qemu_memory, status_id=:status_id, vm_type=:vm_type, max_domain=:max_domain, private_vps=:private_vps, instance_id=:instance_id where id=:plan_id
+	}
+	set success_p 1
+    } else {
+	# insert new record
+	set plan_id [db_nextval hf_id_seq]
+	db_dml hf_vmq_insert {
+	    insert into hf_vmq_records (plan_id, description, base_storage, base_traffic, base_memory, base_sku, over_storage_sku, over_traffic_sku, over_memory_sku, storage_unit, traffic_unit, memory_unit, qemu_memory, status_id, vm_type, max_domain, private_vps,instance_id)
+	    values (:plan_id,:description,:base_storage,:base_traffic,:base_memory,:base_sku,:over_storage_sku,:over_traffic_sku,:over_memory_sku,:storage_unit,:traffic_unit,:memory_unit,:qemu_memory,:status_id,:vm_type,:max_domain,:private_vps,:instance_id)
+	}
+	set success_p 1
+    }
+    return $success_p
 }
 
 ad_proc -private hf_ua_write {
