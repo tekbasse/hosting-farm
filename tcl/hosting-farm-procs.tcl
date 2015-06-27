@@ -2565,6 +2565,31 @@ ad_proc -private hf_up_write {
     ##code
 }
 
+ad_proc -private hf_up_get {
+    {ua}
+    {instance_id ""}
+} {
+    gets up of ua
+} {
+    # must have admin_p to create
+    # otherwise hf_up_ck must be 1 to update
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
+    ##code
+    # use: set up_scrambled [string map $kv_list $up]
+    # to create scrambled up
+    # consider using half letters as functional delimiters to expand some cases to multiple characters: a -> dx , b -> dg ..
+    # this only works if delims are not also used as tr (1:1 character mapping)
+    # kv_list must be created and stored dynamically (in a package parameter for example)
+
+}
+
+
 
 ad_proc -private hf_monitor_configs {
     {asset_id_list ""}
