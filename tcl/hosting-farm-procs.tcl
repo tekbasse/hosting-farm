@@ -2510,6 +2510,14 @@ ad_proc -private hf_ua_write {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
+#CREATE TABLE hf_ua (
+#    instance_id     integer,
+#    ua_id           integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+#    -- bruger kontonavn
+#    details         text,
+#    -- following was database_auth.secure_authentication bool
+#    connection_type varchar(24)
+
     ##code
 }
 
@@ -2519,6 +2527,14 @@ ad_proc -private hf_ua_read {
 } {
        see hf_ua_ck for access credential checking. hf_ua_read is for admin only.
 } {
+#CREATE TABLE hf_ua (
+#    instance_id     integer,
+#    ua_id           integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+#    -- bruger kontonavn
+#    details         text,
+#    -- following was database_auth.secure_authentication bool
+#    connection_type varchar(24)
+
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
@@ -2561,6 +2577,11 @@ ad_proc -private hf_up_write {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
+#CREATE TABLE hf_up (
+#    instance_id     integer,
+#    up_id           integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+#    --ie. adgangs kode
+#    details         text
     ##code
 }
 
@@ -2579,7 +2600,16 @@ ad_proc -private hf_up_get {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
+    set hfk_list [hf_key]
+    
+    set up [string map $hfk_list $up]
     ##code
+#CREATE TABLE hf_up (
+#    instance_id     integer,
+#    up_id           integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+#    --ie. adgangs kode
+#    details         text
+
     # use: set up_scrambled [string map $kv_list $up]
     # to create scrambled up
     # consider using half letters as functional delimiters to expand some cases to multiple characters: a -> dx , b -> dg ..
@@ -2596,11 +2626,17 @@ ad_proc -private hf_key {
     if { ![file exists $fp] } {
         file mkdir [file path $fp]
         set k_list hf_key_create
-        puts $fileId [join $k_list \t]
+	# reverse key value for read bias
+	set k2_list [list ]
+	foreach { key value } $k_list {
+	    lappend k2_list $value
+	    lappend k2_list $key
+	}
+        puts $fileId [join $k2_list \t]
         close $fileId
         # to be consistent, read it first time also
     } 
-    set fileId [open  r]
+    set fileId [open $fp r]
     set k ""
     while { ![eof $fileId] } {
         gets $fileId line
@@ -2697,7 +2733,6 @@ ad_proc -private hf_key_create {
     }
     #ns_log Notice $kv_list
     return $kv_list
-    
 }
 
 
