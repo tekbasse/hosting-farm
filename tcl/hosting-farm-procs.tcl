@@ -2588,6 +2588,31 @@ ad_proc -private hf_up_get {
 
 }
 
+ad_proc -private hf_key {
+} {
+    Returns key value list. Creates first if it doesn't exist.
+} {
+    set fp [file join [acs_root_dir] hosting-farm hf-cert.txt]
+    if { ![file exists $fp] } {
+        file mkdir [file path $fp]
+        set k_list hf_key_create
+        puts $fileId [join $k_list \t]
+        close $fileId
+        # to be consistent, read it first time also
+    } 
+    set fileId [open  r]
+    set k ""
+    while { ![eof $fileId] } {
+        gets $fileId line
+        append k $line
+    }
+    close $fileId
+    set kv_list [split $k "\t"]
+    return $kv_list
+}
+
+
+}
 ad_proc -private hf_key_create {
     {characters ""}
 } {
@@ -2622,7 +2647,7 @@ ad_proc -private hf_key_create {
     set i 0
     set doubles_list [list ]   
     while { $i < $commons_count } {
-        set pos [expr { int( rand() * [llength $availables_list] ) } ]
+        set pos [expr { int( [random] * [llength $availables_list] ) } ]
         lappend doubles_list [lrange $availables_list $pos $pos]
         set availables_list [lreplace $availables_list $pos $pos]
         incr i
@@ -2639,7 +2664,7 @@ ad_proc -private hf_key_create {
     foreach double $doubles_list {
         # key1 is a kind of delim
         set key1 $double
-        set pos [expr { int( rand() * [llength $temp_avail_list] ) } ]
+        set pos [expr { int( [random] * [llength $temp_avail_list] ) } ]
         set key2 [lrange $temp_avail_list $pos $pos]
         set availables_list [lreplace $temp_avail_list $pos $pos]
         set key $key1
@@ -2664,7 +2689,7 @@ ad_proc -private hf_key_create {
 
     set kv_list [list ]
     foreach key $keys_list {
-        set pos [expr { int( rand() * [llength $val_list] ) } ]
+        set pos [expr { int( [random] * [llength $val_list] ) } ]
         set val [lrange $val_list $pos $pos]
         set val_list [lreplace $val_list $pos $pos]
         lappend kv_list $key
