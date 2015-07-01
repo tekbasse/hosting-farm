@@ -2423,7 +2423,6 @@ ad_proc -private hf_vm_quota_write {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    ##code
     set success_p 1
     set vmq_exists_p 0
     if { $instance_id eq "" } {
@@ -2589,6 +2588,92 @@ ad_proc -private hf_up_get {
 
 }
 
+ad_proc -private hf_key_create {
+    {characters ""}
+} {
+    Returns a list of key value pairs for scrambling a string.
+    Scrambles characters in a string.
+    If characters is blank, uses a printable ascii subset.
+} {
+    if { $characters eq "" } {
+        set characters ""
+        for { set i 48 } { $i < 59 } { incr i } {
+            append characters [format %c $i]
+        }
+        for { set i 60 } { $i < 91 } { incr i } {
+            append characters [format %c $i]
+        }
+        for { set i 97 } { $i < 122 } { incr i } {
+            append characters [format %c $i]
+        }
+    }
+    set commons_list [list a e i o u y 0 1 2 9 A E I O U Y ]
+    set keys_list [lsort -unique [split $characters ""]]
+    # how many commons in keys_list?
+    set commons_count 0
+    foreach common $commons_list {
+        if { [lsearch -exact $keys_list $common] > -1 } {
+            incr commons_count
+        }
+    }
+    #ns_log Notice "keys_list $keys_list"
+    #ns_log Notice "commons_count $commons_count commons_list $commons_list"
+    set availables_list $keys_list
+    set i 0
+    set doubles_list [list ]   
+    while { $i < $commons_count } {
+        set pos [expr { int( rand() * [llength $availables_list] ) } ]
+        lappend doubles_list [lrange $availables_list $pos $pos]
+        set availables_list [lreplace $availables_list $pos $pos]
+        incr i
+    }
+    # availables_list + $doubles_list = $keys_list
+    # to each doubles_list, add another character for the heck of it
+    #ns_log Notice "availables_list + doubles_list = keys_list"
+    #ns_log Notice "availables_list $availables_list"
+    #ns_log Notice "doubles_list $doubles_list"
+    # create doubles list, and remove key1 from val_list
+    set val_list $availables_list 
+    set new_doubles_list [list ]
+    set temp_avail_list $keys_list
+    foreach double $doubles_list {
+        # key1 is a kind of delim
+        set key1 $double
+        set pos [expr { int( rand() * [llength $temp_avail_list] ) } ]
+        set key2 [lrange $temp_avail_list $pos $pos]
+        set availables_list [lreplace $temp_avail_list $pos $pos]
+        set key $key1
+        append key $key2
+        lappend new_doubles_list $key
+        set pos1 [lsearch -exact $val_list $key1]
+        # remove key1 from val_list
+        set val_list [lreplace $val_list $pos1 $pos1]
+    }
+
+    foreach val $new_doubles_list {
+        lappend val_list $val
+    }
+    #ns_log Notice "val_list $val_list"
+    #    set val2_list $val_list
+    # verify that no doubles start with a regular key
+    foreach dob $doubles_list {
+        if { [lsearch -exact $val_list $dob] > -1 } {
+            ns_log Error "hf_key_create: Error double ${dob} exists in val_list '${val_list}'"
+        }
+    }
+
+    set kv_list [list ]
+    foreach key $keys_list {
+        set pos [expr { int( rand() * [llength $val_list] ) } ]
+        set val [lrange $val_list $pos $pos]
+        set val_list [lreplace $val_list $pos $pos]
+        lappend kv_list $key
+        lappend kv_list $val
+    }
+    #ns_log Notice $kv_list
+    return $kv_list
+    
+}
 
 
 ad_proc -private hf_monitor_configs {
