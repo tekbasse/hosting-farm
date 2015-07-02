@@ -2479,7 +2479,7 @@ ad_proc -private hf_vm_quota_write {
 	if { $vmq_exists_p } {
 	    # update existing record
 	    db_dml hf_vmq_update {
-		update hf_vmq_records set description:=description, base_storage=:base_storage, base_traffic=:base_traffic, base_memory=:base_memory, base_sku=:base_sku, over_storage_sku=:over_storage_sku, over_traffic_sku=:over_traffic_sku, over_memory_sku=:over_memory_sku, storage_unit=:storage_unit, traffic_unit=:traffic_unit, memory_unit=:memory_unit, qemu_memory=:qemu_memory, status_id=:status_id, vm_type=:vm_type, max_domain=:max_domain, private_vps=:private_vps, instance_id=:instance_id where id=:plan_id
+		update hf_vmq_records set description:=description, base_storage=:base_storage, base_traffic=:base_traffic, base_memory=:base_memory, base_sku=:base_sku, over_storage_sku=:over_storage_sku, over_traffic_sku=:over_traffic_sku, over_memory_sku=:over_memory_sku, storage_unit=:storage_unit, traffic_unit=:traffic_unit, memory_unit=:memory_unit, qemu_memory=:qemu_memory, status_id=:status_id, vm_type=:vm_type, max_domain=:max_domain, private_vps=:private_vps where id=:plan_id and instance_id=:instance_id
 	    }
 	} else {
 	    # insert new record
@@ -2496,33 +2496,69 @@ ad_proc -private hf_vm_quota_write {
 }
 
 ad_proc -private hf_ua_write {
-    args
+    ua
+    connection_type
+    {ua_id ""}
     {instance_id ""}
 } {
-       writes or creates a ua. If ua_id is blank, a new one is created, and the new id returned. id is returned if successful, otherwise -1 is returned.
+    writes or creates a ua. If ua_id is blank, a new one is created. If successful,  ua_id is returned, otherwise 0.
 } {
-    # permissions must be careful here.
+    # permissions must be careful here. Should have already been vetted. Log anything suspect
     # only admin_p or create_p create new
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-#CREATE TABLE hf_ua (
-#    instance_id     integer,
-#    ua_id           integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
-#    -- bruger kontonavn
-#    details         text,
-#    -- following was database_auth.secure_authentication bool
-#    connection_type varchar(24)
 
-    ##code
+    set new_ua_id 0
+    if { [regexp -- {^[[:graph:]]+$} $details scratch ] } {    
+	set log_p 0
+	if { ![qf_is_natural_number $instance_id] } {
+	    # set instance_id package_id
+	    set instance_id [ad_conn package_id]
+	    if { $ua_id eq "" } {
+		set log_p 1
+	    }
+	}
+	# validation and limits
+	set connection_type [string range $connection_type 0 23]
+	if { $ua_id ne "" } {
+	    # update
+	    set id_exists_p 0
+	    # does ua_id exist?
+	    if { [qf_is_natural_number $ua_id] } {
+		set id_exists_p [db_0or1row hf_ua_id_get "select ua_id as new_ua_id from hf_ua where instance_id =:instance_id and ua_id =:ua_id"]
+	    }
+	    if { $id_exists_p } {
+		db_dml hf_ua_update {
+		    update hf_ua set details=:details, connection_type=:connection_type where ua_id=:ua_id and instance_id=:instance_id
+		}
+	    }
+	}
+	if { $new_ua_id eq "" }
+	# create
+	set new_ua_id [db_nextval hf_id_seq]
+	db_dml hf_ua_create {
+	    insert into hf_ua (ua_id, instance_id, details, connection_type)
+	    values (:new_ua_id,:instance_id,:details,:connection_type)
+	}
+	if { $log_p } {
+	    if { [ns_conn isconnected] } {
+		set user_id [ad_conn user_id]
+		ns_log Warning "hf_ua_write(2511): Poor call. New ua '${details}' created by user_id ${user_id} called with blank instance_id."
+	    } else {
+		ns_log Warning "hf_ua_write(2513): Poor call. New ua '${details}' with ua_id ${ua_id} created without a connection and called with blank instance_id."
+	    }
+	}
+    } else {
+	if { [ns_conn isconnected] } {
+	    set user_id [ad_conn user_id]
+	    ns_log Warning "hf_ua_write(2552): Poor call rejected. New ua '${details}' for conn '${connection_type}' requested with unprintable or no characters by user_id ${user_id}."
+	} else {
+	    ns_log Warning "hf_ua_write(2513): Poor call rejected. New ua '${details}' for conn '${connection_type}' requested with unprintable or no characters by process without a connection."
+	}
+    }
+    return $new_ua_id
 }
 
 ad_proc -private hf_ua_read {
-    args
+    ua_id
     {instance_id ""}
 } {
        see hf_ua_ck for access credential checking. hf_ua_read is for admin only.
