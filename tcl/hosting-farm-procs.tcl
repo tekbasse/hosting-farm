@@ -2518,6 +2518,7 @@ ad_proc -private hf_ua_write {
 	}
 	# validation and limits
 	set connection_type [string range $connection_type 0 23]
+	set sdetail [string map [hf_key] $details]
 	if { $ua_id ne "" } {
 	    # update
 	    set id_exists_p 0
@@ -2527,7 +2528,7 @@ ad_proc -private hf_ua_write {
 	    }
 	    if { $id_exists_p } {
 		db_dml hf_ua_update {
-		    update hf_ua set details=:details, connection_type=:connection_type where ua_id=:ua_id and instance_id=:instance_id
+		    update hf_ua set details=:sdetail, connection_type=:connection_type where ua_id=:ua_id and instance_id=:instance_id
 		}
 	    }
 	}
@@ -2536,7 +2537,7 @@ ad_proc -private hf_ua_write {
 	set new_ua_id [db_nextval hf_id_seq]
 	db_dml hf_ua_create {
 	    insert into hf_ua (ua_id, instance_id, details, connection_type)
-	    values (:new_ua_id,:instance_id,:details,:connection_type)
+	    values (:new_ua_id,:instance_id,:sdetail,:connection_type)
 	}
 	if { $log_p } {
 	    if { [ns_conn isconnected] } {
