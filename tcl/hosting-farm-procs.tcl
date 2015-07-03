@@ -2508,52 +2508,57 @@ ad_proc -private hf_ua_write {
 
     set new_ua_id 0
     if { [regexp -- {^[[:graph:]]+$} $details scratch ] } {    
-	set log_p 0
-	if { ![qf_is_natural_number $instance_id] } {
-	    # set instance_id package_id
-	    set instance_id [ad_conn package_id]
-	    if { $ua_id eq "" } {
-		set log_p 1
-	    }
-	}
-	# validation and limits
-	set connection_type [string range $connection_type 0 23]
-	set sdetail [string map [hf_key] $details]
-	if { $ua_id ne "" } {
-	    # update
-	    set id_exists_p 0
-	    # does ua_id exist?
-	    if { [qf_is_natural_number $ua_id] } {
-		set id_exists_p [db_0or1row hf_ua_id_get "select ua_id as new_ua_id from hf_ua where instance_id =:instance_id and ua_id =:ua_id"]
-	    }
-	    if { $id_exists_p } {
-		db_dml hf_ua_update {
-		    update hf_ua set details=:sdetail, connection_type=:connection_type where ua_id=:ua_id and instance_id=:instance_id
-		}
-	    }
-	}
-	if { $new_ua_id eq "" }
-	# create
-	set new_ua_id [db_nextval hf_id_seq]
-	db_dml hf_ua_create {
-	    insert into hf_ua (ua_id, instance_id, details, connection_type)
-	    values (:new_ua_id,:instance_id,:sdetail,:connection_type)
-	}
-	if { $log_p } {
-	    if { [ns_conn isconnected] } {
-		set user_id [ad_conn user_id]
-		ns_log Warning "hf_ua_write(2511): Poor call. New ua '${details}' created by user_id ${user_id} called with blank instance_id."
-	    } else {
-		ns_log Warning "hf_ua_write(2513): Poor call. New ua '${details}' with ua_id ${ua_id} created without a connection and called with blank instance_id."
-	    }
-	}
+        set log_p 0
+        if { ![qf_is_natural_number $instance_id] } {
+            # set instance_id package_id
+            set instance_id [ad_conn package_id]
+            if { $ua_id eq "" } {
+                set log_p 1
+            }
+        }
+        # validation and limits
+        set connection_type [string range $connection_type 0 23]
+        set vk_list [list ]
+        foreach {k v} [hf_key] {
+            lappend vk_list $v
+            lappend vk_list $k
+        }
+        set sdetail [string map $vk_list $details]
+        if { $ua_id ne "" } {
+            # update
+            set id_exists_p 0
+            # does ua_id exist?
+            if { [qf_is_natural_number $ua_id] } {
+                set id_exists_p [db_0or1row hf_ua_id_get "select ua_id as new_ua_id from hf_ua where instance_id =:instance_id and ua_id =:ua_id"]
+            }
+            if { $id_exists_p } {
+                db_dml hf_ua_update {
+                    update hf_ua set details=:sdetail, connection_type=:connection_type where ua_id=:ua_id and instance_id=:instance_id
+                }
+            }
+        }
+        if { $new_ua_id eq "" }
+        # create
+        set new_ua_id [db_nextval hf_id_seq]
+        db_dml hf_ua_create {
+            insert into hf_ua (ua_id, instance_id, details, connection_type)
+            values (:new_ua_id,:instance_id,:sdetail,:connection_type)
+        }
+        if { $log_p } {
+            if { [ns_conn isconnected] } {
+                set user_id [ad_conn user_id]
+                ns_log Warning "hf_ua_write(2511): Poor call. New ua '${details}' created by user_id ${user_id} called with blank instance_id."
+            } else {
+                ns_log Warning "hf_ua_write(2513): Poor call. New ua '${details}' with ua_id ${ua_id} created without a connection and called with blank instance_id."
+            }
+        }
     } else {
-	if { [ns_conn isconnected] } {
-	    set user_id [ad_conn user_id]
-	    ns_log Warning "hf_ua_write(2552): Poor call rejected. New ua '${details}' for conn '${connection_type}' requested with unprintable or no characters by user_id ${user_id}."
-	} else {
-	    ns_log Warning "hf_ua_write(2513): Poor call rejected. New ua '${details}' for conn '${connection_type}' requested with unprintable or no characters by process without a connection."
-	}
+        if { [ns_conn isconnected] } {
+            set user_id [ad_conn user_id]
+            ns_log Warning "hf_ua_write(2552): Poor call rejected. New ua '${details}' for conn '${connection_type}' requested with unprintable or no characters by user_id ${user_id}."
+        } else {
+            ns_log Warning "hf_ua_write(2513): Poor call rejected. New ua '${details}' for conn '${connection_type}' requested with unprintable or no characters by process without a connection."
+        }
     }
     return $new_ua_id
 }
