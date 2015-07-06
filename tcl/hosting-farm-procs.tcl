@@ -2519,7 +2519,7 @@ ad_proc -private hf_ua_write {
         # validation and limits
         set connection_type [string range $connection_type 0 23]
         set vk_list [list ]
-        foreach {k v} [hf_key] {
+        foreach {k v} [hf_key 0123456789abcdef] {
             lappend vk_list $v
             lappend vk_list $k
         }
@@ -2564,25 +2564,57 @@ ad_proc -private hf_ua_write {
 }
 
 ad_proc -private hf_ua_read {
-    ua_id
+    {ua_id ""}
+    {ua ""}
+    {connection_type ""}
     {instance_id ""}
+    {r_pw_p "0"}
 } {
-       see hf_ua_ck for access credential checking. hf_ua_read is for admin only.
+    Reads ua by ua_id or ua
+    See hf_ua_ck for access credential checking. hf_ua_read is for admin only.
+    Returns 1 if successful, otherwise 0.
+    Values returned to calling environment.
+    if r_pw_p true, includes pw.
 } {
-#CREATE TABLE hf_ua (
+    set success_p 0
+    # validation and limits
+    if { ![qf_is_natural_number $instance_id] } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { ![qf_is_natural_number $ua_id] } {
+	set ua_id ""
+    }
+    set connection_type [string range $connection_type 0 23]
+    if { $ua ne "" } {
+	if { ![regexp -- {^[[:graph:]]+$} $details scratch ] } {
+	    set ua ""
+	}
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
+    # ua_id or ua && conn type
+    if { $ua_id ne "" } {
+	# read
+# TABLE hf_ua (
 #    instance_id     integer,
 #    ua_id           integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
 #    -- bruger kontonavn
 #    details         text,
 #    -- following was database_auth.secure_authentication bool
 #    connection_type varchar(24)
-
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
+	set details 
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
+    if { $success_p == 0 && $ua ne "" } {
+	# read
+	
+    }
+    if { $success_p } {
+	set details [string map [hf_key 0123456789abcdef]]
+	if { $r_pw_p } {
+	    set pw [string map [hf_key] $hfpw]
+	}
     }
     ##code
 }
@@ -2661,13 +2693,19 @@ ad_proc -private hf_up_get {
 }
 
 ad_proc -private hf_key {
+    {key ""}
 } {
     Returns key value list. Creates first if it doesn't exist.
 } {
-    set fp [file join [acs_root_dir] hosting-farm hf-cert.txt]
+    if { $key eq "" } {
+	set fk hf-cert.txt
+    } else {
+	set fk $key
+    }
+    set fp [file join [acs_root_dir] hosting-farm $fk]
     if { ![file exists $fp] } {
         file mkdir [file path $fp]
-        set k_list hf_key_create
+        set k_list hf_key_create $key
 	# reverse key value for read bias
 	set k2_list [list ]
 	foreach { key value } $k_list {
