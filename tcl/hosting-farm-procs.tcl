@@ -2602,32 +2602,40 @@ ad_proc -private hf_ua_read {
     if { $ua_id ne "" } {
 	# read
 	if { $r_pw_p } {
-	    set success_p [db_0or1row hf_ua_read_w_pw "select ua.details as ua, ua.connection_type, up.details as hfpw from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.ua_id=ua_id and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and hm.up_id=up.up_id"  ]
+	    set success_p [db_0or1row hf_ua_id_read_w_pw "select ua.details as ua, ua.connection_type, up.details as hfpw from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.ua_id=ua_id and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and hm.up_id=up.up_id"  ]
 	} else {
 	    set hfpw ""
-	    set success_p [db_0or1row hf_ua_read "select details as ua, connection_type from hf_ua where instance_id =:instance_id and ua_id=:ua_id" ]
+	    set success_p [db_0or1row hf_ua_id_read "select details as ua, connection_type from hf_ua where instance_id =:instance_id and ua_id=:ua_id" ]
 	}
     }
-# TABLE hf_ua (
-#    instance_id     integer,
-#    ua_id           integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
-#    -- bruger kontonavn
-#    details         text,
-#    -- following was database_auth.secure_authentication bool
-#    connection_type varchar(24)
     if { $success_p == 0 && $ua ne "" } {
 	# read
-	
+	if { $r_pw_p } {
+	    set vk_list [list ]
+	    foreach {k v} [hf_key 0123456789abcdef] {
+		lappend vk_list $v
+		lappend vk_list $k
+	    }
+	    set ua_ik [string map $vk_list $details]
+	    set success_p [db_0or1row hf_ua_read_w_pw "select ua.ua_id, ua.connection_type, up.details as hfpw from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.ua=:ua_ik and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and hm.up_id=up.up_id"  ]
+	} else {
+	    set hfpw ""
+	    set success_p [db_0or1row hf_ua_read "select ua_id, connection_type from hf_ua where instance_id =:instance_id and ua=:ua" ]
+	}	
     }
     if { $success_p } {
-	set details [string map [hf_key 0123456789abcdef] $details]
+	if { $details eq "" } {
+	    set details [string map [hf_key 0123456789abcdef] $ua]
+	}
 	if { $r_pw_p } {
 	    set pw [string map [hf_key] $hfpw]
 	}
 	set i_list [list ua_id ua connection_type instance_id pw details]
+	foreach i $i_list {
+	    set hf_ua_arr($i) [set $i]
+	}
     }
-    
-    ##code
+    return $success_p
 }
 
 ad_proc -private hf_up_ck {
@@ -2713,7 +2721,7 @@ ad_proc -private hf_key {
     } else {
 	set fk $key
     }
-    set fp [file join [acs_root_dir] hosting-farm $fk]
+    set fp [file join [acs_root_dir] hosting-farm [ad_urlencode_path $fk]]
     if { ![file exists $fp] } {
         file mkdir [file path $fp]
         set k_list hf_key_create $key
