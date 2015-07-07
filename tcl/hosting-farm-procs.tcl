@@ -2569,14 +2569,18 @@ ad_proc -private hf_ua_read {
     {connection_type ""}
     {instance_id ""}
     {r_pw_p "0"}
+    {arr_nam "hf_ua_arr"}
 } {
     Reads ua by ua_id or ua
     See hf_ua_ck for access credential checking. hf_ua_read is for admin only.
     Returns 1 if successful, otherwise 0.
-    Values returned to calling environment.
-    if r_pw_p true, includes pw.
+    Values returned to calling environment in array hf_ua_arr.
+    if r_pw_p true, includes password.
 } {
+    upvar 1 $arr_nam hu_arr
     set success_p 0
+    
+    
     # validation and limits
     if { ![qf_is_natural_number $instance_id] } {
         # set instance_id package_id
@@ -2597,6 +2601,13 @@ ad_proc -private hf_ua_read {
     # ua_id or ua && conn type
     if { $ua_id ne "" } {
 	# read
+	if { $r_pw_p } {
+	    set success_p [db_0or1row hf_ua_read_w_pw "select ua.details as ua, ua.connection_type, up.details as hfpw from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.ua_id=ua_id and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and hm.up_id=up.up_id"  ]
+	} else {
+	    set hfpw ""
+	    set success_p [db_0or1row hf_ua_read "select details as ua, connection_type from hf_ua where instance_id =:instance_id and ua_id=:ua_id" ]
+	}
+    }
 # TABLE hf_ua (
 #    instance_id     integer,
 #    ua_id           integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
@@ -2604,18 +2615,18 @@ ad_proc -private hf_ua_read {
 #    details         text,
 #    -- following was database_auth.secure_authentication bool
 #    connection_type varchar(24)
-	set details 
-    }
     if { $success_p == 0 && $ua ne "" } {
 	# read
 	
     }
     if { $success_p } {
-	set details [string map [hf_key 0123456789abcdef]]
+	set details [string map [hf_key 0123456789abcdef] $details]
 	if { $r_pw_p } {
 	    set pw [string map [hf_key] $hfpw]
 	}
+	set i_list [list ua_id ua connection_type instance_id pw details]
     }
+    
     ##code
 }
 
