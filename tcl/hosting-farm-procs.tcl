@@ -2656,59 +2656,101 @@ ad_proc -private hf_up_ck {
 }
 
 ad_proc -private hf_up_write {
-    {ua,submitted_up, new}
+    ua_id
+    up
     {instance_id ""}
 } {
-    writes or creates a up. If up is blank, a new one is created, and 1 is returned, otherwise returns 0.
+    writes or creates a up. Fails if up is blank. Returns 1 if successful, otherwise returns 0.
 } {
-    # must have admin_p to create
-    # otherwise hf_up_ck must be 1 to update
-    if { $instance_id eq "" } {
+    set success_p 1
+    
+    # validation and limits
+    if { ![qf_is_natural_number $instance_id] } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
+    }
+    if { ![qf_is_natural_number $ua_id] } {
+	set ua_id ""
+	set success_p 0
+    }
+    if { $up ne "" } {
+	if { ![regexp -- {^[[:graph:]]+$} $details scratch ] } {
+	    set up ""
+	    set success_p 0
+	}
     }
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-#CREATE TABLE hf_up (
-#    instance_id     integer,
-#    up_id           integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
-#    --ie. adgangs kode
-#    details         text
-    ##code
+    # ideally, must have admin_p to create
+    # otherwise hf_up_ck must be 1 to update
+    # Not enforcable at this level.
+    # maybe could use user_id and instance_id???
+
+    if { $success_p } {
+	set up_exists_p [db_0or1row ua_id_exists_p "select ua_id as ua_id_db from hf_ua where ua_id=:ua_id and instance_id=:instance_id"]
+	set vk_list [list ]
+        foreach {k v} [hf_key] {
+            lappend vk_list $v
+            lappend vk_list $k
+        }
+        set details [string map $vk_list $up]
+	if { $up_exists_p } {
+	    db_dml hf_up_update {
+		update hf_up set details=:details where instance_id=:instance_id and up_id is in (select up_id from hf_ua_up_map where ua_id=:ua_id and instance_id=:instance_id)
+	    }
+	} else {
+        # create
+	    set new_up_id [db_nextval hf_id_seq]
+	    db_transaction {
+		db_dml hf_up_create {
+		    insert into hf_up (up_id, instance_id, details)
+		    values (:new_up_id,:instance_id,:details)
+		}
+		db_dml hf_up_map_it {
+		    insert into hf_ua_up_map (ua_id, up_id, instance_id)
+		    values (:ua_id,:up_id,:instance_id)
+		}
+	    }
+	}	
+    }
+    return $success_p
 }
 
-ad_proc -private hf_up_get {
-    {ua}
+ad_proc -private hf_up_get_from_ua_id {
+    ua_id
     {instance_id ""}
 } {
     gets up of ua
 } {
-    # must have admin_p to create
-    # otherwise hf_up_ck must be 1 to update
-    if { $instance_id eq "" } {
+    set success_p 1
+    set up ""
+    # validation and limits
+    if { ![qf_is_natural_number $instance_id] } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
+    }
+    if { ![qf_is_natural_number $ua_id] } {
+	set ua_id ""
+	set success_p 0
     }
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    set hfk_list [hf_key]
-    
-    set up [string map $hfk_list $up]
-    ##code
-#CREATE TABLE hf_up (
-#    instance_id     integer,
-#    up_id           integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
-#    --ie. adgangs kode
-#    details         text
-
-    # use: set up_scrambled [string map $kv_list $up]
-    # to create scrambled up
-    # consider using half letters as functional delimiters to expand some cases to multiple characters: a -> dx , b -> dg ..
-    # this only works if delims are not also used as tr (1:1 character mapping)
-    # kv_list must be created and stored dynamically (in a package parameter for example)
-
+    # must have admin_p to create
+    # otherwise hf_up_ck must be 1 to update
+    # At least make sure standard permissions from a write able user exist
+    set allowed_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege write_p]
+    if { $success_p && $allowed_p } {
+	set success_p [db_0or1row hf_up_get_from_ua_id "select details from hf_up where instance_id=:instance_id and up_id in (select up_id from hf_ua_up_map where ua_id=:ua_id and instance_id=:instance_id"]
+	if { $success_p } {
+	    set hfk_list [hf_key]
+	    set up [string map $hfk_list $details]
+	}
+    } else {
+	ns_log Warning "hf_up_det_from_ua_id: request denied for user_id '${user_id}' instance_id '${instance_id}' ua_id '${ua_id}' allowed_p ${allowed_p}"
+    }
+    return $up
 }
 
 ad_proc -private hf_key {
@@ -2746,8 +2788,6 @@ ad_proc -private hf_key {
     return $kv_list
 }
 
-
-}
 ad_proc -private hf_key_create {
     {characters ""}
 } {
