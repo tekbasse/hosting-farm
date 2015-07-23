@@ -2639,20 +2639,50 @@ ad_proc -private hf_ua_read {
 }
 
 ad_proc -private hf_up_ck {
-    {ua,submitted_up}
+    ua
+    up_submitted
+    {connection_type ""}
     {instance_id ""}
 } {
     checks submitted against existing. returns 1 if matches, otherwise returns 0.
 } {
-    # hf_up_ck takes the place of a standard hf_ua_read
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
+    set ck_ok_p 0
+    set log_p 1
+    if { [regexp -- {^[[:graph:]]+$} $ua scratch ] } {
+        set log_p 0
+        if { ![qf_is_natural_number $instance_id] } {
+            # set instance_id package_id
+            set instance_id [ad_conn package_id]
+            if { $ua eq "" } {
+                set log_p 1
+            }
+        }
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
+    if { !$log_p } {
+	# validation and limits
+	set connection_type [string range $connection_type 0 23]
+	set vka_list [list ]
+	foreach {k v} [hf_key 0123456789abcdef] {
+	    lappend vka_list $v
+	    lappend vka_list $k
+	}
+	set sdetail [string map $vka_list $ua]
+	set vkp_list [list ]
+	foreach {k v} [hf_key ] {
+	    lappend vkp_list $v
+	    lappend vkp_list $k
+	}
+	set upp [string map $vkp_list $up_submitted]
+	set ck_ok_p [db_0or1row hf_ua_ck_up {select ua.ua_id from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and ua.connection_type=:connection_type and ua.details=:sdetail and hm.up_id=up.up_id and up.details=:upp}  ]
+    } else {
+	if { [ns_conn isconnected] } {
+            set user_id [ad_conn user_id]
+            ns_log Warning "hf_up_ck(2680): Poor call rejected. submitted ua '${ua}' and '${up_submitted}' for conn '${connection_type}' requested by user_id ${user_id}."
+        } else {
+            ns_log Warning "hf_up_ck(2682): Poor call rejected. submitted ua '${ua}' and '${up_submitted}' for conn '${connection_type}' requested by process without a connection."
+        }
     }
-    ##code
+    return $ck_ok_p
 }
 
 ad_proc -private hf_up_write {
