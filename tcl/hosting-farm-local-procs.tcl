@@ -23,38 +23,39 @@ ad_proc -private hfl_asset_halt_example {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        # set user_id package_id
+    if { [ns_conn isconnected] } {
+	# this shouldn't happen. All these are called via scheduled procs.
         set user_id [ad_conn user_id]
-    }
-
-    # determine customer_id of asset
-    # name,title,asset_type_id,keywords,description,template_p,templated_p,trashed_p,trashed_by,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,flags
-    set asset_stats_list [hf_asset_stats $asset_id $instance_id $user_id]
-    set customer_id [lindex $asset_stats_list 17]
-    
-    set admin_p [hf_permission_p $user_id $customer_id assets admin $instance_id]
-    if { $admin_p } {
-        # determine asset_type
-        set asset_type_id [lindex $asset_stats_list 2]
-
-	# set asset attributes so that remaining code can use them for any nonlocal api calls.
-	set now [dt_systime -gmt 1]
-	## read properties of asset_id for halting.
+	ns_log Warning "hfl_asset_halt_example(29): direct execution attempted by user_id '${user_id}'. Aborted."
+    } else {
+	# determine customer_id of asset
+	# name,title,asset_type_id,keywords,description,template_p,templated_p,trashed_p,trashed_by,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,flags
+	set asset_stats_list [hf_asset_stats $asset_id $instance_id $user_id]
+	set customer_id [lindex $asset_stats_list 17]
 	
-	ns_log Notice "hf_asset_halt id ${asset_id}' of type '${asset_type_id}'"
-	db_dml hf_asset_id_halt { update hf_assets
-	    set time_stop = :now where time_stop is null and asset_id = :asset_id 
-	}
-	#    set a priority for use with hf process stack
-	set priority [lindex $asset_stats_list 9]
-	if { $priority eq "" } {
-	    # triage_priority
-	    set priority [lindex $asset_stats_list 12]
-	}
-	
-	set proc_name [db_1row hf_asset_type_halt_proc_get { 
-	    select halt_proc from hf_asset_type where id = :asset_type_id and instance_id = :instance_id
+	set admin_p [hf_permission_p $user_id $customer_id assets admin $instance_id]
+	if { $admin_p } {
+	    # determine asset_type
+	    set asset_type_id [lindex $asset_stats_list 2]
+
+	    # set asset attributes so that remaining code can use them for any nonlocal api calls.
+	    set now [dt_systime -gmt 1]
+	    ## read properties of asset_id for halting.
+	    
+	    ns_log Notice "hf_asset_halt id ${asset_id}' of type '${asset_type_id}'"
+	    db_dml hf_asset_id_halt { update hf_assets
+		set time_stop = :now where time_stop is null and asset_id = :asset_id 
+	    }
+	    #    set a priority for use with hf process stack
+	    set priority [lindex $asset_stats_list 9]
+	    if { $priority eq "" } {
+		# triage_priority
+		set priority [lindex $asset_stats_list 12]
+	    }
+	    
+	    set proc_name [db_1row hf_asset_type_halt_proc_get { 
+		select halt_proc from hf_asset_type where id = :asset_type_id and instance_id = :instance_id
+	    } ]
 	}
     }
     # return 1 if successful (at least has permission)

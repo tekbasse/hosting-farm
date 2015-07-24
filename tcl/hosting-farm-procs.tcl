@@ -2907,8 +2907,16 @@ ad_proc -private hf_key_create {
 
 # see hf_asset_do
 # The following tables are involved in managing asset direct api
-# Need to re-read existing interface docs for calling local api
 # as defined in hosting-farm-local-procs.tcl
+ad_proc -private hf_call_write {
+    args
+} {
+    Writes a new/update call and associates it to a specific asset_type
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
 
 #CREATE TABLE hf_calls (
 #    instance_id integer not null,
@@ -2934,6 +2942,22 @@ ad_proc -private hf_key_create {
 #       role_id integer not null
 #);
 #
+
+
+    ##code
+}
+
+ad_proc -private hf_calls_read {
+    args
+} {
+    Writes a new/update call and associates it to a specific asset_type
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    ##code
+}
 
 
 ad_proc -private hf_monitor_configs_read {
