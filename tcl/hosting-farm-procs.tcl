@@ -2905,8 +2905,75 @@ ad_proc -private hf_key_create {
 }
 
 
-ad_proc -private hf_monitor_configs {
+# see hf_asset_do
+# The following tables are involved in managing asset direct api
+# Need to re-read existing interface docs for calling local api
+# as defined in hosting-farm-local-procs.tcl
+
+#CREATE TABLE hf_calls (
+#    instance_id integer not null,
+#    id integer not null,
+#    -- system api call name
+#    -- the api grabs asset specific values, then updates db and makes systems calls as needed
+#    proc_name varchar(40) not null,
+#    -- in order of increasing specificity to allow for system-wide exceptions
+#    -- of calling another proc for a more specific asset
+#    asset_type_id varchar(24),
+#    asset_template_id integer,
+#    asset_id integer
+#    -- permissions always uses asset_id
+#);
+#
+#
+#-- Assigns a role permission to make a call, and
+#-- answers question: what roles are allowed to make call?
+#CREATE TABLE hf_call_role_map (
+#       instance_id integer not null,
+#       -- hf_calls.proc_id
+#       call_id integer not null,
+#       role_id integer not null
+#);
+#
+
+
+ad_proc -private hf_monitor_configs_read {
     {asset_id_list ""}
+    {instance_id ""}
+} {
+    description
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
+
+#CREATE TABLE hf_monitor_config_n_control (
+#    instance_id               integer,
+#    monitor_id                integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+#    asset_id                  integer not null,
+#    label                     varchar(200) not null,
+#    active_p                  varchar(1) not null,
+#    -- number of portions to use in frequency distribution curve
+#    portions_count            integer not null,
+#    -- allow some control over how the distribution curves are represented:
+#    calculation_switches      varchar(20),
+#    -- Following 2 are used to suggest hf_monitor_status.expected_health:
+#    -- the percentile rank that triggers an alarm
+#    -- 0% rarely triggers, 100% triggers on most everything.
+#    health_percentile_trigger numeric,
+#    -- the health_value matching health_percentile_trigger
+#    health_threshold          integer
+#);
+
+    ##code
+}
+
+ad_proc -private hf_monitor_configs_write {
+    {asset_id ""}
+    args
     {instance_id ""}
 } {
     description
@@ -2934,6 +3001,30 @@ ad_proc -private hf_monitor_logs {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
+#CREATE TABLE hf_monitor_log (
+#    instance_id          integer,
+#    monitor_id           integer not null,
+#    -- if monitor_id is 0 such as when adding activity note, user_id should not be 0
+#    user_id              integer not null,
+#    asset_id             integer not null,
+#    -- increases by 1 for each monitor_id's report of asset_id
+#    report_id            integer not null,
+#    -- reported_by provides means to identify/verify reporting source
+#    reported_by          varchar(120),
+#    report_time          timestamptz,
+#    -- 0 dead, down, not normal
+#    -- 10000 nominal, allows for variable performance issues
+#    -- health = numeric summary indicator determined by hf_procs
+#    health               integer,
+#    -- latest report from monitoring
+#    report text,
+#    -- sysadmins can log significant changes to asset, such as sw updates
+#    -- with health=null and/or:
+#    significant_change   varchar(1)
+#    -- Changes mark boundaries for data samples
+#);
+
+
     ##code
 }
 
@@ -2950,6 +3041,19 @@ ad_proc -private hf_monitor_status {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
+#CREATE TABLE hf_monitor_status (
+#    instance_id                integer,
+#    monitor_id                 integer unique not null,
+#    asset_id                   integer,
+#    -- most recent report_id:
+#    report_id                  integer,
+#    health_p0                  integer,
+#    -- for calculating differential, p1 is always 1, just as p0 is 0
+#    health_p1                  integer,
+#    expected_health            integer
+#);
+
+
     ##code
 }
 
@@ -2966,6 +3070,23 @@ ad_proc -private hf_monitor_statistics {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
+#CREATE TABLE hf_monitor_statistics (
+#    instance_id     integer,
+#    -- only most recent status statistics are reported here 
+#    -- A hf_monitor_log.significant_change flags boundary
+#    monitor_id      integer not null,
+#    analysis_id     integer not null,
+#    sample_count    integer,
+#    -- range_min is minimum value of report_id
+#    range_min       integer,
+#    range_max       integer,
+#    health_max      integer,
+#    health_min      integer,
+#    health_average  numeric,
+#    health_median   numeric
+#); 
+
+
     ##code
 }
 
@@ -2983,6 +3104,31 @@ ad_proc -private hf_monitor_report {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
+
+#-- Curves are normalized to 1.0
+#-- Percents are represented decimally 0.01 is one percent
+#-- Maybe one day "Per mil" notation should be used instead of percent.
+#-- http://en.wikipedia.org/wiki/Permille
+#-- curve resolution is count of points
+#-- This model keeps old curves, to help with long-term performance insights
+#-- see accounts-finance  qaf_discrete_dist_report {
+#CREATE TABLE hf_monitor_freq_dist_curves (
+#    instance_id      integer,
+#    monitor_id       integer not null,
+#    analysis_id      integer not null,
+#    -- position x is a sequential position below curve
+#    -- median is where cumulative_pct = 0.50 
+#    -- x_pos may not be evenly distributed
+#    x_pos            integer not null,
+#    -- cumulative_pct increases to 1.0 (from 0 to 100 percentile)
+#    cumulative_pct   numeric not null,
+#    -- sum of the delta_x equals 1.0
+#    -- delta_x values might be equal, or not,
+#    -- depending on how distribution is calculated/represented
+#    delta_x_pct      numeric not null
+#);
+
+
     ##code
 }
 
