@@ -2909,7 +2909,12 @@ ad_proc -private hf_key_create {
 # The following tables are involved in managing asset direct api
 # as defined in hosting-farm-local-procs.tcl
 ad_proc -private hf_call_write {
-    args
+    hf_call_id
+    proc_name
+    {asset_type_id ""}
+    {asset_template_id ""}
+    {asset_id ""}
+    {instance_id ""}
 } {
     Writes a new/update call and associates it to a specific asset_type
 } {
@@ -2932,6 +2937,41 @@ ad_proc -private hf_call_write {
 #    -- permissions always uses asset_id
 #);
 #
+
+
+    ##code
+}
+
+ad_proc -private hf_call_read {
+    proc_name
+    {asset_type_id ""}
+    {asset_template_id ""}
+    {asset_id ""}
+    {instance_id ""}
+} {
+    Returns call_id of hf_procedure associated with a specific asset_type
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+
+    ##code
+    return $hf_call_id
+}
+
+
+ad_proc -private hf_call_role_write {
+    call_id
+    role_id
+    {instance_id ""}
+} {
+    Writes an association  between an hf_call and a role
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
 #
 #-- Assigns a role permission to make a call, and
 #-- answers question: what roles are allowed to make call?
@@ -2942,23 +2982,32 @@ ad_proc -private hf_call_write {
 #       role_id integer not null
 #);
 #
-
-
     ##code
 }
 
-ad_proc -private hf_calls_read {
-    args
+
+ad_proc -private hf_call_roles_read {
+    call_id
+    {instance_id ""}
 } {
-    Writes a new/update call and associates it to a specific asset_type
+    reads assigned roles for an hf_call
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
+#
+#-- Assigns a role permission to make a call, and
+#-- answers question: what roles are allowed to make call?
+#CREATE TABLE hf_call_role_map (
+#       instance_id integer not null,
+#       -- hf_calls.proc_id
+#       call_id integer not null,
+#       role_id integer not null
+#);
+#
     ##code
 }
-
 
 ad_proc -private hf_monitor_configs_read {
     {asset_id_list ""}
