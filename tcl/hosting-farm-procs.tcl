@@ -304,7 +304,10 @@ ad_proc -private hf_asset_do {
 } {
     process hf_local_call_id on asset_id
 } {
-    # check permission passed to executable
+   ## check permission passed to executable
+
+#see hf_call_roles_read
+
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
@@ -2918,10 +2921,22 @@ ad_proc -private hf_call_write {
 } {
     Writes a new/update call and associates it to a specific asset_type
 } {
+    set success_p 0
+    set no_errors_p 1
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
+    set hf_call_id_exists_p [qf_is_natural_number $hf_call_id]
+    if { $hf_call_id_exists_p } {
+        # verify hf_call_id, or set hf_call_id_exists_p 0 no_errors_p 0
+    }
+    if { $hf_call_id_exists_p == 0 && $no_errors_p && $proc_name ne "" } {
+        # check proc_name  in context with asset_ids, see proc hf_asset_do at circa line 310
+        # get the appropriate hf_call_id
+    }
+    if { $hf_call_id_exists_p && $no_errors_p } {
+        # Write 
 
 #CREATE TABLE hf_calls (
 #    instance_id integer not null,
@@ -2940,6 +2955,11 @@ ad_proc -private hf_call_write {
 
 
     ##code
+    }
+    if { $no_errors_p == 0 } {
+        set success_p 0
+    }
+    return $success_p
 }
 
 ad_proc -private hf_call_read {
