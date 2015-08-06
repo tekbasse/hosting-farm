@@ -2919,42 +2919,59 @@ ad_proc -private hf_call_write {
     {asset_id ""}
     {instance_id ""}
 } {
-    Writes a new/update call and associates it to a specific asset_type
+    Writes a new/update call and associates it to a specific asset_type. To remove an existing record, set proc_name blank for hf_call_id.
+    At least one asset_id, asset_type_id or asset_templat_id must be nonempty.
 } {
     set success_p 0
     set no_errors_p 1
+    set remove_p 0
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    set hf_call_id_exists_p [qf_is_natural_number $hf_call_id]
-    if { $hf_call_id_exists_p } {
-        # verify hf_call_id, or set hf_call_id_exists_p 0 no_errors_p 0
-    }
-    if { $hf_call_id_exists_p == 0 && $no_errors_p && $proc_name ne "" } {
-        # check proc_name  in context with asset_ids, see proc hf_asset_do at circa line 310
-        # get the appropriate hf_call_id
-    }
-    if { $hf_call_id_exists_p && $no_errors_p } {
-        # Write 
+    # This can only be done by an admin user
+    set user_id [ad_conn user_id]
+    set admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
+    if { $admin_p } {
+        set hf_call_id_exists_p [qf_is_natural_number $hf_call_id]
+        if { $hf_call_id_exists_p } {
+            # verify hf_call_id, or set hf_call_id_exists_p 0 no_errors_p 0
+            if { $proc_name eq "" } {
+                # This write is to blank out ie remove an existing record
+                set remove_p 1
+            }
+        }
+        if { $hf_call_id_exists_p == 0 && $no_errors_p && $proc_name ne "" } {
+            # Check proc_name in context with asset_ids, see proc hf_asset_do at circa line 310
+            # Actually, don't check for asset_id resolution as determined at execution.
+            # Just make sure that hf_call_id matches with proc_name, or report an error.
 
-#CREATE TABLE hf_calls (
-#    instance_id integer not null,
-#    id integer not null,
-#    -- system api call name
-#    -- the api grabs asset specific values, then updates db and makes systems calls as needed
-#    proc_name varchar(40) not null,
-#    -- in order of increasing specificity to allow for system-wide exceptions
-#    -- of calling another proc for a more specific asset
-#    asset_type_id varchar(24),
-#    asset_template_id integer,
-#    asset_id integer
-#    -- permissions always uses asset_id
-#);
-#
+            # get the appropriate hf_call_id
+        }
+        if { $hf_call_id_exists_p && $no_errors_p } {
+            # Write 
+
+            #CREATE TABLE hf_calls (
+            #    instance_id integer not null,
+            #    id integer not null,
+            #    -- system api call name
+            #    -- the api grabs asset specific values, then updates db and makes systems calls as needed
+            #    proc_name varchar(40) not null,
+            #    -- in order of increasing specificity to allow for system-wide exceptions
+            #    -- of calling another proc for a more specific asset
+            #    asset_type_id varchar(24),
+            #    asset_template_id integer,
+            #    asset_id integer
+            #    -- permissions always uses asset_id
+            #);
+            #
 
 
-    ##code
+            ##code
+        }
+    } else {
+        set no_errors_p 0
+        ns_log Warning "hf_call_write: user_id '${user_id}' denied. hf_call_id '${hf_call_id}' proc_name '${proc_name}' instance_id '${instance_id}' asset_type_id '${asset_type_id}' asset_template_id '${asset_template_id}' asset_id '${asset_id}' "
     }
     if { $no_errors_p == 0 } {
         set success_p 0
