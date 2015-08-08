@@ -1,3 +1,4 @@
+#hosting-farm/tcl/hosting-farm-procs.tcl
 ad_library {
 
     misc API for hosting-farm
@@ -9,10 +10,10 @@ ad_library {
     @email: tekbasse@yahoo.com
 
     # UI for one click (web-based) installers
-      # installers install/update/monitor/activate/de-activate software, ie hosted service (hs) or software as a service (ss)
-      # asset_type_id = hs or ss
-      # code is going to use ss for all cases of hs or ss, because hs sounds like hf and looks like ns, which might increase 
-      # errors and make code more difficult to read and debug.
+    # installers install/update/monitor/activate/de-activate software, ie hosted service (hs) or software as a service (ss)
+    # asset_type_id = hs or ss
+    # code is going to use ss for all cases of hs or ss, because hs sounds like hf and looks like ns, which might increase 
+    # errors and make code more difficult to read and debug.
 
     # A conspicuous alert when system needs user attention (contract expiring, service down etc)
     # Use: util_user_message  For example, see q-wiki/www/q-wiki.tcl 
@@ -44,7 +45,7 @@ ad_library {
     # vh  vh_id                    - virtual host
     #       ->  ss_id              - service asset attached to (with dependency primarily on) virtual host
 
-# ni, ip, os, ns are not assets, but attributes that can be assigned to assets.
+    # ni, ip, os, ns are not assets, but attributes that can be assigned to assets.
 
     # objects can easily be passed to procs via an array and upvar
     #  array references don't work in sql, so these use ordered lists
@@ -112,7 +113,7 @@ ad_proc -private hf_asset_create_from_asset_template {
     asset_label_new
     {instance_id ""}
 } {
-   this should be a proc equivalent to a page that loads template and creates new.. 
+    this should be a proc equivalent to a page that loads template and creates new.. 
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -138,7 +139,7 @@ ad_proc -private hf_asset_create_from_asset_template {
             set status [hf_asset_create $asset_label_new $aa(2) $aa(1) $aa(5) $aa(3) $aa(4) $aa(6) 0 $aa(10) 0 $aa(12) 0 $aa(14) "" $aa(16) $aa(17) $aa(18) $customer_id "" "" $instance_id $user_id]
             # params: name, asset_type_id, title, content, keywords, description, comments, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, {template_id ""}, {flags ""}, {instance_id ""}, {user_id ""}
             if { $status } {
-## TODO: create should not include the same ns_id or ua_id. create a new entry in hf_ua and hf_ns tables. Delay coding until these procs created:
+                ## TODO: create should not include the same ns_id or ua_id. create a new entry in hf_ua and hf_ns tables. Delay coding until these procs created:
                 #            hf_ua_write
                 #            hf_ns_write
 
@@ -155,9 +156,9 @@ ad_proc -private hf_asset_create_from_asset_label {
     asset_label_new
     {instance_id ""}
 } {
-   creates a new asset_label based on an existing asset. Returns 1 if successful, otherwise 0.
+    creates a new asset_label based on an existing asset. Returns 1 if successful, otherwise 0.
 } {
-  ## TODO code: basically duplicate hf_asset_create_from_asset_template, getting id from hf_asset_id_from_label
+    ## TODO code: basically duplicate hf_asset_create_from_asset_template, getting id from hf_asset_id_from_label
 
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -167,8 +168,8 @@ ad_proc -private hf_asset_create_from_asset_label {
         set user_id [ad_conn user_id]
     }
     set customer_ids_list [hf_customer_ids_for_user $user_id]
-#     hf_asset_read instance_id asset_id
-#     hf_asset_create new_label
+    #     hf_asset_read instance_id asset_id
+    #     hf_asset_create new_label
 
     # set asset_id_orig [hf_asset_id_from_label $asset_label_orig $instance_id]
 
@@ -219,7 +220,7 @@ ad_proc -private hf_asset_templates {
             if { $insert_p } {
                 set insert_p 0
                 # just id's:  lappend return_list [lindex $template_list 0]
-                 lappend return_list $template_list
+                lappend return_list $template_list
             }
         }
     }
@@ -286,7 +287,7 @@ ad_proc -private hf_assets_w_detail {
             if { $insert_p } {
                 set insert_p 0
                 # just id's:  lappend return_list \[lindex $template_list 0\]
-                 lappend return_list $template_list
+                lappend return_list $template_list
             }
         }
     }
@@ -304,9 +305,9 @@ ad_proc -private hf_asset_do {
 } {
     process hf_local_call_id on asset_id
 } {
-   ## check permission passed to executable
+    ## check permission passed to executable
 
-#see hf_call_roles_read
+    #see hf_call_roles_read
 
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -328,33 +329,33 @@ ad_proc -private hf_asset_do {
     set proc_name_template ""
     set proc_name_type ""
     while { $proc_name eq "" && $counter < $counter_max } {
-	set choice_list [lindex $template_ids_name_list $counter]
-	set c_asset_template_id [lindex $choice_list 0]
-	set c_asset_id [lindex $choice_list 1]
-	# each of these if's should only be true a maximimum of once.
-	if { $c_asset_id eq $asset_id } {
-	    set proc_name [lindex $choice_list 2]
-	} elseif { $asset_template_id eq $c_asset_template_id } {
-	    #  then all template_ids, 
-	    set proc_name_template [lindex $choice_list 2]
-	} elseif { $c_asset_id eq "" && $c_asset_template_id eq "" } {
-	    # then go with asset_type_id 
-	    set proc_name_type  [lindex $choice_list 2]
-	}
+        set choice_list [lindex $template_ids_name_list $counter]
+        set c_asset_template_id [lindex $choice_list 0]
+        set c_asset_id [lindex $choice_list 1]
+        # each of these if's should only be true a maximimum of once.
+        if { $c_asset_id eq $asset_id } {
+            set proc_name [lindex $choice_list 2]
+        } elseif { $asset_template_id eq $c_asset_template_id } {
+            #  then all template_ids, 
+            set proc_name_template [lindex $choice_list 2]
+        } elseif { $c_asset_id eq "" && $c_asset_template_id eq "" } {
+            # then go with asset_type_id 
+            set proc_name_type  [lindex $choice_list 2]
+        }
     }
     if { $proc_name eq "" } {
-	if { $proc_name_template ne "" } {
-	    set proc_name $proc_name_template
-	} elseif { $proc_name_type ne "" } {
-	    set proc_name $proc_name_type
-	}
+        if { $proc_name_template ne "" } {
+            set proc_name $proc_name_template
+        } elseif { $proc_name_type ne "" } {
+            set proc_name $proc_name_type
+        }
     }
 
     if { $proc_name ne "" } {
-	##    add to operations stack that is listened to by an ad_scheduled_proc procedure working in short interval cycles
-	hf::schedule_add $proc_name [list $asset_id $user_id $instance_id] $user_id $instance_id $priority
+        ##    add to operations stack that is listened to by an ad_scheduled_proc procedure working in short interval cycles
+        hf::schedule_add $proc_name [list $asset_id $user_id $instance_id] $user_id $instance_id $priority
     }
-  
+    
 
 }
 ## make procs that return the asset objects given one or more asset ids.
@@ -386,7 +387,7 @@ ad_proc -private hf_dcs {
     set dc_detail_list [db_list_of_lists hf_dc_get "select dc_id, affix, description, details from hf_data_centers where instance_id =:instance_id and dc_id in ([template::util::tcl_to_sql_list $asset_id_list])"]
     # dc_id_list is a subset of asset_id_list
     # to this point, the maximum available dc_id(s) have been returned, and filtered to customer_id_list
- 
+    
     # If proc parameters are not blank, filter the results.
     set filter_asset_id_p [expr { $asset_id_list ne "" } ]
     if { $filter_asset_id_p } {
@@ -468,7 +469,7 @@ ad_proc -private hf_hws {
             }
             if { $insert_p } {
                 set insert_p 0
-#                set hw_id \[lindex $one_hw_detail_list 0\]
+                #                set hw_id \[lindex $one_hw_detail_list 0\]
                 lappend base_return_list $one_hw_detail_list
             }
         }
@@ -751,8 +752,8 @@ ad_proc -private hf_vms_basic {
         set base_return_list $vm_detail_list
     }
 
-# results in base_return_list, consisting of this ordered list:
-# vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details, count of vhosts on vm
+    # results in base_return_list, consisting of this ordered list:
+    # vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details, count of vhosts on vm
     return $base_return_list
 }
 
@@ -805,16 +806,16 @@ ad_proc -private hf_ips {
     set user_id [ad_conn user_id]
 
     set base_return_list [hf_vms_basic $instance_id $customer_id_list $asset_id_list] 
-# results in base_return_list, consisting of this ordered list:
-#    vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details, count of vhosts on vm
+    # results in base_return_list, consisting of this ordered list:
+    #    vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details, count of vhosts on vm
     # of note:  hf_virtual_machines.ip_id    
     set ip_ids_list [list ]
     foreach base_list $base_return_list {
         lappend ip_ids_list [lindex $base_list 2]
     }
     #   hf_ip_addresses.instance_id ip_id ipv4_addr ipv4_status ipv6_addr ipv6_status
-    set ip_detail_list [db_list_of_lists hf_ip_addresses_get "select vm.vm_id, ip.ip_id, ip.ipv4_addr, ip.ipv4_status, ip.ipv6_addr, ip.ipv6_status from hf_assets vm, hf_ip_addresses ip where vm.instance_id =ip.instance_id and ip.ip_id = vm.ip_id and vm.instance_id =:instance_id and ip.ip_id in ([template::util::tcl_to_sql_list $ip_ids_list])"
-    
+    set ip_detail_list [db_list_of_lists hf_ip_addresses_get "select vm.vm_id, ip.ip_id, ip.ipv4_addr, ip.ipv4_status, ip.ipv6_addr, ip.ipv6_status from hf_assets vm, hf_ip_addresses ip where vm.instance_id =ip.instance_id and ip.ip_id = vm.ip_id and vm.instance_id =:instance_id and ip.ip_id in ([template::util::tcl_to_sql_list $ip_ids_list])"]
+                        
     # If proc ip_id_list is not blank, filter the results.
     # results already scoped for customer_id_list via asset_detail_lists
     set filter_ip_id_p [expr { $ip_id_list ne "" } ]
@@ -827,7 +828,7 @@ ad_proc -private hf_ips {
                 set insert_p 1
             }
             # if filtering list by details, do it here
-
+            
             if { $insert_p } {
                 set insert_p 0
                 lappend base_return_list $ip_list
@@ -835,7 +836,8 @@ ad_proc -private hf_ips {
         }
     } else {
         set base_return_list $ip_detail_list
-    } 
+    }
+    
     return $base_return_list
 }
 
@@ -899,8 +901,8 @@ ad_proc -private hf_vhs {
     # a common use will be to supply vm_id as asset_id_list.
     set base_return_list [hf_vms_basic $instance_id $customer_id_list $asset_id_list] 
 
-# results in base_return_list, consisting of this ordered list:
-#    vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details
+    # results in base_return_list, consisting of this ordered list:
+    #    vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details
     set vm_ids_list [list ]
     foreach base_list $base_return_list {
         lappend vm_ids_list [lindex $base_list 0]
@@ -966,9 +968,9 @@ ad_proc -private hf_m_uas {
     }
     set user_id [ad_conn user_id]
     # ua's are referenced by: 
-        # hf_assets.ua_id
-        # hf_vhosts.ua_id
-        # hf_services.ua_id
+    # hf_assets.ua_id
+    # hf_vhosts.ua_id
+    # hf_services.ua_id
 
     # build ua_ids_list
     # and compile index list and arrays
@@ -986,7 +988,7 @@ ad_proc -private hf_m_uas {
         set ua_id [lindex $base_list 2]
         lappend as_ids_list $asset_id
         lappend ua_ids_list $ua_id
-#        set ua_type_arr($ua_id) "as"
+        #        set ua_type_arr($ua_id) "as"
         if { $asset_type eq "vm" } {
             lappend vm_ids_list $asset_id
         }
@@ -999,8 +1001,8 @@ ad_proc -private hf_m_uas {
     # every vh_id is mapped to a vm_id
     # hf_vm_vh_map.instance_id vm_id vh_id
     set vm_vh_map_list [db_list_of_lists hf_vm_vh_map_get "select vm_id, vh_id from hf_vm_vh_map where instance_id =:instance_id vh_id in ([template::util::tcl_to_sql_list $vm_ids_list])"]
- 
-   # filter vm_vh_list to vh_id_list
+    
+    # filter vm_vh_list to vh_id_list
     if { $vh_id_list ne "" } {
         set vm_vh_2_list [list ]
         foreach vm_vh $vm_vh_list {
@@ -1026,7 +1028,7 @@ ad_proc -private hf_m_uas {
         set ua_id [lindex $vh_ua_list 1]
         lappend vh_ids_list $vh_id
         lappend ua_ids_list $ua_id
- #       set ua_type_arr($ua_id) "vh"
+        #       set ua_type_arr($ua_id) "vh"
     }
 
     # include cases where ss is a subsite of a vh_id and not referenced by asset_id directly.
@@ -1045,7 +1047,7 @@ ad_proc -private hf_m_uas {
                 set ua_id [lindex $ss_ua_list 2]
                 lappend ss_ids_list $ss_id
                 lappend ua_ids_list $ua_id
-            #        set ua_type_arr($ua_id) "ss"
+                #        set ua_type_arr($ua_id) "ss"
                 lappend ss_set_2_list $ss_set
             }
         }
@@ -1138,9 +1140,9 @@ ad_proc -private hf_asset_uas {
     }
     set user_id [ad_conn user_id]
     # ua's referenced by: 
-        # hf_assets.ua_id
-        # hf_vhosts.ua_id
-        # hf_services.ua_id
+    # hf_assets.ua_id
+    # hf_vhosts.ua_id
+    # hf_services.ua_id
 
     # build ua_ids_list
     # and compile index list and arrays
@@ -2044,7 +2046,7 @@ ad_proc -private hf_ni_read {
     }
     set return_list [list ]
     if { [qf_is_natural_number $ni_id] } {
-       set return_list [db_list hf_network_interfaces_read1 "select os_dev_ref, bia_mac_address, ul_mac_address, ipv4_addr_range, ipv6_addr_range from hf_network_interfaces where instance_id=:instance_id and ni_id =:ni_id"]
+        set return_list [db_list hf_network_interfaces_read1 "select os_dev_ref, bia_mac_address, ul_mac_address, ipv4_addr_range, ipv6_addr_range from hf_network_interfaces where instance_id=:instance_id and ni_id =:ni_id"]
     }
     return $return_list
 }
@@ -2196,31 +2198,31 @@ ad_proc -private hf_os_read {
         set instance_id [ad_conn package_id]
     }
     if { $os_id_list eq "" } {
-	set os_lists [db_list_of_lists hf_os_read_inst { select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id } ]
+        set os_lists [db_list_of_lists hf_os_read_inst { select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id } ]
     } else {
-	set filtered_ids_list [list ]
-	foreach os_id $os_id_list {
-	    if { [qf_is_natural_number $os_id] } {
-		lappend filtered_ids_list $os_id
-	    }
-	}
-	set os_lists [db_list_of_lists hf_os_read_some "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id and os_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
+        set filtered_ids_list [list ]
+        foreach os_id $os_id_list {
+            if { [qf_is_natural_number $os_id] } {
+                lappend filtered_ids_list $os_id
+            }
+        }
+        set os_lists [db_list_of_lists hf_os_read_some "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id and os_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
     }
     # set all *_p values as either 1 or 0
     # this should already be handled via hf_os_write,
     #  but in case data is imported.. code expects consistency.
     set new_os_lists [list ]
     foreach os_list $os_lists {
-	set new_list $os_list
-	set orphaned_p [lindex $os_list 5]
-	set requires_upgrade_p [lindex $os_list 6]
-	if { $orphaned_p ne "1" } {
-	    set new_list [linsert $new_list 5 "0"]
-	}
-	if { $requires_upgrade_p ne "1" } {
-	    set new_list [linsert $new_list 6 "0"]
-	}
-	lappend new_os_lists $new_list
+        set new_list $os_list
+        set orphaned_p [lindex $os_list 5]
+        set requires_upgrade_p [lindex $os_list 6]
+        if { $orphaned_p ne "1" } {
+            set new_list [linsert $new_list 5 "0"]
+        }
+        if { $requires_upgrade_p ne "1" } {
+            set new_list [linsert $new_list 6 "0"]
+        }
+        lappend new_os_lists $new_list
     }
     return $new_os_lists
 }
@@ -2245,10 +2247,10 @@ ad_proc -private hf_os_write {
         set instance_id [ad_conn package_id]
     }
     if { ![qf_is_natural_number $os_id] } {
-	set os_id ""
+        set os_id ""
     }
     if { $os_id ne "" } {
-	set os_exists_p [db_0or1row check_os_id_exists "select os_id as os_id_db from hf_operating_systems where os_id=:os_id"]
+        set os_exists_p [db_0or1row check_os_id_exists "select os_id as os_id_db from hf_operating_systems where os_id=:os_id"]
     }
     # filter data to limits
     set label [string range $label 0 19]
@@ -2256,27 +2258,27 @@ ad_proc -private hf_os_write {
     set version [string range $version 0 299]
     set kernel [string range $kernel 0 299]
     if { $orphaned_p ne "1" } {
-	set orphaned_p 0
+        set orphaned_p 0
     }
     if { $requires_upgrade_p ne "1" } {
-	set requires_upgrade_p 0
+        set requires_upgrade_p 0
     }
     
     if { $os_exists_p } {
-	# update existing record
-	#	set os_lists [db_list_of_lists hf_os_read "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id and os_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
-	db_dml hf_os_update {
-	    update hf_operating_systems set label=:label, brand=:brand, version=:version, kernel=:kernel, orphaned_p=:orphaned_p, requires_upgrade_p=:requires_upgrade_p,description=:description,instance_id=:instance_id where os_id=:os_id
-	}
-	set success_p 1
+        # update existing record
+        #    set os_lists [db_list_of_lists hf_os_read "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id and os_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
+        db_dml hf_os_update {
+            update hf_operating_systems set label=:label, brand=:brand, version=:version, kernel=:kernel, orphaned_p=:orphaned_p, requires_upgrade_p=:requires_upgrade_p,description=:description,instance_id=:instance_id where os_id=:os_id
+        }
+        set success_p 1
     } else {
-	# insert new record
-	set os_id [db_nextval hf_id_seq]
-	db_dml hf_os_insert {
-	    insert into hf_operating_systems (label,brand,version,kernel,orphaned_p,requires_upgrade_p,description,instance_id,os_id )
-	    values (:label,:brand,:version,:kernel,:orphaned_p,:requires_upgrade_p,:description,:instance_id,:os_id)
-	}
-	set success_p 1
+        # insert new record
+        set os_id [db_nextval hf_id_seq]
+        db_dml hf_os_insert {
+            insert into hf_operating_systems (label,brand,version,kernel,orphaned_p,requires_upgrade_p,description,instance_id,os_id )
+            values (:label,:brand,:version,:kernel,:orphaned_p,:requires_upgrade_p,:description,:instance_id,:os_id)
+        }
+        set success_p 1
     }
     return $success_p
 }
@@ -2309,16 +2311,16 @@ ad_proc -private hf_ns_read {
     #  but in case data is imported.. code expects consistency.
     set new_ns_lists [list ]
     foreach ns_list $ns_lists {
-	set new_list $ns_list
-	set orphaned_p [lindex $ns_list 5]
-	set requires_upgrade_p [lindex $ns_list 6]
-	if { $orphaned_p ne "1" } {
-	    set new_list [linsert $new_list 5 "0"]
-	}
-	if { $requires_upgrade_p ne "1" } {
-	    set new_list [linsert $new_list 6 "0"]
-	}
-	lappend new_ns_lists $new_list
+        set new_list $ns_list
+        set orphaned_p [lindex $ns_list 5]
+        set requires_upgrade_p [lindex $ns_list 6]
+        if { $orphaned_p ne "1" } {
+            set new_list [linsert $new_list 5 "0"]
+        }
+        if { $requires_upgrade_p ne "1" } {
+            set new_list [linsert $new_list 6 "0"]
+        }
+        lappend new_ns_lists $new_list
     }
     return $new_ns_lists
 }
@@ -2346,29 +2348,29 @@ ad_proc -private hf_ns_write {
         set instance_id [ad_conn package_id]
     }
     if { ![qf_is_natural_number $ns_id] } {
-	set ns_id ""
+        set ns_id ""
     }
     if { $ns_id ne "" } {
-	set ns_exists_p [db_0or1row check_ns_id_exists "select id as ns_id_db from hf_ns_records where id=:ns_id"]
+        set ns_exists_p [db_0or1row check_ns_id_exists "select id as ns_id_db from hf_ns_records where id=:ns_id"]
     }
     # filter data to limits
     if { $active_p ne "1" } {
-	set active_p 0
+        set active_p 0
     }
     if { $ns_exists_p } {
-	# update existing record
-	db_dml hf_ns_update {
-	    update hf_ns_records set name_record=:name_record, active_p=:active_p,instance_id=:instance_id where id=:ns_id
-	}
-	set success_p 1
+        # update existing record
+        db_dml hf_ns_update {
+            update hf_ns_records set name_record=:name_record, active_p=:active_p,instance_id=:instance_id where id=:ns_id
+        }
+        set success_p 1
     } else {
-	# insert new record
-	set ns_id [db_nextval hf_id_seq]
-	db_dml hf_ns_insert {
-	    insert into hf_ns_records (active_p,name_record,instance_id,id)
-	    values (:active_p,:name_record,:instance_id,:ns_id)
-	}
-	set success_p 1
+        # insert new record
+        set ns_id [db_nextval hf_id_seq]
+        db_dml hf_ns_insert {
+            insert into hf_ns_records (active_p,name_record,instance_id,id)
+            values (:active_p,:name_record,:instance_id,:ns_id)
+        }
+        set success_p 1
     }
     return $success_p
 }
@@ -2433,67 +2435,67 @@ ad_proc -private hf_vm_quota_write {
         set instance_id [ad_conn package_id]
     }
     if { ![qf_is_natural_number $plan_id] } {
-	set plan_id ""
+        set plan_id ""
     }
     if { $plan_id ne "" } {
-	set vmq_exists_p [db_0or1row check_plan_id_exists "select id as plan_id_db from hf_vm_quotas where id=:plan_id"]
+        set vmq_exists_p [db_0or1row check_plan_id_exists "select id as plan_id_db from hf_vm_quotas where id=:plan_id"]
     }
     # filter data to limits
     set description [string range $description 0 39]
     if { ![qf_is_integer $base_storage] } {
-	set base_storage -1
+        set base_storage -1
     }
     if { ![qf_is_integer $base_traffic] } {
-	set base_traffic -1
+        set base_traffic -1
     }
     if { ![qf_is_integer $base_memory] } {
-	set base_memory -1
+        set base_memory -1
     }
     set base_sku [string range $base_sku 0 39]
     set over_storage_sku [string range $over_storage_sku 0 39]
     set over_traffic_sku [string range $over_traffic_sku 0 39]
     set over_memory_sku [string range $over_memory_sku 0 39]
     if { ![qf_is_integer $storage_unit] } {
-	set sucess_p 0
+        set sucess_p 0
     }
     if { ![qf_is_integer $traffic_unit] } {
-	set sucess_p 0
+        set sucess_p 0
     }
     if { ![qf_is_integer $memory_unit] } {
-	set sucess_p 0
+        set sucess_p 0
     }
     if { ![qf_is_integer $qemu_memory] } {
-	set sucess_p 0
+        set sucess_p 0
     }
     if { ![qf_is_integer $status_id] } {
-	set sucess_p 0
+        set sucess_p 0
     }
     if { ![qf_is_integer $vm_type] } {
-	set sucess_p 0
+        set sucess_p 0
     }
     if { ![qf_is_integer $max_domain] } {
-	set sucess_p 0
+        set sucess_p 0
     }
     if { $private_vps ne "1" } {
-	set private_vps "0"
+        set private_vps "0"
     }
     # hf_vm_quotas.instance_id plan_id description base_storage base_traffic base_memory base_sku over_storage_sku over_traffic_sku over_memory_sku storage_unit traffic_unit memory_unit qemu_memory status_id vm_type max_domain private_vps
     if { $success_p } {
-	if { $vmq_exists_p } {
-	    # update existing record
-	    db_dml hf_vmq_update {
-		update hf_vmq_records set description:=description, base_storage=:base_storage, base_traffic=:base_traffic, base_memory=:base_memory, base_sku=:base_sku, over_storage_sku=:over_storage_sku, over_traffic_sku=:over_traffic_sku, over_memory_sku=:over_memory_sku, storage_unit=:storage_unit, traffic_unit=:traffic_unit, memory_unit=:memory_unit, qemu_memory=:qemu_memory, status_id=:status_id, vm_type=:vm_type, max_domain=:max_domain, private_vps=:private_vps where id=:plan_id and instance_id=:instance_id
-	    }
-	} else {
-	    # insert new record
-	    set plan_id [db_nextval hf_id_seq]
-	    db_dml hf_vmq_insert {
-		insert into hf_vmq_records (plan_id, description, base_storage, base_traffic, base_memory, base_sku, over_storage_sku, over_traffic_sku, over_memory_sku, storage_unit, traffic_unit, memory_unit, qemu_memory, status_id, vm_type, max_domain, private_vps,instance_id)
-		values (:plan_id,:description,:base_storage,:base_traffic,:base_memory,:base_sku,:over_storage_sku,:over_traffic_sku,:over_memory_sku,:storage_unit,:traffic_unit,:memory_unit,:qemu_memory,:status_id,:vm_type,:max_domain,:private_vps,:instance_id)
-	    }
-	}
+        if { $vmq_exists_p } {
+            # update existing record
+            db_dml hf_vmq_update {
+                update hf_vmq_records set description:=description, base_storage=:base_storage, base_traffic=:base_traffic, base_memory=:base_memory, base_sku=:base_sku, over_storage_sku=:over_storage_sku, over_traffic_sku=:over_traffic_sku, over_memory_sku=:over_memory_sku, storage_unit=:storage_unit, traffic_unit=:traffic_unit, memory_unit=:memory_unit, qemu_memory=:qemu_memory, status_id=:status_id, vm_type=:vm_type, max_domain=:max_domain, private_vps=:private_vps where id=:plan_id and instance_id=:instance_id
+            }
+        } else {
+            # insert new record
+            set plan_id [db_nextval hf_id_seq]
+            db_dml hf_vmq_insert {
+                insert into hf_vmq_records (plan_id, description, base_storage, base_traffic, base_memory, base_sku, over_storage_sku, over_traffic_sku, over_memory_sku, storage_unit, traffic_unit, memory_unit, qemu_memory, status_id, vm_type, max_domain, private_vps,instance_id)
+                values (:plan_id,:description,:base_storage,:base_traffic,:base_memory,:base_sku,:over_storage_sku,:over_traffic_sku,:over_memory_sku,:storage_unit,:traffic_unit,:memory_unit,:qemu_memory,:status_id,:vm_type,:max_domain,:private_vps,:instance_id)
+            }
+        }
     } else {
-	ns_log Notice "hf_vm_quota_write: sucess_p 0 at least one value doesn't fit: '${instance_id}' '${plan_id}' '${description}' '${base_storage}' '${base_traffic}' '${base_memory}' '${base_sku}' '${over_storage_sku}' '${over_traffic_sku}' '${over_memory_sku}' '${storage_unit}' '${traffic_unit}' '${memory_unit}' '${qemu_memory}' '${status_id}' '${vm_type}' '${max_domain}' '${private_vps}'"
+        ns_log Notice "hf_vm_quota_write: sucess_p 0 at least one value doesn't fit: '${instance_id}' '${plan_id}' '${description}' '${base_storage}' '${base_traffic}' '${base_memory}' '${base_sku}' '${over_storage_sku}' '${over_traffic_sku}' '${over_memory_sku}' '${storage_unit}' '${traffic_unit}' '${memory_unit}' '${qemu_memory}' '${status_id}' '${vm_type}' '${max_domain}' '${private_vps}'"
     }
     return $success_p
 }
@@ -2590,53 +2592,53 @@ ad_proc -private hf_ua_read {
         set instance_id [ad_conn package_id]
     }
     if { ![qf_is_natural_number $ua_id] } {
-	set ua_id ""
+        set ua_id ""
     }
     set connection_type [string range $connection_type 0 23]
     if { $ua ne "" } {
-	if { ![regexp -- {^[[:graph:]]+$} $details scratch ] } {
-	    set ua ""
-	}
+        if { ![regexp -- {^[[:graph:]]+$} $details scratch ] } {
+            set ua ""
+        }
     }
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
     # ua_id or ua && conn type
     if { $ua_id ne "" } {
-	# read
-	if { $r_pw_p } {
-	    set success_p [db_0or1row hf_ua_id_read_w_pw "select ua.details as ua, ua.connection_type, up.details as hfpw from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.ua_id=ua_id and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and hm.up_id=up.up_id"  ]
-	} else {
-	    set hfpw ""
-	    set success_p [db_0or1row hf_ua_id_read "select details as ua, connection_type from hf_ua where instance_id =:instance_id and ua_id=:ua_id" ]
-	}
+        # read
+        if { $r_pw_p } {
+            set success_p [db_0or1row hf_ua_id_read_w_pw "select ua.details as ua, ua.connection_type, up.details as hfpw from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.ua_id=ua_id and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and hm.up_id=up.up_id"  ]
+        } else {
+            set hfpw ""
+            set success_p [db_0or1row hf_ua_id_read "select details as ua, connection_type from hf_ua where instance_id =:instance_id and ua_id=:ua_id" ]
+        }
     }
     if { $success_p == 0 && $ua ne "" } {
-	# read
-	if { $r_pw_p } {
-	    set vk_list [list ]
-	    foreach {k v} [hf_key 0123456789abcdef] {
-		lappend vk_list $v
-		lappend vk_list $k
-	    }
-	    set ua_ik [string map $vk_list $details]
-	    set success_p [db_0or1row hf_ua_read_w_pw "select ua.ua_id, ua.connection_type, up.details as hfpw from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.ua=:ua_ik and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and hm.up_id=up.up_id"  ]
-	} else {
-	    set hfpw ""
-	    set success_p [db_0or1row hf_ua_read "select ua_id, connection_type from hf_ua where instance_id =:instance_id and ua=:ua" ]
-	}	
+        # read
+        if { $r_pw_p } {
+            set vk_list [list ]
+            foreach {k v} [hf_key 0123456789abcdef] {
+                lappend vk_list $v
+                lappend vk_list $k
+            }
+            set ua_ik [string map $vk_list $details]
+            set success_p [db_0or1row hf_ua_read_w_pw "select ua.ua_id, ua.connection_type, up.details as hfpw from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.ua=:ua_ik and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and hm.up_id=up.up_id"  ]
+        } else {
+            set hfpw ""
+            set success_p [db_0or1row hf_ua_read "select ua_id, connection_type from hf_ua where instance_id =:instance_id and ua=:ua" ]
+        }    
     }
     if { $success_p } {
-	if { $details eq "" } {
-	    set details [string map [hf_key 0123456789abcdef] $ua]
-	}
-	if { $r_pw_p } {
-	    set pw [string map [hf_key] $hfpw]
-	}
-	set i_list [list ua_id ua connection_type instance_id pw details]
-	foreach i $i_list {
-	    set hf_ua_arr($i) [set $i]
-	}
+        if { $details eq "" } {
+            set details [string map [hf_key 0123456789abcdef] $ua]
+        }
+        if { $r_pw_p } {
+            set pw [string map [hf_key] $hfpw]
+        }
+        set i_list [list ua_id ua connection_type instance_id pw details]
+        foreach i $i_list {
+            set hf_ua_arr($i) [set $i]
+        }
     }
     return $success_p
 }
@@ -2662,23 +2664,23 @@ ad_proc -private hf_up_ck {
         }
     }
     if { !$log_p } {
-	# validation and limits
-	set connection_type [string range $connection_type 0 23]
-	set vka_list [list ]
-	foreach {k v} [hf_key 0123456789abcdef] {
-	    lappend vka_list $v
-	    lappend vka_list $k
-	}
-	set sdetail [string map $vka_list $ua]
-	set vkp_list [list ]
-	foreach {k v} [hf_key ] {
-	    lappend vkp_list $v
-	    lappend vkp_list $k
-	}
-	set upp [string map $vkp_list $up_submitted]
-	set ck_ok_p [db_0or1row hf_ua_ck_up {select ua.ua_id from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and ua.connection_type=:connection_type and ua.details=:sdetail and hm.up_id=up.up_id and up.details=:upp}  ]
+        # validation and limits
+        set connection_type [string range $connection_type 0 23]
+        set vka_list [list ]
+        foreach {k v} [hf_key 0123456789abcdef] {
+            lappend vka_list $v
+            lappend vka_list $k
+        }
+        set sdetail [string map $vka_list $ua]
+        set vkp_list [list ]
+        foreach {k v} [hf_key ] {
+            lappend vkp_list $v
+            lappend vkp_list $k
+        }
+        set upp [string map $vkp_list $up_submitted]
+        set ck_ok_p [db_0or1row hf_ua_ck_up {select ua.ua_id from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and ua.connection_type=:connection_type and ua.details=:sdetail and hm.up_id=up.up_id and up.details=:upp}  ]
     } else {
-	if { [ns_conn isconnected] } {
+        if { [ns_conn isconnected] } {
             set user_id [ad_conn user_id]
             ns_log Warning "hf_up_ck(2680): Poor call rejected. submitted ua '${ua}' and '${up_submitted}' for conn '${connection_type}' requested by user_id ${user_id}."
         } else {
@@ -2703,14 +2705,14 @@ ad_proc -private hf_up_write {
         set instance_id [ad_conn package_id]
     }
     if { ![qf_is_natural_number $ua_id] } {
-	set ua_id ""
-	set success_p 0
+        set ua_id ""
+        set success_p 0
     }
     if { $up ne "" } {
-	if { ![regexp -- {^[[:graph:]]+$} $details scratch ] } {
-	    set up ""
-	    set success_p 0
-	}
+        if { ![regexp -- {^[[:graph:]]+$} $details scratch ] } {
+            set up ""
+            set success_p 0
+        }
     }
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
@@ -2721,31 +2723,31 @@ ad_proc -private hf_up_write {
     # maybe could use user_id and instance_id???
 
     if { $success_p } {
-	set up_exists_p [db_0or1row ua_id_exists_p "select ua_id as ua_id_db from hf_ua where ua_id=:ua_id and instance_id=:instance_id"]
-	set vk_list [list ]
+        set up_exists_p [db_0or1row ua_id_exists_p "select ua_id as ua_id_db from hf_ua where ua_id=:ua_id and instance_id=:instance_id"]
+        set vk_list [list ]
         foreach {k v} [hf_key] {
             lappend vk_list $v
             lappend vk_list $k
         }
         set details [string map $vk_list $up]
-	if { $up_exists_p } {
-	    db_dml hf_up_update {
-		update hf_up set details=:details where instance_id=:instance_id and up_id is in (select up_id from hf_ua_up_map where ua_id=:ua_id and instance_id=:instance_id)
-	    }
-	} else {
-        # create
-	    set new_up_id [db_nextval hf_id_seq]
-	    db_transaction {
-		db_dml hf_up_create {
-		    insert into hf_up (up_id, instance_id, details)
-		    values (:new_up_id,:instance_id,:details)
-		}
-		db_dml hf_up_map_it {
-		    insert into hf_ua_up_map (ua_id, up_id, instance_id)
-		    values (:ua_id,:up_id,:instance_id)
-		}
-	    }
-	}	
+        if { $up_exists_p } {
+            db_dml hf_up_update {
+                update hf_up set details=:details where instance_id=:instance_id and up_id is in (select up_id from hf_ua_up_map where ua_id=:ua_id and instance_id=:instance_id)
+            }
+        } else {
+            # create
+            set new_up_id [db_nextval hf_id_seq]
+            db_transaction {
+                db_dml hf_up_create {
+                    insert into hf_up (up_id, instance_id, details)
+                    values (:new_up_id,:instance_id,:details)
+                }
+                db_dml hf_up_map_it {
+                    insert into hf_ua_up_map (ua_id, up_id, instance_id)
+                    values (:ua_id,:up_id,:instance_id)
+                }
+            }
+        }    
     }
     return $success_p
 }
@@ -2764,8 +2766,8 @@ ad_proc -private hf_up_get_from_ua_id {
         set instance_id [ad_conn package_id]
     }
     if { ![qf_is_natural_number $ua_id] } {
-	set ua_id ""
-	set success_p 0
+        set ua_id ""
+        set success_p 0
     }
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
@@ -2775,13 +2777,13 @@ ad_proc -private hf_up_get_from_ua_id {
     # At least make sure standard permissions from a write able user exist
     set allowed_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege write_p]
     if { $success_p && $allowed_p } {
-	set success_p [db_0or1row hf_up_get_from_ua_id "select details from hf_up where instance_id=:instance_id and up_id in (select up_id from hf_ua_up_map where ua_id=:ua_id and instance_id=:instance_id"]
-	if { $success_p } {
-	    set hfk_list [hf_key]
-	    set up [string map $hfk_list $details]
-	}
+        set success_p [db_0or1row hf_up_get_from_ua_id "select details from hf_up where instance_id=:instance_id and up_id in (select up_id from hf_ua_up_map where ua_id=:ua_id and instance_id=:instance_id"]
+        if { $success_p } {
+            set hfk_list [hf_key]
+            set up [string map $hfk_list $details]
+        }
     } else {
-	ns_log Warning "hf_up_det_from_ua_id: request denied for user_id '${user_id}' instance_id '${instance_id}' ua_id '${ua_id}' allowed_p ${allowed_p}"
+        ns_log Warning "hf_up_det_from_ua_id: request denied for user_id '${user_id}' instance_id '${instance_id}' ua_id '${ua_id}' allowed_p ${allowed_p}"
     }
     return $up
 }
@@ -2792,20 +2794,20 @@ ad_proc -private hf_key {
     Returns key value list. Creates first if it doesn't exist.
 } {
     if { $key eq "" } {
-	set fk hf-cert.txt
+        set fk hf-cert.txt
     } else {
-	set fk $key
+        set fk $key
     }
     set fp [file join [acs_root_dir] hosting-farm [ad_urlencode_path $fk]]
     if { ![file exists $fp] } {
         file mkdir [file path $fp]
         set k_list hf_key_create $key
-	# reverse key value for read bias
-	set k2_list [list ]
-	foreach { key value } $k_list {
-	    lappend k2_list $value
-	    lappend k2_list $key
-	}
+        # reverse key value for read bias
+        set k2_list [list ]
+        foreach { key value } $k_list {
+            lappend k2_list $value
+            lappend k2_list $key
+        }
         puts $fileId [join $k2_list \t]
         close $fileId
         # to be consistent, read it first time also
@@ -2933,26 +2935,26 @@ ad_proc -private hf_call_write {
     set user_id [ad_conn user_id]
     set admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
     if { $admin_p } {
-	# param validation
+        # param validation
         set hf_call_id_exists_p [qf_is_natural_number $hf_call_id]
-	set asset_type_id [string range $asset_type_id 0 23]
-	if { $asset_type_id ne "" } {
-	    if { ![regexp -- {^[[:graph:]]+$} $asset_type_id scratch ] } {
-		set asset_type_id ""
-		set no_errors_p 0
-		ns_log Warning "hf_call_write(2942): user_id ${user_id} attempted to write including unprintable characters asset_type_id '${asset_type_id}'"
-	    }
-	}
-	if { ![qf_is_natural_number $asset_template_id] } {
-	    ns_log Warning "hf_call_write(2948): user_id ${user_id} attempted to write with nonstandard asset_template_id '${asset_template_id}'"
-	    set asset_template_id ""
-	    set no_errors_p 0
-	}
-	if { ![qf_is_natural_number $asset_id] } {
-	    ns_log Warning "hf_call_write(2954): user_id ${user_id} attempted to write with nonstandard asset_id '${asset_id}'"
-	    set asset_id ""
-	    set no_errors_p 0
-	}
+        set asset_type_id [string range $asset_type_id 0 23]
+        if { $asset_type_id ne "" } {
+            if { ![regexp -- {^[[:graph:]]+$} $asset_type_id scratch ] } {
+                set asset_type_id ""
+                set no_errors_p 0
+                ns_log Warning "hf_call_write(2942): user_id ${user_id} attempted to write including unprintable characters asset_type_id '${asset_type_id}'"
+            }
+        }
+        if { ![qf_is_natural_number $asset_template_id] } {
+            ns_log Warning "hf_call_write(2948): user_id ${user_id} attempted to write with nonstandard asset_template_id '${asset_template_id}'"
+            set asset_template_id ""
+            set no_errors_p 0
+        }
+        if { ![qf_is_natural_number $asset_id] } {
+            ns_log Warning "hf_call_write(2954): user_id ${user_id} attempted to write with nonstandard asset_id '${asset_id}'"
+            set asset_id ""
+            set no_errors_p 0
+        }
         if { $hf_call_id_exists_p } {
             # verify hf_call_id, or set hf_call_id_exists_p 0 no_errors_p 0
             if { $proc_name eq "" } {
@@ -2964,52 +2966,52 @@ ad_proc -private hf_call_write {
             # Check proc_name in context with asset_ids, see proc hf_asset_do at circa line 310
             # Actually, don't check for asset_id resolution as determined at execution.
             # Just make sure that hf_call_id matches with proc_name, or report an error.
-	    set proc_name [string range $proc_name 0 39]
+            set proc_name [string range $proc_name 0 39]
 
             # get the appropriate hf_call_id
-	    # Cannot use db_0or1row, because there maybe multiple assignments of proc_name
-	    #db_0or1row hf_calls_ck_id {select id as hf_calls_db_id from hf_calls where instance_id=:instance_id and proc_name=:proc_name}
-	    set query_suffix ""
-	    if { $asset_type_id ne ""  } {
-		append query_suffix "and asset_type_id=:asset_type_id"
-	    }
-	    if { $asset_template_id ne "" } {
-		append query_suffix "and asset_template_id=:asset_template_id"
-	    }
-	    if { $asset_id ne "" } {
-		append query_suffix "and asset_id=:asset_id"
-	    }
-	    set hc_id_list [db_list hf_calls_db_ids "select id from hf_calls where instance_id=:instance_id and proc_name=:proc_name ${query_suffix}"]
-	    if { [llength $hc_id_list] == 1 } {
-		set hf_call_id_exists_p 1
-		set hf_call_id [lindex $hc_id_list 0]
-	    } else {
-		ns_log Notice "hf_call_write(2968): user_id ${user_id} attempted to write to multiple records for instance_id '${instance_id}' proc_name '${proc_name}' query_suffix '${query_suffix}'. Check for UI issue."
-		set no_errors_p 0
-	    }
+            # Cannot use db_0or1row, because there maybe multiple assignments of proc_name
+            #db_0or1row hf_calls_ck_id {select id as hf_calls_db_id from hf_calls where instance_id=:instance_id and proc_name=:proc_name}
+            set query_suffix ""
+            if { $asset_type_id ne ""  } {
+                append query_suffix "and asset_type_id=:asset_type_id"
+            }
+            if { $asset_template_id ne "" } {
+                append query_suffix "and asset_template_id=:asset_template_id"
+            }
+            if { $asset_id ne "" } {
+                append query_suffix "and asset_id=:asset_id"
+            }
+            set hc_id_list [db_list hf_calls_db_ids "select id from hf_calls where instance_id=:instance_id and proc_name=:proc_name ${query_suffix}"]
+            if { [llength $hc_id_list] == 1 } {
+                set hf_call_id_exists_p 1
+                set hf_call_id [lindex $hc_id_list 0]
+            } else {
+                ns_log Notice "hf_call_write(2968): user_id ${user_id} attempted to write to multiple records for instance_id '${instance_id}' proc_name '${proc_name}' query_suffix '${query_suffix}'. Check for UI issue."
+                set no_errors_p 0
+            }
         }
         if { $hf_call_id_exists_p && $no_errors_p } {
-	    if { $remove_p } {
-		##code
-		# remove record
-		db_dml hf_calls_delete1 {
-		    delete from hf_calls where id=:hf_call_id
-		}
-	    } else {
-		# Update
-		db_dml hf_calls_update1 {
-		    update hf_calls set instance_id=:instance_id, proc_name=:proc_name,asset_type_id=:asset_type_id,asset_template_id=:asset_template_id,asset_id=:asset_id where id=:hf_call_id
-		}
-	    }
+            if { $remove_p } {
+                ##code
+                # remove record
+                db_dml hf_calls_delete1 {
+                    delete from hf_calls where id=:hf_call_id
+                }
+            } else {
+                # Update
+                db_dml hf_calls_update1 {
+                    update hf_calls set instance_id=:instance_id, proc_name=:proc_name,asset_type_id=:asset_type_id,asset_template_id=:asset_template_id,asset_id=:asset_id where id=:hf_call_id
+                }
+            }
         } elseif { $no_errors_p } {
-	    # write new
-	    ##code
-	    db_dml hf_calls_write1 {
-		insert into hf_calls (instance_id,id,proc_name,asset_type_id,asset_template_id,asset_id)
-		values (:instance_id,:id,:proc_name,:asset_type_id,:asset_template_id,:asset_id)
-	    }
-	}
-	    
+            # write new
+            ##code
+            db_dml hf_calls_write1 {
+                insert into hf_calls (instance_id,id,proc_name,asset_type_id,asset_template_id,asset_id)
+                values (:instance_id,:id,:proc_name,:asset_type_id,:asset_template_id,:asset_id)
+            }
+        }
+        
     } else {
         set no_errors_p 0
         ns_log Warning "hf_call_write: user_id '${user_id}' denied. hf_call_id '${hf_call_id}' proc_name '${proc_name}' instance_id '${instance_id}' asset_type_id '${asset_type_id}' asset_template_id '${asset_template_id}' asset_id '${asset_id}' "
@@ -3035,20 +3037,20 @@ ad_proc -private hf_call_read {
     }
 
     ##code
-    	                #CREATE TABLE hf_calls (
-            #    instance_id integer not null,
-            #    id integer not null,
-            #    -- system api call name
-            #    -- the api grabs asset specific values, then updates db and makes systems calls as needed
-            #    proc_name varchar(40) not null,
-            #    -- in order of increasing specificity to allow for system-wide exceptions
-            #    -- of calling another proc for a more specific asset
-            #    asset_type_id varchar(24),
-            #    asset_template_id integer,
-            #    asset_id integer
-            #    -- permissions always uses asset_id
-            #);
-            #
+    #CREATE TABLE hf_calls (
+    #    instance_id integer not null,
+    #    id integer not null,
+    #    -- system api call name
+    #    -- the api grabs asset specific values, then updates db and makes systems calls as needed
+    #    proc_name varchar(40) not null,
+    #    -- in order of increasing specificity to allow for system-wide exceptions
+    #    -- of calling another proc for a more specific asset
+    #    asset_type_id varchar(24),
+    #    asset_template_id integer,
+    #    asset_id integer
+    #    -- permissions always uses asset_id
+    #);
+    #
 
     return $hf_call_id
 }
@@ -3065,16 +3067,16 @@ ad_proc -private hf_call_role_write {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-#
-#-- Assigns a role permission to make a call, and
-#-- answers question: what roles are allowed to make call?
-#CREATE TABLE hf_call_role_map (
-#       instance_id integer not null,
-#       -- hf_calls.proc_id
-#       call_id integer not null,
-#       role_id integer not null
-#);
-#
+    #
+    #-- Assigns a role permission to make a call, and
+    #-- answers question: what roles are allowed to make call?
+    #CREATE TABLE hf_call_role_map (
+    #       instance_id integer not null,
+    #       -- hf_calls.proc_id
+    #       call_id integer not null,
+    #       role_id integer not null
+    #);
+    #
     ##code
 }
 
@@ -3089,16 +3091,16 @@ ad_proc -private hf_call_roles_read {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-#
-#-- Assigns a role permission to make a call, and
-#-- answers question: what roles are allowed to make call?
-#CREATE TABLE hf_call_role_map (
-#       instance_id integer not null,
-#       -- hf_calls.proc_id
-#       call_id integer not null,
-#       role_id integer not null
-#);
-#
+    #
+    #-- Assigns a role permission to make a call, and
+    #-- answers question: what roles are allowed to make call?
+    #CREATE TABLE hf_call_role_map (
+    #       instance_id integer not null,
+    #       -- hf_calls.proc_id
+    #       call_id integer not null,
+    #       role_id integer not null
+    #);
+    #
     ##code
 }
 
@@ -3116,23 +3118,23 @@ ad_proc -private hf_monitor_configs_read {
         set user_id [ad_conn user_id]
     }
 
-#CREATE TABLE hf_monitor_config_n_control (
-#    instance_id               integer,
-#    monitor_id                integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
-#    asset_id                  integer not null,
-#    label                     varchar(200) not null,
-#    active_p                  varchar(1) not null,
-#    -- number of portions to use in frequency distribution curve
-#    portions_count            integer not null,
-#    -- allow some control over how the distribution curves are represented:
-#    calculation_switches      varchar(20),
-#    -- Following 2 are used to suggest hf_monitor_status.expected_health:
-#    -- the percentile rank that triggers an alarm
-#    -- 0% rarely triggers, 100% triggers on most everything.
-#    health_percentile_trigger numeric,
-#    -- the health_value matching health_percentile_trigger
-#    health_threshold          integer
-#);
+    #CREATE TABLE hf_monitor_config_n_control (
+    #    instance_id               integer,
+    #    monitor_id                integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+    #    asset_id                  integer not null,
+    #    label                     varchar(200) not null,
+    #    active_p                  varchar(1) not null,
+    #    -- number of portions to use in frequency distribution curve
+    #    portions_count            integer not null,
+    #    -- allow some control over how the distribution curves are represented:
+    #    calculation_switches      varchar(20),
+    #    -- Following 2 are used to suggest hf_monitor_status.expected_health:
+    #    -- the percentile rank that triggers an alarm
+    #    -- 0% rarely triggers, 100% triggers on most everything.
+    #    health_percentile_trigger numeric,
+    #    -- the health_value matching health_percentile_trigger
+    #    health_threshold          integer
+    #);
 
     ##code
 }
@@ -3167,28 +3169,28 @@ ad_proc -private hf_monitor_logs {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-#CREATE TABLE hf_monitor_log (
-#    instance_id          integer,
-#    monitor_id           integer not null,
-#    -- if monitor_id is 0 such as when adding activity note, user_id should not be 0
-#    user_id              integer not null,
-#    asset_id             integer not null,
-#    -- increases by 1 for each monitor_id's report of asset_id
-#    report_id            integer not null,
-#    -- reported_by provides means to identify/verify reporting source
-#    reported_by          varchar(120),
-#    report_time          timestamptz,
-#    -- 0 dead, down, not normal
-#    -- 10000 nominal, allows for variable performance issues
-#    -- health = numeric summary indicator determined by hf_procs
-#    health               integer,
-#    -- latest report from monitoring
-#    report text,
-#    -- sysadmins can log significant changes to asset, such as sw updates
-#    -- with health=null and/or:
-#    significant_change   varchar(1)
-#    -- Changes mark boundaries for data samples
-#);
+    #CREATE TABLE hf_monitor_log (
+    #    instance_id          integer,
+    #    monitor_id           integer not null,
+    #    -- if monitor_id is 0 such as when adding activity note, user_id should not be 0
+    #    user_id              integer not null,
+    #    asset_id             integer not null,
+    #    -- increases by 1 for each monitor_id's report of asset_id
+    #    report_id            integer not null,
+    #    -- reported_by provides means to identify/verify reporting source
+    #    reported_by          varchar(120),
+    #    report_time          timestamptz,
+    #    -- 0 dead, down, not normal
+    #    -- 10000 nominal, allows for variable performance issues
+    #    -- health = numeric summary indicator determined by hf_procs
+    #    health               integer,
+    #    -- latest report from monitoring
+    #    report text,
+    #    -- sysadmins can log significant changes to asset, such as sw updates
+    #    -- with health=null and/or:
+    #    significant_change   varchar(1)
+    #    -- Changes mark boundaries for data samples
+    #);
 
 
     ##code
@@ -3207,17 +3209,17 @@ ad_proc -private hf_monitor_status {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-#CREATE TABLE hf_monitor_status (
-#    instance_id                integer,
-#    monitor_id                 integer unique not null,
-#    asset_id                   integer,
-#    -- most recent report_id:
-#    report_id                  integer,
-#    health_p0                  integer,
-#    -- for calculating differential, p1 is always 1, just as p0 is 0
-#    health_p1                  integer,
-#    expected_health            integer
-#);
+    #CREATE TABLE hf_monitor_status (
+    #    instance_id                integer,
+    #    monitor_id                 integer unique not null,
+    #    asset_id                   integer,
+    #    -- most recent report_id:
+    #    report_id                  integer,
+    #    health_p0                  integer,
+    #    -- for calculating differential, p1 is always 1, just as p0 is 0
+    #    health_p1                  integer,
+    #    expected_health            integer
+    #);
 
 
     ##code
@@ -3236,21 +3238,21 @@ ad_proc -private hf_monitor_statistics {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-#CREATE TABLE hf_monitor_statistics (
-#    instance_id     integer,
-#    -- only most recent status statistics are reported here 
-#    -- A hf_monitor_log.significant_change flags boundary
-#    monitor_id      integer not null,
-#    analysis_id     integer not null,
-#    sample_count    integer,
-#    -- range_min is minimum value of report_id
-#    range_min       integer,
-#    range_max       integer,
-#    health_max      integer,
-#    health_min      integer,
-#    health_average  numeric,
-#    health_median   numeric
-#); 
+    #CREATE TABLE hf_monitor_statistics (
+    #    instance_id     integer,
+    #    -- only most recent status statistics are reported here 
+    #    -- A hf_monitor_log.significant_change flags boundary
+    #    monitor_id      integer not null,
+    #    analysis_id     integer not null,
+    #    sample_count    integer,
+    #    -- range_min is minimum value of report_id
+    #    range_min       integer,
+    #    range_max       integer,
+    #    health_max      integer,
+    #    health_min      integer,
+    #    health_average  numeric,
+    #    health_median   numeric
+    #); 
 
 
     ##code
@@ -3271,28 +3273,28 @@ ad_proc -private hf_monitor_report {
         set user_id [ad_conn user_id]
     }
 
-#-- Curves are normalized to 1.0
-#-- Percents are represented decimally 0.01 is one percent
-#-- Maybe one day "Per mil" notation should be used instead of percent.
-#-- http://en.wikipedia.org/wiki/Permille
-#-- curve resolution is count of points
-#-- This model keeps old curves, to help with long-term performance insights
-#-- see accounts-finance  qaf_discrete_dist_report {
-#CREATE TABLE hf_monitor_freq_dist_curves (
-#    instance_id      integer,
-#    monitor_id       integer not null,
-#    analysis_id      integer not null,
-#    -- position x is a sequential position below curve
-#    -- median is where cumulative_pct = 0.50 
-#    -- x_pos may not be evenly distributed
-#    x_pos            integer not null,
-#    -- cumulative_pct increases to 1.0 (from 0 to 100 percentile)
-#    cumulative_pct   numeric not null,
-#    -- sum of the delta_x equals 1.0
-#    -- delta_x values might be equal, or not,
-#    -- depending on how distribution is calculated/represented
-#    delta_x_pct      numeric not null
-#);
+    #-- Curves are normalized to 1.0
+    #-- Percents are represented decimally 0.01 is one percent
+    #-- Maybe one day "Per mil" notation should be used instead of percent.
+    #-- http://en.wikipedia.org/wiki/Permille
+    #-- curve resolution is count of points
+    #-- This model keeps old curves, to help with long-term performance insights
+    #-- see accounts-finance  qaf_discrete_dist_report {
+    #CREATE TABLE hf_monitor_freq_dist_curves (
+    #    instance_id      integer,
+    #    monitor_id       integer not null,
+    #    analysis_id      integer not null,
+    #    -- position x is a sequential position below curve
+    #    -- median is where cumulative_pct = 0.50 
+    #    -- x_pos may not be evenly distributed
+    #    x_pos            integer not null,
+    #    -- cumulative_pct increases to 1.0 (from 0 to 100 percentile)
+    #    cumulative_pct   numeric not null,
+    #    -- sum of the delta_x equals 1.0
+    #    -- delta_x values might be equal, or not,
+    #    -- depending on how distribution is calculated/represented
+    #    delta_x_pct      numeric not null
+    #);
 
 
     ##code
