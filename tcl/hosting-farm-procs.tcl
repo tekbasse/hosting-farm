@@ -2933,7 +2933,26 @@ ad_proc -private hf_call_write {
     set user_id [ad_conn user_id]
     set admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
     if { $admin_p } {
+	# param validation
         set hf_call_id_exists_p [qf_is_natural_number $hf_call_id]
+	set asset_type_id [string range $asset_type_id 0 23]
+	if { $asset_type_id ne "" } {
+	    if { ![regexp -- {^[[:graph:]]+$} $asset_type_id scratch ] } {
+		set asset_type_id ""
+		set no_errors_p 0
+		ns_log Warning "hf_call_write(2942): user_id ${user_id} attempted to write including unprintable characters asset_type_id '${asset_type_id}'"
+	    }
+	}
+	if { ![qf_is_natural_number $asset_template_id] } {
+	    ns_log Warning "hf_call_write(2948): user_id ${user_id} attempted to write with nonstandard asset_template_id '${asset_template_id}'"
+	    set asset_template_id ""
+	    set no_errors_p 0
+	}
+	if { ![qf_is_natural_number $asset_id] } {
+	    ns_log Warning "hf_call_write(2954): user_id ${user_id} attempted to write with nonstandard asset_id '${asset_id}'"
+	    set asset_id ""
+	    set no_errors_p 0
+	}
         if { $hf_call_id_exists_p } {
             # verify hf_call_id, or set hf_call_id_exists_p 0 no_errors_p 0
             if { $proc_name eq "" } {
@@ -2945,13 +2964,78 @@ ad_proc -private hf_call_write {
             # Check proc_name in context with asset_ids, see proc hf_asset_do at circa line 310
             # Actually, don't check for asset_id resolution as determined at execution.
             # Just make sure that hf_call_id matches with proc_name, or report an error.
+	    set proc_name [string range $proc_name 0 39]
 
             # get the appropriate hf_call_id
+	    # Cannot use db_0or1row, because there maybe multiple assignments of proc_name
+	    #db_0or1row hf_calls_ck_id {select id as hf_calls_db_id from hf_calls where instance_id=:instance_id and proc_name=:proc_name}
+	    set query_suffix ""
+	    if { $asset_type_id ne ""  } {
+		append query_suffix "and asset_type_id=:asset_type_id"
+	    }
+	    if { $asset_template_id ne "" } {
+		append query_suffix "and asset_template_id=:asset_template_id"
+	    }
+	    if { $asset_id ne "" } {
+		append query_suffix "and asset_id=:asset_id"
+	    }
+	    set hc_id_list [db_list hf_calls_db_ids "select id from hf_calls where instance_id=:instance_id and proc_name=:proc_name ${query_suffix}"]
+	    if { [llength $hc_id_list] == 1 } {
+		set hf_call_id_exists_p 1
+		set hf_call_id [lindex $hc_id_list 0]
+	    } else {
+		ns_log Notice "hf_call_write(2968): user_id ${user_id} attempted to write to multiple records for instance_id '${instance_id}' proc_name '${proc_name}' query_suffix '${query_suffix}'. Check for UI issue."
+		set no_errors_p 0
+	    }
         }
         if { $hf_call_id_exists_p && $no_errors_p } {
-            # Write 
+	    if { $remove_p } {
+		##code
+		# remove record
+		db_dml hf_calls_delete1 {
+		    delete from hf_calls where id=:hf_call_id
+		}
+	    } else {
+		# Update
+		db_dml hf_calls_update1 {
+		    update hf_calls set instance_id=:instance_id, proc_name=:proc_name,asset_type_id=:asset_type_id,asset_template_id=:asset_template_id,asset_id=:asset_id where id=:hf_call_id
+		}
+	    }
+        } elseif { $no_errors_p } {
+	    # write new
+	    ##code
+	    db_dml hf_calls_write1 {
+		insert into hf_calls (instance_id,id,proc_name,asset_type_id,asset_template_id,asset_id)
+		values (:instance_id,:id,:proc_name,:asset_type_id,:asset_template_id,:asset_id)
+	    }
+	}
+	    
+    } else {
+        set no_errors_p 0
+        ns_log Warning "hf_call_write: user_id '${user_id}' denied. hf_call_id '${hf_call_id}' proc_name '${proc_name}' instance_id '${instance_id}' asset_type_id '${asset_type_id}' asset_template_id '${asset_template_id}' asset_id '${asset_id}' "
+    }
+    if { $no_errors_p == 0 } {
+        set success_p 0
+    }
+    return $success_p
+}
 
-            #CREATE TABLE hf_calls (
+ad_proc -private hf_call_read {
+    call_id
+    {asset_type_id ""}
+    {asset_template_id ""}
+    {asset_id ""}
+    {instance_id ""}
+} {
+    Returns proc_name to use with specified
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+
+    ##code
+    	                #CREATE TABLE hf_calls (
             #    instance_id integer not null,
             #    id integer not null,
             #    -- system api call name
@@ -2966,34 +3050,6 @@ ad_proc -private hf_call_write {
             #);
             #
 
-
-            ##code
-        }
-    } else {
-        set no_errors_p 0
-        ns_log Warning "hf_call_write: user_id '${user_id}' denied. hf_call_id '${hf_call_id}' proc_name '${proc_name}' instance_id '${instance_id}' asset_type_id '${asset_type_id}' asset_template_id '${asset_template_id}' asset_id '${asset_id}' "
-    }
-    if { $no_errors_p == 0 } {
-        set success_p 0
-    }
-    return $success_p
-}
-
-ad_proc -private hf_call_read {
-    proc_name
-    {asset_type_id ""}
-    {asset_template_id ""}
-    {asset_id ""}
-    {instance_id ""}
-} {
-    Returns call_id of hf_procedure associated with a specific asset_type
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-
-    ##code
     return $hf_call_id
 }
 
