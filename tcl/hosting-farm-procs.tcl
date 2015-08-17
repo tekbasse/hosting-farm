@@ -2992,10 +2992,11 @@ ad_proc -private hf_call_write {
         }
         if { $hf_call_id_exists_p && $no_errors_p } {
             if { $remove_p } {
-                ##code
                 # remove record
+                db_1row hf_calls_read1 "select proc_name from hf_calls where id=:hf_call_id and instance_id=:instance_id"
+                ns_log Notice "hf_call_write(2998): user_id ${user_id} deleted hf_calls.id '${hf_call_id}'  instance_id '${instance_id}' proc_name '${proc_name}'"
                 db_dml hf_calls_delete1 {
-                    delete from hf_calls where id=:hf_call_id
+                    delete from hf_calls where id=:hf_call_id and instance_id=:instance_id
                 }
             } else {
                 # Update
@@ -3005,7 +3006,6 @@ ad_proc -private hf_call_write {
             }
         } elseif { $no_errors_p } {
             # write new
-            ##code
             db_dml hf_calls_write1 {
                 insert into hf_calls (instance_id,id,proc_name,asset_type_id,asset_template_id,asset_id)
                 values (:instance_id,:id,:proc_name,:asset_type_id,:asset_template_id,:asset_id)
