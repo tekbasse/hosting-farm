@@ -3006,6 +3006,7 @@ ad_proc -private hf_call_write {
             }
         } elseif { $no_errors_p } {
             # write new
+            set id [db_nextval hf_id_seq]
             db_dml hf_calls_write1 {
                 insert into hf_calls (instance_id,id,proc_name,asset_type_id,asset_template_id,asset_id)
                 values (:instance_id,:id,:proc_name,:asset_type_id,:asset_template_id,:asset_id)
@@ -3022,37 +3023,99 @@ ad_proc -private hf_call_write {
     return $success_p
 }
 
-ad_proc -private hf_call_read {
-    call_id
+
+ad_proc -private hf_call_delete {
+    hf_call_id
     {asset_type_id ""}
     {asset_template_id ""}
     {asset_id ""}
     {instance_id ""}
 } {
-    Returns proc_name to use with specified
+    Deletes hf_call_id 
 } {
+    # set proc_name ""
+    set success_p [hf_call_write $hf_call_id "" $asset_type_id $asset_template_id $asset_id $instance_id]
+}
+
+ad_proc -private hf_call_read {
+    hf_call_id
+    {asset_type_id ""}
+    {asset_template_id ""}
+    {asset_id ""}
+    {instance_id ""}
+} {
+    Returns proc_name to use with specified asset of highest specificity to allow for system-wide exceptions
+    of calling another proc_name for a more specific asset etc.
+
+} {
+    set proc_name ""
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
+    set user_id [ad_conn user_id]
+    set read_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege read]
+    if { $read_p } {
+    # param validation
+    set hf_call_id_exists_p [qf_is_natural_number $hf_call_id]
+    set asset_type_id [string range $asset_type_id 0 23]
+    if { $asset_type_id ne "" } {
+        if { ![regexp -- {^[[:graph:]]+$} $asset_type_id scratch ] } {
+            set asset_type_id ""
+            set no_errors_p 0
+            ns_log Warning "hf_call_read(3062): user_id ${user_id} attempted to read including unprintable characters asset_type_id '${asset_type_id}'"
+        }
+    }
+    if { ![qf_is_natural_number $asset_template_id] } {
+        ns_log Warning "hf_call_read(3066): user_id ${user_id} attempted to read with nonstandard asset_template_id '${asset_template_id}'"
+        set asset_template_id ""
+        set no_errors_p 0
+    }
+    if { ![qf_is_natural_number $asset_id] } {
+        ns_log Warning "hf_call_read(3071): user_id ${user_id} attempted to read with nonstandard asset_id '${asset_id}'"
+        set asset_id ""
+        set no_errors_p 0
+    }
+    if { $hf_call_id_exists_p } {
+        # verify hf_call_id, or set hf_call_id_exists_p 0 no_errors_p 0
+        if { $proc_name eq "" } {
+            # This write is to blank out ie remove an existing record
+            set remove_p 1
+        }
+    }
+    if { $hf_call_id_exists_p == 0 && $no_errors_p && $proc_name ne "" } {
+        # Check proc_name in context with asset_ids, see proc hf_asset_do at circa line 310
+        # Actually, don't check for asset_id resolution as determined at execution.
+        # Just make sure that hf_call_id matches with proc_name, or report an error.
+        set proc_name [string range $proc_name 0 39]
 
-    ##code
-    #CREATE TABLE hf_calls (
-    #    instance_id integer not null,
-    #    id integer not null,
-    #    -- system api call name
-    #    -- the api grabs asset specific values, then updates db and makes systems calls as needed
-    #    proc_name varchar(40) not null,
-    #    -- in order of increasing specificity to allow for system-wide exceptions
-    #    -- of calling another proc for a more specific asset
-    #    asset_type_id varchar(24),
-    #    asset_template_id integer,
-    #    asset_id integer
-    #    -- permissions always uses asset_id
-    #);
-    #
+        # get the appropriate hf_call_id
+        # Cannot use db_0or1row, because there maybe multiple assignments of proc_name
+        #db_0or1row hf_calls_ck_id {select id as hf_calls_db_id from hf_calls where instance_id=:instance_id and proc_name=:proc_name}
 
-    return $hf_call_id
+##code
+## redo query to use OR instead of AND
+        set query_suffix ""
+        if { $asset_type_id ne ""  } {
+            append query_suffix "and asset_type_id=:asset_type_id"
+        }
+        if { $asset_template_id ne "" } {
+            append query_suffix "and asset_template_id=:asset_template_id"
+        }
+        if { $asset_id ne "" } {
+            append query_suffix "and asset_id=:asset_id"
+        } 
+        set hc_proc_list [db_list hf_calls_db_ids "select proc_name, asset_id, asset_templat_id, asset_type_id from hf_calls where instance_id=:instance_id and id=:hf_call_id ${query_suffix}"]
+        if { [llength $hc_id_list] == 0 } {
+            ns_log Notice "hf_call_read(3110): no proc_name for hf_call_id '$hf_call_id' user_id ${user_id} instance_id '${instance_id}' query_suffix '${query_suffix}'. Check for UI issue."
+            set no_errors_p 0
+        } else {
+            # Get the most specific proc_name from available list
+
+
+        }
+    }
+    return $proc_name
 }
 
 
