@@ -14,6 +14,10 @@
 
 -- assets use object_id for permissions purposes: db_nextval acs_object_id_seq
 -- asset parts use this id_seq
+
+-- Sometimes integer types can be empty strings or null. 
+-- To reduce coding requirements for handling type change issues
+-- integer type is replaced with more general varchar(19).
 CREATE SEQUENCE hf_id_seq start 10000;
 SELECT nextval ('hf_id_seq');
 
@@ -64,8 +68,8 @@ CREATE TABLE hf_assets (
     -- for mapping to ledger and sales attributes, and role-based permissions 
     -- such as pricing, period length, etc
     -- null is same as company_summary.is_exempt=true
-    qal_product_id  integer,
-    qal_customer_id integer,
+    qal_product_id  varchar(19),
+    qal_customer_id varchar(19),
     label 	    varchar(30),
     keywords        varchar(100),
     description     varchar(80),
@@ -86,8 +90,8 @@ CREATE TABLE hf_assets (
     -- expires/expired on
     time_stop 	    timestamptz,
     -- DNS record reference
-    ns_id           integer,
-    ua_id 	        integer,
+    ns_id           varchar(19),
+    ua_id 	        varchar(19),
   -- status aka vm_to_configure, on,off etc.
   -- use with qal_product_id for vm_to_configure.plan_id
   -- and qal_customer_id for vm_to_configure.company_id
@@ -95,9 +99,9 @@ CREATE TABLE hf_assets (
     -- for use with monitoring.
     trashed_p 	    varchar(1),
     -- last trashed by
-    trashed_by 	    integer,
+    trashed_by 	    varchar(19),
     -- possible future asset analyzing
-    popularity      integer,
+    popularity      varchar(19),
     -- built-in customization flags
     flags	    varchar(12),
     -- mainly for promoting clients by linking to their website
@@ -105,7 +109,7 @@ CREATE TABLE hf_assets (
     publish_p       varchar(1),
     monitor_p       varchar(1),
     -- when monitoring, higher value is higher priority for alerts, alert reponses
-    triage_priority integer
+    triage_priority varchar(19)
 );
 
 create index hf_assets_id_idx on hf_assets (id);
@@ -125,7 +129,7 @@ CREATE TABLE hf_asset_label_map (
        -- should be a value from hf_assets.id
        asset_id integer not null,
        trashed_p varchar(1),
-       instance_id integer
+       instance_id integer not null
 );
 
 create index hf_asset_name_map_label_idx on hf_asset_label_map (label);
@@ -133,7 +137,7 @@ create index hf_asset_name_map_instance_id_idx on hf_asset_label_map (instance_i
 create index hf_asset_name_map_asset_id_idx on hf_asset_label_map (asset_id);
 
 CREATE TABLE hf_asset_type_features (
-    instance_id          integer,
+    instance_id          integer not null,
     -- feature.id
     id                   integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- hf_asset_type.id
@@ -156,7 +160,7 @@ create index hf_asset_type_features_label_idx on hf_asset_type_features (label);
 
 -- domain name recods, one per asset_id
 CREATE TABLE hf_ns_records (
-       instance_id integer,
+       instance_id integer not null,
        -- ns_id
        id          integer not null DEFAULT nextval ( 'hf_id_seq' ),
        -- should be validated before allowed to go live.
@@ -170,7 +174,7 @@ create index hf_ns_records_id_idx on hf_ns_records (id);
 create index hf_ns_records_active_p_idx on hf_ns_records (active_p);
 
 CREATE TABLE hf_data_centers (
-    instance_id integer,
+    instance_id integer not null,
     dc_id       integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- was datacenter.short_code
     affix       varchar(20),
@@ -184,14 +188,14 @@ create index hf_data_centers_affix_idx on hf_data_centers (affix);
 
 
 CREATE TABLE hf_hardware (
-    instance_id integer,
+    instance_id integer not null,
     hw_id       integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- following aka backup_config.server_name backup_server
     system_name varchar(200),
     backup_sys  varchar(200),
     -- network interface id, this is the remote console (primary only, if more than one)
-    ni_id       integer,
-    os_id       integer,
+    ni_id       varchar(19),
+    os_id       varchar(19),
     description varchar(200),
     details     text
 );
@@ -201,22 +205,22 @@ create index hf_hardware_hw_id_idx on hf_hardware (hw_id);
 
 
 CREATE TABLE hf_virtual_machines (
-    instance_id integer,
+    instance_id integer not null,
     vm_id         integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     domain_name   varchar(300),
-    ip_id         integer,
+    ip_id         varchar(19),
     -- network interface id. This is duplicate of hf_assets.ni_id. Ideally, see hf_assets only
     -- if there is more than one, create an hf_vm_ni_map
     -- Leaving this here for now, because 60+ cases of ni_id in hosting-farm-procs ATM.
     -- It is more important to write to both places the same and get project to first release.
     -- Remove later.
-    ni_id         integer
+    ni_id         varchar(19)
     -- DNS record id
-    ns_id         integer,
-    os_id         integer,
+    ns_id         varchar(19),
+    os_id         varchar(19),
     -- from database_server.type_id
     --      server.server_type
-    type_id       integer,
+    type_id       varchar(19),
     -- was vm_template.path
     resource_path varchar(300),
     -- was vm_template.mount_union
@@ -234,7 +238,7 @@ create index hf_virtual_machines_ns_id_idx on hf_virtual_machines (ns_id);
 create index hf_virtual_machines_type_id_idx on hf_virtual_machines (type_id);
 
 CREATE TABLE hf_network_interfaces (
-    instance_id        integer,
+    instance_id        integer not null,
   -- see interfaces table
     ni_id              integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- see interfaces.assigned_interface
@@ -251,7 +255,7 @@ create index hf_network_interfaces_instance_id_idx on hf_network_interfaces (ins
 create index hf_network_interfaces_ni_id_idx on hf_network_interfaces (ni_id);
 
 CREATE TABLE hf_ip_addresses (
-    instance_id  integer,
+    instance_id  integer not null,
     ip_id        integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     ipv4_addr    varchar(15),
     ipv4_status  integer,
@@ -265,7 +269,7 @@ create index hf_ip_addresses_ipv4_addr_idx on hf_ip_addresses (ipv4_addr);
 create index hf_ip_addresses_ipv6_addr_idx on hf_ip_addresses (ipv6_addr);
 
 CREATE TABLE hf_operating_systems (
-    instance_id         integer,
+    instance_id         integer not null,
     os_id               integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- server.fsys
     label               varchar(20),
@@ -282,10 +286,10 @@ create index hf_operating_systems_os_id_idx on hf_operating_systems (os_id);
 create index hf_operating_systems_requires_upgrade_p_idx on hf_operating_systems (requires_upgrade_p);
 
 CREATE TABLE hf_asset_feature_map (
-    instance_id     integer,
-    asset_id        integer,
+    instance_id     integer not null,
+    asset_id        integer not null,
     -- from hf_asset_type_features
-    feature_id      integer
+    feature_id      integer not null
 );
 
 create index hf_asset_feature_map_instance_id_idx on hf_asset_feature_map (instance_id);
@@ -293,12 +297,12 @@ create index hf_asset_feature_map_asset_id_idx on hf_asset_feature_map (asset_id
 create index hf_asset_feature_map_feature_id_idx on hf_asset_feature_map (feature_id);
 
 CREATE TABLE hf_vm_quotas (
-  instance_id        integer,
+  instance_id        integer not null,
   plan_id            integer not null,
   description        varchar(40) not null,
   base_storage       integer not null,
   base_traffic       integer not null,
-  base_memory        integer,
+  base_memory        varchar(19),
   base_sku           varchar(40) not null,
   over_storage_sku   varchar(40) not null,
   over_traffic_sku   varchar(40) not null,
@@ -306,13 +310,13 @@ CREATE TABLE hf_vm_quotas (
   -- unit is amount per quantity of one sku
   storage_unit       integer not null,
   traffic_unit       integer not null,
-  memory_unit        integer,
-  qemu_memory        integer,
-  status_id          integer,
+  memory_unit        varchar(19),
+  qemu_memory        varchar(19),
+  status_id          varchar(19),
   -- shows as 1 or 2 (means?)
-  vm_type            integer,
+  vm_type            varchar(19),
   -- was vm_group (0 to 3) means?
-  max_domain         integer,
+  max_domain         varchar(19),
   private_vps        varchar(1)
   -- plan.high_end is ambiguous and isn't differentiated from private_vps, so ignoring.
  );
@@ -324,10 +328,10 @@ create index hf_vm_quotas_private_vps_idx on hf_vm_quotas (private_vps);
 
 -- vh might be a domain resolving to ni
 CREATE TABLE hf_vhosts (
-    instance_id integer,
+    instance_id integer not null,
     vh_id       integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
-    ua_id       integer,
-    ns_id       integer,
+    ua_id       integer not null,
+    ns_id       integer not null,
     domain_name varchar(200),
     details     text
 );
@@ -342,7 +346,7 @@ create index hf_vhosts_domain_name_idx on hf_vhosts (domain_name);
 -- a service can be mapped to any hf_id via hf_ss_map
 --  This mapping helps to alert on asset dependencies etc
 CREATE TABLE hf_services (
-    instance_id     integer,
+    instance_id     integer not null,
   -- was database_id
     ss_id           integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     server_name     varchar(40),
@@ -351,7 +355,7 @@ CREATE TABLE hf_services (
     protocol        varchar(40),
     port            varchar(40),
   -- was database_user_id
-    ua_id           integer,
+    ua_id           varchar(19),
     -- from database_server.type_id 
     -- type can be: db, protocol, generic daemon etc.    port integer,
     ss_type         varchar(24),
@@ -363,7 +367,7 @@ CREATE TABLE hf_services (
     ss_ultrasubtype varchar(24),
     config_uri      varchar(300),
     -- following from database_memory_detail
-    memory_bytes    bigint,
+    memory_bytes    varchar(19),
     --runtime is part of hf_assets start or monitor_log
     details         text
 );
@@ -377,7 +381,7 @@ create index hf_services_port_idx on hf_services (port);
 create index hf_services_ua_id_idx on hf_services (ua_id);
 
 CREATE TABLE hf_ua (
-    instance_id     integer,
+    instance_id     integer not null,
     ua_id           integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- bruger kontonavn
     details         text,
@@ -389,7 +393,7 @@ create index hf_ua_instance_id_idx on hf_ua (instance_id);
 create index hf_ua_ua_id_idx on hf_ua (ua_id);
 
 CREATE TABLE hf_up (
-    instance_id     integer,
+    instance_id     integer not null,
     up_id           integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     --ie. adgangs kode
     details         text
@@ -399,9 +403,9 @@ create index hf_up_instance_id_idx on hf_up (instance_id);
 create index hf_up_up_id_idx on hf_up (up_id);
 
 CREATE TABLE hf_dc_hw_map (
-    instance_id     integer,
-    dc_id           integer,
-    hw_id           integer
+    instance_id     integer not null,
+    dc_id           integer not null,
+    hw_id           integer not null
 );
 
 create index hf_dc_hw_map_instance_id_idx on hf_dc_hw_map (instance_id);
@@ -410,9 +414,9 @@ create index hf_dc_hw_map_hw_id_idx on hf_dc_hw_map (hw_id);
 
 
 CREATE TABLE hf_dc_ni_map (
-    instance_id     integer,
-    dc_id           integer,
-    ni_id           integer
+    instance_id     integer not null,
+    dc_id           integer not null,
+    ni_id           integer not null
 );
 
 create index hf_dc_ni_map_instance_id_idx on hf_dc_ni_map (instance_id);
@@ -421,9 +425,9 @@ create index hf_dc_ni_map_ni_id_idx on hf_dc_ni_map (ni_id);
 
 -- hw_ni map is separate fro dc_ni map, because these are inherently 2 different systems
 CREATE TABLE hf_hw_ni_map (
-    instance_id     integer,
-    hw_id           integer,
-    ni_id           integer
+    instance_id     integer not null,
+    hw_id           integer not null,
+    ni_id           integer not null
 );
 
 create index hf_hw_ni_map_instance_id_idx on hf_hw_ni_map (instance_id);
@@ -432,9 +436,9 @@ create index hf_hw_ni_map_ni_id_idx on hf_hw_ni_map (ni_id);
 
 
 CREATE TABLE hf_hw_vm_map (
-    instance_id     integer,
-    hw_id           integer,
-    vm_id           integer
+    instance_id     integer not null,
+    hw_id           integer not null,
+    vm_id           integer not null
 );
 
 create index hf_hw_vm_map_instance_id_idx on hf_hw_vm_map (instance_id);
@@ -442,9 +446,9 @@ create index hf_hw_vm_map_hw_id_idx on hf_hw_vm_map (hw_id);
 create index hf_hw_vm_map_vnm_id on hf_hw_vm_map (vm_id);
 
 CREATE TABLE hf_vm_vh_map (
-    instance_id     integer,
-    vm_id           integer,
-    vh_id           integer
+    instance_id     integer not null,
+    vm_id           integer not null,
+    vh_id           integer not null
 );
 
 create index hf_vm_vh_map_instance_id_idx on hf_vm_vh_map (instance_id);
@@ -454,9 +458,9 @@ create index hf_vm_vh_map_vh_id_idx on hf_vm_vh_map (vh_id);
 -- id_ip map is a catch all for ip addresses not assigned to 
 -- virtual machines
 CREATE TABLE hf_asset_ip_map (
-    instance_id     integer,
-    asset_id        integer,
-    ip_id           integer
+    instance_id     integer not null,
+    asset_id        integer not null,
+    ip_id           integer not null
 );
 
 create index hf_asset_ip_map_instance_id_idx on hf_asset_ip_map (instance_id);
@@ -468,11 +472,11 @@ create index hf_asset_ip_map_ip_id_idx on hf_asset_ip_map (ip_id);
 -- For example, 
 -- ss may be a server on a vm accepting requests for all or a portion of the vm's vhosts and vm
 CREATE TABLE hf_ss_map (
-    instance_id     integer,
-    ss_id           integer,
+    instance_id     integer not null,
+    ss_id           integer not null,
 -- this is hf_id, because it can be an id of a vm, vh another ss ..any asset id
 -- this is an hf_id where the ss operates.
-    hf_id           integer
+    hf_id           integer not null
  );
 
  create index hf_ss_map_instance_id_idx on hf_ss_map (instance_id);
@@ -481,9 +485,9 @@ CREATE TABLE hf_ss_map (
 
 -- was database_auth
 CREATE TABLE hf_ua_up_map (
-    instance_id     integer,
-    ua_id           integer,
-    up_id           integer
+    instance_id     integer not null,
+    ua_id           integer not null,
+    up_id           integer not null
 );
 
 create index hf_ua_up_map_instance_map_idx on hf_ua_up_map (instance_id);
@@ -491,7 +495,7 @@ create index hf_ua_up_map_ua_id_idx on hf_ua_up_map (ua_id);
 create index hf_ua_up_map_up_id_idx on hf_ua_up_map (up_id);
 
 CREATE TABLE hf_monitor_config_n_control (
-    instance_id               integer,
+    instance_id               integer not null,
     monitor_id                integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     asset_id                  integer not null,
     label                     varchar(200) not null,
@@ -505,7 +509,7 @@ CREATE TABLE hf_monitor_config_n_control (
     -- 0% rarely triggers, 100% triggers on most everything.
     health_percentile_trigger numeric,
     -- the health_value matching health_percentile_trigger
-    health_threshold          integer
+    health_threshold          varchar(19)
 );
 
 create index hf_monitor_config_n_control_instance_id_idx on hf_monitor_config_n_control (instance_id);
@@ -514,7 +518,7 @@ create index hf_monitor_config_n_control_asset_id_idx on hf_monitor_config_n_con
 create index hf_monitor_config_n_control_active_p_idx on hf_monitor_config_n_control (active_p);
 
 CREATE TABLE hf_monitor_log (
-    instance_id          integer,
+    instance_id          integer not null,
     monitor_id           integer not null,
     -- if monitor_id is 0 such as when adding activity note, user_id should not be 0
     user_id              integer not null,
@@ -527,7 +531,7 @@ CREATE TABLE hf_monitor_log (
     -- 0 dead, down, not normal
     -- 10000 nominal, allows for variable performance issues
     -- health = numeric summary indicator determined by hf_procs
-    health               integer,
+    health               varchar(19),
     -- latest report from monitoring
     report text,
     -- sysadmins can log significant changes to asset, such as sw updates
@@ -543,15 +547,15 @@ create index hf_monitor_log_report_id_idx on hf_monitor_log (report_id);
 create index hf_monitor_log_sig_change_id_idx on hf_monitor_log (significant_change);
 
 CREATE TABLE hf_monitor_status (
-    instance_id                integer,
+    instance_id                integer not null,
     monitor_id                 integer unique not null,
-    asset_id                   integer,
+    asset_id                   varchar(19),
     -- most recent report_id:
-    report_id                  integer,
-    health_p0                  integer,
+    report_id                  varchar(19),
+    health_p0                  varchar(19),
     -- for calculating differential, p1 is always 1, just as p0 is 0
-    health_p1                  integer,
-    expected_health            integer
+    health_p1                  varchar(19),
+    expected_health            varchar(19)
 );
 
 create index hf_monitor_status_instance_id_idx on hf_monitor_status (instance_id);
@@ -560,17 +564,17 @@ create index hf_monitor_status_asset_id_idx on hf_monitor_status (asset_id);
 create index hf_monitor_status_report_id_idx on hf_monitor_status (report_id);
 
 CREATE TABLE hf_monitor_statistics (
-    instance_id     integer,
+    instance_id     integer not null,
     -- only most recent status statistics are reported here 
     -- A hf_monitor_log.significant_change flags boundary
     monitor_id      integer not null,
     analysis_id     integer not null,
-    sample_count    integer,
+    sample_count    varchar(19),
     -- range_min is minimum value of report_id
-    range_min       integer,
-    range_max       integer,
-    health_max      integer,
-    health_min      integer,
+    range_min       varchar(19),
+    range_max       varchar(19),
+    health_max      varchar(19),
+    health_min      varchar(19),
     health_average  numeric,
     health_median   numeric
 ); 
@@ -587,7 +591,7 @@ create index hf_monitor_statistics_analysis_id_idx on hf_monitor_statistics (ana
 -- This model keeps old curves, to help with long-term performance insights
 -- see accounts-finance  qaf_discrete_dist_report {
 CREATE TABLE hf_monitor_freq_dist_curves (
-    instance_id      integer,
+    instance_id      integer not null,
     monitor_id       integer not null,
     analysis_id      integer not null,
     -- position x is a sequential position below curve
@@ -615,8 +619,8 @@ CREATE TABLE hf_calls (
     -- in order of increasing specificity to allow for system-wide exceptions
     -- of calling another proc for a more specific asset
     asset_type_id varchar(24),
-    asset_template_id integer,
-    asset_id integer
+    asset_template_id varchar(19),
+    asset_id varchar(19)
     -- permissions always uses asset_id
 );
 

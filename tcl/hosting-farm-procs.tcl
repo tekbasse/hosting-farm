@@ -2921,7 +2921,7 @@ ad_proc -private hf_call_write {
     {asset_id ""}
     {instance_id ""}
 } {
-    Writes a new/update call and associates it to a specific asset_type. To remove an existing record, set proc_name blank for hf_call_id.
+    Writes a new/update call and associates it to one or more specific asset_type. To remove an existing record, set proc_name blank for hf_call_id.
     At least one asset_id, asset_type_id or asset_templat_id must be nonempty.
 } {
     set success_p 0
@@ -3001,12 +3001,13 @@ ad_proc -private hf_call_write {
             } else {
                 # Update
                 db_dml hf_calls_update1 {
-                    update hf_calls set instance_id=:instance_id, proc_name=:proc_name,asset_type_id=:asset_type_id,asset_template_id=:asset_template_id,asset_id=:asset_id where id=:hf_call_id
+                    asset_type_id=:asset_type_id,asset_template_id=:asset_template_id,asset_id=:asset_id where id=:hf_call_id
                 }
             }
         } elseif { $no_errors_p } {
             # write new
             set id [db_nextval hf_id_seq]
+            set query_suffix ""
             db_dml hf_calls_write1 {
                 insert into hf_calls (instance_id,id,proc_name,asset_type_id,asset_template_id,asset_id)
                 values (:instance_id,:id,:proc_name,:asset_type_id,:asset_template_id,:asset_id)
@@ -3096,14 +3097,15 @@ ad_proc -private hf_call_read {
 ##code
 ## redo query to use OR instead of AND
         set query_suffix ""
+        append query_suffix "and (asset_type_id"
         if { $asset_type_id ne ""  } {
-            append query_suffix "and asset_type_id=:asset_type_id"
+            append query_suffix "or asset_type_id=:asset_type_id"
         }
         if { $asset_template_id ne "" } {
-            append query_suffix "and asset_template_id=:asset_template_id"
+            append query_suffix "or asset_template_id=:asset_template_id"
         }
         if { $asset_id ne "" } {
-            append query_suffix "and asset_id=:asset_id"
+            append query_suffix "or asset_id=:asset_id"
         } 
         set hc_proc_list [db_list hf_calls_db_ids "select proc_name, asset_id, asset_templat_id, asset_type_id from hf_calls where instance_id=:instance_id and id=:hf_call_id ${query_suffix}"]
         if { [llength $hc_id_list] == 0 } {
