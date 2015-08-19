@@ -17,7 +17,7 @@
 
 -- Sometimes integer types can be empty strings or null. 
 -- To reduce coding requirements for handling type change issues
--- integer type is replaced with more general varchar(19).
+-- integer type is replaced with more general varchar(19) not null DEFAULT ''.
 CREATE SEQUENCE hf_id_seq start 10000;
 SELECT nextval ('hf_id_seq');
 
@@ -64,12 +64,12 @@ CREATE TABLE hf_assets (
     --        ss saas/sw as a service
     --        ns custom domain name service records
     --        ot other
-    asset_type_id   varchar(24),
+    asset_type_id   varchar(24) not null DEFAULT '',
     -- for mapping to ledger and sales attributes, and role-based permissions 
     -- such as pricing, period length, etc
     -- null is same as company_summary.is_exempt=true
-    qal_product_id  varchar(19),
-    qal_customer_id varchar(19),
+    qal_product_id  varchar(19) not null DEFAULT '',
+    qal_customer_id varchar(19) not null DEFAULT '',
     label 	    varchar(30),
     keywords        varchar(100),
     description     varchar(80),
@@ -90,8 +90,8 @@ CREATE TABLE hf_assets (
     -- expires/expired on
     time_stop 	    timestamptz,
     -- DNS record reference
-    ns_id           varchar(19),
-    ua_id 	        varchar(19),
+    ns_id           varchar(19) not null DEFAULT '',
+    ua_id 	        varchar(19) not null DEFAULT '',
   -- status aka vm_to_configure, on,off etc.
   -- use with qal_product_id for vm_to_configure.plan_id
   -- and qal_customer_id for vm_to_configure.company_id
@@ -99,9 +99,9 @@ CREATE TABLE hf_assets (
     -- for use with monitoring.
     trashed_p 	    varchar(1),
     -- last trashed by
-    trashed_by 	    varchar(19),
+    trashed_by 	    varchar(19) not null DEFAULT '',
     -- possible future asset analyzing
-    popularity      varchar(19),
+    popularity      varchar(19) not null DEFAULT '',
     -- built-in customization flags
     flags	    varchar(12),
     -- mainly for promoting clients by linking to their website
@@ -109,7 +109,7 @@ CREATE TABLE hf_assets (
     publish_p       varchar(1),
     monitor_p       varchar(1),
     -- when monitoring, higher value is higher priority for alerts, alert reponses
-    triage_priority varchar(19)
+    triage_priority varchar(19) not null DEFAULT ''
 );
 
 create index hf_assets_id_idx on hf_assets (id);
@@ -141,7 +141,7 @@ CREATE TABLE hf_asset_type_features (
     -- feature.id
     id                   integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- hf_asset_type.id
-    asset_type_id        varchar(24),
+    asset_type_id        varchar(24) not null DEFAULT '',
     -- null
     -- s
     label                varchar(40),
@@ -194,8 +194,8 @@ CREATE TABLE hf_hardware (
     system_name varchar(200),
     backup_sys  varchar(200),
     -- network interface id, this is the remote console (primary only, if more than one)
-    ni_id       varchar(19),
-    os_id       varchar(19),
+    ni_id       varchar(19) not null DEFAULT '',
+    os_id       varchar(19) not null DEFAULT '',
     description varchar(200),
     details     text
 );
@@ -208,19 +208,19 @@ CREATE TABLE hf_virtual_machines (
     instance_id integer not null,
     vm_id         integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     domain_name   varchar(300),
-    ip_id         varchar(19),
+    ip_id         varchar(19) not null DEFAULT '',
     -- network interface id. This is duplicate of hf_assets.ni_id. Ideally, see hf_assets only
     -- if there is more than one, create an hf_vm_ni_map
     -- Leaving this here for now, because 60+ cases of ni_id in hosting-farm-procs ATM.
     -- It is more important to write to both places the same and get project to first release.
     -- Remove later.
-    ni_id         varchar(19)
+    ni_id         varchar(19) not null DEFAULT ''
     -- DNS record id
-    ns_id         varchar(19),
-    os_id         varchar(19),
+    ns_id         varchar(19) not null DEFAULT '',
+    os_id         varchar(19) not null DEFAULT '',
     -- from database_server.type_id
     --      server.server_type
-    type_id       varchar(19),
+    type_id       varchar(19) not null DEFAULT '',
     -- was vm_template.path
     resource_path varchar(300),
     -- was vm_template.mount_union
@@ -302,7 +302,7 @@ CREATE TABLE hf_vm_quotas (
   description        varchar(40) not null,
   base_storage       integer not null,
   base_traffic       integer not null,
-  base_memory        varchar(19),
+  base_memory        varchar(19) not null DEFAULT '',
   base_sku           varchar(40) not null,
   over_storage_sku   varchar(40) not null,
   over_traffic_sku   varchar(40) not null,
@@ -310,13 +310,13 @@ CREATE TABLE hf_vm_quotas (
   -- unit is amount per quantity of one sku
   storage_unit       integer not null,
   traffic_unit       integer not null,
-  memory_unit        varchar(19),
-  qemu_memory        varchar(19),
-  status_id          varchar(19),
+  memory_unit        varchar(19) not null DEFAULT '',
+  qemu_memory        varchar(19) not null DEFAULT '',
+  status_id          varchar(19) not null DEFAULT '',
   -- shows as 1 or 2 (means?)
-  vm_type            varchar(19),
+  vm_type            varchar(19) not null DEFAULT '',
   -- was vm_group (0 to 3) means?
-  max_domain         varchar(19),
+  max_domain         varchar(19) not null DEFAULT '',
   private_vps        varchar(1)
   -- plan.high_end is ambiguous and isn't differentiated from private_vps, so ignoring.
  );
@@ -355,7 +355,7 @@ CREATE TABLE hf_services (
     protocol        varchar(40),
     port            varchar(40),
   -- was database_user_id
-    ua_id           varchar(19),
+    ua_id           varchar(19) not null DEFAULT '',
     -- from database_server.type_id 
     -- type can be: db, protocol, generic daemon etc.    port integer,
     ss_type         varchar(24),
@@ -367,7 +367,7 @@ CREATE TABLE hf_services (
     ss_ultrasubtype varchar(24),
     config_uri      varchar(300),
     -- following from database_memory_detail
-    memory_bytes    varchar(19),
+    memory_bytes    varchar(19) not null DEFAULT '',
     --runtime is part of hf_assets start or monitor_log
     details         text
 );
@@ -509,7 +509,7 @@ CREATE TABLE hf_monitor_config_n_control (
     -- 0% rarely triggers, 100% triggers on most everything.
     health_percentile_trigger numeric,
     -- the health_value matching health_percentile_trigger
-    health_threshold          varchar(19)
+    health_threshold          varchar(19) not null DEFAULT ''
 );
 
 create index hf_monitor_config_n_control_instance_id_idx on hf_monitor_config_n_control (instance_id);
@@ -531,7 +531,7 @@ CREATE TABLE hf_monitor_log (
     -- 0 dead, down, not normal
     -- 10000 nominal, allows for variable performance issues
     -- health = numeric summary indicator determined by hf_procs
-    health               varchar(19),
+    health               varchar(19) not null DEFAULT '',
     -- latest report from monitoring
     report text,
     -- sysadmins can log significant changes to asset, such as sw updates
@@ -549,13 +549,13 @@ create index hf_monitor_log_sig_change_id_idx on hf_monitor_log (significant_cha
 CREATE TABLE hf_monitor_status (
     instance_id                integer not null,
     monitor_id                 integer unique not null,
-    asset_id                   varchar(19),
+    asset_id                   varchar(19) not null DEFAULT '',
     -- most recent report_id:
-    report_id                  varchar(19),
-    health_p0                  varchar(19),
+    report_id                  varchar(19) not null DEFAULT '',
+    health_p0                  varchar(19) not null DEFAULT '',
     -- for calculating differential, p1 is always 1, just as p0 is 0
-    health_p1                  varchar(19),
-    expected_health            varchar(19)
+    health_p1                  varchar(19) not null DEFAULT '',
+    expected_health            varchar(19) not null DEFAULT ''
 );
 
 create index hf_monitor_status_instance_id_idx on hf_monitor_status (instance_id);
@@ -569,12 +569,12 @@ CREATE TABLE hf_monitor_statistics (
     -- A hf_monitor_log.significant_change flags boundary
     monitor_id      integer not null,
     analysis_id     integer not null,
-    sample_count    varchar(19),
+    sample_count    varchar(19) not null DEFAULT '',
     -- range_min is minimum value of report_id
-    range_min       varchar(19),
-    range_max       varchar(19),
-    health_max      varchar(19),
-    health_min      varchar(19),
+    range_min       varchar(19) not null DEFAULT '',
+    range_max       varchar(19) not null DEFAULT '',
+    health_max      varchar(19) not null DEFAULT '',
+    health_min      varchar(19) not null DEFAULT '',
     health_average  numeric,
     health_median   numeric
 ); 
@@ -618,9 +618,9 @@ CREATE TABLE hf_calls (
     proc_name varchar(40) not null,
     -- in order of increasing specificity to allow for system-wide exceptions
     -- of calling another proc for a more specific asset
-    asset_type_id varchar(24),
-    asset_template_id varchar(19),
-    asset_id varchar(19)
+    asset_type_id varchar(24) not null DEFAULT '',
+    asset_template_id varchar(19) not null DEFAULT '',
+    asset_id varchar(19) not null DEFAULT ''
     -- permissions always uses asset_id
 );
 
