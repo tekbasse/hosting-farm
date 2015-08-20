@@ -1521,7 +1521,8 @@ ad_proc -private hf_dc_read {
         # get, append remaining detail
 
         # tables hf_data_centers.instance_id,dc_id, affix (was datacentr.short_code), description, details
-        set dc_detail_list [db_list hf_dc_detail_get "select affix, description, details from hf_data_centers where instance_id =:instance_id and dc_id=:dc_id"]
+        set dc_detail_list [db_list_of_lists hf_dc_detail_get "select affix, description, details from hf_data_centers where instance_id =:instance_id and dc_id=:dc_id"]
+        set dc_detail_list [lindex $dc_detail_list 0]
         foreach dc_att_list $dc_detail_list {
             lappend return_list $dc_att_list
         }
@@ -1616,7 +1617,8 @@ ad_proc -private hf_hw_read {
         # get, append remaining detail
 
         #  hf_hardware.instance_id, hw_id, system_name, backup_sys, ni_id, os_id, description, details
-        set hw_detail_list [db_list hf_hw_detail_get "select system_name, backup_sys, ni_id, os_id, description, details from hf_hardware where instance_id =:instance_id and hw_id=:hw_id"]
+        set hw_detail_list [db_list_of_lists hf_hw_detail_get "select system_name, backup_sys, ni_id, os_id, description, details from hf_hardware where instance_id =:instance_id and hw_id=:hw_id"]
+        set hw_detail_list [lindex $hw_detail_list 0]
         foreach hw_att_list $hw_detail_list {
             lappend return_list $hw_att_list
         }
@@ -1714,7 +1716,8 @@ ad_proc -private hf_vm_read {
         # get, append remaining detail
 
         # hf_virtual_machines.instance_id, vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details
-        set vm_detail_list [db_list hf_vm_detail_get "select domain_name, ip_id, ni_id, ns_id, os_id, type_id, resource_path, mount_union, details from hf_virtual_machines where instance_id =:instance_id and vm_id =:vm_id"]
+        set vm_detail_list [db_list_of_lists hf_vm_detail_get "select domain_name, ip_id, ni_id, ns_id, os_id, type_id, resource_path, mount_union, details from hf_virtual_machines where instance_id =:instance_id and vm_id =:vm_id"]
+        set vm_detail_list [lindex $vm_detail_list 0]
         foreach vm_att_list $vm_detail_list {
             lappend return_list $vm_att_list
         }
@@ -1813,7 +1816,8 @@ ad_proc -private hf_ss_read {
         set return_list $attribute_list
         # get, append remaining detail
         # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
-        set ss_detail_list [db_list hf_ss_detail_get "select server_name, service_name, ss_type, ss_subtype, ss_undersubtype, ss_ultrasubtype, daemon_ref, protocol, port, ua_id, config_uri, memory_bytes, details from hf_services where instance_id =:instance_id and ss_id =:ss_id"]
+        set ss_detail_list [db_list_of_lists hf_ss_detail_get "select server_name, service_name, ss_type, ss_subtype, ss_undersubtype, ss_ultrasubtype, daemon_ref, protocol, port, ua_id, config_uri, memory_bytes, details from hf_services where instance_id =:instance_id and ss_id =:ss_id"]
+        set ss_detail_list [lindex $ss_detail_list 0]
         foreach ss_att_list $ss_detail_list {
             lappend return_list $ss_att_list
         }
@@ -1914,7 +1918,8 @@ ad_proc -private hf_ip_read {
     # get ip data
     set return_list [list ]
     if { [qf_is_natural_number $ip_id ] } {
-        set return_list [db_list hf_ip_detail_get "select ipv4_addr, ipv4_status, ipv6_addr, ipv6_status from hf_ip_addresses where instance_id =:instance_id and ip_id =:ip_id"]
+        set return_list [db_list_of_lists hf_ip_detail_get "select ipv4_addr, ipv4_status, ipv6_addr, ipv6_status from hf_ip_addresses where instance_id =:instance_id and ip_id =:ip_id"]
+        set return_list [lindex $return_list 0]
     }
     return $return_list
 }
@@ -2046,7 +2051,8 @@ ad_proc -private hf_ni_read {
     }
     set return_list [list ]
     if { [qf_is_natural_number $ni_id] } {
-        set return_list [db_list hf_network_interfaces_read1 "select os_dev_ref, bia_mac_address, ul_mac_address, ipv4_addr_range, ipv6_addr_range from hf_network_interfaces where instance_id=:instance_id and ni_id =:ni_id"]
+        set return_list [db_list_of_lists hf_network_interfaces_read1 "select os_dev_ref, bia_mac_address, ul_mac_address, ipv4_addr_range, ipv6_addr_range from hf_network_interfaces where instance_id=:instance_id and ni_id =:ni_id"]
+        set return_list [lindex $return_list 0]
     }
     return $return_list
 }
@@ -3096,7 +3102,7 @@ ad_proc -private hf_call_read {
         if { $asset_type_id ne "" || $asset_template_id ne "" || $asset_id ne "" } {
             set query_suffix ") or (asset_type_id=:asset_type_id or asset_template_id=:asset_template_id or asset_id=:asset_id"
         } 
-        set hc_proc_lists [db_list hf_calls_db_ids "select proc_name, asset_id, asset_template_id, asset_type_id from hf_calls where instance_id=:instance_id and id=:hf_call_id and ( ( asset_type_id='' and asset_type_id='' and asset_template_id='' ${query_suffix}) )"]
+        set hc_proc_lists [db_list_of_lists hf_calls_db_ids "select proc_name, asset_id, asset_template_id, asset_type_id from hf_calls where instance_id=:instance_id and id=:hf_call_id and ( ( asset_type_id='' and asset_type_id='' and asset_template_id='' ${query_suffix}) )"]
         set hf_procs_count [llength $hc_proc_lists]
         if { $hf_procs_count == 0 } {
             ns_log Notice "hf_call_read(3110): no proc_name for hf_call_id '$hf_call_id' user_id ${user_id} instance_id '${instance_id}' query_suffix '${query_suffix}'. Check for UI issue."
@@ -3144,7 +3150,7 @@ ad_proc -private hf_call_role_write {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    # This can only be done by an admin user
+    # Requires admin rights
     set user_id [ad_conn user_id]
     set admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
     if { $admin_p && [qf_is_natural_number $call_id] && [qf_is_natural_number $role_id] } {
@@ -3170,23 +3176,17 @@ ad_proc -private hf_call_roles_read {
     call_id
     {instance_id ""}
 } {
-    reads assigned roles for an hf_call
+    reads assigned roles for an hf_call.  answers question: what roles are allowed to make call?
 } {
+    set role_ids_list [list ]
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
+    } 
+    if { [qf_is_natural_number $call_id ] } {
+        set role_ids_list [db_list hf_call_roles_read "select role_id from hf_call_role_map where instance_id=:instance_id and call_id=:call_id"]
     }
-    #
-    #-- Assigns a role permission to make a call, and
-    #-- answers question: what roles are allowed to make call?
-    #CREATE TABLE hf_call_role_map (
-    #       instance_id integer not null,
-    #       -- hf_calls.proc_id
-    #       call_id integer not null,
-    #       role_id integer not null
-    #);
-    #
-    ##code
+    return $role_ids_list
 }
 
 ad_proc -private hf_monitor_configs_read {
