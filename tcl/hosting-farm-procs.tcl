@@ -3139,21 +3139,30 @@ ad_proc -private hf_call_role_write {
 } {
     Writes an association  between an hf_call and a role
 } {
+    set success_p 0
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    #
-    #-- Assigns a role permission to make a call, and
-    #-- answers question: what roles are allowed to make call?
-    #CREATE TABLE hf_call_role_map (
-    #       instance_id integer not null,
-    #       -- hf_calls.proc_id
-    #       call_id integer not null,
-    #       role_id integer not null
-    #);
-    #
-    ##code
+    # This can only be done by an admin user
+    set user_id [ad_conn user_id]
+    set admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
+    if { $admin_p && [qf_is_natural_number $call_id] && [qf_is_natural_number $role_id] } {
+        if { [hf_call_read $call_id] ne "" && [llength [hf_role_read $role_id]] > 0 } {
+            # if record already exists, do nothing, else add
+            set exists_p [db0or1row call_role_map_ck {select role_id as role_id_from_db from hf_call_role_map where instance_id=:instance_id and call_id=:call_id and role_id=:role_id} ]
+            if { $exists_p } {
+                ns_log Notice "hf_call_role_write(3155): duplicate write attempted by user_id '${user_id}' params role_id '${role_id}' call_id '${call_id}' instance_id '${instance_id}'"
+            } else {
+                db_dml hf_call_role_map_w {
+                    insert into hf_call_role_map (instance_id,call_id,role_id)
+                    values (:instance_id,:call_id,:role_id)
+                }
+            }
+            set success_p 1
+        }
+    }
+    return $success_p
 }
 
 
