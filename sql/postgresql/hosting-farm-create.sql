@@ -214,7 +214,7 @@ CREATE TABLE hf_virtual_machines (
     -- Leaving this here for now, because 60+ cases of ni_id in hosting-farm-procs ATM.
     -- It is more important to write to both places the same and get project to first release.
     -- Remove later.
-    ni_id         varchar(19) not null DEFAULT ''
+    ni_id         varchar(19) not null DEFAULT '',
     -- DNS record id
     ns_id         varchar(19) not null DEFAULT '',
     os_id         varchar(19) not null DEFAULT '',
