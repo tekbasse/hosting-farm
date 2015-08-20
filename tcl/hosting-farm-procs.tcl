@@ -2922,7 +2922,7 @@ ad_proc -private hf_call_write {
     {instance_id ""}
 } {
     Writes a new/update call and associates it to one or more specific asset_type. To remove an existing record, set proc_name blank for hf_call_id.
-    At least one asset_id, asset_type_id or asset_templat_id must be nonempty.
+    At least one asset_id, asset_type_id or asset_template_id must be nonempty.
 } {
     set success_p 0
     set no_errors_p 1
@@ -3092,29 +3092,40 @@ ad_proc -private hf_call_read {
 
         # get the appropriate hf_call_id
         # Cannot use db_0or1row, because there maybe multiple assignments of proc_name
-        #db_0or1row hf_calls_ck_id {select id as hf_calls_db_id from hf_calls where instance_id=:instance_id and proc_name=:proc_name}
-
-##code
-## redo query to use OR instead of AND
         set query_suffix ""
-        append query_suffix "and (asset_type_id"
-        if { $asset_type_id ne ""  } {
-            append query_suffix "or asset_type_id=:asset_type_id"
-        }
-        if { $asset_template_id ne "" } {
-            append query_suffix "or asset_template_id=:asset_template_id"
-        }
-        if { $asset_id ne "" } {
-            append query_suffix "or asset_id=:asset_id"
+        if { $asset_type_id ne "" || $asset_template_id ne "" || $asset_id ne "" } {
+            set query_suffix ") or (asset_type_id=:asset_type_id or asset_template_id=:asset_template_id or asset_id=:asset_id"
         } 
-        set hc_proc_list [db_list hf_calls_db_ids "select proc_name, asset_id, asset_templat_id, asset_type_id from hf_calls where instance_id=:instance_id and id=:hf_call_id ${query_suffix}"]
-        if { [llength $hc_id_list] == 0 } {
+        set hc_proc_lists [db_list hf_calls_db_ids "select proc_name, asset_id, asset_template_id, asset_type_id from hf_calls where instance_id=:instance_id and id=:hf_call_id and ( ( asset_type_id='' and asset_type_id='' and asset_template_id='' ${query_suffix}) )"]
+        set hf_procs_count [llength $hc_proc_lists]
+        if { $hf_procs_count == 0 } {
             ns_log Notice "hf_call_read(3110): no proc_name for hf_call_id '$hf_call_id' user_id ${user_id} instance_id '${instance_id}' query_suffix '${query_suffix}'. Check for UI issue."
             set no_errors_p 0
         } else {
             # Get the most specific proc_name from available list
-
-
+            # prioritize
+            # asset_id most specific (10)
+            # asset_template_id (9)
+            # asset_type_id (8)
+            # blank blank blank (7) standard
+            # other other other (0) <- fail (not retrieved by query)
+            set priority_lists [list ]
+            for {set i 0} {i < $hf_procs_count} {incr i} {
+                set priority 7
+                set proc_list [lindex $hf_proc_lists $i]
+                # proc_name, asset_id, asset_template_id, asset_type_id
+                if { [lindex $proc_list 1] eq $asset_id } {
+                    set priority 10
+                } elseif { [lindex $proc_list 2] eq $asset_template_id } {
+                    set priority 9
+                } elseif { [lindex $proc_list 3] eq $asset_type_id } {
+                    set priority 8
+                }
+                lappend $proc_list $priority
+                lappend priority_lists $proc_list
+            }
+            set prioritized_lists [lsort -index 4 -decreasing $priority_lists]
+            set proc_name [lindex [lindex $prioritized_lists 0] 0]
         }
     }
     return $proc_name
