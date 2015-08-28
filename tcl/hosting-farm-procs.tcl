@@ -3193,7 +3193,7 @@ ad_proc -private hf_monitor_configs_read {
     {asset_id_list ""}
     {instance_id ""}
 } {
-    description
+    Read the configuration parameters of an hf monitored service or system
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -3202,7 +3202,11 @@ ad_proc -private hf_monitor_configs_read {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
+    # validate system
 
+    # check permissions
+
+    
     #CREATE TABLE hf_monitor_config_n_control (
     #    instance_id               integer,
     #    monitor_id                integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
