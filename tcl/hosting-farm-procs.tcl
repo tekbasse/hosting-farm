@@ -1407,7 +1407,8 @@ ad_proc -private hf_asset_features {
 
 
 # basic API
-# With each change, call hf_monitor_log_create {
+##code:
+# With each asset change, call hf_monitor_log_create {
 #    asset_id, reported_by, user_id .. monitor_id=0}
 ad_proc -private hf_asset_type_write {
     label
@@ -3189,22 +3190,34 @@ ad_proc -private hf_call_roles_read {
     return $role_ids_list
 }
 
+
+# monitoring procs
+#   hf_monitor_configs_read   Read monitor configuration
+#   hf_monitor_configs_write  Write monitor configuration
+#   hf_monitor_update         Write an update to a log
+#   hf_monitor_logs           Logs indirectly associated with an asset (direct is 1:! via asset properties)
+#   hf_monitor_status         Analysis of an hf_monitor_update
+#   hf_monitor_statistics     Statistics of the distribution curve resulting from analysis of status info
+#   hf_monitor_report
+
 ad_proc -private hf_monitor_configs_read {
     {asset_id_list ""}
     {instance_id ""}
 } {
-    Read the configuration parameters of an hf monitored service or system
+    Read the configuration parameters of one  hf monitored service or system
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
+
+
     # validate system
 
     # check permissions
+    #either technical or scheduled_proc (no user_id)
+    set user_id [ad_conn user_id]
+    set admin_p [hf_permission_p $user_id $customer_id assets admin $instance_id]
 
     
     #CREATE TABLE hf_monitor_config_n_control (
