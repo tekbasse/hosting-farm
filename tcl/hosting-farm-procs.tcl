@@ -3195,7 +3195,7 @@ ad_proc -private hf_call_roles_read {
 #   hf_monitor_configs_read   Read monitor configuration
 #   hf_monitor_configs_write  Write monitor configuration
 #   hf_monitor_update         Write an update to a log
-#   hf_monitor_logs           Logs indirectly associated with an asset (direct is 1:! via asset properties)
+#   hf_monitor_logs           Logs indirectly associated with an asset (direct is 1:1 via asset properties)
 #   hf_monitor_status         Analysis of an hf_monitor_update
 #   hf_monitor_statistics     Statistics of the distribution curve resulting from analysis of status info
 #   hf_monitor_report
@@ -3246,7 +3246,7 @@ ad_proc -private hf_monitor_configs_write {
     args
     {instance_id ""}
 } {
-    description
+    Write one or more configuration parameters of one hf monitored service or system
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -3262,7 +3262,31 @@ ad_proc -private hf_monitor_logs {
     {asset_id_list ""}
     {instance_id ""}
 } {
-    description
+    Returns monitor_ids of logs indirectly associated with an asset (direct is 1:1 via asset properties)
+} {
+   
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
+
+
+    ##code
+    # should be able to look up dependent asset ids via a proc, and then cross-reference in bulk
+}
+
+
+ad_proc -private hf_monitor_update {
+    {asset_id ""}
+    {instance_id ""}
+} {
+    Write an update to a monitor log, ie create a new entry. 
+    Some other proc collects info from server and interprets health status,
+    Said proc is probably defined in hosting-farm-local-procs.tcl
+    Text of args should include calling proc name and version number for adapting to parameter and returned value revisions
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -3302,7 +3326,7 @@ ad_proc -private hf_monitor_status {
     {asset_id_list ""}
     {instance_id ""}
 } {
-    description
+    Returns standardized analysis (ie change of health_p ) of standardized info health reported from hf_monitor_update
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -3331,7 +3355,7 @@ ad_proc -private hf_monitor_statistics {
     {monitor_id_list ""}
     {instance_id ""}
 } {
-    description
+    Statistics of the distribution curve resulting from analysis of status info
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
