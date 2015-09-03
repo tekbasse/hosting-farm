@@ -3195,10 +3195,20 @@ ad_proc -private hf_call_roles_read {
 #   hf_monitor_configs_read   Read monitor configuration
 #   hf_monitor_configs_write  Write monitor configuration
 #   hf_monitor_update         Write an update to a log
-#   hf_monitor_logs           Logs indirectly associated with an asset (direct is 1:1 via asset properties)
+#   hf_monitor_logs           Returns monitor_ids of logs indirectly associated with an asset (direct is 1:1 via asset properties)
 #   hf_monitor_status         Analysis of an hf_monitor_update
 #   hf_monitor_statistics     Statistics of the distribution curve resulting from analysis of status info
 #   hf_monitor_report
+
+# the process goes something like this:
+# a new monitor is defined via app and saved via hf_monitor_configs_write
+
+# once every N seconds, hf_monitor_update is called. If no hf_monitor_update is active,
+# it calls the next monitor proc in the stack (from hosting-farm-local-procs.tcl)
+# the called procedue calls hf_monitor_configs_read and gets asset parameters, then calls hf_call_read to determine appropriate call_name for monitor
+# then calls returned proc_name
+
+
 
 ad_proc -private hf_monitor_configs_read {
     {asset_id_list ""}
