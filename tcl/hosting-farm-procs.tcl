@@ -3194,11 +3194,16 @@ ad_proc -private hf_call_roles_read {
 # monitoring procs
 #   hf_monitor_configs_read   Read monitor configuration
 #   hf_monitor_configs_write  Write monitor configuration
-#   hf_monitor_update         Write an update to a log
+#   hf_monitor_update         Write an update to a log (this includes distribution curve info, ie time as deltat)
+
+#   hf_monitor_dc             Returns distribution curve of most recent configuration
+#   hf_monitor_statistics     Analyse most recent hf_monitor_update in context of distribution curve
+#   hf_monitor_status_create  Save an Analysis an hf_monitor_update
+
+#   hf_monitor_status_read    Read status of asset_id, defaults to most recent status
+#   hf_monitor_report         Returns a range of monitor history
+#   hf_monitor_status_report  Returns a range of status history
 #   hf_monitor_logs           Returns monitor_ids of logs indirectly associated with an asset (direct is 1:1 via asset properties)
-#   hf_monitor_status         Analysis of an hf_monitor_update
-#   hf_monitor_statistics     Statistics of the distribution curve resulting from analysis of status info
-#   hf_monitor_report
 
 # the process goes something like this:
 # a new monitor is defined via app and saved via hf_monitor_configs_write
