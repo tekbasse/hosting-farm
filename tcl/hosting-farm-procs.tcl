@@ -3194,7 +3194,7 @@ ad_proc -private hf_call_roles_read {
 # monitoring procs
 #   hf_monitor_configs_read   Read monitor configuration
 #   hf_monitor_configs_write  Write monitor configuration
-#   hf_monitor_update         Write an update to a log (this includes distribution curve info, ie time as deltat)
+#   hf_monitor_update         Write an update to a log (this includes distribution curve info, ie time as delta-t)
 
 #   hf_monitor_dc             Returns distribution curve of most recent configuration
 #   hf_monitor_statistics     Analyse most recent hf_monitor_update in context of distribution curve
@@ -3205,6 +3205,10 @@ ad_proc -private hf_call_roles_read {
 #   hf_monitor_status_report  Returns a range of status history
 #   hf_monitor_logs           Returns monitor_ids of logs indirectly associated with an asset (direct is 1:1 via asset properties)
 
+# hf_monitor_alert_create
+# hf_monitor_alert_process
+# hf_monitor_alerts_status
+
 # the process goes something like this:
 # a new monitor is defined via app and saved via hf_monitor_configs_write
 
@@ -3212,6 +3216,11 @@ ad_proc -private hf_call_roles_read {
 # it calls the next monitor proc in the stack (from hosting-farm-local-procs.tcl)
 # the called procedue calls hf_monitor_configs_read and gets asset parameters, then calls hf_call_read to determine appropriate call_name for monitor
 # then calls returned proc_name
+# proc_name grabs info from external server, normalizes and saves info via hf_montor_update,
+# proc_name then calls hf_monitor_statistics, calls hf_monitor_status_create
+# if monitor config data says to flag an alert, 
+#        call a stack system parallel to hosting-farm-scheduled-procs ie  hf::schedule_add etc with appropriate priority
+#        monitor needs to use a separate schedule proc to avoid any instabilities and delays introduced by other processes
 
 
 
