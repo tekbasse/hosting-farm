@@ -11,7 +11,7 @@ ad_library {
 
 }
 
-namespace eval hf {}
+namespace eval hf::schedule {}
 
 #TABLE hf_sched_proc_stack
 #       id integer primary key,
@@ -36,7 +36,7 @@ namespace eval hf {}
 
 # set id [db_nextval hf_sched_id_seq]
 
-ad_proc -private hf::schedule_do {
+ad_proc -private hf::schedule::do {
 
 } { 
     Process any scheduled procedures. Future batches are suspended until this process reports batch complete.
@@ -51,7 +51,7 @@ ad_proc -private hf::schedule_do {
     # set debug_p to 0 to reduce repeated log noise:
     set debug_p 1
     if { $debug_p } {
-        ns_log Notice "hf::schedule_do.39: first_started_time '${first_started_time}' batch_lists_len ${batch_lists_len}"
+        ns_log Notice "hf::schedule::do.39: first_started_time '${first_started_time}' batch_lists_len ${batch_lists_len}"
     }
     if { $first_started_time eq "" } {
         if { $batch_lists_len > 0 } {
@@ -69,7 +69,7 @@ ad_proc -private hf::schedule_do {
                 set success_p [expr { [lsearch -exact $allowed_procs_list $proc_name] > -1 } ]
                 if { $success_p } {
                     if { $proc_name ne "" } {
-                        ns_log Notice "hf::schedule_do.54 evaluating id $id"
+                        ns_log Notice "hf::schedule::do.54 evaluating id $id"
                         set nowts [dt_systime -gmt 1]
                         set start_sec [clock seconds]
                         # tell the system I am working on it.
@@ -84,9 +84,9 @@ ad_proc -private hf::schedule_do {
                             set arg_value [lindex $arg_list 0]
                             lappend proc_list $arg_value
                         }
-                        #ns_log Notice "hf::schedule_do.69: id $id to Eval: '${proc_list}' list len [llength $proc_list]."
+                        #ns_log Notice "hf::schedule::do.69: id $id to Eval: '${proc_list}' list len [llength $proc_list]."
                         if {  [catch { set calc_value [eval $proc_list] } this_err_text] } {
-                            ns_log Warning "hf::schedule_do.71: id $id Eval '${proc_list}' errored with ${this_err_text}."
+                            ns_log Warning "hf::schedule::do.71: id $id Eval '${proc_list}' errored with ${this_err_text}."
                             # don't time an error. This provides a way to manually identify errors via sql sort
                             set nowts [dt_systime -gmt 1]
                             set success_p 0
@@ -105,7 +105,7 @@ ad_proc -private hf::schedule_do {
                             db_dml hf_sched_proc_stack_write {
                                 update hf_sched_proc_stack set proc_out =:calc_value, completed_time=:nowts, process_seconds=:dur_sec where id = :id 
                             }
-                            ns_log Notice "hf::schedule_do.83: id $id completed in circa ${dur_sec} seconds."
+                            ns_log Notice "hf::schedule::do.83: id $id completed in circa ${dur_sec} seconds."
                         }
                         # Alert user that job is done?  
                         # util_user_message doesn't accept user_id instance_id, only session_id
@@ -116,7 +116,7 @@ ad_proc -private hf::schedule_do {
                         # maybe hook into util_user_message after querying users.n_sessions or something..
                     }
                 } else {
-                    ns_log Warning "hf::schedule_do.87: id $id proc_name '${proc_name}' attempted but not allowed. user_id ${user_id} instance_id ${instance_id}"
+                    ns_log Warning "hf::schedule::do.87: id $id proc_name '${proc_name}' attempted but not allowed. user_id ${user_id} instance_id ${instance_id}"
                 }
                 # next batch index
                 incr bi
@@ -124,7 +124,7 @@ ad_proc -private hf::schedule_do {
         } else {
             # if do is idle, delete some (limit 100 or so) used args in hf_sched_proc_args. Ids may have more than 1 arg..
             if { $debug_p } {
-                ns_log Notice "hf::schedule_do.91: Idle. Entering passive maintenance mode. deleting up to 60 used args, if any."
+                ns_log Notice "hf::schedule::do.91: Idle. Entering passive maintenance mode. deleting up to 60 used args, if any."
             }
             set success_p 1
             db_dml hf_sched_proc_args_delete { delete from hf_sched_proc_args 
@@ -132,17 +132,17 @@ ad_proc -private hf::schedule_do {
             }
         }
     } else {
-        ns_log Notice "hf::schedule_do.97: Previous hf::schedule_do still processing. Stopping."
-        # the previous hf::schedule_do is still working. Don't clobber. Quit.
+        ns_log Notice "hf::schedule::do.97: Previous hf::schedule::do still processing. Stopping."
+        # the previous hf::schedule::do is still working. Don't clobber. Quit.
         set success_p 1
     }
     if { $debug_p || !$success_p } {
-        ns_log Notice "hf::schedule_do.99: returning success_p ${success_p}"
+        ns_log Notice "hf::schedule::do.99: returning success_p ${success_p}"
     }
     return $success_p
 }
 
-ad_proc -private hf::schedule_add {
+ad_proc -private hf::schedule::add {
     proc_name
     proc_args_list
     user_id
@@ -180,18 +180,18 @@ ad_proc -private hf::schedule_add {
                 }
             } on_error {
                 set success_p 0
-                ns_log Warning "hf::schedule_add.90 failed for id '$id' ii '$ii' user_id ${user_id} instance_id ${instance_id} proc_args_list '${proc_args_list}'"
-                ns_log Warning "hf::schedule_add.91 failed proc_name '${proc_name}' with message: ${errmsg}"
+                ns_log Warning "hf::schedule::add.90 failed for id '$id' ii '$ii' user_id ${user_id} instance_id ${instance_id} proc_args_list '${proc_args_list}'"
+                ns_log Warning "hf::schedule::add.91 failed proc_name '${proc_name}' with message: ${errmsg}"
             }        
         }
     } else {
-        ns_log Warning "hf::schedule_add.127 failed user_id ${user_id} session_package_id ${session_package_id} instance_id not valid: ${instance_id}"
+        ns_log Warning "hf::schedule::add.127 failed user_id ${user_id} session_package_id ${session_package_id} instance_id not valid: ${instance_id}"
         set success_p 0
     }
     return $success_p
 }
 
-ad_proc -private hf::schedule_trash {
+ad_proc -private hf::schedule::trash {
     sched_id
     user_id
     instance_id
@@ -219,7 +219,7 @@ ad_proc -private hf::schedule_trash {
     return $success_p
 }
 
-ad_proc -private hf::schedule_read {
+ad_proc -private hf::schedule::read {
     sched_id
     user_id
     instance_id
@@ -236,7 +236,7 @@ ad_proc -private hf::schedule_read {
     return $process_stats_list
 }
 
-ad_proc -private hf::schedule_list {
+ad_proc -private hf::schedule::list {
     user_id
     instance_id
     {processed_p "0"}
