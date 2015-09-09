@@ -1,7 +1,7 @@
-# hosting-farm/tcl/hosting-farm-scheduled-procs.tcl
+# hosting-farm/tcl/hosting-farm-monitor-procs.tcl
 ad_library {
 
-    Scheduled procedures for hosting-farm package.
+    Scheduled Monitor procedures for hosting-farm package.
     @creation-date 2014-09-12
     @Copyright (c) 2014 Benjamin Brink
     @license GNU General Public License 3, see project home or http://www.gnu.org/licenses/gpl-3.0.en.html
