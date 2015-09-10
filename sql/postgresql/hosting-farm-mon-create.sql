@@ -52,8 +52,8 @@ CREATE TABLE hf_beat_stack (
        -- stack is prioritized by
        -- time must be > last time + interval_s + last_completed_time 
        -- priority
-       -- relative priority: priority - (now - last_completed_time )/ interval_s
-       -- relative priority kicks in after threashold priority procs have been exhausted
+       -- relative priority: priority - (now - last_completed_time )/ interval_s - last_completed_time
+       -- relative priority kicks in after threashold priority procs have been exhausted for the interval
        proc_name varchar(40),
        proc_args text,
        proc_out text,
@@ -66,6 +66,7 @@ CREATE TABLE hf_beat_stack (
        order_time timestamptz,
        last_started_time timestamptz,
        last_completed_time timestamptz,
+       -- response_time in seconds; should be about same as last_completed_time - last_started_time
        last_process_seconds integer,
        call_counter integer
 );
