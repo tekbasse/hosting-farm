@@ -19,3 +19,4 @@
 set frequent_base [expr 13 * 1]
 
 ad_schedule_proc -thread t $frequent_base hf::schedule_do
+

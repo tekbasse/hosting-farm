@@ -499,9 +499,9 @@ CREATE TABLE hf_monitor_config_n_control (
     monitor_id                integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     asset_id                  integer not null,
     label                     varchar(200) not null,
-    active_p                  varchar(1) not null,
+    active_p                  varchar(1) default '0' not null,
     -- log args into hf_beat_stack.proc_args?
-    log_args_p                  varchar(1) not null,
+    log_args_p                varchar(1) default '0' not null,
     -- number of portions to use in frequency distribution curve
     portions_count            integer not null,
     -- allow some control over how the distribution curves are represented:

@@ -29,7 +29,7 @@
         <callbacks>
         </callbacks>
         <parameters>
-        <!-- No version parameters -->
+          <parameter datatype="number"  min_n_values="1"  max_n_values="1"  name="priorityThreashold"  default="3" description="What is the lowest priority that takes precedence in scheduling over all other delayed priorities? Highest priority is 1, Lowest is a high integer." section_name="monitoring"/>
         </parameters>
 
     </version>
