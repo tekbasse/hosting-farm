@@ -18,5 +18,13 @@
 # once every 1/3 minute.
 set frequent_base [expr 13 * 1]
 
-ad_schedule_proc -thread t $frequent_base hf::schedule_do
+ad_schedule_proc -thread t $frequent_base hf::schedule::do
 
+# varies with active monitors at time of start
+db_1row hf_active_assets_count { select count(monitor_id) as monitor_count from hf_monitor_config_n_control where active_p == '1' }
+set frequency_base [expr { int( 5 * 60 ) } ]
+if { $monitor_count > 0 } {
+    set frequency_base [expr { int( $frequency_base / $monitor_count ) + 1 } ] 
+} 
+
+ad_schedule_proc -thread t $frequency_base hf::monitor::do
