@@ -13,28 +13,59 @@ ad_library {
 
 namespace eval hf::monitor {}
 
-#TABLE hf_sched_proc_stack
+#CREATE TABLE hf_beat_log (
+#    id integer not null primary key,
+#    instance_id integer,
+#    user_id integer,
+#    asset_id integer,
+#    trashed_p varchar(1) default '0',
+#    name varchar(40),
+#    title varchar(80),
+#    created timestamptz default now(),
+#    last_modified timestamptz,
+#    log_entry text
+#);
+#
+#CREATE TABLE hf_beat_log_viewed (
+#     id integer not null,
+#     instance_id integer,
+#     user_id integer,
+#     asset_id integer, 
+#     last_viewed timestamptz
+#);
+
+#CREATE TABLE hf_beat_stack_active (
+#       -- instead of querying hf_beat_stack for active proc
+#       -- the value is stored and updated here for speed.
+#       id integer 
+#)
+
+#CREATE TABLE hf_beat_stack (
 #       id integer primary key,
-#       -- assumes procedure is only scheduled/called once
+#       -- assumes procedure is called repeatedly
+#       -- stack is prioritized by
+#       -- time must be > last time + interval_s + last_completed_time 
+#       -- priority
+#       -- relative priority: priority - (now - last_completed_time )/ interval_s - last_completed_time
+#       -- relative priority kicks in after threashold priority procs have been exhausted for the interval
 #       proc_name varchar(40),
 #       proc_args text,
-# -- proc_args is just a log of values. Values actually come from hf_sched_proc_args
 #       proc_out text,
 #       user_id integer,
 #       instance_id integer,
 #       priority integer,
+#       -- since procedure is repeated, cannot
+#       -- use empty completed_time to infer active status
+#       -- instead, see hf_beat_stack_active.id
 #       order_time timestamptz,
-#       started_time timestamptz,
-#       completed_time timestamptz,
-#       process_seconds integer
+#       last_started_time timestamptz,
+#       last_completed_time timestamptz,
+#       -- response_time in seconds; should be about same as last_completed_time - last_started_time
+#       last_process_seconds integer,
+#       call_counter integer
+#);
 
-# TABLE hf_sched_proc_args
-#    stack_id integer
-#    arg_number integer
-#    arg_value text
-
-
-# set id [db_nextval hf_sched_id_seq]
+# set id [db_nextval hf_beat_id_seq]
 
 ad_proc -private hf::monitor::do {
 
@@ -63,7 +94,7 @@ ad_proc -private hf::monitor::do {
                 lassign $sched_list id proc_name user_id instance_id priority order_time started_time
                 # package_id can vary with each entry
                 
-                set allowed_procs [parameter::get -parameter ScheduledProcsAllowed -package_id $instance_id]
+                set allowed_procs [parameter::get -parameter MonitorProcsAllowed -package_id $instance_id]
                 # added comma and period to "split" to screen external/private references and poorly formatted lists
                 set allowed_procs_list [split $allowed_procs " ,."]
                 set success_p [expr { [lsearch -exact $allowed_procs_list $proc_name] > -1 } ]

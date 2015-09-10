@@ -44,7 +44,7 @@ CREATE TABLE hf_beat_stack_active (
        -- instead of querying hf_beat_stack for active proc
        -- the value is stored and updated here for speed.
        id integer 
-)
+);
 
 CREATE TABLE hf_beat_stack (
        id integer primary key,
