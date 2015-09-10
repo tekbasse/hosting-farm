@@ -1,13 +1,13 @@
 -- hosting-farm-cron-create.sql
 --
--- @author Dekka Corp.
--- @cvs-id
+-- @author Benjamin Brink
+-- @copyright 2015 see GPL License for distribution info
 --
 
 CREATE SEQUENCE hf_beat_id_seq start 1;
 SELECT nextval ('hf_beat_id_seq');
 
--- For general qaf app delayed process logs
+-- For monitor process logs
 CREATE TABLE hf_beat_log (
     id integer not null primary key,
     instance_id integer,
@@ -60,13 +60,13 @@ CREATE index hf_beat_stack_id_key on hf_beat_stack(id);
 CREATE index hf_beat_stack_priority_key on hf_beat_stack(priority);
 CREATE index hf_beat_stack_started_time_key on hf_beat_stack(started_time);
 
-CREATE TABLE hf_beat_args (
-       stack_id integer,
+--CREATE TABLE hf_beat_args (
+--       stack_id integer,
        -- list_number 0 for standard args. if arg contains a regexp \1
        -- or other integer, then insert list built from list_number = n (1 for example).
-       list_number integer,
-       arg_number integer,
-       arg_value text
-);
+--       list_number integer,
+--       arg_number integer,
+--       arg_value text
+--);
 
-CREATE index hf_beat_args_stack_id on hf_beat_args(stack_id);
+--CREATE index hf_beat_args_stack_id on hf_beat_args(stack_id);

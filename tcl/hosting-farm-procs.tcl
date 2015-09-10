@@ -3260,6 +3260,9 @@ ad_proc -private hf_monitor_configs_read {
     #    health_percentile_trigger numeric,
     #    -- the health_value matching health_percentile_trigger
     #    health_threshold          integer
+# priority varchar(19) default '' not null,
+# -- interval in seconds
+    # interval_s varchar(19) default '' not null,
     #);
 
     ##code

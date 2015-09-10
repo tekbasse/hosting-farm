@@ -3,9 +3,9 @@
 -- @author
 -- @cvs-id
 --
-DROP index hf_beat_args_stack_id;
+--DROP index hf_beat_args_stack_id;
 
-DROP TABLE hf_beat_args;
+--DROP TABLE hf_beat_args;
 
 DROP index hf_beat_stack_started_time_key;
 DROP index hf_beat_stack_priority_key;

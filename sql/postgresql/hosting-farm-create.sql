@@ -552,9 +552,12 @@ CREATE TABLE hf_monitor_status (
     asset_id                   varchar(19) not null DEFAULT '',
     -- most recent report_id:
     report_id                  varchar(19) not null DEFAULT '',
+    -- health at p0
     health_p0                  varchar(19) not null DEFAULT '',
     -- for calculating differential, p1 is always 1, just as p0 is 0
+    -- health at p1
     health_p1                  varchar(19) not null DEFAULT '',
+    -- 
     expected_health            varchar(19) not null DEFAULT ''
 );
 
