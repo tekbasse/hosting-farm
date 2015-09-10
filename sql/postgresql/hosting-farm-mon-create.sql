@@ -40,20 +40,34 @@ create index hf_beat_log_viewed_instance_id_idx on hf_beat_log_viewed (instance_
 create index hf_beat_log_viewed_user_id_idx on hf_beat_log_viewed (user_id);
 create index hf_beat_log_viewed_asset_id_idx on hf_beat_log_viewed (asset_id);
 
+CREATE TABLE hf_beat_stack_active (
+       -- instead of querying hf_beat_stack for active proc
+       -- the value is stored and updated here for speed.
+       id integer 
+)
 
 CREATE TABLE hf_beat_stack (
        id integer primary key,
-       -- assumes procedure is only scheduled/called once
+       -- assumes procedure is called repeatedly
+       -- stack is prioritized by
+       -- time must be > last time + interval_s + last_completed_time 
+       -- priority
+       -- relative priority: priority - (now - last_completed_time )/ interval_s
+       -- relative priority kicks in after threashold priority procs have been exhausted
        proc_name varchar(40),
        proc_args text,
        proc_out text,
        user_id integer,
        instance_id integer,
        priority integer,
+       -- since procedure is repeated, cannot
+       -- use empty completed_time to infer active status
+       -- instead, see hf_beat_stack_active.id
        order_time timestamptz,
-       started_time timestamptz,
-       completed_time timestamptz,
-       process_seconds integer
+       last_started_time timestamptz,
+       last_completed_time timestamptz,
+       last_process_seconds integer,
+       call_counter integer
 );
 
 CREATE index hf_beat_stack_id_key on hf_beat_stack(id);

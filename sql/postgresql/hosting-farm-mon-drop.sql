@@ -13,6 +13,8 @@ DROP index hf_beat_stack_id_key;
 
 DROP TABLE hf_beat_stack;
 
+DROP TABLE hf_beat_stack_active;
+
 DROP index hf_beat_log_id_idx;
 DROP index hf_beat_log_instance_id_idx;
 DROP index hf_beat_log_user_id_idx;
