@@ -29,8 +29,9 @@
         <callbacks>
         </callbacks>
         <parameters>
-          <parameter datatype="number"  min_n_values="1"  max_n_values="1"  name="priorityThreashold"  default="3" description="What is the lowest priority that takes precedence in scheduling over all other delayed priorities? Highest priority is 1, Lowest is a high integer." section_name="monitoring"/>
+          <parameter datatype="number"  min_n_values="1"  max_n_values="1"  name="priorityThreashold"  default="13" description="What is the lowest priority that takes precedence in scheduling over all other delayed priorities? Highest priority is 1, Lowest is a high integer." section_name="monitoring"/>
+        <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="MonitorProcsAllowed"  default="" description="A space delimited list of procs allowed for use with monitors in package instance and usually defined in tcl/hosting-farm-local-procs.tcl" section_name="monitoring"/>
+        <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="ScheduledProcsAllowed"  default="" description="A space delimited list of procs allowed for use with asset admin in package instance and usually defined in tcl/hosting-farm-local-procs.tcl" section_name="systemcalls"/>
         </parameters>
-
     </version>
 </package>
