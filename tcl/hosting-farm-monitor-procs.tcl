@@ -70,12 +70,12 @@ namespace eval hf::monitor {}
 ad_proc -private hf::monitor::do {
 
 } { 
-    Process any scheduled procedures. Future batches are suspended until this process reports batch complete.
+    Process any scheduled monitoring procedures. Future monitors are suspended until this process reports batch complete.
 } {
     set cycle_time 13
     incr cycle_time -1
     set success_p 0
-    set batch_lists [db_list_of_lists hf_sched_proc_stack_read_adm_p0_s { select id,proc_name,user_id,instance_id, priority, order_time, started_time from hf_sched_proc_stack where completed_time is null order by started_time asc, priority asc , order_time asc } ]
+    set batch_lists [db_list_of_lists hf_beat_stack_read_adm_p0_s { select id,proc_name,user_id,instance_id, priority, order_time, started_time from hf_beat_stack where completed_time is null order by started_time asc, priority asc , order_time asc } ]
     set batch_lists_len [llength $batch_lists]
     set dur_sum 0
     set first_started_time [lindex [lindex $batch_lists 0] 6]
@@ -105,8 +105,8 @@ ad_proc -private hf::monitor::do {
                         set start_sec [clock seconds]
                         # tell the system I am working on it.
                         set success_p 1
-                        db_dml hf_sched_proc_stack_started {
-                            update hf_sched_proc_stack set started_time =:nowts where id =:id
+                        db_dml hf_beat_stack_started {
+                            update hf_beat_stack set started_time =:nowts where id =:id
                         }
                         
                         set proc_list [list $proc_name]
@@ -121,8 +121,8 @@ ad_proc -private hf::monitor::do {
                             # don't time an error. This provides a way to manually identify errors via sql sort
                             set nowts [dt_systime -gmt 1]
                             set success_p 0
-                            db_dml hf_sched_proc_stack_write {
-                                update hf_sched_proc_stack set proc_out =:this_err_text, completed_time=:nowts where id = :id 
+                            db_dml hf_beat_stack_write {
+                                update hf_beat_stack set proc_out =:this_err_text, completed_time=:nowts where id = :id 
                             } 
                             # inform user of error
                             set scenario_tid [lindex [lindex $args_lists 0] 0]
@@ -133,8 +133,8 @@ ad_proc -private hf::monitor::do {
                             set dur_sum [expr { $dur_sum + $dur_sec } ]
                             set nowts [dt_systime -gmt 1]
                             set success_p 1
-                            db_dml hf_sched_proc_stack_write {
-                                update hf_sched_proc_stack set proc_out =:calc_value, completed_time=:nowts, process_seconds=:dur_sec where id = :id 
+                            db_dml hf_beat_stack_write {
+                                update hf_beat_stack set proc_out =:calc_value, completed_time=:nowts, process_seconds=:dur_sec where id = :id 
                             }
                             ns_log Notice "hf::monitor::do.83: id $id completed in circa ${dur_sec} seconds."
                         }
@@ -159,7 +159,7 @@ ad_proc -private hf::monitor::do {
             }
             set success_p 1
             db_dml hf_sched_proc_args_delete { delete from hf_sched_proc_args 
-                where stack_id in ( select id from hf_sched_proc_stack where process_seconds is not null order by id limit 60 ) 
+                where stack_id in ( select id from hf_beat_stack where process_seconds is not null order by id limit 60 ) 
             }
         }
     } else {
@@ -196,7 +196,7 @@ ad_proc -private hf::monitor::add {
             db_transaction {
                 set proc_args_txt [join $proc_args_list "\t"]
                 set nowts [dt_systime -gmt 1]
-                db_dml hf_sched_proc_stack_create { insert into hf_sched_proc_stack 
+                db_dml hf_beat_stack_create { insert into hf_beat_stack 
                     (id, proc_name, proc_args, user_id, instance_id, priority, order_time)
                     values (:id,:proc_name,:proc_args_txt,:user_id,:session_package_id,:priority,:nowts)
                     
@@ -244,7 +244,7 @@ ad_proc -private hf::monitor::trash {
     if { $admin_p || ($session_user_id eq $user_id && ( $session_package_id eq $instance_id || $session_user_id eq $session_package_id ) ) } {
         set nowts [dt_systime -gmt 1]
         set proc_out "Process unscheduled by user_id $session_user_id."
-        set success_p [db_dml hf_sched_proc_stack_trash { update hf_sched_proc_stack
+        set success_p [db_dml hf_beat_stack_trash { update hf_beat_stack
             set proc_out=:proc_out, started_time=:nowts, completed_time=:nowts where sched_id=:sched_id and user_id=:user_id and instance_id=:instance_id and proc_out is null and started_time is null and completed_time is null } ]
     }
     return $success_p
@@ -262,7 +262,7 @@ ad_proc -private hf::monitor::read {
     set admin_p [permission::permission_p -party_id $session_user_id -object_id $session_package_id -privilege admin]
     set process_stats_list [list ]
     if { $admin_p || ($session_user_id eq $user_id && ( $session_package_id eq $instance_id || $session_user_id eq $session_package_id ) ) } {
-        set process_stats_list [db_list_of_lists hf_sched_proc_stack_read { select id,proc_name,proc_args,proc_out,user_id,instance_id, priority, order_time, started_time, completed_time, process_seconds from hf_sched_proc_stack where id =:sched_id and user_id=:user_id and instance_id=:instance_id } ]
+        set process_stats_list [db_list_of_lists hf_beat_stack_read { select id,proc_name,proc_args,proc_out,user_id,instance_id, priority, order_time, started_time, completed_time, process_seconds from hf_beat_stack where id =:sched_id and user_id=:user_id and instance_id=:instance_id } ]
     }
     return $process_stats_list
 }
@@ -307,15 +307,15 @@ ad_proc -private hf::monitor::list {
 
         if { $admin_p } {
             if { $processed_p } {
-                set process_stats_list [db_list_of_lists hf_sched_proc_stack_read_adm_p1 " select id,proc_name,proc_args,user_id,instance_id, priority, order_time, started_time, completed_time, process_seconds from hf_sched_proc_stack order where instance_id=:instance_id by $sort_by $sort_type limit $n_items offset :m_offset " ]
+                set process_stats_list [db_list_of_lists hf_beat_stack_read_adm_p1 " select id,proc_name,proc_args,user_id,instance_id, priority, order_time, started_time, completed_time, process_seconds from hf_beat_stack order where instance_id=:instance_id by $sort_by $sort_type limit $n_items offset :m_offset " ]
             } else {
-                set process_stats_list [db_list_of_lists hf_sched_proc_stack_read_adm_p0 " select id,proc_name,proc_args,user_id,instance_id, priority, order_time, started_time, completed_time, process_seconds from hf_sched_proc_stack where completed_time is null order by $sort_by $sort_type limit $n_items offset :m_offset " ]
+                set process_stats_list [db_list_of_lists hf_beat_stack_read_adm_p0 " select id,proc_name,proc_args,user_id,instance_id, priority, order_time, started_time, completed_time, process_seconds from hf_beat_stack where completed_time is null order by $sort_by $sort_type limit $n_items offset :m_offset " ]
             }
         } else {
             if { $processed_p } {
-                set process_stats_list [db_list_of_lists hf_sched_proc_stack_read_user_p1 " select id,proc_name,proc_args,user_id,instance_id, priority, order_time, started_time, completed_time, process_seconds from hf_sched_proc_stack where user_id=:user_id and ( instance_id=:instance_id or instance_id=:user_id) order by $sort_by $sort_type limit $n_items offset :m_offset " ]
+                set process_stats_list [db_list_of_lists hf_beat_stack_read_user_p1 " select id,proc_name,proc_args,user_id,instance_id, priority, order_time, started_time, completed_time, process_seconds from hf_beat_stack where user_id=:user_id and ( instance_id=:instance_id or instance_id=:user_id) order by $sort_by $sort_type limit $n_items offset :m_offset " ]
             } else {
-                set process_stats_list [db_list_of_lists hf_sched_proc_stack_read_user_p0 " select id,proc_name,proc_args,user_id,instance_id, priority, order_time, started_time, completed_time, process_seconds from hf_sched_proc_stack where completed_time is null and user_id=:user_id and ( instance_id=:instance_id or instance_id=:user_id) order by $sort_by $sort_type limit $n_items offset :m_offset " ]
+                set process_stats_list [db_list_of_lists hf_beat_stack_read_user_p0 " select id,proc_name,proc_args,user_id,instance_id, priority, order_time, started_time, completed_time, process_seconds from hf_beat_stack where completed_time is null and user_id=:user_id and ( instance_id=:instance_id or instance_id=:user_id) order by $sort_by $sort_type limit $n_items offset :m_offset " ]
             }
         }
     }

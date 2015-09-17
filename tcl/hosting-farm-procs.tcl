@@ -3192,34 +3192,42 @@ ad_proc -private hf_call_roles_read {
 
 
 # monitoring procs
+# hf::monitor::do
+# hf::monitor::read
+# hf::monitor::trash
+# hf::monitor::add
+# hf::monitor::list
+
 #   hf_monitor_configs_read   Read monitor configuration
 #   hf_monitor_configs_write  Write monitor configuration
 #   hf_monitor_update         Write an update to a log (this includes distribution curve info, ie time as delta-t)
 
 #   hf_monitor_dc             Returns distribution curve of most recent configuration
 #   hf_monitor_statistics     Analyse most recent hf_monitor_update in context of distribution curve
-#   hf_monitor_status_create  Save an Analysis an hf_monitor_update
+#   hf_monitor_status_create  Save an Analysis an hf_monitor_update (or FLAG ERROR)
 
 #   hf_monitor_status_read    Read status of asset_id, defaults to most recent status
 #   hf_monitor_report         Returns a range of monitor history
 #   hf_monitor_status_report  Returns a range of status history
 #   hf_monitor_logs           Returns monitor_ids of logs indirectly associated with an asset (direct is 1:1 via asset properties)
 
-# hf_monitor_alert_create
+# hf_monitor_alert_create 
 # hf_monitor_alert_process
 # hf_monitor_alerts_status
+# hf_monitor_alert_trash 
 
 # the process goes something like this:
 # a new monitor is defined via app and saved via hf_monitor_configs_write
 
-# once every N seconds, hf_monitor_update is called. If no hf_monitor_update is active,
+# once every N seconds, hf::monitor::do is called. If no hf::monitor::do is active,
 # it calls the next monitor proc in the stack (from hosting-farm-local-procs.tcl)
 # the called procedue calls hf_monitor_configs_read and gets asset parameters, then calls hf_call_read to determine appropriate call_name for monitor
 # then calls returned proc_name
 # proc_name grabs info from external server, normalizes and saves info via hf_montor_update,
 # proc_name then calls hf_monitor_statistics, calls hf_monitor_status_create
-# if monitor config data says to flag an alert, 
-#        call a stack system parallel to hosting-farm-scheduled-procs ie  hf::schedule_add etc with appropriate priority
+# (those are done in proc_name proc to efficiently use available resources etc.)
+# if monitor config data says to flag an alert, report it in the same hf monitor logs and perhaps flag a notification.
+
 #        monitor needs to use a separate schedule proc to avoid any instabilities and delays introduced by other processes
 
 
