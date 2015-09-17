@@ -2,8 +2,10 @@
 ad_library {
 
     Scheduled Monitor procedures for hosting-farm package.
-    @creation-date 2014-09-12
-    @Copyright (c) 2014 Benjamin Brink
+    Monitoring uses a separate scheduling paradigm
+    to avoid instabilities and conflicts from other processes
+    @creation-date 2015-09-12
+    @Copyright (c) 2015 Benjamin Brink
     @license GNU General Public License 3, see project home or http://www.gnu.org/licenses/gpl-3.0.en.html
     @project home: http://github.com/tekbasse/hosting-farm
     @address: po box 20, Marylhurst, OR 97036-0020 usa
@@ -12,6 +14,20 @@ ad_library {
 }
 
 namespace eval hf::monitor {}
+
+# once every N seconds, hf::monitor::do is called. ( see tcl/hosting-farm-scheduled-init.tcl )
+
+# If no proc called by hf::monitor::do is active (check hf_beat_stack_active.id ),
+# call the next monitor proc in the stack (from hosting-farm-local-procs.tcl)
+# the called procedue calls hf_monitor_configs_read and gets asset parameters, then calls hf_call_read to determine appropriate call_name for monitor
+# then calls returned proc_name
+# proc_name grabs info from external server, normalizes and saves info via hf_montor_update,
+# proc_name then calls hf_monitor_statistics, calls hf_monitor_status_create
+# (those are done in proc_name proc to efficiently use available resources etc.)
+# if monitor config data says to flag an alert, report it in the same hf monitor logs and perhaps flag a notification.
+
+#       
+
 
 #CREATE TABLE hf_beat_log (
 #    id integer not null primary key,
@@ -34,10 +50,12 @@ namespace eval hf::monitor {}
 #     last_viewed timestamptz
 #);
 
-#CREATE TABLE hf_beat_stack_active (
+#CREATE TABLE hf_beat_stack_bus (
 #       -- instead of querying hf_beat_stack for active proc
 #       -- the value is stored and updated here for speed.
-#       id integer 
+#       active_id varchar(19),
+#       -- when checking for active_id, can also get a dynamic value for debug_p with low overhead
+#       debug_p varchar(1) 
 #)
 
 #CREATE TABLE hf_beat_stack (
@@ -56,7 +74,7 @@ namespace eval hf::monitor {}
 #       priority integer,
 #       -- since procedure is repeated, cannot
 #       -- use empty completed_time to infer active status
-#       -- instead, see hf_beat_stack_active.id
+#       -- instead, see hf_beat_stack_bus.active_id
 #       order_time timestamptz,
 #       last_started_time timestamptz,
 #       last_completed_time timestamptz,
@@ -72,15 +90,27 @@ ad_proc -private hf::monitor::do {
 } { 
     Process any scheduled monitoring procedures. Future monitors are suspended until this process reports batch complete.
 } {
+
+    # First, check if a process exists and get status of debug_p
+    # set debug_p to 0 to reduce repeated log noise:
+    db_1row hf_beat_stack_bus_ck "select active_id, debug_p from hf_beat_stack_bus limit 1"
+
+
     set cycle_time 13
     incr cycle_time -1
     set success_p 0
+
+#       -- stack is prioritized by
+#       -- time must be > last time + interval_s + last_completed_time 
+#       -- priority
+#       -- relative priority: priority - (now - last_completed_time )/ interval_s - last_completed_time
+#       -- relative priority kicks in after threashold priority procs have been exhausted for the interval
+
+
     set batch_lists [db_list_of_lists hf_beat_stack_read_adm_p0_s { select id,proc_name,user_id,instance_id, priority, order_time, started_time from hf_beat_stack where completed_time is null order by started_time asc, priority asc , order_time asc } ]
     set batch_lists_len [llength $batch_lists]
     set dur_sum 0
     set first_started_time [lindex [lindex $batch_lists 0] 6]
-    # set debug_p to 0 to reduce repeated log noise:
-    set debug_p 1
     if { $debug_p } {
         ns_log Notice "hf::monitor::do.39: first_started_time '${first_started_time}' batch_lists_len ${batch_lists_len}"
     }

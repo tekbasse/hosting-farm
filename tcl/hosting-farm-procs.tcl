@@ -3219,16 +3219,6 @@ ad_proc -private hf_call_roles_read {
 # the process goes something like this:
 # a new monitor is defined via app and saved via hf_monitor_configs_write
 
-# once every N seconds, hf::monitor::do is called. If no hf::monitor::do is active,
-# it calls the next monitor proc in the stack (from hosting-farm-local-procs.tcl)
-# the called procedue calls hf_monitor_configs_read and gets asset parameters, then calls hf_call_read to determine appropriate call_name for monitor
-# then calls returned proc_name
-# proc_name grabs info from external server, normalizes and saves info via hf_montor_update,
-# proc_name then calls hf_monitor_statistics, calls hf_monitor_status_create
-# (those are done in proc_name proc to efficiently use available resources etc.)
-# if monitor config data says to flag an alert, report it in the same hf monitor logs and perhaps flag a notification.
-
-#        monitor needs to use a separate schedule proc to avoid any instabilities and delays introduced by other processes
 
 
 

@@ -40,10 +40,12 @@ create index hf_beat_log_viewed_instance_id_idx on hf_beat_log_viewed (instance_
 create index hf_beat_log_viewed_user_id_idx on hf_beat_log_viewed (user_id);
 create index hf_beat_log_viewed_asset_id_idx on hf_beat_log_viewed (asset_id);
 
-CREATE TABLE hf_beat_stack_active (
+CREATE TABLE hf_beat_stack_bus (
        -- instead of querying hf_beat_stack for active proc
        -- the value is stored and updated here for speed.
-       id integer 
+       active_id varchar(19) default '',
+       -- when checking for active_id, can also get a dynamic value for debug_p with low overhead
+       debug_p varchar(1) default '1' 
 );
 
 CREATE TABLE hf_beat_stack (
