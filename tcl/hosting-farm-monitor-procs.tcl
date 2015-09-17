@@ -17,16 +17,7 @@ namespace eval hf::monitor {}
 
 # once every N seconds, hf::monitor::do is called. ( see tcl/hosting-farm-scheduled-init.tcl )
 
-# If no proc called by hf::monitor::do is active (check hf_beat_stack_active.id ),
-# call the next monitor proc in the stack (from hosting-farm-local-procs.tcl)
-# the called procedue calls hf_monitor_configs_read and gets asset parameters, then calls hf_call_read to determine appropriate call_name for monitor
-# then calls returned proc_name
-# proc_name grabs info from external server, normalizes and saves info via hf_montor_update,
-# proc_name then calls hf_monitor_statistics, calls hf_monitor_status_create
-# (those are done in proc_name proc to efficiently use available resources etc.)
-# if monitor config data says to flag an alert, report it in the same hf monitor logs and perhaps flag a notification.
-
-#       
+     
 
 
 #CREATE TABLE hf_beat_log (
@@ -90,8 +81,16 @@ ad_proc -private hf::monitor::do {
 } { 
     Process any scheduled monitoring procedures. Future monitors are suspended until this process reports batch complete.
 } {
+    # If no proc called by hf::monitor::do is active (check hf_beat_stack_active.id ),
+    # call the next monitor proc in the stack (from hosting-farm-local-procs.tcl)
+    # the called procedue calls hf_monitor_configs_read and gets asset parameters, then calls hf_call_read to determine appropriate call_name for monitor
+    # then calls returned proc_name
+    # proc_name grabs info from external server, normalizes and saves info via hf_montor_update,
+    # proc_name then calls hf_monitor_statistics, calls hf_monitor_status_create
+    # (those are done in proc_name proc to efficiently use available resources etc.)
+    # if monitor config data says to flag an alert, report it in the same hf monitor logs and perhaps flag a notification.
 
-    # First, check if a process exists and get status of debug_p
+    # First, check if a monitor process is running and get status of debug_p
     # set debug_p to 0 to reduce repeated log noise:
     db_1row hf_beat_stack_bus_ck "select active_id, debug_p from hf_beat_stack_bus limit 1"
 
