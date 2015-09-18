@@ -15,7 +15,7 @@ ad_library {
 
 namespace eval hf::monitor {}
 
-# once every N seconds, hf::monitor::do is called. ( see tcl/hosting-farm-scheduled-init.tcl )
+# once every few seconds, hf::monitor::do is called. ( see tcl/hosting-farm-scheduled-init.tcl )
 
      
 
@@ -41,38 +41,6 @@ namespace eval hf::monitor {}
 #     last_viewed timestamptz
 #);
 
-#CREATE TABLE hf_beat_stack_bus (
-#       -- instead of querying hf_beat_stack for active proc
-#       -- the value is stored and updated here for speed.
-#       active_id varchar(19),
-#       -- when checking for active_id, can also get a dynamic value for debug_p with low overhead
-#       debug_p varchar(1) 
-#)
-
-#CREATE TABLE hf_beat_stack (
-#       id integer primary key,
-#       -- assumes procedure is called repeatedly
-#       -- stack is prioritized by
-#       -- time must be > last time + interval_s + last_completed_time 
-#       -- priority
-#       -- relative priority: priority - (now - last_completed_time )/ interval_s - last_completed_time
-#       -- relative priority kicks in after threashold priority procs have been exhausted for the interval
-#       proc_name varchar(40),
-#       proc_args text,
-#       proc_out text,
-#       user_id integer,
-#       instance_id integer,
-#       priority integer,
-#       -- since procedure is repeated, cannot
-#       -- use empty completed_time to infer active status
-#       -- instead, see hf_beat_stack_bus.active_id
-#       order_time timestamptz,
-#       last_started_time timestamptz,
-#       last_completed_time timestamptz,
-#       -- response_time in seconds; should be about same as last_completed_time - last_started_time
-#       last_process_seconds integer,
-#       call_counter integer
-#);
 
 # set id [db_nextval hf_beat_id_seq]
 
@@ -92,11 +60,21 @@ ad_proc -private hf::monitor::do {
 
     # First, check if a monitor process is running and get status of debug_p
     # set debug_p to 0 to reduce repeated log noise:
-    db_1row hf_beat_stack_bus_ck "select active_id, debug_p from hf_beat_stack_bus limit 1"
+    if { ![db_0or1row hf_beat_stack_bus_ck "select active_id, debug_p from hf_beat_stack_bus limit 1"] } {
 
+#CREATE TABLE hf_beat_stack_bus (
+#       -- instead of querying hf_beat_stack for active proc
+#       -- the value is stored and updated here for speed.
+#       active_id varchar(19),
+#       -- when checking for active_id, can also get a dynamic value for debug_p with low overhead
+#       debug_p varchar(1) 
+#)
 
-    set cycle_time 13
-    incr cycle_time -1
+        set active_id ""
+        set debug_p 1
+        # create the row
+        db_dml hf_beat_stack_bus_cr { insert into hf_beat_stack_bus (active_id,debug_p) values (:active_id,:debug_p) }
+    }
     set success_p 0
 
 #       -- stack is prioritized by
@@ -104,9 +82,44 @@ ad_proc -private hf::monitor::do {
 #       -- priority
 #       -- relative priority: priority - (now - last_completed_time )/ interval_s - last_completed_time
 #       -- relative priority kicks in after threashold priority procs have been exhausted for the interval
+    set clock_sec [clock seconds]
+    set batch_lists [db_list_of_lists hf_beat_stack_read_adm_p0_s { select id,proc_name,user_id,instance_id, priority, order_clock_s, last_started_clock_s,last_completed_clock_s,last_process_s,interval_s,(priority - (:clock_sec - last_completed_clock_s) /greatest('1',interval_s ) + last_process_s) as dynamic_priority  from hf_beat_stack where completed_time is null order by priority asc, dynamic_priority asc } ]
 
+#CREATE TABLE hf_beat_stack (
+#       id integer primary key,
+#       -- Assumes procedure is called repeatedly
+#       -- Since procedure is repeated, cannot
+#       -- use empty completed_time to infer active status
+#       -- instead, see hf_beat_stack_bus.active_id
+#
+#       -- stack is prioritized by
+#       -- time must be > last time + interval_s + last_process_time_s
+#       -- priority
+#       -- relative priority: priority - (now - last_completed_time )/ interval_s + last_process_s
+#       -- relative priority kicks in after threashold priority procs have been exhausted for the interval
+#       proc_name varchar(40),
+#       proc_args text,
+#       proc_out text,
+#       user_id integer,
+#       instance_id integer,
+#       priority integer,
+#       -- when first requested in  machine clock seconds
+#       order_clock_s integer,
+#       -- last time proc was started in machine clock seconds
+#       last_started_clock_s integer,
+#       -- last time proc completed in machine clock seconds
+#       last_completed_clock_s integer,
+#       -- response_time in seconds; should be about same as last_completed_time - last_started_time
+#       last_process_s integer,
+#       -- requested interval between calls
+#       -- this value is extracted from hf_monitor_config_n_control
+#       interval_s integer,
+#       order_time timestamptz,
+#       last_started_time timestamptz,
+#       last_completed_time timestamptz,
+#       call_counter integer
+#);
 
-    set batch_lists [db_list_of_lists hf_beat_stack_read_adm_p0_s { select id,proc_name,user_id,instance_id, priority, order_time, started_time from hf_beat_stack where completed_time is null order by started_time asc, priority asc , order_time asc } ]
     set batch_lists_len [llength $batch_lists]
     set dur_sum 0
     set first_started_time [lindex [lindex $batch_lists 0] 6]

@@ -50,11 +50,15 @@ CREATE TABLE hf_beat_stack_bus (
 
 CREATE TABLE hf_beat_stack (
        id integer primary key,
-       -- assumes procedure is called repeatedly
+       -- Assumes procedure is called repeatedly
+       -- Since procedure is repeated, cannot
+       -- use empty completed_time to infer active status
+       -- instead, see hf_beat_stack_bus.active_id
+
        -- stack is prioritized by
-       -- time must be > last time + interval_s + last_completed_time 
+       -- time must be > last time + interval_s + last_process_time_s
        -- priority
-       -- relative priority: priority - (now - last_completed_time )/ interval_s - last_completed_time
+       -- relative priority: priority - (now - last_completed_time )/ interval_s + last_process_s
        -- relative priority kicks in after threashold priority procs have been exhausted for the interval
        proc_name varchar(40),
        proc_args text,
@@ -62,20 +66,26 @@ CREATE TABLE hf_beat_stack (
        user_id integer,
        instance_id integer,
        priority integer,
-       -- since procedure is repeated, cannot
-       -- use empty completed_time to infer active status
-       -- instead, see hf_beat_stack_active.id
+       -- when first requested in machine clock seconds
+       order_clock_s integer,
+       -- last time proc was started in machine clock seconds
+       last_started_clock_s integer,
+       -- last time proc completed in machine clock seconds
+       last_completed_clock_s integer,
+       -- last response_time in seconds; should be about same as last_completed_time_s - last_started_time_s
+       last_process_s integer,
+       -- requested interval between calls
+       -- this value is extracted from hf_monitor_config_n_control
+       interval_s integer,
        order_time timestamptz,
        last_started_time timestamptz,
        last_completed_time timestamptz,
-       -- response_time in seconds; should be about same as last_completed_time - last_started_time
-       last_process_seconds integer,
        call_counter integer
 );
 
 CREATE index hf_beat_stack_id_key on hf_beat_stack(id);
 CREATE index hf_beat_stack_priority_key on hf_beat_stack(priority);
-CREATE index hf_beat_stack_started_time_key on hf_beat_stack(started_time);
+
 
 --CREATE TABLE hf_beat_args (
 --       stack_id integer,
