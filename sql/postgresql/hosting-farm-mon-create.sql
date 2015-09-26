@@ -45,7 +45,10 @@ CREATE TABLE hf_beat_stack_bus (
        -- the value is stored and updated here for speed.
        active_id varchar(19) default '',
        -- when checking for active_id, can also get a dynamic value for debug_p with low overhead
-       debug_p varchar(1) default '1' 
+       debug_p varchar(1) default '1',
+       -- What is the lowest priority that takes precedence in scheduling over all other delayed 
+       -- priorities? Highest priority is 1, Lowest is a high integer.
+       priority_threashold integer default '13'
 );
 
 CREATE TABLE hf_beat_stack (

@@ -17,7 +17,6 @@
 
 # once every 1/3 minute.
 set frequent_base [expr 13 * 1]
-
 ad_schedule_proc -thread t $frequent_base hf::schedule::do
 
 # varies with active monitors at time of start
