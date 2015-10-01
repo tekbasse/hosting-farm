@@ -138,6 +138,7 @@ ad_proc -private hf::monitor::do {
 #       -- requested interval between calls
 #       -- this value is extracted from hf_monitor_config_n_control
 #       interval_s integer,
+#       trigger_s integer,
 #       order_time timestamptz,
 #       last_started_time timestamptz,
 #       last_completed_time timestamptz,
@@ -155,10 +156,10 @@ ad_proc -private hf::monitor::do {
             set bi 0
             # if loop nears cycle_time, quit and let next cycle reprioritize with any new jobs
             while { $bi < $batch_lists_len && $dur_sum < $cycle_time } {
-                set sched_list [lindex $batch_lists $bi]
+                set mon_list [lindex $batch_lists $bi]
                 # set proc_list lindex combo from sched_list
-                lassign $sched_list id proc_name user_id instance_id priority order_time started_time
-                # package_id can vary with each entry
+                lassign $mon_list id proc_name user_id instance_id priority order_clock_s last_started_clock_s last_completed_clock_s last_process_s interval_s dynamic_priority trigger_s
+                # instance_id can vary with each entry
                 
                 set allowed_procs [parameter::get -parameter MonitorProcsAllowed -package_id $instance_id]
                 # added comma and period to "split" to screen external/private references and poorly formatted lists
@@ -172,17 +173,16 @@ ad_proc -private hf::monitor::do {
                         # tell the system I am working on it.
                         set success_p 1
                         db_dml hf_beat_stack_started {
-                            update hf_beat_stack set started_time =:nowts where id =:id
+                            update hf_beat_stack set started_time =:nowts, last_started_clock_s =:start_sec where id =:id
                         }
                         
-                        set proc_list [list $proc_name]
-                        set args_lists [db_list_of_lists hf_sched_proc_args_read_s { select arg_value, arg_number from hf_sched_proc_args where stack_id =:id order by arg_number asc} ]
-                        foreach arg_list $args_lists {
-                            set arg_value [lindex $arg_list 0]
-                            lappend proc_list $arg_value
-                        }
                         #ns_log Notice "hf::monitor::do.69: id $id to Eval: '${proc_list}' list len [llength $proc_list]."
-                        if {  [catch { set calc_value [eval $proc_list] } this_err_text] } {
+                        # This works in tcl env. should work here:
+                        # get asset attributes
+                          # getasset type
+                          # switch $asset_type ...
+                        # ss { hf_ss_read $id} ...
+                        if {  [catch { set calc_value [eval $proc_name] } this_err_text] } {
                             ns_log Warning "hf::monitor::do.71: id $id Eval '${proc_list}' errored with ${this_err_text}."
                             # don't time an error. This provides a way to manually identify errors via sql sort
                             set nowts [dt_systime -gmt 1]
