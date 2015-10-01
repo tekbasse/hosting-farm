@@ -51,6 +51,7 @@ CREATE TABLE hf_beat_stack_bus (
        priority_threashold integer default '13'
 );
 
+
 CREATE TABLE hf_beat_stack (
        id integer primary key,
        -- Assumes procedure is called repeatedly
@@ -80,6 +81,8 @@ CREATE TABLE hf_beat_stack (
        -- requested interval between calls
        -- this value is extracted from hf_monitor_config_n_control
        interval_s integer,
+       -- trigger_s is last_started_clock_s + last_process_s - interval_s 
+       trigger_s integer,
        order_time timestamptz,
        last_started_time timestamptz,
        last_completed_time timestamptz,

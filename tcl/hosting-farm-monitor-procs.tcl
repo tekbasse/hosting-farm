@@ -18,8 +18,6 @@ namespace eval hf::monitor {}
 # once every few seconds, hf::monitor::do is called. ( see tcl/hosting-farm-scheduled-init.tcl )
 
      
-
-
 #CREATE TABLE hf_beat_log (
 #    id integer not null primary key,
 #    instance_id integer,
@@ -44,13 +42,51 @@ namespace eval hf::monitor {}
 
 # set id [db_nextval hf_beat_id_seq]
 
+ad_proc -private hf::monitor::check {
+
+} {
+    Returns current values from hf_beat_stack_bus table (active_id, debug_p, priority_threashold, cycle_time)  into the calling environment
+} {
+    upvar 1 active_id active_id 
+    upvar 1 debug_p debug_p 
+    upvar 1 priority_threashold priority_threashold
+    upvar 1 cycle_time cycle_time
+ 
+    if { ![db_0or1row hf_beat_stack_bus_ck "select active_id, debug_p,priority_threashold,cycle_time from hf_beat_stack_bus limit 1"] } {
+
+        #CREATE TABLE hf_beat_stack_bus (
+        #       -- instead of querying hf_beat_stack for active proc
+        #       -- the value is stored and updated here for speed.
+        #       active_id varchar(19),
+        #       -- when checking for active_id, can also get a dynamic value for debug_p with low overhead
+        #       debug_p varchar(1) 
+        #)
+        
+        set active_id ""
+        # set debug_p to 0 to reduce repeated log noise
+        set debug_p 1
+        set priority_threashold 13
+
+        set cycle_time [expr { int( 5 * 60 ) } ]
+        # cycle_time varies with active monitors at time of start
+        db_1row hf_active_assets_count { select count(monitor_id) as monitor_count from hf_monitor_config_n_control where active_p == '1' }
+        if { $monitor_count > 0 } {
+            set cycle_time [expr { int( $cycle_time / $monitor_count ) + 1 } ] 
+        } 
+
+        # create the row
+        db_dml hf_beat_stack_bus_cr { insert into hf_beat_stack_bus (active_id,debug_p,priority_threashold,cycle_time) values (:active_id,:debug_p,:priority_threashold,:cycle_time) }
+    }
+    return 1
+}
+
 ad_proc -private hf::monitor::do {
 
 } { 
     Process any scheduled monitoring procedures. Future monitors are suspended until this process reports batch complete.
 } {
-    # cycle_time set in tcl/hosting-farm-scheduled-init.tcl and repeated here:
-    set cycle_time 13
+
+    
     # If no proc called by hf::monitor::do is active (check hf_beat_stack_active.id ),
     # call the next monitor proc in the stack (from hosting-farm-local-procs.tcl)
     # the called procedue calls hf_monitor_configs_read and gets asset parameters, then calls hf_call_read to determine appropriate call_name for monitor
@@ -61,23 +97,7 @@ ad_proc -private hf::monitor::do {
     # if monitor config data says to flag an alert, report it in the same hf monitor logs and perhaps flag a notification.
 
     # First, check if a monitor process is running and get status of debug_p
-    # set debug_p to 0 to reduce repeated log noise:
-    if { ![db_0or1row hf_beat_stack_bus_ck "select active_id, debug_p,priority_threashold from hf_beat_stack_bus limit 1"] } {
-
-#CREATE TABLE hf_beat_stack_bus (
-#       -- instead of querying hf_beat_stack for active proc
-#       -- the value is stored and updated here for speed.
-#       active_id varchar(19),
-#       -- when checking for active_id, can also get a dynamic value for debug_p with low overhead
-#       debug_p varchar(1) 
-#)
-
-        set active_id ""
-        set debug_p 1
-        set priority_threashold 13
-        # create the row
-        db_dml hf_beat_stack_bus_cr { insert into hf_beat_stack_bus (active_id,debug_p,priority_threashold) values (:active_id,:debug_p,:priority_threashold) }
-    }
+    hf::monitor::check
     set success_p 0
 
 #       -- stack is prioritized by
@@ -85,8 +105,9 @@ ad_proc -private hf::monitor::do {
 #       -- priority
 #       -- relative priority: priority - (now - last_completed_time )/ interval_s - last_completed_time
 #       -- relative priority kicks in after threashold priority procs have been exhausted for the interval
+#       -- trigger_s is  ( last_started_clock_s + last_process_s - interval_s ) 
     set clock_sec [clock seconds]
-    set batch_lists [db_list_of_lists hf_beat_stack_read_adm_p0_s { select id,proc_name,user_id,instance_id, priority, order_clock_s, last_started_clock_s,last_completed_clock_s,last_process_s,interval_s,(priority - (:clock_sec - last_completed_clock_s) /greatest('1',interval_s ) + last_process_s) as dynamic_priority , ( last_started_clock_s + last_process_s - interval_s ) as trigger_s from hf_beat_stack where trigger_s < :clock_sec, order by priority asc, dynamic_priority asc } ]
+    set batch_lists [db_list_of_lists hf_beat_stack_read_adm_p0_s { select id,proc_name,user_id,instance_id, priority, order_clock_s, last_started_clock_s,last_completed_clock_s,last_process_s,interval_s,(priority - (:clock_sec - last_completed_clock_s) /greatest('1',interval_s ) + last_process_s) as dynamic_priority , trigger_s from hf_beat_stack where trigger_s < :clock_sec, order by priority asc, dynamic_priority asc } ]
 
 #CREATE TABLE hf_beat_stack (
 #       id integer primary key,
