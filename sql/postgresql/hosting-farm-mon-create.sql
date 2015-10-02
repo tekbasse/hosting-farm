@@ -65,6 +65,7 @@ CREATE TABLE hf_beat_stack (
        -- relative priority: priority - (now - last_completed_time )/ interval_s + last_process_s
        -- relative priority kicks in after threashold priority procs have been exhausted for the interval
        proc_name varchar(40),
+       asset_id integer,
        proc_args text,
        proc_out text,
        user_id integer,
@@ -90,6 +91,7 @@ CREATE TABLE hf_beat_stack (
 );
 
 CREATE index hf_beat_stack_id_key on hf_beat_stack(id);
+CREATE index hf_beat_stack_asset_id_key on hf_beat_stack(asset_id);
 CREATE index hf_beat_stack_priority_key on hf_beat_stack(priority);
 
 

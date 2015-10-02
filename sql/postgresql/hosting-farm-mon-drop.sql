@@ -6,6 +6,7 @@
 
 DROP index hf_beat_stack_priority_key;
 DROP index hf_beat_stack_id_key;
+DROP index hf_beat_stack_asset_id_key;
 DROP TABLE hf_beat_stack;
 
 DROP TABLE hf_beat_stack_bus;

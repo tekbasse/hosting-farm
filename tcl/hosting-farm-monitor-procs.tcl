@@ -108,6 +108,7 @@ ad_proc -private hf::monitor::do {
         #       -- relative priority kicks in after threashold priority procs have been exhausted for the interval
         #       -- trigger_s is  ( last_started_clock_s + last_process_s - interval_s ) 
         set clock_sec [clock seconds]
+        # consider separating this into two separate queries, so if first query with priority is empty, then query for dynamic_priority..
         set batch_lists [db_list_of_lists hf_beat_stack_read_adm_p0_s { select id,proc_name,user_id,instance_id, priority, order_clock_s, last_started_clock_s,last_completed_clock_s,last_process_s,interval_s,(priority - (:clock_sec - last_completed_clock_s) /greatest('1',interval_s ) + last_process_s) as dynamic_priority , trigger_s from hf_beat_stack where trigger_s < :clock_sec, order by priority asc, dynamic_priority asc } ]
 
         #CREATE TABLE hf_beat_stack (
@@ -181,6 +182,8 @@ ad_proc -private hf::monitor::do {
                             # This works in tcl env. should work here:
                             # get asset attributes
                             # getasset type
+                            db_1row "select asset_type_id from hf_assets where asset_id = "
+
                             # switch $asset_type ...
                             # ss { hf_ss_read $id} ...
                             if {  [catch { set calc_value [eval $proc_name] } this_err_text] } {
