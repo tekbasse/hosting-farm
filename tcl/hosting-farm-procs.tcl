@@ -3219,7 +3219,61 @@ ad_proc -private hf_call_roles_read {
 # the process goes something like this:
 # a new monitor is defined via app and saved via hf_monitor_configs_write
 
+ad_proc -private hf_asset_properties {
+    asset_id
+    array_name
+    {instance_id ""}
+    {user_id ""}
+} {
+    passes properties of an asset into array_name; creates array_name if it doesn't exist. Returns 1 if asset is returned, otherwise returns 0.
+} {
+    upvar $array_name named_arr
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
 
+    set success_p [db_0or1row hf_assets_asset_type_id_r "select asset_type_id from hf_assets where instance_id=:instance_id and id=:asset_id"]
+    if { $success_p } {
+        switch -- $asset_type_id {
+            dc {
+                set asset_prop_list [hf_dcs $instance_id "" $asset_id]
+                set asset_key_list [list id user_id last_modified created asset_type_id qal_product_id qal_customer_id label keywords templated_p template_p time_start time_stop trashed_p trashed_by flags publish_p ni_id_count hw_id_count]
+            }
+            hw {
+                ##code
+            }
+            vm {
+            }
+            vh {
+            }
+            hs {
+            }
+            ss {
+            }
+            ns {
+            }
+            ot { 
+                # nothing specific. Supply generic info.
+            }
+
+            default {
+                ns_log Warning "hf_asset_properties: missing asset_type_id in switch options. asset_type_id '${asset_type_id}'"
+            }
+        }
+        set i 0
+        foreach key $asset_key_list {
+            set named_arr($key) [lindex $asset_prop_list $i]
+            incr i
+        }
+    } else {
+        ns_log Warning "hf_asset_properties: no asset_id '${asset_id}' found. instance_id '${instance_id}' user_id '${user_id}' array_name '${array_name}'"
+    }
+    return $success_p
+}
 
 
 ad_proc -private hf_monitor_configs_read {

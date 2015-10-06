@@ -109,7 +109,7 @@ ad_proc -private hf::monitor::do {
         #       -- trigger_s is  ( last_started_clock_s + last_process_s - interval_s ) 
         set clock_sec [clock seconds]
         # consider separating this into two separate queries, so if first query with priority is empty, then query for dynamic_priority..
-        set batch_lists [db_list_of_lists hf_beat_stack_read_adm_p0_s { select id,proc_name,user_id,instance_id, priority, order_clock_s, last_started_clock_s,last_completed_clock_s,last_process_s,interval_s,(priority - (:clock_sec - last_completed_clock_s) /greatest('1',interval_s ) + last_process_s) as dynamic_priority , trigger_s from hf_beat_stack where trigger_s < :clock_sec, order by priority asc, dynamic_priority asc } ]
+        set batch_lists [db_list_of_lists hf_beat_stack_read_adm_p0_s { select id,proc_name,asset_id,user_id,instance_id, priority, order_clock_s, last_started_clock_s,last_completed_clock_s,last_process_s,interval_s,(priority - (:clock_sec - last_completed_clock_s) /greatest('1',interval_s ) + last_process_s) as dynamic_priority , trigger_s from hf_beat_stack where trigger_s < :clock_sec, order by priority asc, dynamic_priority asc } ]
 
         #CREATE TABLE hf_beat_stack (
         #       id integer primary key,
@@ -124,6 +124,7 @@ ad_proc -private hf::monitor::do {
         #       -- relative priority: priority - (now - last_completed_time )/ interval_s + last_process_s
         #       -- relative priority kicks in after threashold priority procs have been exhausted for the interval
         #       proc_name varchar(40),
+        #       asset_id integer,
         #       proc_args text,
         #       proc_out text,
         #       user_id integer,
@@ -155,14 +156,14 @@ ad_proc -private hf::monitor::do {
         }
         if { $first_started_time eq "" } {
             if { $batch_lists_len > 0 } {
+                set query_key_list [list id proc_name asset_id user_id instance_id priority order_clock_s last_started_clock_s last_completed_clock_s last_process_s interval_s dynamic_priority trigger_s]
+                # instance_id can vary with each entry
                 set bi 0
                 # if loop nears cycle_time, quit and let next cycle reprioritize with any new jobs
                 while { $bi < $batch_lists_len && $dur_sum < $cycle_time } {
                     set mon_list [lindex $batch_lists $bi]
                     # set proc_list lindex combo from sched_list
-                    lassign $mon_list id proc_name user_id instance_id priority order_clock_s last_started_clock_s last_completed_clock_s last_process_s interval_s dynamic_priority trigger_s
-                    # instance_id can vary with each entry
-                    
+                   
                     set allowed_procs [parameter::get -parameter MonitorProcsAllowed -package_id $instance_id]
                     # added comma and period to "split" to screen external/private references and poorly formatted lists
                     set allowed_procs_list [split $allowed_procs " ,."]
@@ -170,6 +171,12 @@ ad_proc -private hf::monitor::do {
                     if { $success_p } {
                         if { $proc_name ne "" } {
                             ns_log Notice "hf::monitor::do.54 evaluating id $id"
+                            # create asset properties array
+                            set i 0
+                            foreach key $query_key_list {
+                                set asset_prop_arr(${key}) [lindex $mon_list $i]
+                            }
+
                             set nowts [dt_systime -gmt 1]
                             set start_sec [clock seconds]
                             # tell the system I am working on it.
@@ -182,6 +189,7 @@ ad_proc -private hf::monitor::do {
                             # This works in tcl env. should work here:
                             # get asset attributes
                             # getasset type
+                            # Make this a proc.. useful for generalizing app ui
                             db_1row "select asset_type_id from hf_assets where asset_id = "
 
                             # switch $asset_type ...
