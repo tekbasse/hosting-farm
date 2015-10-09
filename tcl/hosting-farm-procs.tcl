@@ -3238,17 +3238,23 @@ ad_proc -private hf_asset_properties {
 
     set success_p [db_0or1row hf_assets_asset_type_id_r "select asset_type_id from hf_assets where instance_id=:instance_id and id=:asset_id"]
     if { $success_p } {
+        # Don't use hf_* API here. Create queries specific to system call requirements.
         switch -- $asset_type_id {
             dc {
-                set asset_prop_list [hf_dcs $instance_id "" $asset_id]
-                set asset_key_list [list id user_id last_modified created asset_type_id qal_product_id qal_customer_id label keywords templated_p template_p time_start time_stop trashed_p trashed_by flags publish_p ni_id_count hw_id_count]
+                #set asset_prop_list hf_dcs $instance_id "" $asset_id
+                set success_p [db_0or1row hf_dc_prop_get "select a.label as label, a.templated_p as templated_p, a.template_p as template_p, a.flags as flags, x.ipv4_addr as ipv4_addr, x.ipv4_status as ipv4_status, x.ipv6_addr as ipv6_addr, x.ipv6_status as ipv6_status from hf_assets a, hf_asset_ip_map i, hf_ip_addresses x where a.instance_id=:instance_id and a.id=:asset_id and a.asset_type_id=:asset_type_id and i.instance_id=:instance_id and i.asset_id=:asset_id and x.instance_id=:instance_id and i.ip_id=x.ip_id"]
+                set asset_key_list [list label templated_p template_p flags ipv4_addr ipv4_status ipv6_addr ipv6_status]
             }
             hw {
-                ##code
+                set asset_prop_list [hf_hws $instance_id "" $asset_id]
+                set asset_key_list [list hw_id system_name backup_sys ni_id os_id description details active_vm_count]
             }
             vm {
+                set asset_prop_list [hf_vms $instance_id "" $asset_id]
+                set asset_key_list [list vm_id domain_name ip_id ni_id ns_id os_id type_id resource_path mount_union details vhosts_count services_count]
             }
             vh {
+                set asset_prop_list [hf_vhs $instance_id "" $asset_id]
             }
             hs {
             }
