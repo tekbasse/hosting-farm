@@ -258,8 +258,10 @@ CREATE TABLE hf_ip_addresses (
     instance_id  integer not null,
     ip_id        integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     ipv4_addr    varchar(15),
+    -- 0 down, 1 up
     ipv4_status  integer,
     ipv6_addr    varchar(39), 
+    -- 0 down, 1 up
     ipv6_status  integer
 );
 
