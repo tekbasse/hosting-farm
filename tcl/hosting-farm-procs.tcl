@@ -3247,6 +3247,7 @@ ad_proc -private hf_asset_properties {
             }
             hw {
                 set asset_prop_list [hf_hws $instance_id "" $asset_id]
+                set success_p [db_0or1row hf_hw_prop_get "select a.label as label, a.templated_p as templated_p, a.template_p as template_p, a.flags as flags, h.system_name as system_name, h.backup_sys as backup_sys, o.label as os_label, o.brand as os_brand, o.version as os_version, o.kernel as os_kernel, o.orphaned_p as os_orphaned_p, o.requires_upgrade_p as os_req_upgrade_p, n.os_dev_ref as os_dev_ref, n.bia_mac_address as bia_mac_address, n.ul_mac_address as ul_mac_address, n.ipv4_addr_range as ipv4_addr_range, n.ipv6_addr_range as ipv6_addr_range, x.ipv4_addr as ipv4_addr, x.ipv4_status as ipv4_status, x.ipv6_addr as ipv6_addr, x.ipv6_status as ipv6_status from hf_assets a, hf_hardware h, hf_operating_systems o, hf_network_interfaces n, hf_ip_addresses x where a.instance_id = h.instance_id and h.instance_id = o.instance_id and a.instance_id=x.instance_id and a.instance_id=:instance_id and a.id=:asset_id and a.id=h.hw_id and h.os_id=o.os_id and h.ni_id=n.ni_id and a.id=x.ip_id"]
                 set asset_key_list [list hw_id system_name backup_sys ni_id os_id description details active_vm_count]
             }
             vm {
