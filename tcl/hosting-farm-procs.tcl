@@ -3239,15 +3239,46 @@ ad_proc -private hf_asset_properties {
     set success_p [db_0or1row hf_assets_asset_type_id_r "select asset_type_id from hf_assets where instance_id=:instance_id and id=:asset_id"]
     if { $success_p } {
         # Don't use hf_* API here. Create queries specific to system call requirements.
+        set asset_prop_list [list ]
         switch -- $asset_type_id {
             dc {
                 #set asset_prop_list hf_dcs $instance_id "" $asset_id
-                set asset_prop_list [db_list_of_lists hf_dc_prop_get "select a.label as label, a.templated_p as templated_p, a.template_p as template_p, a.flags as flags, x.ipv4_addr as ipv4_addr, x.ipv4_status as ipv4_status, x.ipv6_addr as ipv6_addr, x.ipv6_status as ipv6_status from hf_assets a, hf_asset_ip_map i, hf_ip_addresses x where a.instance_id=:instance_id and a.id=:asset_id and a.asset_type_id=:asset_type_id and i.instance_id=:instance_id and i.asset_id=:asset_id and x.instance_id=:instance_id and i.ip_id=x.ip_id"]
+                set asset_list [db_list_of_lists hf_asset_prop_get1 "select label, templated_p, template_p, flags from hf_assets where instance_id=:instance_id and id=:asset_id"] 
+                set ip_list [db_list_of_lists hf_ip_address_prop_get1 "select ipv4_addr ipv4_status, ipv6_addr, ipv6_status from hf_ip_addresses where instance_id=:instance_id and ip_id in (select ip_id from hf_asset_ip_map where asset_id=:asset_id and instance_id=:instance_id)"]
+                if { [llength $ip_list] > 0 && [llength $asset_list] > 0 } { 
+                    set asset_prop_list $asset_list
+                    foreach el $ip_list {
+                        lappend asset_prop_list $el
+                    }
+                }
                 set asset_key_list [list label templated_p template_p flags ipv4_addr ipv4_status ipv6_addr ipv6_status]
             }
             hw {
                 #set asset_prop_list [hf_hws $instance_id "" $asset_id]
-                set asset_prop_list [db_list_of_lists hf_hw_prop_get "select a.label as label, a.templated_p as templated_p, a.template_p as template_p, a.flags as flags, h.system_name as system_name, h.backup_sys as backup_sys, o.label as os_label, o.brand as os_brand, o.version as os_version, o.kernel as os_kernel, o.orphaned_p as os_orphaned_p, o.requires_upgrade_p as os_req_upgrade_p, n.os_dev_ref as os_dev_ref, n.bia_mac_address as bia_mac_address, n.ul_mac_address as ul_mac_address, n.ipv4_addr_range as ipv4_addr_range, n.ipv6_addr_range as ipv6_addr_range, x.ipv4_addr as ipv4_addr, x.ipv4_status as ipv4_status, x.ipv6_addr as ipv6_addr, x.ipv6_status as ipv6_status from hf_assets a, hf_hardware h, hf_operating_systems o, hf_network_interfaces n, hf_ip_addresses x where a.instance_id = h.instance_id and h.instance_id = o.instance_id and a.instance_id=x.instance_id and a.instance_id=:instance_id and a.id=:asset_id and a.id=h.hw_id and h.os_id=o.os_id and h.ni_id=n.ni_id and a.id=x.ip_id"]
+                set asset_list [db_list_of_lists hf_asset_prop_get1 "select label, templated_p, template_p, flags from hf_assets where instance_id=:instance_id and id=:asset_id"] 
+                set hw_list [db_list_of_lists hf_hardware_prop_get1 "select system_name, backup_sys, ns_id from hf_hardware where instance_id=:instance_id and hw_id=:asset_id)"]
+                if { [llength $hw_list] > 1 } {
+                    set ns_id [lindex $hw_list 2]
+                    set hw_list [lrange $hw_list 0 end-1]
+                    set ni_list [db_list_of_lists hf_network_interfaces_prop_get1 "select os_dev_ref, bia_mac_address, ul_mac_address ipv4_addr_range, ipv6_addr_range from hf_network_interfaces where instance_id=:instance_id and ni_id=:ni_id"]
+                    set ip_list [db_list_of_lists hf_ip_address_prop_get1 "select ipv4_addr ipv4_status, ipv6_addr, ipv6_status from hf_ip_addresses where instance_id=:instance_id and ip_id in (select ip_id from hf_asset_ip_map where asset_id=:asset_id and instance_id=:instance_id)"]                
+                    set os_list [db_list_of_lists hf_operating_systems_prop_get1 "select label, brand, version, kernel, orphaned_p, requires_upgrade_p from hf_operating_systems where instance_id=:instance_id and os_id in (select os_id from hf_hardware where instance_id=:instance_id and hw_id=:asset_id)"]
+                    if { [llength $ip_list] > 0 && [llength $os_list] > 0 && [llength $ni_list] > 0 } { 
+                        set asset_prop_list $asset_list
+                        foreach el $hw_list {
+                            lappend asset_prop_list $el
+                        }
+                        foreach el $ni_list {
+                            lappend asset_prop_list $el
+                        }
+                        foreach el $ip_list {
+                            lappend asset_prop_list $el
+                        }
+                        foreach el $os_list {
+                            lappend asset_prop_list $el
+                        }
+                    }
+                }
                 set asset_key_list [list label templated_p template_p flags system_name backup_sys os_label os_brand os_version os_kernel os_orphaned_p os_req_upgrade_p os_dev_ref bia_mac_address ul_mac_address ipv4_addr_range ipv6_addr_range ipv4_addr ipv4_status ipv6_addr ipv6_status]
             }
             vm {
