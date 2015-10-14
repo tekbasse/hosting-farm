@@ -209,8 +209,8 @@ CREATE TABLE hf_virtual_machines (
     vm_id         integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     domain_name   varchar(300),
     ip_id         varchar(19) not null DEFAULT '',
-    -- network interface id. This is duplicate of hf_assets.ni_id. Ideally, see hf_assets only
-    -- if there is more than one, create an hf_vm_ni_map
+    -- network interface id. This is duplicate of hf_assets.ni_id. Ideally, see hf_assets only.
+    -- If there is more than one ns_id, create an hf_vm_ni_map
     -- Leaving this here for now, because 60+ cases of ni_id in hosting-farm-procs ATM.
     -- It is more important to write to both places the same and get project to first release.
     -- Remove later.
