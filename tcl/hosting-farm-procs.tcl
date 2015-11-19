@@ -3284,18 +3284,25 @@ ad_proc -private hf_asset_properties {
             }
             vm {
                 #set asset_prop_list [hf_vms $instance_id "" $asset_id]
+                # split query into separate tables to handle more dynamics
                 set asset_prop_list [db_list_of_lists hf_vm_prop_get "select a.label as label, a.templated_p as templated_p, a.template_p as template_p, a.flags as flags, x.ipv4_addr as ipv4_addr, x.ipv4_status as ipv4_status, x.ipv6_addr as ipv6_addr, x.ipv6_status as ipv6_status, v.domain_name as domain_name, v.type_id as vm_type_id, v.resource_path as vm_resource_path, v.mount_union as mount_union from hf_assets a, hf_asset_ip_map i, hf_ip_addresses x, hf_virtual_machines v, hf_ua ua, hf_up up where a.instance_id=:instance_id and a.id=:asset_id and a.asset_type_id=:asset_type_id and i.instance_id=:instance_id and i.asset_id=:asset_id and x.instance_id=:instance_id and v.instance_id=a.instance_id and i.ip_id=x.ip_id and a.id=i.vm_id and a.id=v.vm_id and "]
                 set asset_key_list [list label templated_p template_p flags ipv4_addr ipv4_status ipv6_addr ipv6_status domain_name vm_type_id vm_resource_path mount_union vm_user vm_pasw]
+                # hf_up_get_from_ua_id ua_id instance_id 
             }
             vh {
                 #set asset_prop_list [hf_vhs $instance_id "" $asset_id]
+                # split query into separate tables to handle more dynamics
                 set asset_prop_list [db_list_of_lists hf_vh_prop_get "select a.label as label, a.templated_p as templated_p, a.template_p as template_p, a.flags as flags, x.ipv4_addr as ipv4_addr, x.ipv4_status as ipv4_status, x.ipv6_addr as ipv6_addr, x.ipv6_status as ipv6_status, v.domain_name as domain_name, v.type_id as vm_type_id, v.resource_path as vm_resource_path, v.mount_union as mount_union, vh.domain_name as vh_domain from hf_assets a, hf_asset_ip_map i, hf_ip_addresses x, hf_virtual_machines v, hf_vm_vh_map hv, hf_vhosts vh  where a.instance_id=:instance_id and a.id=:asset_id and a.asset_type_id=:asset_type_id and i.instance_id=:instance_id and i.asset_id=:asset_id and x.instance_id=:instance_id and v.instance_id=a.instance_id and vh.instance_id=a.instance_id and i.ip_id=x.ip_id and a.id=i.vm_id and a.id=v.vm_id and hv.vm_id=a.id and hv.vh_id=:vhost_id"]
-               set asset_key_list [list label templated_p template_p flags ipv4_addr ipv4_status ipv6_addr ipv6_status domain_name vm_type_id vm_resource_path mount_union vh_domain vh_user vh_pasw]
+                set asset_key_list [list label templated_p template_p flags ipv4_addr ipv4_status ipv6_addr ipv6_status domain_name vm_type_id vm_resource_path mount_union vh_domain vh_user vh_pasw]
+                # hf_up_get_from_ua_id ua_id Instance_id
             }
             hs,ss {
                 # see ss, hs hosting service is saas: ss
                 # hf_ss_map ss_id, hf_id, hf_services,
                 # maybe ua_id hf_up
+                set asset_prop_list [db_list_of_lists hf_ss_prop_get ""]
+                set asset_key_list [list ]
+                
             }
             ns {
                 # ns , custom domain name service records
