@@ -3285,6 +3285,16 @@ ad_proc -private hf_asset_properties {
             vm {
                 #set asset_prop_list [hf_vms $instance_id "" $asset_id]
                 # split query into separate tables to handle more dynamics
+                # h_assets  hf_asset_ip_map hf_ip_addresses hf_virutal_machines hf_ua hf_up 
+                set asset_list [db_list_of_lists hf_asset_prop_get1 "select label, templated_p, template_p, flags from hf_assets where instance_id=:instance_id and id=:asset_id"] 
+                set vm_list [db_list_of_lists hf_virtual_machines_prop_get1 "select domain_name, type_id, resource_path, mount_union, ip_id, ni_id, ns_id, os_id from hf_virtual_machines where instance_id=:instance_id and vm_id=:asset_id"]
+                if [llength $vm_list] > 1 } {
+                    set ip_id [lindex $vm_list 4]
+                    set ni_id [lindex $vm_list 5]
+                    set ns_id [lindex $vm_list 6]
+                    set os_id [lindex $vm_list 7]
+###
+                }
                 set asset_prop_list [db_list_of_lists hf_vm_prop_get "select a.label as label, a.templated_p as templated_p, a.template_p as template_p, a.flags as flags, x.ipv4_addr as ipv4_addr, x.ipv4_status as ipv4_status, x.ipv6_addr as ipv6_addr, x.ipv6_status as ipv6_status, v.domain_name as domain_name, v.type_id as vm_type_id, v.resource_path as vm_resource_path, v.mount_union as mount_union from hf_assets a, hf_asset_ip_map i, hf_ip_addresses x, hf_virtual_machines v, hf_ua ua, hf_up up where a.instance_id=:instance_id and a.id=:asset_id and a.asset_type_id=:asset_type_id and i.instance_id=:instance_id and i.asset_id=:asset_id and x.instance_id=:instance_id and v.instance_id=a.instance_id and i.ip_id=x.ip_id and a.id=i.vm_id and a.id=v.vm_id and "]
                 set asset_key_list [list label templated_p template_p flags ipv4_addr ipv4_status ipv6_addr ipv6_status domain_name vm_type_id vm_resource_path mount_union vm_user vm_pasw]
                 # hf_up_get_from_ua_id ua_id instance_id 
