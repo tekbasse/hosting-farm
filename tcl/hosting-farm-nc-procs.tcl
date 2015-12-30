@@ -1,7 +1,7 @@
-# hosting-farm/tcl/hosting-farm-scheduled-procs.tcl
+# hosting-farm/tcl/hosting-farm-nc-procs.tcl
 ad_library {
 
-    no-connection procedures for hosting-farm package,mainly for use with scheduled procs
+    no-connection procedures for hosting-farm package, a repo file for scheduled procs and dev convenience of apm reload
     @creation-date 2015-12-30
     @Copyright (c) 2015 Benjamin Brink
     @license GNU General Public License 3, see project home or http://www.gnu.org/licenses/gpl-3.0.en.html
@@ -11,9 +11,8 @@ ad_library {
 
 }
 
-namespace eval hf::schedule {}
-
-ad_proc -private hf::schedule::go_ahead {
+# using standard namespace to avoid caching of data that can happen in separate namespaces
+ad_proc -private hf_nc_go_ahead {
 } {
     Confirms process is not run via connection, or is run by an admin
 } {
@@ -22,7 +21,7 @@ ad_proc -private hf::schedule::go_ahead {
         set instance_id [ad_conn package_id]
         set go_ahead [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
         if { !$go_ahead } {
-            ns_log Warning "hf::schedule::go_head failed. Called by user_id ${user_id}, instance_id ${instance_id}"
+            ns_log Warning "hf_nc_go_head failed. Called by user_id ${user_id}, instance_id ${instance_id}"
         }
     } else {
         set go_ahead 1
@@ -35,15 +34,26 @@ ad_proc -private hf::schedule::go_ahead {
 }
 
 
-ad_proc -private hf::schedule::ip_read {
-    id
+ad_proc -private hf_nc_ip_read {
+    ip_id
+    instance_id
     arr_name
 } {
     Adds elements to an array. Creates array if it doesn't exist.
 } {
     upvar 1 $arr_name obj_arr
-    set success [hf::schedule::go_ahead ]
-
+    set success [hf_nc_go_ahead ]
+    if { $success } {
+        # element list
+        set ip_el_list [list ipv4_addr ipv4_status ipv6_addr ipv6_status]
+        set asset_id $ip_id
+        set ip_list [db_list_of_lists hf_ip_address_prop_get1 "select ipv4_addr, ipv4_status, ipv6_addr, ipv6_status from hf_ip_addresses where instance_id=:instance_id and ip_id in (select ip_id from hf_asset_ip_map where asset_id=:asset_id and instance_id=:instance_id)"]
+        set ip_el_len [llength $ip_el_list]
+        for {set i 0} {$i < $ip_el_len} {incr i} {
+            set el [lindex $ip_el_list $i]
+            set $obj_arr(${el}) [lindex $ip_list $i]
+        }
+    }
     return $success
 }
 
@@ -74,13 +84,8 @@ ad_proc -private hf_asset_properties {
             dc {
                 #set asset_prop_list hf_dcs $instance_id "" $asset_id
                 set asset_list [db_list_of_lists hf_asset_prop_get1 "select label, templated_p, template_p, flags from hf_assets where instance_id=:instance_id and id=:asset_id"] 
-                set ip_list [db_list_of_lists hf_ip_address_prop_get1 "select ipv4_addr ipv4_status, ipv6_addr, ipv6_status from hf_ip_addresses where instance_id=:instance_id and ip_id in (select ip_id from hf_asset_ip_map where asset_id=:asset_id and instance_id=:instance_id)"]
-                if { [llength $ip_list] > 0 && [llength $asset_list] > 0 } { 
-                    set asset_prop_list $asset_list
-                    foreach el $ip_list {
-                        lappend asset_prop_list $el
-                    }
-                }
+                hf_nc_ip_read $asset_id $instance_id $named_arr
+
                 set asset_key_list [list label templated_p template_p flags ipv4_addr ipv4_status ipv6_addr ipv6_status]
             }
             hw {
