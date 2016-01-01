@@ -90,8 +90,8 @@ ad_proc -private hf_nc_hw_read {
     set success [hf_nc_go_ahead ]
     if { $success } {
         # element list
-        set hw_el_list [list system_name backup_sys ns_id]
-        set hw_list [db_list_of_lists hf_hardware_prop_get1 "select system_name, backup_sys, ns_id from hf_hardware where instance_id=:instance_id and hw_id=:asset_id)"]
+        set hw_el_list [list system_name backup_sys ns_id os_id]
+        set hw_list [db_list_of_lists hf_hardware_prop_get1 "select system_name, backup_sys, ns_id, os_id from hf_hardware where instance_id=:instance_id and hw_id=:asset_id)"]
         set hw_el_len [llength $hw_el_list]
         for {set i 0} {$i < $hw_el_len} {incr i} {
             set el [lindex $hw_el_list $i]
@@ -101,6 +101,49 @@ ad_proc -private hf_nc_hw_read {
     return $success
 }
 
+ad_proc -private hf_nc_ni_read {
+    ni_id
+    instance_id
+    arr_name
+} {
+    Adds elements to an array. Creates array if it doesn't exist.
+} {
+    upvar 1 $arr_name obj_arr
+    set success [hf_nc_go_ahead ]
+    if { $success } {
+        # element list
+        set ni_el_list [list os_dev_ref bia_mac_address ul_mac_address ipv4_addr_range ipv6_addr_range ]
+        set ni_list [db_list_of_lists hf_network_interfaces_prop_get1 "select os_dev_ref, bia_mac_address, ul_mac_address ipv4_addr_range, ipv6_addr_range from hf_network_interfaces where instance_id=:instance_id and ni_id=:ni_id"]
+        set ni_el_len [llength $ni_el_list]
+        for {set i 0} {$i < $ni_el_len} {incr i} {
+            set el [lindex $ni_el_list $i]
+            set $obj_arr(${el}) [lindex $ni_list $i]
+        }
+    }
+    return $success
+}
+
+ad_proc -private hf_nc_os_read {
+    asset_id
+    instance_id
+    arr_name
+} {
+    Adds elements to an array. Creates array if it doesn't exist.
+} {
+    upvar 1 $arr_name obj_arr
+    set success [hf_nc_go_ahead ]
+    if { $success } {
+        # element list
+        set os_el_list [list label brand version kernel orphaned_p requires_upgrade_p]
+        set os_list [db_list_of_lists hf_operating_systems_prop_get1 "select label, brand, version, kernel, orphaned_p, requires_upgrade_p from hf_operating_systems where instance_id=:instance_id and os_id=:os_id"]
+        set os_el_len [llength $os_el_list]
+        for {set i 0} {$i < $os_el_len} {incr i} {
+            set el [lindex $os_el_list $i]
+            set $obj_arr(${el}) [lindex $os_list $i]
+        }
+    }
+    return $success
+}
 
 
 ad_proc -private hf_asset_properties {
@@ -134,30 +177,12 @@ ad_proc -private hf_asset_properties {
             hw {
                 #set asset_prop_list [hf_hws $instance_id "" $asset_id]
                 hf_nc_asset_read $asset_id $instance_id $named_arr
-
-
                 if { [hf_nc_hw_read $asset_id $instance_id $named_arr ] } {
                     set ns_id $named_arr(ns_id)
-                    set ni_list [db_list_of_lists hf_network_interfaces_prop_get1 "select os_dev_ref, bia_mac_address, ul_mac_address ipv4_addr_range, ipv6_addr_range from hf_network_interfaces where instance_id=:instance_id and ni_id=:ni_id"]
-                    set ip_list [db_list_of_lists hf_ip_address_prop_get1 "select ipv4_addr ipv4_status, ipv6_addr, ipv6_status from hf_ip_addresses where instance_id=:instance_id and ip_id in (select ip_id from hf_asset_ip_map where asset_id=:asset_id and instance_id=:instance_id)"]                
-                    set os_list [db_list_of_lists hf_operating_systems_prop_get1 "select label, brand, version, kernel, orphaned_p, requires_upgrade_p from hf_operating_systems where instance_id=:instance_id and os_id in (select os_id from hf_hardware where instance_id=:instance_id and hw_id=:asset_id)"]
-                    if { [llength $ip_list] > 0 && [llength $os_list] > 0 && [llength $ni_list] > 0 } { 
-                        set asset_prop_list $asset_list
-                        foreach el $hw_list {
-                            lappend asset_prop_list $el
-                        }
-                        foreach el $ni_list {
-                            lappend asset_prop_list $el
-                        }
-                        foreach el $ip_list {
-                            lappend asset_prop_list $el
-                        }
-                        foreach el $os_list {
-                            lappend asset_prop_list $el
-                        }
-                    }
+                    hf_nc_ni_read $ns_id $instance_id $named_arr
+                    hf_nc_ip_read $asset_id $instance_id $named_arr
+                    hf_nc_os_read $os_id $instance_id $named_arr
                 }
-                set asset_key_list [list label templated_p template_p flags system_name backup_sys os_label os_brand os_version os_kernel os_orphaned_p os_req_upgrade_p os_dev_ref bia_mac_address ul_mac_address ipv4_addr_range ipv6_addr_range ipv4_addr ipv4_status ipv6_addr ipv6_status]
             }
             vm {
                 #set asset_prop_list [hf_vms $instance_id "" $asset_id]
@@ -172,8 +197,6 @@ ad_proc -private hf_asset_properties {
                     set os_id [lindex $vm_list 7]
 ###
                 }
-                set asset_prop_list [db_list_of_lists hf_vm_prop_get "select a.label as label, a.templated_p as templated_p, a.template_p as template_p, a.flags as flags, x.ipv4_addr as ipv4_addr, x.ipv4_status as ipv4_status, x.ipv6_addr as ipv6_addr, x.ipv6_status as ipv6_status, v.domain_name as domain_name, v.type_id as vm_type_id, v.resource_path as vm_resource_path, v.mount_union as mount_union from hf_assets a, hf_asset_ip_map i, hf_ip_addresses x, hf_virtual_machines v, hf_ua ua, hf_up up where a.instance_id=:instance_id and a.id=:asset_id and a.asset_type_id=:asset_type_id and i.instance_id=:instance_id and i.asset_id=:asset_id and x.instance_id=:instance_id and v.instance_id=a.instance_id and i.ip_id=x.ip_id and a.id=i.vm_id and a.id=v.vm_id and "]
-                set asset_key_list [list label templated_p template_p flags ipv4_addr ipv4_status ipv6_addr ipv6_status domain_name vm_type_id vm_resource_path mount_union vm_user vm_pasw]
                 # hf_up_get_from_ua_id ua_id instance_id 
             }
             vh {
@@ -201,14 +224,6 @@ ad_proc -private hf_asset_properties {
             default {
                 ns_log Warning "hf_asset_properties: missing asset_type_id in switch options. asset_type_id '${asset_type_id}'"
             }
-        }
-        set i 0
-        foreach key $asset_key_list {
-            set named_arr($key) [lindex $asset_prop_list $i]
-            incr i
-        }
-        if { $i == 0 } {
-            set success_p 0
         }
     } else {
         ns_log Warning "hf_asset_properties: no asset_id '${asset_id}' found. instance_id '${instance_id}' user_id '${user_id}' array_name '${array_name}'"
