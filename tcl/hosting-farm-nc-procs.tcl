@@ -57,7 +57,7 @@ ad_proc -private hf_nc_ip_read {
     return $success
 }
 
-ad_proc -private hf_nc_dc_read {
+ad_proc -private hf_nc_asset_read {
     asset_id
     instance_id
     arr_name
@@ -68,16 +68,39 @@ ad_proc -private hf_nc_dc_read {
     set success [hf_nc_go_ahead ]
     if { $success } {
         # element list
-        set dc_el_list [list label templated_p template_p flags]
-        set dc_list [db_list_of_lists hf_dc_prop_get1 "select label, templated_p, template_p, flags from hf_assets where instance_id=:instance_id and id=:asset_id"] 
-        set dc_el_len [llength $dc_el_list]
-        for {set i 0} {$i < $dc_el_len} {incr i} {
-            set el [lindex $dc_el_list $i]
-            set $obj_arr(${el}) [lindex $dc_list $i]
+        set as_el_list [list label templated_p template_p flags]
+        set as_list [db_list_of_lists hf_as_prop_get1 "select label, templated_p, template_p, flags from hf_assets where instance_id=:instance_id and id=:asset_id"] 
+        set as_el_len [llength $as_el_list]
+        for {set i 0} {$i < $as_el_len} {incr i} {
+            set el [lindex $as_el_list $i]
+            set $obj_arr(${el}) [lindex $as_list $i]
         }
     }
     return $success
 }
+
+ad_proc -private hf_nc_hw_read {
+    asset_id
+    instance_id
+    arr_name
+} {
+    Adds elements to an array. Creates array if it doesn't exist.
+} {
+    upvar 1 $arr_name obj_arr
+    set success [hf_nc_go_ahead ]
+    if { $success } {
+        # element list
+        set hw_el_list [list system_name backup_sys ns_id]
+        set hw_list [db_list_of_lists hf_hardware_prop_get1 "select system_name, backup_sys, ns_id from hf_hardware where instance_id=:instance_id and hw_id=:asset_id)"]
+        set hw_el_len [llength $hw_el_list]
+        for {set i 0} {$i < $hw_el_len} {incr i} {
+            set el [lindex $hw_el_list $i]
+            set $obj_arr(${el}) [lindex $hw_list $i]
+        }
+    }
+    return $success
+}
+
 
 
 ad_proc -private hf_asset_properties {
@@ -106,15 +129,15 @@ ad_proc -private hf_asset_properties {
             dc {
                 #set asset_prop_list hf_dcs $instance_id "" $asset_id
                 hf_nc_ip_read $asset_id $instance_id $named_arr
-                hf_nc_dc_read $asset_id $instance_id $named_arr
+                hf_nc_asset_read $asset_id $instance_id $named_arr
             }
             hw {
                 #set asset_prop_list [hf_hws $instance_id "" $asset_id]
-                set asset_list [db_list_of_lists hf_asset_prop_get1 "select label, templated_p, template_p, flags from hf_assets where instance_id=:instance_id and id=:asset_id"] 
-                set hw_list [db_list_of_lists hf_hardware_prop_get1 "select system_name, backup_sys, ns_id from hf_hardware where instance_id=:instance_id and hw_id=:asset_id)"]
-                if { [llength $hw_list] > 1 } {
-                    set ns_id [lindex $hw_list 2]
-                    set hw_list [lrange $hw_list 0 end-1]
+                hf_nc_asset_read $asset_id $instance_id $named_arr
+
+
+                if { [hf_nc_hw_read $asset_id $instance_id $named_arr ] } {
+                    set ns_id $named_arr(ns_id)
                     set ni_list [db_list_of_lists hf_network_interfaces_prop_get1 "select os_dev_ref, bia_mac_address, ul_mac_address ipv4_addr_range, ipv6_addr_range from hf_network_interfaces where instance_id=:instance_id and ni_id=:ni_id"]
                     set ip_list [db_list_of_lists hf_ip_address_prop_get1 "select ipv4_addr ipv4_status, ipv6_addr, ipv6_status from hf_ip_addresses where instance_id=:instance_id and ip_id in (select ip_id from hf_asset_ip_map where asset_id=:asset_id and instance_id=:instance_id)"]                
                     set os_list [db_list_of_lists hf_operating_systems_prop_get1 "select label, brand, version, kernel, orphaned_p, requires_upgrade_p from hf_operating_systems where instance_id=:instance_id and os_id in (select os_id from hf_hardware where instance_id=:instance_id and hw_id=:asset_id)"]
@@ -140,7 +163,7 @@ ad_proc -private hf_asset_properties {
                 #set asset_prop_list [hf_vms $instance_id "" $asset_id]
                 # split query into separate tables to handle more dynamics
                 # h_assets  hf_asset_ip_map hf_ip_addresses hf_virutal_machines hf_ua hf_up 
-                set asset_list [db_list_of_lists hf_asset_prop_get1 "select label, templated_p, template_p, flags from hf_assets where instance_id=:instance_id and id=:asset_id"] 
+                hf_nc_asset_read $asset_id $instance_id $named_arr
                 set vm_list [db_list_of_lists hf_virtual_machines_prop_get1 "select domain_name, type_id, resource_path, mount_union, ip_id, ni_id, ns_id, os_id from hf_virtual_machines where instance_id=:instance_id and vm_id=:asset_id"]
                 if [llength $vm_list] > 1 } {
                     set ip_id [lindex $vm_list 4]
