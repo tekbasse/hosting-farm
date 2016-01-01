@@ -57,6 +57,28 @@ ad_proc -private hf_nc_ip_read {
     return $success
 }
 
+ad_proc -private hf_nc_dc_read {
+    asset_id
+    instance_id
+    arr_name
+} {
+    Adds elements to an array. Creates array if it doesn't exist.
+} {
+    upvar 1 $arr_name obj_arr
+    set success [hf_nc_go_ahead ]
+    if { $success } {
+        # element list
+        set dc_el_list [list label templated_p template_p flags]
+        set dc_list [db_list_of_lists hf_dc_prop_get1 "select label, templated_p, template_p, flags from hf_assets where instance_id=:instance_id and id=:asset_id"] 
+        set dc_el_len [llength $dc_el_list]
+        for {set i 0} {$i < $dc_el_len} {incr i} {
+            set el [lindex $dc_el_list $i]
+            set $obj_arr(${el}) [lindex $dc_list $i]
+        }
+    }
+    return $success
+}
+
 
 ad_proc -private hf_asset_properties {
     asset_id
@@ -83,10 +105,8 @@ ad_proc -private hf_asset_properties {
 ###  move these db calls into procs in hosting-farm-scheduled-procs.tcl as private procs with permission only for no ns_conn or admin_p true. (create proc: is_admin_p )
             dc {
                 #set asset_prop_list hf_dcs $instance_id "" $asset_id
-                set asset_list [db_list_of_lists hf_asset_prop_get1 "select label, templated_p, template_p, flags from hf_assets where instance_id=:instance_id and id=:asset_id"] 
                 hf_nc_ip_read $asset_id $instance_id $named_arr
-
-                set asset_key_list [list label templated_p template_p flags ipv4_addr ipv4_status ipv6_addr ipv6_status]
+                hf_nc_dc_read $asset_id $instance_id $named_arr
             }
             hw {
                 #set asset_prop_list [hf_hws $instance_id "" $asset_id]
