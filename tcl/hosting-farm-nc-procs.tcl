@@ -145,6 +145,28 @@ ad_proc -private hf_nc_os_read {
     return $success
 }
 
+ad_proc -private hf_nc_vm_read {
+    asset_id
+    instance_id
+    arr_name
+} {
+    Adds elements to an array. Creates array if it doesn't exist.
+} {
+    upvar 1 $arr_name obj_arr
+    set success [hf_nc_go_ahead ]
+    if { $success } {
+        # element list
+        set vm_el_list [list domain_name type_id resource_path mount_union ip_id ni_id os_id]
+        set vm_list [db_list_of_lists hf_virtual_machines_prop_get1 "select domain_name, type_id, resource_path, mount_union, ip_id, ni_id, ns_id, os_id from hf_virtual_machines where instance_id=:instance_id and vm_id=:asset_id"]
+        set vm_el_len [llength $vm_el_list]
+        for {set i 0} {$i < $vm_el_len} {incr i} {
+            set el [lindex $vm_el_list $i]
+            set $obj_arr(${el}) [lindex $vm_list $i]
+        }
+    }
+    return $success
+}
+
 
 ad_proc -private hf_asset_properties {
     asset_id
@@ -178,10 +200,9 @@ ad_proc -private hf_asset_properties {
                 #set asset_prop_list [hf_hws $instance_id "" $asset_id]
                 hf_nc_asset_read $asset_id $instance_id $named_arr
                 if { [hf_nc_hw_read $asset_id $instance_id $named_arr ] } {
-                    set ns_id $named_arr(ns_id)
-                    hf_nc_ni_read $ns_id $instance_id $named_arr
+                    hf_nc_ni_read $named_arr(ns_id) $instance_id $named_arr
                     hf_nc_ip_read $asset_id $instance_id $named_arr
-                    hf_nc_os_read $os_id $instance_id $named_arr
+                    hf_nc_os_read $named_arr(os_id) $instance_id $named_arr
                 }
             }
             vm {
@@ -189,19 +210,17 @@ ad_proc -private hf_asset_properties {
                 # split query into separate tables to handle more dynamics
                 # h_assets  hf_asset_ip_map hf_ip_addresses hf_virutal_machines hf_ua hf_up 
                 hf_nc_asset_read $asset_id $instance_id $named_arr
-                set vm_list [db_list_of_lists hf_virtual_machines_prop_get1 "select domain_name, type_id, resource_path, mount_union, ip_id, ni_id, ns_id, os_id from hf_virtual_machines where instance_id=:instance_id and vm_id=:asset_id"]
-                if [llength $vm_list] > 1 } {
-                    set ip_id [lindex $vm_list 4]
-                    set ni_id [lindex $vm_list 5]
-                    set ns_id [lindex $vm_list 6]
-                    set os_id [lindex $vm_list 7]
-###
-                }
+                hf_nc_vm_read $asset_id $instance_id $named_arr
                 # hf_up_get_from_ua_id ua_id instance_id 
             }
             vh {
                 #set asset_prop_list [hf_vhs $instance_id "" $asset_id]
-                # split query into separate tables to handle more dynamics
+#how is this called? vh_id?  if asset_id is passed as vh_id, then code must find vm asset_id for vh_id
+                hf_nc_asset_read $asset_id $instance_id $named_arr
+                hf_nc_vm_read $asset_id $instance_id $named_arr
+                hf_nc_ip_read $asset_id $instance_id $named_arr
+                hf_nc_os_read $named_arr(os_id) $instance_id $named_arr
+                hf_nc_vh_read $vh_id $instance_id $named_arr
                 set asset_prop_list [db_list_of_lists hf_vh_prop_get "select a.label as label, a.templated_p as templated_p, a.template_p as template_p, a.flags as flags, x.ipv4_addr as ipv4_addr, x.ipv4_status as ipv4_status, x.ipv6_addr as ipv6_addr, x.ipv6_status as ipv6_status, v.domain_name as domain_name, v.type_id as vm_type_id, v.resource_path as vm_resource_path, v.mount_union as mount_union, vh.domain_name as vh_domain from hf_assets a, hf_asset_ip_map i, hf_ip_addresses x, hf_virtual_machines v, hf_vm_vh_map hv, hf_vhosts vh  where a.instance_id=:instance_id and a.id=:asset_id and a.asset_type_id=:asset_type_id and i.instance_id=:instance_id and i.asset_id=:asset_id and x.instance_id=:instance_id and v.instance_id=a.instance_id and vh.instance_id=a.instance_id and i.ip_id=x.ip_id and a.id=i.vm_id and a.id=v.vm_id and hv.vm_id=a.id and hv.vh_id=:vhost_id"]
                 set asset_key_list [list label templated_p template_p flags ipv4_addr ipv4_status ipv6_addr ipv6_status domain_name vm_type_id vm_resource_path mount_union vh_domain vh_user vh_pasw]
                 # hf_up_get_from_ua_id ua_id Instance_id
