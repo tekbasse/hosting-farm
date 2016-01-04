@@ -213,6 +213,27 @@ ad_proc -private hf_nc_ns_read {
     return $success
 }
 
+ad_proc -private hf_nc_ss_read {
+    ss_id
+    instance_id
+    arr_name
+} {
+    Adds elements to an array. Creates array if it doesn't exist.
+} {
+    upvar 1 $arr_name obj_arr
+    set success [hf_nc_go_ahead ]
+    if { $success } {
+        # element list
+        set ss_el_list [list server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes ]
+        set ss_list [db_list_of_lists hf_ss_prop_get1 "select server_name, service_name, daemon_ref, protocol, port, ua_id, ss_type, ss_subtype, ss_undersubtype, ss_ultrasubtype, config_uri, memory_bytes from hf_services where instance_id=:instance_id and ss_id=:ss_id"]
+        set ss_el_len [llength $ss_el_list]
+        for {set i 0} {$i < $ss_el_len} {incr i} {
+            set el [lindex $ss_el_list $i]
+            set $obj_arr(${el}) [lindex $ss_list $i]
+        }
+    }
+    return $success
+}
 
 ad_proc -private hf_asset_properties {
     asset_id
@@ -281,19 +302,28 @@ ad_proc -private hf_asset_properties {
                 # see ss, hs hosting service is saas: ss
                 # hf_ss_map ss_id, hf_id, hf_services,
                 # maybe ua_id hf_up
-                set asset_prop_list [db_list_of_lists hf_ss_prop_get ""]
-                set asset_key_list [list ]
+                set hf_id ""
+                db_0or1row hf_vm_vh_map_asset_get "select hf_id from hf_ss_map where instance_id=:instance_id and ss_id=:asset_id"
+                # hf_id is main asset_id, if it exists
+                if { $hf_id ne "" } {
+                    set named_arr(ss_id) $asset_id
+                    set asset_id $hf_id
+                } else {
+                    set named_arr(ss_id) $asset_id
+                }
+                hf_nc_ss_read $named_arr(ss_id) $instance_id named_arr
                 hf_ua_read $named_arr(ua_id) "" "" $instance_id 1 named_arr
             }
             ns {
                 # ns , custom domain name service records
+
             }
             ot { 
                 # other, nothing specific. Supply generic info.
             }
 
             default {
-                ns_log Warning "hf_asset_properties: missing asset_type_id in switch options. asset_type_id '${asset_type_id}'"
+                ns_log Warning "hf_asset_properties: missing useful asset_type_id in switch options. asset_type_id '${asset_type_id}'"
             }
         }
     } else {
