@@ -235,6 +235,29 @@ ad_proc -private hf_nc_ss_read {
     return $success
 }
 
+ad_proc -private hf_nc_ns_read {
+    ns_id
+    instance_id
+    arr_name
+} {
+    Adds elements to an array. Creates array if it doesn't exist.
+} {
+    upvar 1 $arr_name obj_arr
+    set success [hf_nc_go_ahead ]
+    if { $success } {
+        # element list
+        set ns_el_list [list active_p name_record ]
+        set ns_list [db_list_of_lists hf_ns_prop_get1 "select active_p name_record from hf_ns_records where instance_id=:instance_id and id=:asset_id"]
+        set ns_el_len [llength $ns_el_list]
+        for {set i 0} {$i < $ns_el_len} {incr i} {
+            set el [lindex $ns_el_list $i]
+            set $obj_arr(${el}) [lindex $ns_list $i]
+        }
+    }
+    return $success
+}
+
+
 ad_proc -private hf_asset_properties {
     asset_id
     array_name
@@ -316,10 +339,11 @@ ad_proc -private hf_asset_properties {
             }
             ns {
                 # ns , custom domain name service records
-
+                hf_nc_ns_read $asset_id $instance_id named_arr
             }
             ot { 
                 # other, nothing specific. Supply generic info.
+                hf_nc_asset_read $asset_id $instance_id named_arr
             }
 
             default {
