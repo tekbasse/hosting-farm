@@ -3064,14 +3064,15 @@ ad_proc -private hf_call_read {
     set user_id [ad_conn user_id]
     set read_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege read]
     if { $read_p } {
-    # param validation
-    set hf_call_id_exists_p [qf_is_natural_number $hf_call_id]
-    set asset_type_id [string range $asset_type_id 0 23]
-    if { $asset_type_id ne "" } {
-        if { ![regexp -- {^[[:graph:]]+$} $asset_type_id scratch ] } {
-            set asset_type_id ""
-            set no_errors_p 0
-            ns_log Warning "hf_call_read(3062): user_id ${user_id} attempted to read including unprintable characters asset_type_id '${asset_type_id}'"
+        # param validation
+        set hf_call_id_exists_p [qf_is_natural_number $hf_call_id]
+        set asset_type_id [string range $asset_type_id 0 23]
+        if { $asset_type_id ne "" } {
+            if { ![regexp -- {^[[:graph:]]+$} $asset_type_id scratch ] } {
+                set asset_type_id ""
+                set no_errors_p 0
+                ns_log Warning "hf_call_read(3062): user_id ${user_id} attempted to read including unprintable characters asset_type_id '${asset_type_id}'"
+            }
         }
     }
     if { ![qf_is_natural_number $asset_template_id] } {
@@ -3265,8 +3266,8 @@ ad_proc -private hf_monitor_configs_read {
 
 ad_proc -private hf_monitor_configs_write {
     {asset_id ""}
-    args
     {instance_id ""}
+    args
 } {
     Write one or more configuration parameters of one hf monitored service or system
 } {
@@ -3286,7 +3287,7 @@ ad_proc -private hf_monitor_logs {
 } {
     Returns monitor_ids of logs indirectly associated with an asset (direct is 1:1 via asset properties)
 } {
-   
+    
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
@@ -3294,8 +3295,8 @@ ad_proc -private hf_monitor_logs {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-
-
+    
+    
     ##code
     # should be able to look up dependent asset ids via a proc, and then cross-reference in bulk
 }
@@ -3420,14 +3421,14 @@ ad_proc -private hf_monitor_report {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-
+    
     #-- Curves are normalized to 1.0
     #-- Percents are represented decimally 0.01 is one percent
     #-- Maybe one day "Per mil" notation should be used instead of percent.
     #-- http://en.wikipedia.org/wiki/Permille
     #-- curve resolution is count of points
     #-- This model keeps old curves, to help with long-term performance insights
-    #-- see accounts-finance  qaf_discrete_dist_report {
+    #-- see accounts-finance  qaf_discrete_dist_report 
     #CREATE TABLE hf_monitor_freq_dist_curves (
     #    instance_id      integer,
     #    monitor_id       integer not null,
@@ -3443,8 +3444,8 @@ ad_proc -private hf_monitor_report {
     #    -- depending on how distribution is calculated/represented
     #    delta_x_pct      numeric not null
     #);
-
-
+    
+    
     ##code
 }
 
