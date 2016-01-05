@@ -352,7 +352,8 @@ ad_proc -private hf_asset_do {
     }
 
     if { $proc_name ne "" } {
-        ##    add to operations stack that is listened to by an ad_scheduled_proc procedure working in short interval cycles
+        #  add to operations stack that is listened to by an ad_scheduled_proc procedure working in short interval cycles
+        # proc_name should be mostly defined in hosting-farm-local-procs
         hf::schedule_add $proc_name [list $asset_id $user_id $instance_id] $user_id $instance_id $priority
     }
     
@@ -3265,9 +3266,9 @@ ad_proc -private hf_monitor_configs_read {
 }
 
 ad_proc -private hf_monitor_configs_write {
+    args
     {asset_id ""}
     {instance_id ""}
-    args
 } {
     Write one or more configuration parameters of one hf monitored service or system
 } {
