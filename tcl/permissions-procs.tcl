@@ -77,7 +77,7 @@ ad_proc -private hf_property_id {
     return $exists_p
 }
 
-ad_proc -private hf_property_create  {
+ad_proc -private hf_property_create {
     asset_type_id
     title
     {customer_id ""}
