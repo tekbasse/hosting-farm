@@ -9,63 +9,103 @@ ad_library {
     @email: tekbasse@yahoo.com
 }
 # begin all procs here with hfl_ for hflocal.
+ad_proc -private hfl_allow_q {
+    {privilege "admin"}
+} {
+    Confirms process is allowed.
+} {
+    #  not run via connection, or is run by an admin
+    if { [ns_conn isconnected] } {
+        set user_id [ad_conn user_id]
+        set instance_id [ad_conn package_id]
+        set go_ahead [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
+        if { !$go_ahead } {
+            ns_log Warning "hfl_go_head(24). failed. Called by user_id ${user_id}, instance_id ${instance_id}"
+        }
+    } else {
+    }
+    if { !$go_ahead } {
+        ad_script_abort
+    }
+
+    return $go_ahead
+}
+
+
 ad_proc -private hfl_asset_halt_example {
     asset_id
     {user_id ""}
     {instance_id ""}
 } {
-    Halts the operation of an asset, such as service, vm, vhost etc
+    An example local proc that: Halts the operation of an asset, such as service, vm, vhost etc
 } {
-    ##code
+    # This proc can filter by asset_type_id
 
     # check permission
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { [ns_conn isconnected] } {
-        # this shouldn't happen. All these are called via scheduled procs.
-        set user_id [ad_conn user_id]
-        ns_log Warning "hfl_asset_halt_example(29): direct execution attempted by user_id '${user_id}'. Aborted."
-    } else {
-        # determine customer_id of asset
-        # name,title,asset_type_id,keywords,description,template_p,templated_p,trashed_p,trashed_by,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,flags
-        set asset_stats_list [hf_asset_stats $asset_id $instance_id $user_id]
-        set customer_id [lindex $asset_stats_list 17]
+    # basic pre-check:
+    hf_nc_go_ahead
+    # determine customer_id of asset
+    # name,title,asset_type_id,keywords,description,template_p,templated_p,trashed_p,trashed_by,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,flags
+    set asset_stats_list [hf_asset_stats $asset_id $instance_id $user_id]
+    set customer_id [lindex $asset_stats_list 17]
+    set allowed_p [hf_permission_p $user_id $customer_id assets $privilege $instance_id]
+
+    if { $allowed_p } {
+        # determine asset_type
+        set asset_type_id [lindex $asset_stats_list 2]
         
-        set admin_p [hf_permission_p $user_id $customer_id assets admin $instance_id]
-        if { $admin_p } {
-            # determine asset_type
-            set asset_type_id [lindex $asset_stats_list 2]
-            
-            # set asset attributes so that remaining code can use them for any nonlocal api calls.
-            set now [dt_systime -gmt 1]
-            # read properties of asset_id for halting.
-            
-            ns_log Notice "hf_asset_halt id ${asset_id}' of type '${asset_type_id}'"
-            db_dml hf_asset_id_halt { update hf_assets
-                set time_stop = :now where time_stop is null and asset_id = :asset_id 
-            }
-            #    set a priority for use with hf process stack
-            set priority [lindex $asset_stats_list 9]
-            if { $priority eq "" } {
-                # triage_priority
-                set priority [lindex $asset_stats_list 12]
-            }
-            
-            set proc_name [db_1row hf_asset_type_halt_proc_get { 
-                select halt_proc from hf_asset_type where id = :asset_type_id and instance_id = :instance_id
-            } ]
-            if { $proc_name ne "" } {
-                # load object properties in array obj_arr
-                hf_asset_properties $asset_id obj_arr $instance_id
-                # call proc, passing object info
-                safe_eval $proc_name obj_arr
+        
+        # set asset attributes so that remaining code can use them for any nonlocal api calls.
+        set now [dt_systime -gmt 1]
+
+        #    set a priority for use with hf process stack
+        set priority [lindex $asset_stats_list 9]
+        if { $priority eq "" } {
+            # triage_priority
+            set priority [lindex $asset_stats_list 12]
+        }
+
+        # log intent
+        ns_log Notice "hfl_asset_halt_example id ${asset_id}' of type '${asset_type_id}' priority '${priority}'"
+        # update properties of asset_id to halt.
+        db_dml hf_asset_id_halt { update hf_assets
+            set time_stop = :now where time_stop is null and asset_id = :asset_id 
+        }
+
+        if { $proc_name ne "" } {
+            # load object properties in array obj_arr
+            hf_asset_properties $asset_id obj_arr $instance_id
+
+            # one way to filter by asset_type_id:
+            switch -- $asset_type_id { 
+                vm  {
+                    # prep or call for halting virtual machine
+                    # call proc, passing object info
+
+                    # example system call
+                    set daemon_uri "/usr/local/bin/vm-api halt"
+                    safe_eval [list $daemon_uri $obj_arr(domain_name)]
+                }
+                vh,ss {
+                    # prep or call for halting vh or service
+                    # call proc, passing object info
+                    # example external call: 
+                    set admin_url "https://$obj_arr(domain_name):$obj_arr(port)/$obj_arr(url)?action=halt"
+                    ns_httpget $admin_url
+                }
+                other {
+                    # ignore other cases, but maybe log that it is being ignored if nonstandard
+
+                    if { $asset_type_id ne "dc" } {
+                        ns_log Warning "hfl_asset_halt_example(100): ignoring unexpected asset_type_id '${asset_type_id}'"
+                    }
+                }
             }
         }
     }
+    
     # return 1 if successful (at least has permission)
-    return $admin_p
+    return $allowed_p
 }
 
 
