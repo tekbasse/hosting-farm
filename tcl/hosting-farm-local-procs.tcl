@@ -9,8 +9,22 @@ ad_library {
     @email: tekbasse@yahoo.com
 }
 # begin all procs here with hfl_ for hflocal.
+
+# Note to sys admins:
+# These procs are called from a scheduled proc stack.
+# A system restart is required for the system to use
+# any changes in code in this file.
+# If you expect regular changes to some portions of code,
+# consider putting volatile parts in a table named hfl_* in
+# the database to avoid changing code.
+# Most any proc in package/tcl/*.tcl is immediatedly updated 
+# in an active system via broswer url /acs-admin/apm 
+# except scheduled procs. 
+# For testing purposes, an admin can call an updated proc
+# in a test page after reloading via url /acs-admin/apm
+
+
 ad_proc -private hfl_allow_q {
-    {privilege "admin"}
 } {
     Confirms process is allowed.
 } {
