@@ -12,8 +12,11 @@ ad_library {
 # begin all custom procs with hfl_ for hflocal.
 # To be sure that your code is not overwritten during
 # a package update, put your code in a separate tcl file 
-# in this directory. Call it hosting-farm-local-procs.tcl for
-# example.
+# in this directory. 
+# You might want to have one file for local monitor procs
+# hosting-farm-local-mon-procs.tcl for example,
+# and another for local maintenance calls
+# hosting-farm-local-sys-procs.tcl for example.
 
 # Note to sys admins:
 # These procs are called from a scheduled proc stack.
