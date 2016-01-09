@@ -300,10 +300,10 @@ ad_proc -private hf_assets_w_detail {
 
 ad_proc -private hf_asset_do {
     asset_id
-    hf_local_call_id
+    hfl_proc_name
     {instance_id ""}
 } {
-    process hf_local_call_id on asset_id
+    process an hfl_ procedure on asset_id
 } {
     ## check permission passed to executable
 
