@@ -3202,16 +3202,25 @@ ad_proc -private hf_call_roles_read {
 
 #   hf_monitor_configs_read   Read monitor configuration
 #   hf_monitor_configs_write  Write monitor configuration
+
 #   hf_monitor_update         Write an update to a log (this includes distribution curve info, ie time as delta-t)
+#   hf_monitor_status_read    Read status of asset_id, defaults to most recent status (like read, just status number)
 
-#   hf_monitor_dc             Returns distribution curve of most recent configuration
 #   hf_monitor_statistics     Analyse most recent hf_monitor_update in context of distribution curve
-#   hf_monitor_status_create  Save an Analysis an hf_monitor_update (or FLAG ERROR)
 
-#   hf_monitor_status_read    Read status of asset_id, defaults to most recent status
+#   hf_monitor_logs           Returns monitor_ids of logs indirectly associated with an asset (direct is 1:1 via asset properties)
+
 #   hf_monitor_report         Returns a range of monitor history
 #   hf_monitor_status_report  Returns a range of status history
-#   hf_monitor_logs           Returns monitor_ids of logs indirectly associated with an asset (direct is 1:1 via asset properties)
+
+#   hf_monitor_asset_from_id  Returns asset_id of monitor_id
+
+### These are really a part of hf_monitor_update:
+#   hf_monitor_dc             Returns distribution curve of most recent configuration
+#   hf_monitor_status_create  Save an Analysis an hf_monitor_update (or FLAG ERROR)
+
+
+
 
 # hf_monitor_alert_create 
 # hf_monitor_alert_process
@@ -3309,10 +3318,10 @@ ad_proc -private hf_monitor_logs {
 
 
 ad_proc -private hf_monitor_update {
-    {asset_id ""}
+    {monitor_id ""}
     {instance_id ""}
 } {
-    Write an update to a monitor log, ie create a new entry. 
+    Write an update to a monitor log, ie create a new entry. monitor_id is asset_id or hf_monitor_config_n_control.monitor_id
     Some other proc collects info from server and interprets health status,
     Said proc is probably defined in hosting-farm-local-procs.tcl
     Text of args should include calling proc name and version number for adapting to parameter and returned value revisions
