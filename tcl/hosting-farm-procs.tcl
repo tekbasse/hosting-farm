@@ -3227,18 +3227,20 @@ ad_proc -private hf_monitor_configs_read {
 } {
     Read the configuration parameters of one  hf monitored service or system
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
 
 
     # validate system
 
     # check permissions
-    #either technical or scheduled_proc (no user_id)
-    set user_id [ad_conn user_id]
-    set admin_p [hf_permission_p $user_id $customer_id assets admin $instance_id]
+    #either admin or scheduled_proc (no user_id)
+    if { [ns_conn isconnected] } {
+        set user_id [ad_conn user_id]
+        if { $instance_id eq "" } {
+            # set instance_id package_id
+            set instance_id [ad_conn package_id]
+        }
+        set admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
+    }
 
     
     #CREATE TABLE hf_monitor_config_n_control (
@@ -3281,6 +3283,7 @@ ad_proc -private hf_monitor_configs_write {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
+    set admin_p [hf_permission_p $user_id "" assets admin $instance_id]
     ##code
 }
 
@@ -3298,7 +3301,7 @@ ad_proc -private hf_monitor_logs {
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    
+    set admin_p [hf_permission_p $user_id "" assets admin $instance_id]
     
     ##code
     # should be able to look up dependent asset ids via a proc, and then cross-reference in bulk
