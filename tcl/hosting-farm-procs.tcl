@@ -3247,7 +3247,7 @@ ad_proc -private hf_monitor_configs_read {
     #    asset_id                  integer not null,
     #    label                     varchar(200) not null,
     #    active_p                  varchar(1) not null,
-    #    -- number of portions to use in frequency distribution curve
+    #    -- (MAX) number of portions to use in frequency distribution curve
     #    portions_count            integer not null,
     #    -- allow some control over how the distribution curves are represented:
     #    calculation_switches      varchar(20),
@@ -3257,6 +3257,8 @@ ad_proc -private hf_monitor_configs_read {
     #    health_percentile_trigger numeric,
     #    -- the health_value matching health_percentile_trigger
     #    health_threshold          integer
+    # -- any monitor value equal or greather than health_percentile_trigger or health_thread
+    # -- triggers an alert.
 # priority varchar(19) default '' not null,
 # -- interval in seconds
     # interval_s varchar(19) default '' not null,
