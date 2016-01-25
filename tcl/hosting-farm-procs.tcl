@@ -3231,70 +3231,158 @@ ad_proc -private hf_call_roles_read {
 # a new monitor is defined via app and saved via hf_monitor_configs_write
 
 ad_proc -private hf_monitor_configs_read {
-    {asset_id_list ""}
+    {id}
     {instance_id ""}
 } {
-    Read the configuration parameters of one  hf monitored service or system
+    Read the configuration parameters of one  hf monitored service or system. 
+    id is either a monitor_id or asset_id.
+    returns an ordered list: instance_id, monitor_id, asset_id, label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threashold, interval_s. Returns empty list if not found.
 } {
-
-
+    set return_list [list ]
     # validate system
+    if { [qf_is_natural_number $id] } {
 
-    # check permissions
+        # check permissions
+        set admin_p 1
+
+        #either admin or scheduled_proc (no user_id)
+        if { [ns_conn isconnected] } {
+            set user_id [ad_conn user_id]
+            # try and make it work
+            if { $instance_id eq "" } {
+                # set instance_id package_id
+                set instance_id [ad_conn package_id]
+            }
+            set admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
+        } 
+        
+        #CREATE TABLE hf_monitor_config_n_control (
+        #    instance_id               integer,
+        #    monitor_id                integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+        #    asset_id                  integer not null,
+        #    label                     varchar(200) not null,
+        #    active_p                  varchar(1) not null,
+        #    -- (MAX) number of portions to use in frequency distribution curve
+        #    portions_count            integer not null,
+        #    -- allow some control over how the distribution curves are represented:
+        #    calculation_switches      varchar(20),
+        #    -- Following 2 are used to suggest hf_monitor_status.expected_health:
+        #    -- the percentile rank that triggers an alarm
+        #    -- 0% rarely triggers, 100% triggers on most everything.
+        #    health_percentile_trigger numeric,
+        #    -- the health_value matching health_percentile_trigger
+        #    health_threshold          integer
+        # -- any monitor value equal or greather than health_percentile_trigger or health_thread
+        # -- triggers an alert.
+        # priority varchar(19) default '' not null,
+        # -- interval in seconds
+        # interval_s varchar(19) default '' not null,
+        #);
+
+        if { $admin_p && [qf_is_natural_number $instance_id ] } {
+            set success_p [db_0or1row hf_mon_con_n_ctrl_get1 "select label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threashold, inteval_s from hf_monitor_config_n_control where instance_id=:instance_id and (monitor_id=:id or asset_id=:id)"]
+            if { $success_p } {
+                set return_list [list $instance_id $monitor_id $asset_id $label $active_p $portions_count $calculation_switches $health_percentile_trigger $health_threashold $interval_s]
+            }
+        }
+    }    
+    return $return_list
+}
+
+ad_proc -private hf_monitor_configs_write {
+    label
+    active_p
+    portions_count
+    calculation_switches
+    health_percentile_trigger
+    health_threashold
+    interval_s
+    {asset_id ""}
+    {monitor_id ""}
+    {instance_id ""}
+} {
+    Write configuration parameters of one hf monitored service or system.
+} {
     #either admin or scheduled_proc (no user_id)
-    if { [ns_conn isconnected] } {
+    set nc_p [ns_conn isconnected]
+    if { !$nc_p } {
         set user_id [ad_conn user_id]
+        # try and make it work
         if { $instance_id eq "" } {
             # set instance_id package_id
             set instance_id [ad_conn package_id]
         }
-        set admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
+    } 
+
+    # validate system
+
+##code Logic here needs re-worked. interrupted. saving work
+    set asset_id_p [qf_is_natural_number $asset_id] 
+    set monitor_id_p [qf_is_natural_number $monitor_id]
+    if { $asset_id_p || $monitor_id_p } {
+        if { [string length $label ] < 201 && [string length $calculation_switches] < 21 } {
+            set label_p 1
+            set cs_p 1
+            if { $active_p eq "1" || $active_p eq "0" } {
+                set active_p_p 1
+            } else {
+                set active_p_p 0
+            }
+            set instance_id_p [qf_is_natural_number $instance_id] 
+            set interval_s_p [qf_is_natural_number $interval_id] 
+            set health_threashold_p [qf_is_natural_number $health_threashold] 
+            set hpt_p [qf_is_decimal $health_percentile_trigger]
+        } else {
+            # reject write. 
+            set label_p 0
+            set cs_p 0
+        }
     }
 
-    
-    #CREATE TABLE hf_monitor_config_n_control (
-    #    instance_id               integer,
-    #    monitor_id                integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
-    #    asset_id                  integer not null,
-    #    label                     varchar(200) not null,
-    #    active_p                  varchar(1) not null,
-    #    -- (MAX) number of portions to use in frequency distribution curve
-    #    portions_count            integer not null,
-    #    -- allow some control over how the distribution curves are represented:
-    #    calculation_switches      varchar(20),
-    #    -- Following 2 are used to suggest hf_monitor_status.expected_health:
-    #    -- the percentile rank that triggers an alarm
-    #    -- 0% rarely triggers, 100% triggers on most everything.
-    #    health_percentile_trigger numeric,
-    #    -- the health_value matching health_percentile_trigger
-    #    health_threshold          integer
-    # -- any monitor value equal or greather than health_percentile_trigger or health_thread
-    # -- triggers an alert.
-# priority varchar(19) default '' not null,
-# -- interval in seconds
-    # interval_s varchar(19) default '' not null,
-    #);
+    # check permissions
+    if { !$nc_p } {
+        set admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]    
+    }
+     
 
     ##code
 }
 
-ad_proc -private hf_monitor_configs_write {
-    args
+ad_proc -private hf_monitor_configs_update {
+    label
+    active_p
+    portions_count
+    calculation_switches
+    health_percentile_trigger
+    health_threashold
+    interval_s
     {asset_id ""}
+    {monitor_id ""}
     {instance_id ""}
 } {
-    Write one or more configuration parameters of one hf monitored service or system
+    Updates one or more configuration parameters of one hf monitored service or system.
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
+    # both asset_id and monitor_id cannot be blank. If monitor_id is nonblank, use it (asset_id becomes a verifying condition of query)
+    # validate system
+    if { [qf_is_natural_number $id] } {
+
+        # check permissions
+        set admin_p 1
+
+        #either admin or scheduled_proc (no user_id)
+        if { [ns_conn isconnected] } {
+            set user_id [ad_conn user_id]
+            # try and make it work
+            if { $instance_id eq "" } {
+                # set instance_id package_id
+                set instance_id [ad_conn package_id]
+            }
+            set admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
+        } 
     set admin_p [hf_permission_p $user_id "" assets admin $instance_id]
     ##code
 }
+
 
 ad_proc -private hf_monitor_logs {
     {asset_id_list ""}
