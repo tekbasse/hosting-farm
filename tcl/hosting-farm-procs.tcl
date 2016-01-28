@@ -3301,8 +3301,10 @@ ad_proc -private hf_monitor_configs_write {
     {monitor_id ""}
     {instance_id ""}
 } {
-    Write configuration parameters of one hf monitored service or system.
+    Write configuration parameters of one hf monitored service or system. Returns monitor_id or 0 if unsuccesssful.
+    If monitor_id is blank, will assign a new monitor_id.
 } {
+    set return_id 0
     #either admin or scheduled_proc (no user_id)
     set nc_p [ns_conn isconnected]
     if { !$nc_p } {
@@ -3315,37 +3317,59 @@ ad_proc -private hf_monitor_configs_write {
     } 
 
     # validate system
-
-##code Logic here needs re-worked. interrupted. saving work
     set asset_id_p [qf_is_natural_number $asset_id] 
     set monitor_id_p [qf_is_natural_number $monitor_id]
+    if { $monitor_id_p } {
+        # make sure monitor_id doesn't already exist
+    }
+
     if { $asset_id_p || $monitor_id_p } {
         if { [string length $label ] < 201 && [string length $calculation_switches] < 21 } {
             set label_p 1
             set cs_p 1
+            set active_p_p 0
             if { $active_p eq "1" || $active_p eq "0" } {
                 set active_p_p 1
-            } else {
-                set active_p_p 0
-            }
+            } 
             set instance_id_p [qf_is_natural_number $instance_id] 
             set interval_s_p [qf_is_natural_number $interval_id] 
             set health_threashold_p [qf_is_natural_number $health_threashold] 
             set hpt_p [qf_is_decimal $health_percentile_trigger]
-        } else {
-            # reject write. 
-            set label_p 0
-            set cs_p 0
+            
+            # check permissions
+            set admin_p 0
+            if { !$nc_p } {
+                set admin_p [hf_permission_p $user_id "" assets admin $instance_id]
+            } 
+            if { $admin_p || $nc_p } {
+
+                # confirm/get index parameters
+
+                if { $monitor_id_p && $asset_id_p } {
+                # if monitor_id_p, does it exist in context of asset_id?
+                    set mon_id_exists_p [db_0or1row hf_monitor_id_ck "select monitor_id from hf_monitor_config_n_control where instance_id=:instance_id and asset_id=:asset_id and monitor_id=:monitor_id" ] 
+                } elseif { $monitor_id_p } {
+                    # While checking monitor_id, define asset_id if monitor_id exists
+                    set mon_id_exists_p [db_0or1row hf_mon_id_ck_w_aid "select asset_id from hf_monitor_config_n_control where instance_id=:instance_id and asset_id=:asset_id and monitor_id=:monitor_id" ] 
+                } else {
+                    # monitor_id doesn't exist, but asset_id is supposed to exist per validation check.
+                    # If hf_monitor_config_n_control.asset_id exists, create a new monitor_id, otherwise assign monitor_id same as asset_id
+                    db_1row hf_asset_ck "select count(*) as asset_id_count from hf_monitor_config_n_control where instance_id=:instance_id and asset_id=:asset_id"
+                    if { $asset_id_count > 0 } {
+                        # Create new  monitor_id
+                        set monitor_id [db_nextval hf_id_seq]
+                    } else {
+                        set monitor_id $asset_id
+                    }
+                }
+    ##code
+## create sql
+#            set success_p [db_0or1row hf_mon_con_n_ctrl_get1 "select label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threashold, inteval_s from hf_monitor_config_n_control where instance_id=:instance_id and (monitor_id=:id or asset_id=:id)"]                
+
+            }
         }
     }
-
-    # check permissions
-    if { !$nc_p } {
-        set admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]    
-    }
-     
-
-    ##code
+    return $return_id
 }
 
 ad_proc -private hf_monitor_configs_update {
