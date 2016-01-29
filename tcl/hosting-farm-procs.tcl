@@ -3009,7 +3009,7 @@ ad_proc -private hf_call_write {
             } else {
                 # Update
                 db_dml hf_calls_update1 {
-                    asset_type_id=:asset_type_id,asset_template_id=:asset_template_id,asset_id=:asset_id where id=:hf_call_id
+                    update hf_calls set asset_type_id=:asset_type_id,asset_template_id=:asset_template_id,asset_id=:asset_id where id=:hf_call_id
                 }
             }
         } elseif { $no_errors_p } {
@@ -3280,7 +3280,7 @@ ad_proc -private hf_monitor_configs_read {
         #);
 
         if { $admin_p && [qf_is_natural_number $instance_id ] } {
-            set success_p [db_0or1row hf_mon_con_n_ctrl_get1 "select label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threashold, inteval_s from hf_monitor_config_n_control where instance_id=:instance_id and (monitor_id=:id or asset_id=:id)"]
+            set success_p [db_0or1row hf_mon_con_n_ctrl_get1 "select label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threashold, interval_s from hf_monitor_config_n_control where instance_id=:instance_id and (monitor_id=:id or asset_id=:id)"]
             if { $success_p } {
                 set return_list [list $instance_id $monitor_id $asset_id $label $active_p $portions_count $calculation_switches $health_percentile_trigger $health_threashold $interval_s]
             }
@@ -3301,7 +3301,7 @@ ad_proc -private hf_monitor_configs_write {
     {monitor_id ""}
     {instance_id ""}
 } {
-    Write configuration parameters of one hf monitored service or system. Returns monitor_id or 0 if unsuccesssful.
+    Writes (updates or creates) configuration parameters of one hf monitored service or system. Returns monitor_id or 0 if unsuccesssful.
     If monitor_id is blank, will assign a new monitor_id.
 } {
     set return_id 0
@@ -3319,9 +3319,6 @@ ad_proc -private hf_monitor_configs_write {
     # validate system
     set asset_id_p [qf_is_natural_number $asset_id] 
     set monitor_id_p [qf_is_natural_number $monitor_id]
-    if { $monitor_id_p } {
-        # make sure monitor_id doesn't already exist
-    }
 
     if { $asset_id_p || $monitor_id_p } {
         if { [string length $label ] < 201 && [string length $calculation_switches] < 21 } {
@@ -3341,12 +3338,12 @@ ad_proc -private hf_monitor_configs_write {
             if { !$nc_p } {
                 set admin_p [hf_permission_p $user_id "" assets admin $instance_id]
             } 
-            if { $admin_p || $nc_p } {
+            if { ( $admin_p || $nc_p ) && $label_p && $cs_p && $active_p_p && $instance_id_p && $interval_s_p && $health_threashold_p && $hpt_p } {
 
                 # confirm/get index parameters
 
                 if { $monitor_id_p && $asset_id_p } {
-                # if monitor_id_p, does it exist in context of asset_id?
+                    # if monitor_id_p, does it exist in context of asset_id?
                     set mon_id_exists_p [db_0or1row hf_monitor_id_ck "select monitor_id from hf_monitor_config_n_control where instance_id=:instance_id and asset_id=:asset_id and monitor_id=:monitor_id" ] 
                 } elseif { $monitor_id_p } {
                     # While checking monitor_id, define asset_id if monitor_id exists
@@ -3362,49 +3359,27 @@ ad_proc -private hf_monitor_configs_write {
                         set monitor_id $asset_id
                     }
                 }
-    ##code
-## create sql
-#            set success_p [db_0or1row hf_mon_con_n_ctrl_get1 "select label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threashold, inteval_s from hf_monitor_config_n_control where instance_id=:instance_id and (monitor_id=:id or asset_id=:id)"]                
+                # write db record
+                if { $mon_id_exists_p || $asset_id_count > 0 } {
+                    # update record
+                    db_dml { 
+                        update hf_monitor_config_n_control set label=:label,active_p=:active_p,portions_count=:portions_count,calculation_switches=:calculation_switches,health_percentile_trigger=:health_percentile_trigger,health_threashold=:health_threashold,interval_s=:interval_s where instance_id=:instance_id and monitor_id=:monitor_id and asset_id=:asset_id
+                    }
+                } else  {
+                    # create new record
+                    db_dml { 
+                        insert into hf_calls (label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threashold, interval_s, instance_id, monitor_id, asset_id )
+                        values (:label,:active_p,:portions_count,:calculation_switches,:health_percentile_trigger,:health_threashold,:interval_s,:instance_id,:monitor_id,:asset_id)
+                    }
+                }
 
+            } else {
+                ns_log Warning "hf_monitor_configs_write(3383): could not write. admin_p '${admin_p}' nc_p '${nc_p}' asset_id '${asset_id}' monitor_id '${monitor_id}' label '${label}' active_p '${active_p} "
+                ns_log Warning "hf_monitor_configs_write(3384): .. portions '${portions_count}' calc sws '${calculation_switches}' health% trigger '${health_percentile_trigger}' health threash. '${health_threashold}' interval_s '${interval_s}'"
             }
         }
     }
     return $return_id
-}
-
-ad_proc -private hf_monitor_configs_update {
-    label
-    active_p
-    portions_count
-    calculation_switches
-    health_percentile_trigger
-    health_threashold
-    interval_s
-    {asset_id ""}
-    {monitor_id ""}
-    {instance_id ""}
-} {
-    Updates one or more configuration parameters of one hf monitored service or system.
-} {
-    # both asset_id and monitor_id cannot be blank. If monitor_id is nonblank, use it (asset_id becomes a verifying condition of query)
-    # validate system
-    if { [qf_is_natural_number $id] } {
-
-        # check permissions
-        set admin_p 1
-
-        #either admin or scheduled_proc (no user_id)
-        if { [ns_conn isconnected] } {
-            set user_id [ad_conn user_id]
-            # try and make it work
-            if { $instance_id eq "" } {
-                # set instance_id package_id
-                set instance_id [ad_conn package_id]
-            }
-            set admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
-        } 
-    set admin_p [hf_permission_p $user_id "" assets admin $instance_id]
-    ##code
 }
 
 
