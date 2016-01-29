@@ -3017,7 +3017,8 @@ ad_proc -private hf_call_write {
             set id [db_nextval hf_id_seq]
             set query_suffix ""
             db_dml hf_calls_write1 {
-                insert into hf_calls (instance_id,id,proc_name,asset_type_id,asset_template_id,asset_id)
+                insert into hf_calls 
+                (instance_id,id,proc_name,asset_type_id,asset_template_id,asset_id)
                 values (:instance_id,:id,:proc_name,:asset_type_id,:asset_template_id,:asset_id)
             }
         }
@@ -3164,7 +3165,8 @@ ad_proc -private hf_call_role_write {
                 ns_log Notice "hf_call_role_write(3155): duplicate write attempted by user_id '${user_id}' params role_id '${role_id}' call_id '${call_id}' instance_id '${instance_id}'"
             } else {
                 db_dml hf_call_role_map_w {
-                    insert into hf_call_role_map (instance_id,call_id,role_id)
+                    insert into hf_call_role_map 
+                    (instance_id,call_id,role_id)
                     values (:instance_id,:call_id,:role_id)
                 }
             }
@@ -3368,13 +3370,14 @@ ad_proc -private hf_monitor_configs_write {
                 } else  {
                     # create new record
                     db_dml { 
-                        insert into hf_calls (label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threashold, interval_s, instance_id, monitor_id, asset_id )
+                        insert into hf_monitor_config_n_control 
+                        (label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threashold, interval_s, instance_id, monitor_id, asset_id )
                         values (:label,:active_p,:portions_count,:calculation_switches,:health_percentile_trigger,:health_threashold,:interval_s,:instance_id,:monitor_id,:asset_id)
                     }
                 }
-
+                set return_id $monitor_id
             } else {
-                ns_log Warning "hf_monitor_configs_write(3383): could not write. admin_p '${admin_p}' nc_p '${nc_p}' asset_id '${asset_id}' monitor_id '${monitor_id}' label '${label}' active_p '${active_p} "
+                ns_log Warning "hf_monitor_configs_write(3383): could not write. admin_p '${admin_p}' nc_p '${nc_p}' asset_id '${asset_id}' monitor_id '${monitor_id}' label '${label}' active_p '${active_p}'"
                 ns_log Warning "hf_monitor_configs_write(3384): .. portions '${portions_count}' calc sws '${calculation_switches}' health% trigger '${health_percentile_trigger}' health threash. '${health_threashold}' interval_s '${interval_s}'"
             }
         }
@@ -3384,41 +3387,76 @@ ad_proc -private hf_monitor_configs_write {
 
 
 ad_proc -private hf_monitor_logs {
-    {asset_id_list ""}
+    {asset_ids ""}
     {instance_id ""}
 } {
-    Returns monitor_ids of logs indirectly associated with an asset (direct is 1:1 via asset properties)
+    Returns a list of hf_monitor_config_n_control.monitor_ids associated with asset_id(s). List is empty if there are none.
 } {
-    
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
+    set nc_p [ns_conn isconnected]
+    if { !$nc_p } {
         set user_id [ad_conn user_id]
+        # try and make it work
+        if { $instance_id eq "" } {
+            # set instance_id package_id
+            set instance_id [ad_conn package_id]
+        }
+    } 
+    # validation
+    set asset_id_list [list ]
+    foreach asset_id_q $asset_ids {
+        if { [qf_is_natural_number $asset_id_q] } {
+            lappend asset_id_list $asset_id_q
+        }
     }
-    set admin_p [hf_permission_p $user_id "" assets admin $instance_id]
-    
-    ##code
-    # should be able to look up dependent asset ids via a proc, and then cross-reference in bulk
+    set monitor_id_list [db_list hf_monitor_ids_get "select monitor_id from hf_monitor_config_n_control where instance_id =:instance_id and asset_id in ([template::util::tcl_to_sql_list $asset_id_list])"]
+    # Should be able to look up dependent asset ids via a proc, and then cross-reference in bulk
+    return $monitor_id_list
 }
 
 
 ad_proc -private hf_monitor_update {
-    {monitor_id ""}
+    asset_id
+    monitor_id
+    {report_id ""}
     {instance_id ""}
 } {
     Write an update to a monitor log, ie create a new entry. monitor_id is asset_id or hf_monitor_config_n_control.monitor_id
     Some other proc collects info from server and interprets health status,
     Said proc is probably defined in hosting-farm-local-procs.tcl
     Text of args should include calling proc name and version number for adapting to parameter and returned value revisions
+    If report_id is supplied, it will be incremented by 1.
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
+    set success_p 1
+    # validate
+    set nc_p [ns_conn isconnected]
+    if { !$nc_p } {
         set user_id [ad_conn user_id]
+        # try and make it work
+        if { $instance_id eq "" } {
+            # set instance_id package_id
+            set instance_id [ad_conn package_id]
+        }
+    } else {
+        set user_id 0
+    }
+    if { ![qf_is_natural_number $report_id ] } {
+        # this will return a valid chronological number to year 2037, when db integer type will be over limit.
+        ## THIS WILL NEED REVISED BY 2036
+        set report_id [clock seconds]
+    } else {
+        set report_id [expr { $report_id + 1 } ]
+    }
+    set reported_by [string range $reported_by 0 119]
+    if { ![qf_is_natural_number $health] } {
+        # log error
+        ns_log Warning "hf_monitor_update(3449): health value unexpected '${health}'. Set to 0 for asset_id '${asset_id}' monitor_id '${monitor_id}'"
+        if { !$nc_p } {
+            ns_log Warning "hf_monitor_update(3450): ..  user_id '${user_id}' instance_id '${instance_id}'"
+        }
+        set health 0
+    }  
+    if { $significant_change ne "1" } {
+        set significant_change "0"
     }
     #CREATE TABLE hf_monitor_log (
     #    instance_id          integer,
@@ -3445,6 +3483,13 @@ ad_proc -private hf_monitor_update {
 
 
     ##code
+    # log it no matter what to not lose the info..
+    db_dml hf_monitor_log_add { insert into hf_monitor_log 
+        (instance_id,monitor_id,user_id,asset_id,report_id,reported_by,report_time,health,report,significant_change)
+        values (:instance_id,:monitor_id,:user_id,:asset_id,:report_id,:reported_by,:report_time,:health,:report,:significant_change)
+    }
+    
+    return $success_p
 }
 
 ad_proc -private hf_monitor_status {
