@@ -3417,6 +3417,10 @@ ad_proc -private hf_monitor_logs {
 ad_proc -private hf_monitor_update {
     asset_id
     monitor_id
+    reported_by
+    health
+    report
+    significant_change_p
     {report_id ""}
     {instance_id ""}
 } {
@@ -3425,19 +3429,26 @@ ad_proc -private hf_monitor_update {
     Said proc is probably defined in hosting-farm-local-procs.tcl
     Text of args should include calling proc name and version number for adapting to parameter and returned value revisions
     If report_id is supplied, it will be incremented by 1.
+    Monitor data sets use signficant_change_p set to 1 as boundary, indicating significant change to monitored configuration 
+    implies the possibility of a change in monitoring performance curve.
 } {
     set success_p 1
     # validate
     set nc_p [ns_conn isconnected]
-    if { !$nc_p } {
+    if { $nc_p } {
+        set user_id 0
+    } else {
         set user_id [ad_conn user_id]
         # try and make it work
         if { $instance_id eq "" } {
             # set instance_id package_id
             set instance_id [ad_conn package_id]
         }
-    } else {
-        set user_id 0
+        if { $reported_by eq "" } {
+            # feed some connection info
+            set addrs [ad_conn peeraddrs]
+            set reported_by "user_id '${user_id}' instance_id '${instance_id}' peeraddrs '${addrs}'"
+        }
     }
     if { ![qf_is_natural_number $report_id ] } {
         # this will return a valid chronological number to year 2037, when db integer type will be over limit.
@@ -3455,8 +3466,8 @@ ad_proc -private hf_monitor_update {
         }
         set health 0
     }  
-    if { $significant_change ne "1" } {
-        set significant_change "0"
+    if { $significant_change_p ne "1" } {
+        set significant_change_p "0"
     }
     #CREATE TABLE hf_monitor_log (
     #    instance_id          integer,
@@ -3481,12 +3492,10 @@ ad_proc -private hf_monitor_update {
     #    -- Changes mark boundaries for data samples
     #);
 
-
-    ##code
-    # log it no matter what to not lose the info..
+    # log it no matter what to not lose info
     db_dml hf_monitor_log_add { insert into hf_monitor_log 
         (instance_id,monitor_id,user_id,asset_id,report_id,reported_by,report_time,health,report,significant_change)
-        values (:instance_id,:monitor_id,:user_id,:asset_id,:report_id,:reported_by,:report_time,:health,:report,:significant_change)
+        values (:instance_id,:monitor_id,:user_id,:asset_id,:report_id,:reported_by,now(),:health,:report,:significant_change_p)
     }
     
     return $success_p
@@ -3596,3 +3605,24 @@ ad_proc -private hf_monitor_report {
     ##code
 }
 
+ad_proc -public hf_monitors_inactivate {
+    monitor_ids
+    {instance_id ""}
+    {user_id ""}
+} {
+    Monitor_ids can be asset_id or monitor_id. If reference is an asset_id, all monitors associated with an asset_id are inactivated.
+} {
+    # validate
+    set nc_p [ns_conn isconnected]
+    if { !$nc_p } {
+        set user_id [ad_conn user_id]
+        # try and make it work
+        if { $instance_id eq "" } {
+            # set instance_id package_id
+            set instance_id [ad_conn package_id]
+        }
+    }
+    # if an asset_id, also force off monitor_p in hf_assets to indicate monitoring is not happening. 
+    # Creating a ns_log warning if hf_assets.monitor_p was 1.
+
+}
