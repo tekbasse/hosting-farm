@@ -3431,8 +3431,8 @@ ad_proc -private hf_monitor_update {
     If report_id is supplied, it will be incremented by 1.
     Monitor data sets use signficant_change_p set to 1 as boundary, indicating significant change to monitored configuration 
     implies the possibility of a change in monitoring performance curve.
+    Returns report_id
 } {
-    set success_p 1
     # validate
     set nc_p [ns_conn isconnected]
     if { $nc_p } {
@@ -3498,7 +3498,7 @@ ad_proc -private hf_monitor_update {
         values (:instance_id,:monitor_id,:user_id,:asset_id,:report_id,:reported_by,now(),:health,:report,:significant_change_p)
     }
     
-    return $success_p
+    return $report_id
 }
 
 ad_proc -private hf_monitor_status {
@@ -3544,13 +3544,18 @@ ad_proc -private hf_monitor_status {
 }
 
 ad_proc -private hf_monitor_statistics {
+    asset_id
     monitor_id
-    {analysis_id ""}
+    portions_count
+    calculation_switches
+    interval_s
     {instance_id ""}
 } {
-    Statistics of the distribution curve resulting from analysis of status info.
-    analysis_id assumes most recent analysis.
+    Analyse most recent hf_monitor_update in context of distribution curve.
+    returns analysis_id
 } {
+    set statistics_list [list ]
+    # validate
     set nc_p [ns_conn isconnected]
     if { $nc_p } {
         set user_id 0
@@ -3562,6 +3567,8 @@ ad_proc -private hf_monitor_statistics {
             set instance_id [ad_conn package_id]
         }
     }
+    set monitor_id_p [qf_is_natural_number $monitor_id]
+    set analysis_id_p [qf_is_natural_number $analysis_id]
     #CREATE TABLE hf_monitor_statistics (
     #    instance_id     integer,
     #    -- only most recent status statistics are reported here 
@@ -3577,17 +3584,25 @@ ad_proc -private hf_monitor_statistics {
     #    health_average  numeric,
     #    health_median   numeric
     #); 
-
-
-    ##code
+    if { $monitor_id_p } {
+        if { $analysis_id_p } {
+            set statistics_lists [db_list_of_lists hf_monitor_stats_get "select sample_count, range_min, range_max, health_min, health_max, health_average, health_median, analysis_id, monitor_id from hf_monitor_statistics where instance_id=:instance_id and monitor_id=:monitor_id and analysis_id=:analysis_id"]
+        } else {
+            # set analysis_id to the latest
+            set statistics_lists [db_list_of_lists hf_monitor_stats_get "select sample_count, range_min, range_max, health_min, health_max, health_average, health_median, analysis_id, monitor_id from hf_monitor_statistics where instance_id=:instance_id and monitor_id=:monitor_id order by analysis_id desc limit 1"]
+        }
+        set statistics_list [lindex $statistics_lists 0]
+    }
+    return $statistics_list
 }
 
 ad_proc -private hf_monitor_report {
     monitor_id 
-    args
+    analysis_id
     {instance_id ""}
 } {
-    description
+    Statistics of the distribution curve resulting from analysis of status info.
+    analysis_id assumes most recent analysis. Can return a range of monitor history.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -3604,6 +3619,7 @@ ad_proc -private hf_monitor_report {
     #-- curve resolution is count of points
     #-- This model keeps old curves, to help with long-term performance insights
     #-- see accounts-finance  qaf_discrete_dist_report 
+
     #CREATE TABLE hf_monitor_freq_dist_curves (
     #    instance_id      integer,
     #    monitor_id       integer not null,
