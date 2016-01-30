@@ -3502,18 +3502,29 @@ ad_proc -private hf_monitor_update {
 }
 
 ad_proc -private hf_monitor_status {
-    {asset_id_list ""}
+    {monitor_id_list ""}
     {instance_id ""}
 } {
-    Returns standardized analysis (ie change of health_p ) of standardized info health reported from hf_monitor_update
+    Returns  standardized analysis (ie change of health_p ) of standardized info health reported from hf_monitor_update.
+    Data is in list of lists format, where each list represents a monitor_id and contains this ordered info:
+    monitor_id, asset_id, report_id, health_p0, health_p1, expected_health.
+    Where report_id is id of most recent hf_monitor_update.
+    health_p0 is the second to last health value.
+    health_p1 is the most recent (last) health value.
+    expected_health is the projected health value (either at next report, or at quota point if monitor has a quota.
 } {
+    # expected_health is expected to be calculated by a proc in hosting-farm-local-procs.tcl, just prior to
+    # issuing an hf_monitor_update.
+    # hf_monitor_statistics is called to help determine health (percentile)
+
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
+    # validation
+    set monitor_id_list [hf_monitor_logs $monitor_ids]
+    set status_lists [db_list_of_lists hf_monitor_status_read "select monitor_id, asset_id, report_id, health_p0, health_p1,expected_health from hf_monitor_status where instance_id=:instance_id and monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list])"]
+
     #CREATE TABLE hf_monitor_status (
     #    instance_id                integer,
     #    monitor_id                 integer unique not null,
@@ -3526,22 +3537,30 @@ ad_proc -private hf_monitor_status {
     #    expected_health            integer
     #);
 
-
-    ##code
+    #  hf_monitor_configs_read contains hf_monitor_configs.interval_s for timing (next) expected_health 
+    # ie time interval between p1 and p0.
+    #  If monitor has a quota, the quota end point should be the point for projected health.
+    return $status_lists
 }
 
 ad_proc -private hf_monitor_statistics {
-    {monitor_id_list ""}
+    monitor_id
+    {analysis_id ""}
     {instance_id ""}
 } {
-    Statistics of the distribution curve resulting from analysis of status info
+    Statistics of the distribution curve resulting from analysis of status info.
+    analysis_id assumes most recent analysis.
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
+    set nc_p [ns_conn isconnected]
+    if { $nc_p } {
+        set user_id 0
+    } else {
         set user_id [ad_conn user_id]
+        # try and make it work
+        if { $instance_id eq "" } {
+            # set instance_id package_id
+            set instance_id [ad_conn package_id]
+        }
     }
     #CREATE TABLE hf_monitor_statistics (
     #    instance_id     integer,
