@@ -534,6 +534,7 @@ CREATE TABLE hf_monitor_log (
     report_time          timestamptz,
     -- 0 dead, down, not normal
     -- 10000 nominal, allows for variable performance issues
+    -- Ideal health index should be in range of 0 to 20000.
     -- health = numeric summary indicator determined by hf_procs
     health               varchar(19) not null DEFAULT '',
     -- latest report from monitoring
@@ -605,12 +606,17 @@ CREATE TABLE hf_monitor_freq_dist_curves (
     -- median is where cumulative_pct = 0.50 
     -- x_pos may not be evenly distributed
     x_pos            integer not null,
+    -- The sum of all delta_x_pct from 0 to this x_pos.
     -- cumulative_pct increases to 1.0 (from 0 to 100 percentile)
     cumulative_pct   numeric not null,
-    -- sum of the delta_x equals 1.0
+    -- Sum of all delta_x equals 1.0
     -- delta_x values might be equal, or not,
-    -- depending on how distribution is calculated/represented
-    delta_x_pct      numeric not null
+    -- Depends on how distribution is obtained.
+    delta_x_pct      numeric not null,
+    -- Duplicate of hf_monitor_log.health.
+    -- Avoids excessive table joins and provides a clearer
+    -- boundary between admin and user accessible table queries.
+    monitor_y        numeric not null
 );
 
 create index hf_monitor_freq_dist_curves_instance_id_idx on hf_monitor_freq_dist_curves (instance_id);

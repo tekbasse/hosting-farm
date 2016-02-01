@@ -3482,7 +3482,7 @@ ad_proc -private hf_monitor_update {
     #    report_time          timestamptz,
     #    -- 0 dead, down, not normal
     #    -- 10000 nominal, allows for variable performance issues
-    #    -- health = numeric summary indicator determined by hf_procs
+    #    -- health = numeric summary index ie indicator determined by hf_procs
     #    health               integer,
     #    -- latest report from monitoring
     #    report text,
@@ -3601,7 +3601,7 @@ ad_proc -private hf_monitor_report {
     analysis_id
     {instance_id ""}
 } {
-    Statistics of the distribution curve resulting from analysis of status info.
+    Generates statistical distribution curve resulting from analysis of status info.
     analysis_id assumes most recent analysis. Can return a range of monitor history.
 } {
     if { $instance_id eq "" } {
@@ -3620,6 +3620,8 @@ ad_proc -private hf_monitor_report {
     #-- This model keeps old curves, to help with long-term performance insights
     #-- see accounts-finance  qaf_discrete_dist_report 
 
+    # qaf_discrete_dist_report expects dalta_x and y.
+
     #CREATE TABLE hf_monitor_freq_dist_curves (
     #    instance_id      integer,
     #    monitor_id       integer not null,
@@ -3627,13 +3629,17 @@ ad_proc -private hf_monitor_report {
     #    -- position x is a sequential position below curve
     #    -- median is where cumulative_pct = 0.50 
     #    -- x_pos may not be evenly distributed
+    #    -- x_pos provides order to an anlysis' distribution points
     #    x_pos            integer not null,
     #    -- cumulative_pct increases to 1.0 (from 0 to 100 percentile)
     #    cumulative_pct   numeric not null,
     #    -- sum of the delta_x equals 1.0
     #    -- delta_x values might be equal, or not,
     #    -- depending on how distribution is calculated/represented
-    #    delta_x_pct      numeric not null
+    #    delta_x_pct      numeric not null,
+    #    -- duplicate of hf_monitor_log.health to avoid excess table joins
+    #    -- and provide a clearer boundary for internal security between table accesses
+    #    monitor_y        numeric not null
     #);
     
     
