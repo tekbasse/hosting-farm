@@ -3526,26 +3526,6 @@ ad_proc -private hf_monitor_status {
     set monitor_id_list [hf_monitor_logs $monitor_ids]
     set status_lists [db_list_of_lists hf_monitor_status_read "select monitor_id, asset_id, report_id, health_p0, health_p1,expected_health from hf_monitor_status where instance_id=:instance_id and monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list])"]
 
-    # CREATE TABLE hf_monitor_status (
-    #    instance_id                integer not null,
-    #    monitor_id                 integer unique not null,
-    #    asset_id                   varchar(19) not null DEFAULT '',
-    #    --  analysis_id at p0
-    #    analysis_id_p0                  varchar(19) not null DEFAULT '',
-    #    -- most recent analysis_id ie at p1
-    #    analysis_id_p1                  varchar(19) not null DEFAULT '',
-    #    -- health at p0
-    #    health_p0                  varchar(19) not null DEFAULT '',
-    #    -- for calculating differential, p1 is always 1, just as p0 is 0
-    #    -- health at p1
-    #    health_p1                  varchar(19) not null DEFAULT '',
-    #    -- 
-    #    expected_health            varchar(19) not null DEFAULT ''
-    #);
-
-    #  hf_monitor_configs_read contains hf_monitor_configs.interval_s for timing (next) expected_health 
-    # ie time interval between p1 and p0.
-    #  If monitor has a quota, the quota end point should be the point for projected health.
     return $status_lists
 }
 
@@ -3583,6 +3563,33 @@ ad_proc -private hf_monitor_statistics {
     }
     set monitor_id_p [qf_is_natural_number $monitor_id]
     set analysis_id_p [qf_is_natural_number $analysis_id]
+
+    # Data are put into separate tables,
+    # hf_monitor_status for simple status queries
+    # hf_monitor_statistics for indepth status queries
+
+    # CREATE TABLE hf_monitor_status (
+    #    instance_id                integer not null,
+    #    monitor_id                 integer unique not null,
+    #    asset_id                   varchar(19) not null DEFAULT '',
+    #    --  analysis_id at p0
+    #    analysis_id_p0                  varchar(19) not null DEFAULT '',
+    #    -- most recent analysis_id ie at p1
+    #    analysis_id_p1                  varchar(19) not null DEFAULT '',
+    #    -- health at p0
+    #    health_p0                  varchar(19) not null DEFAULT '',
+    #    -- for calculating differential, p1 is always 1, just as p0 is 0
+    #    -- health at p1
+    #    health_p1                  varchar(19) not null DEFAULT '',
+    #    -- 
+    #    expected_health            varchar(19) not null DEFAULT ''
+    #);
+
+    #  hf_monitor_configs_read contains hf_monitor_configs.interval_s for timing (next) expected_health 
+    # ie time interval between p1 and p0.
+    #  If monitor has a quota, the quota end point should be the point for projected health.
+
+
     #CREATE TABLE hf_monitor_statistics (
     #    instance_id     integer not null,
     #    -- only most recent status statistics are reported here 
