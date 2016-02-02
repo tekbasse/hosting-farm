@@ -3567,6 +3567,42 @@ ad_proc -private hf_monitor_statistics {
     # Data are put into separate tables,
     # hf_monitor_status for simple status queries
     # hf_monitor_statistics for indepth status queries
+    # hf_monitor_freq_dist_curves for distribution curves
+
+    # qaf_discrete_dist_report expects delta_x and y.
+    #-- Curves are normalized to 1.0
+    #-- Percents are represented decimally 0.01 is one percent
+    #-- Maybe one day "Per mil" notation should be used instead of percent.
+    #-- http://en.wikipedia.org/wiki/Permille
+    #-- curve resolution is count of points
+    #-- This model keeps old curves, to help with long-term performance insights
+    #-- see accounts-finance  qaf_discrete_dist_report 
+
+    #CREATE TABLE hf_monitor_freq_dist_curves (
+    #    instance_id      integer not null,
+    #    monitor_id       integer not null,
+    #    analysis_id      integer not null,
+    #    -- position x is a sequential position below curve
+    #    -- median is where cumulative_pct = 0.50 
+    #    -- x_pos is unlikely to be sampled from intervals of exact same size.
+    #    -- initial cases assume x_pos is a system time in seconds.
+    #    x_pos            integer not null,
+    #    -- The sum of all delta_x_pct from 0 to this x_pos.
+    #    -- cumulative_pct increases to 1.0 (from 0 to 100 percentile)
+    #    cumulative_pct   numeric not null,
+    #    -- Sum of all delta_x_pct equals 1.0
+    #    -- delta_x_pct may have some values near low limits of 
+    #    -- digitial representation, so only delta_x values are stored.
+    #    -- delta_x values might be equal, or not,
+    #    -- Depends on how distribution is obtained.
+    #    -- Initial use assumes delta_x is in seconds.
+    #    delta_x      numeric not null,
+    #    -- Duplicate of hf_monitor_log.health.
+    #    -- Avoids excessive table joins and provides a clearer
+    #    -- boundary between admin and user accessible table queries.
+    #    monitor_y        numeric not null
+    #);
+
 
     # CREATE TABLE hf_monitor_status (
     #    instance_id                integer not null,
@@ -3621,18 +3657,15 @@ ad_proc -private hf_monitor_statistics {
     return $statistics_list
 }
 
-ad_proc -private hf_monitor_report {
+ad_proc -private hf_monitor_report_read {
     monitor_id 
     analysis_id
     {instance_id ""}
 } {
-    Generates statistical distribution curve resulting from analysis of status info.
+    Returns statistical distribution curve resulting from analysis of status info.
     analysis_id assumes most recent analysis. Can return a range of monitor history.
 } {
-
-    #   if analysis_id doesn't exist (most always true)
-    #   generates distribution curve 
-    #   saves distribution in hf_monitor_freq_dist_curves
+    #  hf_monitor_statistics creates the curve at the same time it generates statistics
 
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -3642,15 +3675,6 @@ ad_proc -private hf_monitor_report {
         set user_id [ad_conn user_id]
     }
     
-    #-- Curves are normalized to 1.0
-    #-- Percents are represented decimally 0.01 is one percent
-    #-- Maybe one day "Per mil" notation should be used instead of percent.
-    #-- http://en.wikipedia.org/wiki/Permille
-    #-- curve resolution is count of points
-    #-- This model keeps old curves, to help with long-term performance insights
-    #-- see accounts-finance  qaf_discrete_dist_report 
-
-    # qaf_discrete_dist_report expects delta_x and y.
 
     #CREATE TABLE hf_monitor_freq_dist_curves (
     #    instance_id      integer not null,
@@ -3681,6 +3705,7 @@ ad_proc -private hf_monitor_report {
     ##code
 }
 
+
 ad_proc -public hf_monitors_inactivate {
     monitor_ids
     {instance_id ""}
@@ -3700,5 +3725,5 @@ ad_proc -public hf_monitors_inactivate {
     }
     # if an asset_id, also force off monitor_p in hf_assets to indicate monitoring is not happening. 
     # Creating a ns_log warning if hf_assets.monitor_p was 1.
-
+    ##code
 }
