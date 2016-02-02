@@ -3505,17 +3505,18 @@ ad_proc -private hf_monitor_status {
     {monitor_id_list ""}
     {instance_id ""}
 } {
-    Returns  standardized analysis (ie change of health_p ) of standardized info health reported from hf_monitor_update.
+    Returns  standardized analysis (ie change of health ) of standardized info health reported from hf_monitor_update.
     Data is in list of lists format, where each list represents a monitor_id and contains this ordered info:
     monitor_id, asset_id, report_id, health_p0, health_p1, expected_health.
     Where report_id is id of most recent hf_monitor_update.
-    health_p0 is the second to last health value.
-    health_p1 is the most recent (last) health value.
-    expected_health is the projected health value (either at next report, or at quota point if monitor has a quota.
+    health_p0 is the health value previous to current health.
+    health_p1 is the most recent (current) health value.
+    expected_health is the projected health value (either at next report, or at quota point if monitor has a quota.)
 } {
-    # expected_health is expected to be calculated by a proc in hosting-farm-local-procs.tcl, just prior to
+    # expected_health is expected to have been calculated by a proc in hosting-farm-local-procs.tcl, just prior to
     # issuing an hf_monitor_update.
-    # hf_monitor_statistics is called to help determine health (percentile)
+
+    # hf_monitor_statistics is called for final analysis and to determine health (percentile) 
 
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -3525,16 +3526,21 @@ ad_proc -private hf_monitor_status {
     set monitor_id_list [hf_monitor_logs $monitor_ids]
     set status_lists [db_list_of_lists hf_monitor_status_read "select monitor_id, asset_id, report_id, health_p0, health_p1,expected_health from hf_monitor_status where instance_id=:instance_id and monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list])"]
 
-    #CREATE TABLE hf_monitor_status (
-    #    instance_id                integer,
+    # CREATE TABLE hf_monitor_status (
+    #    instance_id                integer not null,
     #    monitor_id                 integer unique not null,
-    #    asset_id                   integer,
-    #    -- most recent report_id:
-    #    report_id                  integer,
-    #    health_p0                  integer,
+    #    asset_id                   varchar(19) not null DEFAULT '',
+    #    --  analysis_id at p0
+    #    analysis_id_p0                  varchar(19) not null DEFAULT '',
+    #    -- most recent analysis_id ie at p1
+    #    analysis_id_p1                  varchar(19) not null DEFAULT '',
+    #    -- health at p0
+    #    health_p0                  varchar(19) not null DEFAULT '',
     #    -- for calculating differential, p1 is always 1, just as p0 is 0
-    #    health_p1                  integer,
-    #    expected_health            integer
+    #    -- health at p1
+    #    health_p1                  varchar(19) not null DEFAULT '',
+    #    -- 
+    #    expected_health            varchar(19) not null DEFAULT ''
     #);
 
     #  hf_monitor_configs_read contains hf_monitor_configs.interval_s for timing (next) expected_health 
@@ -3546,6 +3552,7 @@ ad_proc -private hf_monitor_status {
 ad_proc -private hf_monitor_statistics {
     asset_id
     monitor_id
+    report_id
     portions_count
     calculation_switches
     interval_s
@@ -3554,6 +3561,13 @@ ad_proc -private hf_monitor_statistics {
     Analyse most recent hf_monitor_update in context of distribution curve.
     returns analysis_id
 } {
+    # collect records from hf_monitor_log
+    # call hf_monitor_report
+    #     which generates/saves distribution curve
+    # and returns stats for..
+    # call hf_monitor_statistics
+    #     which generates data for hf_monitor_status
+
     set statistics_list [list ]
     # validate
     set nc_p [ns_conn isconnected]
@@ -3570,17 +3584,21 @@ ad_proc -private hf_monitor_statistics {
     set monitor_id_p [qf_is_natural_number $monitor_id]
     set analysis_id_p [qf_is_natural_number $analysis_id]
     #CREATE TABLE hf_monitor_statistics (
-    #    instance_id     integer,
+    #    instance_id     integer not null,
     #    -- only most recent status statistics are reported here 
     #    -- A hf_monitor_log.significant_change flags boundary
     #    monitor_id      integer not null,
+    #    -- same as hf_monitor_status.analysis_id_p1
+    #    -- This ref is used to point to a distribution of points in 
+    #    -- hf_monitor_freq_dist_curves
     #    analysis_id     integer not null,
-    #    sample_count    integer,
-    #    -- range_min is minimum value of report_id
-    #    range_min       integer,
-    #    range_max       integer,
-    #    health_max      integer,
-    #    health_min      integer,
+    #    sample_count    varchar(19) not null DEFAULT '',
+    #    -- range_min is minimum value of hf_monitor_log.report_id used.
+    #    range_min       varchar(19) not null DEFAULT '',
+    #    -- range_max is current hf_monitor_log.report_id
+    #    range_max       varchar(19) not null DEFAULT '',
+    #    health_max      varchar(19) not null DEFAULT '',
+    #    health_min      varchar(19) not null DEFAULT '',
     #    health_average  numeric,
     #    health_median   numeric
     #); 
@@ -3604,6 +3622,11 @@ ad_proc -private hf_monitor_report {
     Generates statistical distribution curve resulting from analysis of status info.
     analysis_id assumes most recent analysis. Can return a range of monitor history.
 } {
+
+    #   if analysis_id doesn't exist (most always true)
+    #   generates distribution curve 
+    #   saves distribution in hf_monitor_freq_dist_curves
+
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
@@ -3620,25 +3643,30 @@ ad_proc -private hf_monitor_report {
     #-- This model keeps old curves, to help with long-term performance insights
     #-- see accounts-finance  qaf_discrete_dist_report 
 
-    # qaf_discrete_dist_report expects dalta_x and y.
+    # qaf_discrete_dist_report expects delta_x and y.
 
     #CREATE TABLE hf_monitor_freq_dist_curves (
-    #    instance_id      integer,
+    #    instance_id      integer not null,
     #    monitor_id       integer not null,
     #    analysis_id      integer not null,
     #    -- position x is a sequential position below curve
     #    -- median is where cumulative_pct = 0.50 
-    #    -- x_pos may not be evenly distributed
-    #    -- x_pos provides order to an anlysis' distribution points
+    #    -- x_pos is unlikely to be sampled from intervals of exact same size.
+    #    -- initial cases assume x_pos is a system time in seconds.
     #    x_pos            integer not null,
+    #    -- The sum of all delta_x_pct from 0 to this x_pos.
     #    -- cumulative_pct increases to 1.0 (from 0 to 100 percentile)
     #    cumulative_pct   numeric not null,
-    #    -- sum of the delta_x equals 1.0
+    #    -- Sum of all delta_x_pct equals 1.0
+    #    -- delta_x_pct may have some values near low limits of 
+    #    -- digitial representation, so only delta_x values are stored.
     #    -- delta_x values might be equal, or not,
-    #    -- depending on how distribution is calculated/represented
-    #    delta_x_pct      numeric not null,
-    #    -- duplicate of hf_monitor_log.health to avoid excess table joins
-    #    -- and provide a clearer boundary for internal security between table accesses
+    #    -- Depends on how distribution is obtained.
+    #    -- Initial use assumes delta_x is in seconds.
+    #    delta_x      numeric not null,
+    #    -- Duplicate of hf_monitor_log.health.
+    #    -- Avoids excessive table joins and provides a clearer
+    #    -- boundary between admin and user accessible table queries.
     #    monitor_y        numeric not null
     #);
     

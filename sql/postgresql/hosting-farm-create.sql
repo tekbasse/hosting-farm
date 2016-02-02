@@ -555,8 +555,10 @@ CREATE TABLE hf_monitor_status (
     instance_id                integer not null,
     monitor_id                 integer unique not null,
     asset_id                   varchar(19) not null DEFAULT '',
-    -- most recent report_id:
-    report_id                  varchar(19) not null DEFAULT '',
+    --  analysis_id at p0
+    analysis_id_p0                  varchar(19) not null DEFAULT '',
+    -- most recent analysis_id ie at p1
+    analysis_id_p1                  varchar(19) not null DEFAULT '',
     -- health at p0
     health_p0                  varchar(19) not null DEFAULT '',
     -- for calculating differential, p1 is always 1, just as p0 is 0
@@ -576,10 +578,14 @@ CREATE TABLE hf_monitor_statistics (
     -- only most recent status statistics are reported here 
     -- A hf_monitor_log.significant_change flags boundary
     monitor_id      integer not null,
+    -- same as hf_monitor_status.analysis_id_p1
+    -- This ref is used to point to a distribution of points in 
+    -- hf_monitor_freq_dist_curves
     analysis_id     integer not null,
     sample_count    varchar(19) not null DEFAULT '',
-    -- range_min is minimum value of report_id
+    -- range_min is minimum value of hf_monitor_log.report_id used.
     range_min       varchar(19) not null DEFAULT '',
+    -- range_max is current hf_monitor_log.report_id
     range_max       varchar(19) not null DEFAULT '',
     health_max      varchar(19) not null DEFAULT '',
     health_min      varchar(19) not null DEFAULT '',
@@ -597,22 +603,34 @@ create index hf_monitor_statistics_analysis_id_idx on hf_monitor_statistics (ana
 -- http://en.wikipedia.org/wiki/Permille
 -- curve resolution is count of points
 -- This model keeps old curves, to help with long-term performance insights
--- see accounts-finance  qaf_discrete_dist_report {
+-- see accounts-finance  qaf_discrete_dist_report
+-- On 20160201 it became clear that much of these records between analysis_id
+-- of the same monitor_id will be consistent --execpt for the last value.
+-- anaysis_id would be for just the new point, and hf_monitor_statisics
+-- would need an analysis_id_min, analysis_id_max to reference the points
+-- specific to the analysis_id.  There is little benefit of increasing storage efficiency
+-- versus the additional complexity in code for completing first release.
+-- ADMIN: consider harmonizing hf_monitor_freq_dist_curves at some point if looking
+-- to decrease storage footprint.
 CREATE TABLE hf_monitor_freq_dist_curves (
     instance_id      integer not null,
     monitor_id       integer not null,
     analysis_id      integer not null,
     -- position x is a sequential position below curve
     -- median is where cumulative_pct = 0.50 
-    -- x_pos may not be evenly distributed
+    -- x_pos is unlikely to be sampled from intervals of exact same size.
+    -- initial cases assume x_pos is a system time in seconds.
     x_pos            integer not null,
     -- The sum of all delta_x_pct from 0 to this x_pos.
     -- cumulative_pct increases to 1.0 (from 0 to 100 percentile)
     cumulative_pct   numeric not null,
-    -- Sum of all delta_x equals 1.0
+    -- Sum of all delta_x_pct equals 1.0
+    -- delta_x_pct may have some values near low limits of 
+    -- digitial representation, so only delta_x values are stored.
     -- delta_x values might be equal, or not,
     -- Depends on how distribution is obtained.
-    delta_x_pct      numeric not null,
+    -- Initial use assumes delta_x is in seconds.
+    delta_x      numeric not null,
     -- Duplicate of hf_monitor_log.health.
     -- Avoids excessive table joins and provides a clearer
     -- boundary between admin and user accessible table queries.
