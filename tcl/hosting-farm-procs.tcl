@@ -3453,6 +3453,7 @@ ad_proc -private hf_monitor_update {
     if { ![qf_is_natural_number $report_id ] } {
         # this will return a valid chronological number to year 2037, when db integer type will be over limit.
         ## THIS WILL NEED REVISED BY 2036
+        ## grep 2036 for other places that depend on this use of report_id.
         set report_id [clock seconds]
     } else {
         set report_id [expr { $report_id + 1 } ]
@@ -3537,6 +3538,8 @@ ad_proc -private hf_monitor_statistics {
     calculation_switches
     interval_s
     {instance_id ""}
+    {user_id ""}
+    {analysis_id ""}
 } {
     Analyse most recent hf_monitor_update in context of distribution curve.
     returns analysis_id
@@ -3549,11 +3552,16 @@ ad_proc -private hf_monitor_statistics {
     # This will require some modification to the monitor data model,
     # perhaps including another batching scheduled process just for analysis.
 
-    set statistics_list [list ]
-    # validate
+
+    # collect from hf_monitor_log:
+    #   user_id, asset_id, report_id, health
+    # The proc calling this proc should have this info,
+    # so try to collect it via parameter instead of db.
+
+    # permissions
     set nc_p [ns_conn isconnected]
     if { $nc_p } {
-        set user_id 0
+        set admin_p 1
     } else {
         set user_id [ad_conn user_id]
         # try and make it work
@@ -3561,20 +3569,81 @@ ad_proc -private hf_monitor_statistics {
             # set instance_id package_id
             set instance_id [ad_conn package_id]
         }
+        set admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
     }
+
+    # initializations
+    set statistics_list [list ]
+    set error_p 0
+
+    # validate
     set monitor_id_p [qf_is_natural_number $monitor_id]
-
-
-
-    # collect records from hf_monitor_log
-    # The proc calling this proc should have this info,
-    # so collect it via upvar instead of db.
-
-    
+    set asset_id_p [qf_is_natural_number $asset_id]
+    set report_id_p [qf_is_natural_number $report_id]
+    set portions_count_p [qf_is_natural_number $portions_count]
+    set interval_s_p [qf_is_decimal_number $interval_s]
+    set health_p [qf_is_decimal_number $health]
     set analysis_id_p [qf_is_natural_number $analysis_id]
+    if { [string length $calculation_switches] < 21 } {
+        set calculation_switches_p 1
+    } else {
+        set calculation_switches_p 0
+        set error_p 1
+    }
+    
 
-    # call hf_monitor_report
-    #     which generates/saves distribution curve
+    if { !$error_p } {
+        # call phantom hf_monitor_report (only this proc uses it right now,
+        #     so embedded in this proc)
+        #     which generates/saves distribution curve
+
+        # get raw distribution from log
+        set raw_lists [db_list_of_lists hf_monitor_log_read_dist "select health,report_id,report_time,significant_change from hf_monitor_log where instance_id=:instance_id and monitor_id=:monitor_id and asset_id=:asset_id order by report_time desc limit :portions_count"]
+        if { [llength $raw_lists] == 0 } {
+            ns_log Warning "hf_monitor_statistics(3602): no distribution found for asset_id '${asset_id}' instance_id '${instance_id}' monitor_id '${monitor_id}'"
+            set error_p 1
+        }
+
+        # find end boundary to remove (ie ignore) any points before a significant change in monitored asset
+        set boundary_i [lsearch -exact -index 3 $raw_lists "1"]
+        set dist_lists [list ]
+        if { $boundary_i == -1 } {
+            set boundary_i [llength $raw_lists]
+            # setup first case of for loop conditions
+            set row_i_prev [lrange $raw_lists end end]
+            # use smallest decimal number to achieve value other than delta t of 0
+            set row_i_prev [list [lindex $row_i_prev 0] [expr { [lindex $row_i_prev 1] - 1 } ]]
+        } else {
+            set row_i_prev [lindex $raw_lists $boundary_i]
+        }
+        # Instead of using tcl scan to convert times for detla t values,
+        # at least until 2036, report_id is using machine time seconds.
+        # We can sanity check for machine time since the 
+        # list has already been sorted by time.
+        # And then subtract report_ids for faster, approximate delta t.
+
+        incr boundary_i -1
+        set t0 [lindex $row_i_prev 1]
+        for {set i $boundary_i} {$i > 0 } {incr i -1 } {
+            set row_i [lindex $raw_lists $i]
+            set t1 [lindex $row_i 1]
+            set delta_t [expr { abs( $t1 - $t0 ) } ]
+            set dist_row [list [lindex $row_i 0] $delta_t]
+            lappend dist_lists $dist_row
+            set t0 $t1
+        }
+
+        # convert to cobbler list by sortying by y
+        set normed_lists [lsort -index 0 -real $dist_lists ]
+        # add headers
+        set normed_lists [linsert $normed_lists 0 [list y x]]
+
+        # Determine health_percentile
+        #        set health_percentile [qaf_y_of_x_dist_curve ]?
+        # no, not that proc.. determine p from y given dist_curve.. where is existing proc???
+    }
+
+
     # and returns stats for..
     # call hf_monitor_statistics
     #     which generates data for hf_monitor_status
