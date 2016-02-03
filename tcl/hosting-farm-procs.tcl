@@ -3541,21 +3541,13 @@ ad_proc -private hf_monitor_statistics {
     Analyse most recent hf_monitor_update in context of distribution curve.
     returns analysis_id
 } {
+    # ADMIN
     # Currently, this paradigm assumes a new curve with each new log entry.
     # For scaling at some point in the future, it may be useful to 
     # schedule new curves at a less frequent interval, perhaps updating
     # only as data points reach near trigger outliers.
     # This will require some modification to the monitor data model,
     # perhaps including another batching scheduled process just for analysis.
-
-
-
-    # collect records from hf_monitor_log
-    # call hf_monitor_report
-    #     which generates/saves distribution curve
-    # and returns stats for..
-    # call hf_monitor_statistics
-    #     which generates data for hf_monitor_status
 
     set statistics_list [list ]
     # validate
@@ -3571,7 +3563,22 @@ ad_proc -private hf_monitor_statistics {
         }
     }
     set monitor_id_p [qf_is_natural_number $monitor_id]
+
+
+
+    # collect records from hf_monitor_log
+    # The proc calling this proc should have this info,
+    # so collect it via upvar instead of db.
+
+    
     set analysis_id_p [qf_is_natural_number $analysis_id]
+
+    # call hf_monitor_report
+    #     which generates/saves distribution curve
+    # and returns stats for..
+    # call hf_monitor_statistics
+    #     which generates data for hf_monitor_status
+
 ##code
     # Data are put into separate tables,
     # hf_monitor_status for simple status queries
