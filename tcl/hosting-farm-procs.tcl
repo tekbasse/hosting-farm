@@ -3645,6 +3645,16 @@ ad_proc -private hf_monitor_statistics {
         set health_percentile [qaf_p_at_y_of_dist_curve $health_latest $normed_lists]
     }
 
+    # calculate expected_health? No. local procs do that. ie. the ones that get the raw data
+    # from hf_monitor_status:
+    # expected_health is expected to have been calculated by a proc in hosting-farm-local-procs.tcl, just prior to
+    #    requires quota and dependencies, if there is one.
+    # because local procs know if there is a quota? They don't. expected_health should be determined during analysis.
+    # because that is when other info, such as is_quota_p and quota_interval, and quota_current_point is available.
+
+    # issuing an hf_monitor_update.
+    # hf_monitor_statistics is called for final analysis and to determine health (percentile) 
+
 
     # and returns stats for..
     # call hf_monitor_statistics
