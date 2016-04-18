@@ -3603,10 +3603,12 @@ ad_proc -private hf_monitor_statistics {
             ns_log Warning "hf_monitor_statistics(3602): no distribution found for asset_id '${asset_id}' instance_id '${instance_id}' monitor_id '${monitor_id}'"
             set error_p 1
         }
-
+    }
+    if { !$error_p } {
         # find end boundary to remove (ie ignore) any points before a significant change in monitored asset
         set boundary_i [lsearch -exact -index 3 $raw_lists "1"]
         set dist_lists [list ]
+
         if { $boundary_i == -1 } {
             set boundary_i [llength $raw_lists]
             # setup first case of for loop conditions
@@ -3639,8 +3641,8 @@ ad_proc -private hf_monitor_statistics {
         set normed_lists [linsert $normed_lists 0 [list y x]]
 
         # Determine health_percentile
-        #        set health_percentile [qaf_y_of_x_dist_curve ]?
-        # no, not that proc.. determine p from y given dist_curve.. where is existing proc???
+        set health_latest [lindex [lindex $raw_lists 0] 0]
+        set health_percentile [qaf_p_at_y_of_dist_curve $health_latest $normed_lists]
     }
 
 
