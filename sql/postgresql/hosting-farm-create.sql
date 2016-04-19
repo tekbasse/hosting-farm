@@ -571,7 +571,8 @@ CREATE TABLE hf_monitor_status (
 create index hf_monitor_status_instance_id_idx on hf_monitor_status (instance_id);
 create index hf_monitor_status_monitor_id_idx on hf_monitor_status (monitor_id);
 create index hf_monitor_status_asset_id_idx on hf_monitor_status (asset_id);
-create index hf_monitor_status_report_id_idx on hf_monitor_status (report_id);
+-- to quickly recall most recent prior analysis. id_p0 is prior id_p1
+create index hf_monitor_status_analysis_id_p1 on hf_monitor_status (analysis_id_p1);
 
 CREATE TABLE hf_monitor_statistics (
     instance_id     integer not null,

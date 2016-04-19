@@ -29,7 +29,7 @@ drop index hf_monitor_statistics_instance_id_idx;
 
 DROP TABLE hf_monitor_statistics;
 
-drop index hf_monitor_status_report_id_idx;
+drop index hf_monitor_status_analysis_id_p1;
 drop index hf_monitor_status_asset_id_idx;
 drop index hf_monitor_status_monitor_id_idx;
 drop index hf_monitor_status_instance_id_idx;
