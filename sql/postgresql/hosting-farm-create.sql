@@ -675,3 +675,6 @@ create index hf_call_role_map_instance_id_idx on hf_call_role_map (instance_id);
 create index hf_call_role_map_call_id_idx on hf_call_role_map (call_id);
 create index hf_call_role_map_role_id_idx on hf_call_role_map (role_id);
 
+/i hosting-farm-cron-create.sql
+/i hosting-farm-mon-create.sql
+/i hosting-farm-permissions-create.sql

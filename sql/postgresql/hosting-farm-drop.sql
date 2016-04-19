@@ -3,6 +3,11 @@
 -- @author Benjamin Brink
 -- @license GNU GENERAL PUBLIC LICENSE, Version 3
 --
+/i hosting-farm-cron-drop.sql
+/i hosting-farm-mon-drop.sql
+/i hosting-farm-permissions-drop.sql
+
+
 drop index hf_calls_instance_id_idx;
 drop index hf_calls_proc_name;
 drop index hf_calls_asset_type_id;

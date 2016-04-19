@@ -16,7 +16,7 @@
 #ns_schedule_daily -thread 4 14 hf::proc...
 
 set frequency_base [expr { 3 * 60 } ]
-ad_schedule_proc -thread t hf::schedule::do
+ad_schedule_proc -thread t $frequency_base hf::schedule::do
 
 # set cycle_time:
 hf::monitor::check
