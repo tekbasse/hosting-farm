@@ -73,7 +73,7 @@ ad_proc -private hf::monitor::check {
         if { $monitor_count > 0 } {
             set cycle_time [expr { int( $cycle_time / $monitor_count ) + 1 } ] 
         } 
-
+        
         # create the row
         db_dml hf_beat_stack_bus_cr { insert into hf_beat_stack_bus (active_id,debug_p,priority_threashold,cycle_time) values (:active_id,:debug_p,:priority_threashold,:cycle_time) }
     }
