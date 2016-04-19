@@ -3218,7 +3218,7 @@ ad_proc -private hf_call_roles_read {
 #   hf_monitor_asset_from_id  Returns asset_id of monitor_id
 
 ### These are really a part of hf_monitor_update:
-#   hf_monitor_dc             Returns distribution curve of most recent configuration
+#   hf_monitor_distribution             Returns distribution curve of most recent configuration
 #   hf_monitor_status_create  Save an Analysis an hf_monitor_update (or FLAG ERROR)
 
 
@@ -3651,6 +3651,7 @@ ad_proc -private hf_monitor_statistics {
     #    requires quota and dependencies, if there is one.
     # because local procs know if there is a quota? They don't. expected_health should be determined during analysis.
     # because that is when other info, such as is_quota_p and quota_interval, and quota_current_point is available.
+    # actually, no. quota info should be available to an hf::monitor::do, because it is based on asset info..
 
     # issuing an hf_monitor_update.
     # hf_monitor_statistics is called for final analysis and to determine health (percentile) 
