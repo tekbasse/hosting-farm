@@ -1,0 +1,90 @@
+UI app procs in app-procs.tcl
+hf_log_create (via batch process)
+hf_log_read
+
+UI batch processor API
+hf::schedule::do
+hf::schedule::add
+hf::schedule::trash
+hf::schedule::read
+hf::schedule::list
+
+General Asset UI in hosting-farm-asset-procs.tcl
+hf_asset_id_exists 
+hf_change_asset_id_for_label
+hf_asset_rename
+hf_asset_id_from_label 
+hf_asset_label_from_id 
+hf_asset_label_id_from_template_id 
+hf_asset_from_label 
+hf_asset_create 
+hf_asset_stats 
+hf_assets 
+hf_asset_read 
+hf_asset_write
+hf_asset_delete
+hf_asset_trash
+
+The monitoring process
+
+monitor batch processor API
+hf::monitor::check
+hf::monitor::do
+hf::monitor::add
+hf::monitor::trash
+hf::monitor::read
+hf::monitor::list
+
+
+
+hosting-farm-local-ex-procs.tcl:ad_proc -private hfl_allow_q
+hosting-farm-local-ex-procs.tcl:ad_proc -private hfl_asset_halt_example
+
+hosting-farm-procs.tcl:ad_proc -private hf_vm_quota_read
+
+monitoring processes are automatically considered periodic, and added using hf::monitor::add
+
+monitor user API:
+hf_monitor_configs_write
+hf_monitor_configs_read
+hf_monitor_logs
+hf_monitors_inactivate
+
+
+A process is called to add to the monitor_log
+
+
+hf_monitor_update updates table hf_monitor_log
+
+hf_monitor_status returns most recent analyzed monitor_logs from table hf_monitor_status
+
+hf_monitor_statistics analyzes data from unprocessed hf_monitor_update, posts to hf_monitor_status, hf_monitor_freq_dist_curves, and hf_monitor_statistics
+
+hf_monitor_report_read
+
+
+
+#   hf_monitor_update         Write an update to a log (this includes distribution curve info, ie time as delta-t)
+#   hf_monitor_status         Read status of asset_id, defaults to most recent status (like read, just status number)
+
+#   hf_monitor_statistics     Analyse most recent hf_monitor_update in context of distribution curve
+#                             Returns distribution curve of most recent configuration (table hf_monitor_freq_dist_curves)
+#                             Save an Analysis an hf_monitor_update (or FLAG ERROR)
+
+#   hf_monitor_logs           Returns monitor_ids of logs indirectly associated with an asset (direct is 1:1 via asset properties)
+
+#   hf_monitor_report         Returns a range of monitor history
+#   hf_monitor_status_history  Returns a range of status history
+
+#   hf_monitor_asset_from_id  Returns asset_id of monitor_id
+
+
+
+
+
+# hf_monitor_alert_create 
+# hf_monitor_alert_process
+# hf_monitor_alerts_status
+# hf_monitor_alert_trash 
+
+

@@ -3206,20 +3206,18 @@ ad_proc -private hf_call_roles_read {
 #   hf_monitor_configs_write  Write monitor configuration
 
 #   hf_monitor_update         Write an update to a log (this includes distribution curve info, ie time as delta-t)
-#   hf_monitor_status_read    Read status of asset_id, defaults to most recent status (like read, just status number)
+#   hf_monitor_status         Read status of asset_id, defaults to most recent status (like read, just status number)
 
 #   hf_monitor_statistics     Analyse most recent hf_monitor_update in context of distribution curve
+#                             Returns distribution curve of most recent configuration (table hf_monitor_freq_dist_curves)
+#                             Save an Analysis an hf_monitor_update (or FLAG ERROR)
 
 #   hf_monitor_logs           Returns monitor_ids of logs indirectly associated with an asset (direct is 1:1 via asset properties)
 
 #   hf_monitor_report         Returns a range of monitor history
-#   hf_monitor_status_report  Returns a range of status history
+#   hf_monitor_status_history  Returns a range of status history
 
 #   hf_monitor_asset_from_id  Returns asset_id of monitor_id
-
-### These are really a part of hf_monitor_update:
-#   hf_monitor_distribution             Returns distribution curve of most recent configuration
-#   hf_monitor_status_create  Save an Analysis an hf_monitor_update (or FLAG ERROR)
 
 
 
@@ -3506,7 +3504,8 @@ ad_proc -private hf_monitor_status {
     {monitor_id_list ""}
     {instance_id ""}
 } {
-    Returns  standardized analysis (ie change of health ) of standardized info health reported from hf_monitor_update.
+    Analyzes data from unprocessed hf_monitor_update, posts to hf_monitor_status, hf_monitor_freq_dist_curves, and hf_monitor_statistics
+    Standardizes analysis (ie change of health ) of standardized info health reported from hf_monitor_update.
     Data is in list of lists format, where each list represents a monitor_id and contains this ordered info:
     monitor_id, asset_id, report_id, health_p0, health_p1, expected_health.
     Where report_id is id of most recent hf_monitor_update.
@@ -3514,6 +3513,8 @@ ad_proc -private hf_monitor_status {
     health_p1 is the most recent (current) health value.
     expected_health is the projected health value (either at next report, or at quota point if monitor has a quota.)
 } {
+    # in oscilloscope terms, if hf_monitor_update is "signal in", then hf_monitor_status is the data that gets posted to screen output.
+
     # expected_health is expected to have been calculated by a proc in hosting-farm-local-procs.tcl, just prior to
     # issuing an hf_monitor_update.
 
@@ -3653,7 +3654,6 @@ ad_proc -private hf_monitor_statistics {
     # because that is when other info, such as is_quota_p and quota_interval, and quota_current_point is available.
     # actually, no. quota info should be available to an hf::monitor::do, because it is based on asset info..
 
-    # issuing an hf_monitor_update.
     # hf_monitor_statistics is called for final analysis and to determine health (percentile) 
 
 
@@ -3764,6 +3764,7 @@ ad_proc -private hf_monitor_report_read {
     analysis_id assumes most recent analysis. Can return a range of monitor history.
 } {
     #  hf_monitor_statistics creates the curve at the same time it generates statistics
+    # no. Uses curve from hf_monitor_freq_dist_curves 
 
     if { $instance_id eq "" } {
         # set instance_id package_id
