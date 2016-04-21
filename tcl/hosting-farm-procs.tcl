@@ -3222,13 +3222,12 @@ ad_proc -private hf_call_roles_read {
 
 
 
-# hf_monitor_alert_create 
-# hf_monitor_alert_process
+# triggers are configured in hf_monitor_configs_read
+# hf_monitor_alert_trigger (notifications and hf_log_create )
 # hf_monitor_alerts_status
-# hf_monitor_alert_trash 
 
-# the process goes something like this:
-# a new monitor is defined via app and saved via hf_monitor_configs_write
+
+
 
 ad_proc -private hf_monitor_configs_read {
     {id}
@@ -3514,7 +3513,7 @@ ad_proc -private hf_monitor_status {
     expected_health is the projected health value (either at next report, or at quota point if monitor has a quota.)
 } {
     # in oscilloscope terms, if hf_monitor_update is "signal in", then hf_monitor_status is the data that gets posted to screen output.
-
+    
     # expected_health is expected to have been calculated by a proc in hosting-farm-local-procs.tcl, just prior to
     # issuing an hf_monitor_update.
 
@@ -3529,6 +3528,112 @@ ad_proc -private hf_monitor_status {
     set status_lists [db_list_of_lists hf_monitor_status_read "select monitor_id, asset_id, report_id, health_p0, health_p1,expected_health from hf_monitor_status where instance_id=:instance_id and monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list])"]
 
     return $status_lists
+}
+
+ad_proc -public hf_monitor_distribution {
+    asset_id
+    monitor_id
+    {trigger_ct "0"}
+    {duration_s ""}
+    {points_ct ""}
+} {
+    Return a distributin curve of a monitor_id.
+    Defaults to most recent contiguous sample (trace). 
+    If duration_s (seconds), clips total sample to duration.
+    If points_ct is included, uses a sample rate that results in points_ct data points.
+} {
+    # in oscilloscope terms, if hf_monitor_update is "signal in", then hf_monitor_distribution is a sample trace of signal.
+    ##code
+    # permissions
+    set nc_p [ns_conn isconnected]
+    if { $nc_p } {
+        set read_p 1
+    } else {
+        set user_id [ad_conn user_id]
+        # try and make it work
+        if { $instance_id eq "" } {
+            # set instance_id package_id
+            set instance_id [ad_conn package_id]
+        }
+        set read_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege read]
+    }
+
+    # initializations
+    set error_p 0
+
+    # validate
+    set monitor_id_p [qf_is_natural_number $monitor_id]
+    set asset_id_p [qf_is_natural_number $asset_id]
+    set trigger_ct_p [qf_is_decimal_number $trigge_ct]
+    set duration_s [qf_is_decimal_number $duration_s]
+    set points_ct [qf_is_decimal_number $points_ct]
+    if { $monitor_id_p } {
+        if { $asset_id_p } {
+            
+        } else {
+            # get asset_id
+
+        }
+##code
+    } else {
+        set calculation_switches_p 0
+        set error_p 1
+    }
+    
+
+    if { !$error_p } {
+        # call phantom hf_monitor_report (only this proc uses it right now,
+        #     so embedded in this proc)
+        #     which generates/saves distribution curve
+
+        # get raw distribution from log
+        set raw_lists [db_list_of_lists hf_monitor_log_read_dist "select health,report_id,report_time,significant_change from hf_monitor_log where instance_id=:instance_id and monitor_id=:monitor_id and asset_id=:asset_id order by report_time desc limit :portions_count"]
+        if { [llength $raw_lists] == 0 } {
+            ns_log Warning "hf_monitor_statistics(3602): no distribution found for asset_id '${asset_id}' instance_id '${instance_id}' monitor_id '${monitor_id}'"
+            set error_p 1
+        }
+    }
+    if { !$error_p } {
+        # find end boundary to remove (ie ignore) any points before a significant change in monitored asset
+        set boundary_i [lsearch -exact -index 3 $raw_lists "1"]
+        set dist_lists [list ]
+
+        if { $boundary_i == -1 } {
+            set boundary_i [llength $raw_lists]
+            # setup first case of for loop conditions
+            set row_i_prev [lrange $raw_lists end end]
+            # use smallest decimal number to achieve value other than delta t of 0
+            set row_i_prev [list [lindex $row_i_prev 0] [expr { [lindex $row_i_prev 1] - 1 } ]]
+        } else {
+            set row_i_prev [lindex $raw_lists $boundary_i]
+        }
+        # Instead of using tcl scan to convert times for detla t values,
+        # at least until 2036, report_id is using machine time seconds.
+        # We can sanity check for machine time since the 
+        # list has already been sorted by time.
+        # And then subtract report_ids for faster, approximate delta t.
+
+        incr boundary_i -1
+        set t0 [lindex $row_i_prev 1]
+        for {set i $boundary_i} {$i > 0 } {incr i -1 } {
+            set row_i [lindex $raw_lists $i]
+            set t1 [lindex $row_i 1]
+            set delta_t [expr { abs( $t1 - $t0 ) } ]
+            set dist_row [list [lindex $row_i 0] $delta_t]
+            lappend dist_lists $dist_row
+            set t0 $t1
+        }
+
+        # convert to cobbler list by sortying by y
+        set normed_lists [lsort -index 0 -real $dist_lists ]
+        # add headers
+        set normed_lists [linsert $normed_lists 0 [list y x]]
+
+        # Determine health_percentile
+        set health_latest [lindex [lindex $raw_lists 0] 0]
+        set health_percentile [qaf_p_at_y_of_dist_curve $health_latest $normed_lists]
+    }
+
 }
 
 ad_proc -private hf_monitor_statistics {
@@ -3594,53 +3699,13 @@ ad_proc -private hf_monitor_statistics {
     
 
     if { !$error_p } {
-        # call phantom hf_monitor_report (only this proc uses it right now,
-        #     so embedded in this proc)
-        #     which generates/saves distribution curve
-
-        # get raw distribution from log
-        set raw_lists [db_list_of_lists hf_monitor_log_read_dist "select health,report_id,report_time,significant_change from hf_monitor_log where instance_id=:instance_id and monitor_id=:monitor_id and asset_id=:asset_id order by report_time desc limit :portions_count"]
+        set dist_lists [hf_monitor_distribution 
         if { [llength $raw_lists] == 0 } {
             ns_log Warning "hf_monitor_statistics(3602): no distribution found for asset_id '${asset_id}' instance_id '${instance_id}' monitor_id '${monitor_id}'"
             set error_p 1
         }
     }
     if { !$error_p } {
-        # find end boundary to remove (ie ignore) any points before a significant change in monitored asset
-        set boundary_i [lsearch -exact -index 3 $raw_lists "1"]
-        set dist_lists [list ]
-
-        if { $boundary_i == -1 } {
-            set boundary_i [llength $raw_lists]
-            # setup first case of for loop conditions
-            set row_i_prev [lrange $raw_lists end end]
-            # use smallest decimal number to achieve value other than delta t of 0
-            set row_i_prev [list [lindex $row_i_prev 0] [expr { [lindex $row_i_prev 1] - 1 } ]]
-        } else {
-            set row_i_prev [lindex $raw_lists $boundary_i]
-        }
-        # Instead of using tcl scan to convert times for detla t values,
-        # at least until 2036, report_id is using machine time seconds.
-        # We can sanity check for machine time since the 
-        # list has already been sorted by time.
-        # And then subtract report_ids for faster, approximate delta t.
-
-        incr boundary_i -1
-        set t0 [lindex $row_i_prev 1]
-        for {set i $boundary_i} {$i > 0 } {incr i -1 } {
-            set row_i [lindex $raw_lists $i]
-            set t1 [lindex $row_i 1]
-            set delta_t [expr { abs( $t1 - $t0 ) } ]
-            set dist_row [list [lindex $row_i 0] $delta_t]
-            lappend dist_lists $dist_row
-            set t0 $t1
-        }
-
-        # convert to cobbler list by sortying by y
-        set normed_lists [lsort -index 0 -real $dist_lists ]
-        # add headers
-        set normed_lists [linsert $normed_lists 0 [list y x]]
-
         # Determine health_percentile
         set health_latest [lindex [lindex $raw_lists 0] 0]
         set health_percentile [qaf_p_at_y_of_dist_curve $health_latest $normed_lists]
@@ -3743,6 +3808,11 @@ ad_proc -private hf_monitor_statistics {
     #    health_average  numeric,
     #    health_median   numeric
     #); 
+
+
+    # check triggers. ie hf_monitor_config_n_control.health_percentile_trigger and .health_threashold  
+    # Either one will trigger event. 
+
     if { $monitor_id_p } {
         if { $analysis_id_p } {
             set statistics_lists [db_list_of_lists hf_monitor_stats_get "select sample_count, range_min, range_max, health_min, health_max, health_average, health_median, analysis_id, monitor_id from hf_monitor_statistics where instance_id=:instance_id and monitor_id=:monitor_id and analysis_id=:analysis_id"]
