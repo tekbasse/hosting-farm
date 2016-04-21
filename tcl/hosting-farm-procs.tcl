@@ -3533,16 +3533,18 @@ ad_proc -private hf_monitor_status {
 ad_proc -public hf_monitor_distribution {
     asset_id
     monitor_id
-    {trigger_ct "0"}
+    {instance_id ""}
+    {sample_ct "1"}
     {duration_s ""}
     {points_ct ""}
 } {
     Return a distributin curve of a monitor_id.
     Defaults to most recent contiguous sample (trace). 
-    If duration_s (seconds), clips total sample to duration.
+    If duration_s (seconds), clips total sample(s) to duration.
     If points_ct is included, uses a sample rate that results in points_ct data points.
+    If sample_ct, duration_s and points_ct is blank, returns all sample points associated with monitor_id.
 } {
-    # in oscilloscope terms, if hf_monitor_update is "signal in", then hf_monitor_distribution is a sample trace of signal.
+    # in oscilloscope terms, if hf_monitor_update is "signal in", then hf_monitor_distribution returns a sample trace of signal.
     ##code
     # permissions
     set nc_p [ns_conn isconnected]
@@ -3560,36 +3562,58 @@ ad_proc -public hf_monitor_distribution {
 
     # initializations
     set error_p 0
+    set sample_sql ""
+    set duration_sql ""
+    set points_sql ""
+    set sql_list [list ]
 
     # validate
     set monitor_id_p [qf_is_natural_number $monitor_id]
     set asset_id_p [qf_is_natural_number $asset_id]
-    set trigger_ct_p [qf_is_decimal_number $trigge_ct]
-    set duration_s [qf_is_decimal_number $duration_s]
-    set points_ct [qf_is_decimal_number $points_ct]
+    set sample_ct_p [qf_is_decimal_number $sample_ct]
+    set duration_s_p [qf_is_decimal_number $duration_s]
+    set points_ct_p [qf_is_decimal_number $points_ct]
     if { $monitor_id_p } {
-        if { $asset_id_p } {
-            
-        } else {
+        if { !$asset_id_p } {
             # get asset_id
-
+            set asset_id_p [db_0or1row hf_asset_from_monitor_id "select asset_id from hf_monitor_config_n_control where instance_id =:instance_id and monitor_id =:monitor_id"]
+            if { !$asset_id_p } {
+                set error_p 1
+            }
         }
-##code
     } else {
-        set calculation_switches_p 0
         set error_p 1
     }
-    
+    if { !$error_p } {
+        if { $sample_ct_p } {
+            # get list of significant_change report_times
+            set sc_list [db_list hf_monitor_log_read_sc "select report_time from hf_monitor_log where instance_id=:instance_id and monitor_id=:monitor_id and asset_id=:asset_id order by report_time desc"]
+            # use the report_time as qualifier
+            set i [expr { $sample_ct - 1 } ]
+            set q_time [lindex $sc_list $i]
+            if { $q_time ne "" } {
+                set sample_sql "report_time > '${q_time}'"
+                lappend sql_list $sample_sql
+            }
+        }
+        if { $duration_s_p } {
+            set now_s [clock seconds]
+            set q2_time [expr { $now_s - $duration_s } ]
+            set duration_sql "report_time < ${q2_time}"
+            lappend sql_list $duration_sql
+        }
+        if { $points_ct_p } {
+            set points_sql "limit :points_ct"
+            lappend sql_list $points_sql
+        }
+        set qualifier_sql [join $sql_list " and "]
+    }
 
     if { !$error_p } {
-        # call phantom hf_monitor_report (only this proc uses it right now,
-        #     so embedded in this proc)
-        #     which generates/saves distribution curve
-
         # get raw distribution from log
-        set raw_lists [db_list_of_lists hf_monitor_log_read_dist "select health,report_id,report_time,significant_change from hf_monitor_log where instance_id=:instance_id and monitor_id=:monitor_id and asset_id=:asset_id order by report_time desc limit :portions_count"]
+        set raw_lists [db_list_of_lists hf_monitor_log_read_dist "select health,report_id,report_time,significant_change from hf_monitor_log where instance_id=:instance_id and monitor_id=:monitor_id and asset_id=:asset_id order by report_time desc ${points_sql}"]
         if { [llength $raw_lists] == 0 } {
-            ns_log Warning "hf_monitor_statistics(3602): no distribution found for asset_id '${asset_id}' instance_id '${instance_id}' monitor_id '${monitor_id}'"
+            ns_log Warning "hf_monitor_distribution(3602): no distribution found for asset_id '${asset_id}' instance_id '${instance_id}' monitor_id '${monitor_id}'"
             set error_p 1
         }
     }
