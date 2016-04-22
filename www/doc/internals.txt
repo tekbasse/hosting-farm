@@ -1,3 +1,12 @@
+ DEVELOPER NOTE change before year 2036
+ Instead of using tcl scan to convert times for detla t values,
+ at least until 2036, hf_monitor_log.report_id is using machine time seconds.
+ We can sanity check for machine time since the 
+ list has already been sorted by time.
+ And then subtract report_ids for faster, approximate delta t.
+
+
+
 UI app procs in app-procs.tcl
 hf_log_create (via batch process)
 hf_log_read

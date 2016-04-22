@@ -8,6 +8,14 @@ ad_library {
     @project home: http://github.com/tekbasse/hosting-farm
     @address: po box 20, Marylhurst, OR 97036-0020 usa
     @email: tekbasse@yahoo.com
+    
+    # DEVELOPER NOTE change before year 2036
+    # Instead of using tcl scan to convert times for detla t values,
+    # at least until 2036, hf_monitor_log.report_id is using machine time seconds.
+    # We can sanity check for machine time since the 
+    # list has already been sorted by time.
+    # And then subtract report_ids for faster, approximate delta t.
+
 
     # UI for one click (web-based) installers
     # installers install/update/monitor/activate/de-activate software, ie hosted service (hs) or software as a service (ss)
@@ -3537,12 +3545,14 @@ ad_proc -public hf_monitor_distribution {
     {sample_ct "1"}
     {duration_s ""}
     {points_ct ""}
+    {ct_per_sample "1"}
 } {
     Return a distributin curve of a monitor_id.
     Defaults to most recent contiguous sample (trace). 
     If duration_s (seconds), clips total sample(s) to duration.
-    If points_ct is included, uses a sample rate that results in points_ct data points.
+    If points_ct is included, results in points_ct most recent data points.
     If sample_ct, duration_s and points_ct is blank, returns all sample points associated with monitor_id.
+    ct_per_sample is sample rate. "1" is default ie no points skipped. If ct_per_sample is 2, then every other point is skipped etc.
 } {
     # in oscilloscope terms, if hf_monitor_update is "signal in", then hf_monitor_distribution returns a sample trace of signal.
     ##code
@@ -3573,6 +3583,7 @@ ad_proc -public hf_monitor_distribution {
     set sample_ct_p [qf_is_decimal_number $sample_ct]
     set duration_s_p [qf_is_decimal_number $duration_s]
     set points_ct_p [qf_is_decimal_number $points_ct]
+    set ct_per_sample_p [qf_is_decimal_number $ct_per_sample]
     if { $monitor_id_p } {
         if { !$asset_id_p } {
             # get asset_id
@@ -3589,7 +3600,7 @@ ad_proc -public hf_monitor_distribution {
             # get list of significant_change report_times
             set sc_list [db_list hf_monitor_log_read_sc "select report_time from hf_monitor_log where instance_id=:instance_id and monitor_id=:monitor_id and asset_id=:asset_id order by report_time desc"]
             # use the report_time as qualifier
-            set i [expr { $sample_ct - 1 } ]
+            set i [expr { round( $sample_ct - 1 ) } ]
             set q_time [lindex $sc_list $i]
             if { $q_time ne "" } {
                 set sample_sql "report_time > '${q_time}'"
@@ -3598,11 +3609,17 @@ ad_proc -public hf_monitor_distribution {
         }
         if { $duration_s_p } {
             set now_s [clock seconds]
-            set q2_time [expr { $now_s - $duration_s } ]
+            set q2_time [expr { round( $now_s - $duration_s ) } ]
             set duration_sql "report_time < ${q2_time}"
             lappend sql_list $duration_sql
         }
         if { $points_ct_p } {
+            if { $ct_per_sample_p } {
+                # adjust initial sample size to handle later interval sampling
+                set points_ct [expr { round( $points_ct * $ct_per_sample ) } ]
+            } else {
+                set points_ct [expr { round( $points_ct ) } ]
+            }
             set points_sql "limit :points_ct"
             lappend sql_list $points_sql
         }
@@ -3612,31 +3629,23 @@ ad_proc -public hf_monitor_distribution {
     if { !$error_p } {
         # get raw distribution from log
         set raw_lists [db_list_of_lists hf_monitor_log_read_dist "select health,report_id,report_time,significant_change from hf_monitor_log where instance_id=:instance_id and monitor_id=:monitor_id and asset_id=:asset_id order by report_time desc ${points_sql}"]
-        if { [llength $raw_lists] == 0 } {
+        set sample_ct [llength $raw_lists ]
+        if { $sample_ct == 0 } {
             ns_log Warning "hf_monitor_distribution(3602): no distribution found for asset_id '${asset_id}' instance_id '${instance_id}' monitor_id '${monitor_id}'"
             set error_p 1
         }
     }
     if { !$error_p } {
-        # find end boundary to remove (ie ignore) any points before a significant change in monitored asset
-        set boundary_i [lsearch -exact -index 3 $raw_lists "1"]
-        set dist_lists [list ]
+        if { $ct_per_sample_p } {
+            # reduce the sample size by count per sample ct_per_sample
+            set dist_lists [list ]
+            set i -1
 
-        if { $boundary_i == -1 } {
-            set boundary_i [llength $raw_lists]
-            # setup first case of for loop conditions
-            set row_i_prev [lrange $raw_lists end end]
-            # use smallest decimal number to achieve value other than delta t of 0
-            set row_i_prev [list [lindex $row_i_prev 0] [expr { [lindex $row_i_prev 1] - 1 } ]]
-        } else {
-            set row_i_prev [lindex $raw_lists $boundary_i]
+            while { $i < $sample_ct } {
+            incr i
+
+
         }
-        # Instead of using tcl scan to convert times for detla t values,
-        # at least until 2036, report_id is using machine time seconds.
-        # We can sanity check for machine time since the 
-        # list has already been sorted by time.
-        # And then subtract report_ids for faster, approximate delta t.
-
         incr boundary_i -1
         set t0 [lindex $row_i_prev 1]
         for {set i $boundary_i} {$i > 0 } {incr i -1 } {
