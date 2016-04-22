@@ -3545,18 +3545,20 @@ ad_proc -public hf_monitor_distribution {
     {sample_ct "1"}
     {duration_s ""}
     {points_ct ""}
-    {ct_per_sample "1"}
+    {sample_pt_rate "1"}
+    {sample_s_rate ""}
 } {
-    Return a distribution curve of a monitor_id.
+    Returns an unsorted distribution curve of a monitor_id as a list of lists with first row y,delta_x.
     Defaults to most recent contiguous sample (trace). 
     If duration_s (seconds), clips total sample(s) to duration.
     If points_ct is included, results in points_ct most recent data points.
     If sample_ct, duration_s and points_ct is blank, returns all sample points associated with monitor_id.
-    ct_per_sample is sample rate. "1" is default ie no points skipped. If ct_per_sample is 2, then every other point is skipped etc.
+    A sample_pt_rate of "1" is default ie no points skipped. If sample_pt_rate is 2, then every other point is skipped etc.
+    sample_s_rate is number of seconds between samples. sample_s_rate is ignored if sample_pt_rate is also specified.
     Errors return empty list.
 } {
     # in oscilloscope terms, if hf_monitor_update is "signal in", then hf_monitor_distribution returns a sample trace of signal.
-    ##code
+
     # permissions
     set nc_p [ns_conn isconnected]
     if { $nc_p } {
@@ -3585,7 +3587,8 @@ ad_proc -public hf_monitor_distribution {
     set sample_ct_p [qf_is_decimal_number $sample_ct]
     set duration_s_p [qf_is_decimal_number $duration_s]
     set points_ct_p [qf_is_decimal_number $points_ct]
-    set ct_per_sample_p [qf_is_decimal_number $ct_per_sample]
+    set sample_pt_rate_p [qf_is_decimal_number $sample_pt_rate]
+    set sample_s_rate_p [qf_is_decimal_number $sample_s_rate]
     if { $monitor_id_p } {
         if { !$asset_id_p } {
             # get asset_id
@@ -3616,20 +3619,29 @@ ad_proc -public hf_monitor_distribution {
             lappend sql_list $duration_sql
         }
         if { $points_ct_p } {
-            if { $ct_per_sample_p } {
+            if { $sample_pt_rate_p } {
+                # ignore sample_s_rate
+                set sample_s_rate_p 0
+
                 # adjust initial sample size to handle later interval sampling
                 # make this abs() to block any case of infinite case in later while loop
-                set ct_per_sample [expr { round( abs( $ct_per_sample ) ) } ]
-                if { $ct_per_sample < 1 } {
-                    set ct_per_sample 1
+                set sample_pt_rate [expr { round( abs( $sample_pt_rate ) ) } ]
+                if { $sample_pt_rate < 1 } {
+                    set sample_pt_rate 1
                 }
-                set points_ct [expr { round( $points_ct * $ct_per_sample ) + 1 } ]
+                set points_ct [expr { round( $points_ct * $sample_pt_rate ) + 1 } ]
             } else {
                 set points_ct [expr { round( $points_ct ) } ]
             }
             set points_sql "limit :points_ct"
-            lappend sql_list $points_sql
+
+            if { $sample_s_rate_p } {
+                # ignore this sql qualifier. count has to be made during sampling in tcl.
+            } else {
+                lappend sql_list $points_sql
+            }
         }
+        # join sql qualifiers
         set qualifier_sql [join $sql_list " and "]
     }
 
@@ -3643,14 +3655,56 @@ ad_proc -public hf_monitor_distribution {
         }
     }
     if { !$error_p } {
-        if { $ct_per_sample_p } {
-            # reduce the sample size to count per sample ct_per_sample
-            set dist_lists [list ]
-            set i 0
+        # set dist_lists \[list \]
+        set i 0
+        if { $sample_s_rate_p } {
+            # to reduce sample by time 
+
+            # If $points_ct, then limit to number of points.
+            # pt_i is number of points minus 1, allowing for faster comparison in while statements.
+            set pt_i -1
+            while { $i < $sample_ct && $pt_i < $points_ct } {
+                set row_list [lindex $raw_lists $i]
+                set sig_change [lindex $row_list 3]
+                set t [lindex $row_list 2]
+                while { $sig_change && $i < $sample_ct } {
+                    incr i
+                    set row_list [lindex $raw_lists $i]
+                    set sig_change [lindex $row_list 3]
+                    set t [lindex $row_list 2]
+                }
+                if { !$sig_change } {
+                    lappend dist_lists $row_list
+                    incr pt_i
+                }
+                # Increment by change in t (delta t or dt) instead of point count.
+                # incr i $sample_pt_rate
+                set dt_s $t
+                while { $dt_s < $sample_s_rate && $i < $sample_ct && $pt_i < $points_ct } {
+                    incr i
+                    set row_list [lindex $raw_lists $i]
+                    set sig_change [lindex $row_list 3]
+                    set t [lindex $row_list 2]
+                    incr dt_s $t
+                }
+            }
+
+        } else {
+            # Maybe reduce the sample size to count per sample (sample_pt_rate).
+            # All cases included, except by sample_s_rate.
+
             while { $i < $sample_ct } {
                 set row_list [lindex $raw_lists $i]
-                lappend dist_lists $row_list
-                incr i $ct_per_sample
+                set sig_change [lindex $row_list 3]
+                while { $sig_change && $i < $sample_ct } {
+                    incr i
+                    set row_list [lindex $raw_lists $i]
+                    set sig_change [lindex $row_list 3]
+                }
+                if { !$sig_change } {
+                    lappend dist_lists $row_list
+                }
+                incr i $sample_pt_rate
             }
         }
         
@@ -3664,6 +3718,9 @@ ad_proc -public hf_monitor_distribution {
             lappend dist_lists $dist_row
             set t0 $t1
         }
+        # Add headers
+        set dist_lists [linsert $dist_lists 0 [list y x]]
+
     }
     return $dist_lists
 }
@@ -3731,19 +3788,21 @@ ad_proc -private hf_monitor_statistics {
     
 
     if { !$error_p } {
-        set dist_lists [hf_monitor_distribution ]
-        if { [llength $raw_lists] == 0 } {
-            ns_log Warning "hf_monitor_statistics(3602): no distribution found for asset_id '${asset_id}' instance_id '${instance_id}' monitor_id '${monitor_id}'"
+        set dist_lists [hf_monitor_distribution $asset_id $monitor_id $instance_id 1 ]
+        if { [llength $dist_lists] == 0 } {
+            # error logged by hf_monitor_distribution
             set error_p 1
         }
     }
     
     
     if { !$error_p } {
-        # convert to cobbler list by sortying by y
-        set normed_lists [lsort -index 0 -real $dist_lists ]
-        # add headers
-        set normed_lists [linsert $normed_lists 0 [list y x]]
+        # Convert to cobbler list by sortying by y
+        # Remove header
+        set normed_lists [lrange $dist_lists 1 end]
+        set normed_lists [lsort -index 0 -real $normed_lists]
+        # re-insert heading
+        set normed_lists [linsert $normed_lists 0 [list y x] ]
 
         # Determine health_percentile
         set health_latest [lindex [lindex $raw_lists 0] 0]
