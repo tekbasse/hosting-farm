@@ -3547,12 +3547,13 @@ ad_proc -public hf_monitor_distribution {
     {points_ct ""}
     {ct_per_sample "1"}
 } {
-    Return a distributin curve of a monitor_id.
+    Return a distribution curve of a monitor_id.
     Defaults to most recent contiguous sample (trace). 
     If duration_s (seconds), clips total sample(s) to duration.
     If points_ct is included, results in points_ct most recent data points.
     If sample_ct, duration_s and points_ct is blank, returns all sample points associated with monitor_id.
     ct_per_sample is sample rate. "1" is default ie no points skipped. If ct_per_sample is 2, then every other point is skipped etc.
+    Errors return empty list.
 } {
     # in oscilloscope terms, if hf_monitor_update is "signal in", then hf_monitor_distribution returns a sample trace of signal.
     ##code
@@ -3576,6 +3577,7 @@ ad_proc -public hf_monitor_distribution {
     set duration_sql ""
     set points_sql ""
     set sql_list [list ]
+    set dist_lists [list ]
 
     # validate
     set monitor_id_p [qf_is_natural_number $monitor_id]
@@ -3616,7 +3618,12 @@ ad_proc -public hf_monitor_distribution {
         if { $points_ct_p } {
             if { $ct_per_sample_p } {
                 # adjust initial sample size to handle later interval sampling
-                set points_ct [expr { round( $points_ct * $ct_per_sample ) } ]
+                # make this abs() to block any case of infinite case in later while loop
+                set ct_per_sample [expr { round( abs( $ct_per_sample ) ) } ]
+                if { $ct_per_sample < 1 } {
+                    set ct_per_sample 1
+                }
+                set points_ct [expr { round( $points_ct * $ct_per_sample ) + 1 } ]
             } else {
                 set points_ct [expr { round( $points_ct ) } ]
             }
@@ -3637,16 +3644,17 @@ ad_proc -public hf_monitor_distribution {
     }
     if { !$error_p } {
         if { $ct_per_sample_p } {
-            # reduce the sample size by count per sample ct_per_sample
+            # reduce the sample size to count per sample ct_per_sample
             set dist_lists [list ]
-            set i -1
-
+            set i 0
             while { $i < $sample_ct } {
-            incr i
-
-
+                set row_list [lindex $raw_lists $i]
+                lappend dist_lists $row_list
+                incr i $ct_per_sample
+            }
         }
-        incr boundary_i -1
+        
+        # Create final distribution y, delta_x
         set t0 [lindex $row_i_prev 1]
         for {set i $boundary_i} {$i > 0 } {incr i -1 } {
             set row_i [lindex $raw_lists $i]
@@ -3656,17 +3664,8 @@ ad_proc -public hf_monitor_distribution {
             lappend dist_lists $dist_row
             set t0 $t1
         }
-
-        # convert to cobbler list by sortying by y
-        set normed_lists [lsort -index 0 -real $dist_lists ]
-        # add headers
-        set normed_lists [linsert $normed_lists 0 [list y x]]
-
-        # Determine health_percentile
-        set health_latest [lindex [lindex $raw_lists 0] 0]
-        set health_percentile [qaf_p_at_y_of_dist_curve $health_latest $normed_lists]
     }
-
+    return $dist_lists
 }
 
 ad_proc -private hf_monitor_statistics {
@@ -3732,13 +3731,20 @@ ad_proc -private hf_monitor_statistics {
     
 
     if { !$error_p } {
-        set dist_lists [hf_monitor_distribution 
+        set dist_lists [hf_monitor_distribution ]
         if { [llength $raw_lists] == 0 } {
             ns_log Warning "hf_monitor_statistics(3602): no distribution found for asset_id '${asset_id}' instance_id '${instance_id}' monitor_id '${monitor_id}'"
             set error_p 1
         }
     }
+    
+    
     if { !$error_p } {
+        # convert to cobbler list by sortying by y
+        set normed_lists [lsort -index 0 -real $dist_lists ]
+        # add headers
+        set normed_lists [linsert $normed_lists 0 [list y x]]
+
         # Determine health_percentile
         set health_latest [lindex [lindex $raw_lists 0] 0]
         set health_percentile [qaf_p_at_y_of_dist_curve $health_latest $normed_lists]
