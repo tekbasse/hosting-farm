@@ -3746,21 +3746,22 @@ ad_proc -private hf_monitor_statistics {
     report_id
     portions_count
     calculation_switches
-    interval_s
+    {interval_s ""}
     {instance_id ""}
     {user_id ""}
     {analysis_id ""}
 } {
     Analyse most recent hf_monitor_update in context of distribution curve.
-    returns analysis_id
+    returns analysis_id. Analysis_id can be retrieved via hf_monitor_report_read
 } {
-    # ADMIN
+    # generates data for hf_monitor_status and hf_monitor_report
+
     # Currently, this paradigm assumes a new curve with each new log entry.
+    # Each distribution is not re-saved.
     # For scaling at some point in the future, it may be useful to 
-    # schedule new curves at a less frequent interval, perhaps updating
-    # only as data points reach near trigger outliers.
-    # This will require some modification to the monitor data model,
-    # perhaps including another batching scheduled process just for analysis.
+    # schedule distributions for saving in db at some interval, perhaps updating
+    # only as data points reach near trigger outliers, or when 
+    # a significant change flags the end of changes of a distribution sample.
 
 
     # collect from hf_monitor_log:
@@ -3803,7 +3804,7 @@ ad_proc -private hf_monitor_statistics {
     
 
     if { !$error_p } {
-        set dist_lists [hf_monitor_distribution $asset_id $monitor_id $instance_id 1 ]
+        set dist_lists [hf_monitor_distribution $asset_id $monitor_id $instance_id "1" "" "" "1" $interval_s ]
         if { [llength $dist_lists] == 0 } {
             # error logged by hf_monitor_distribution
             set error_p 1
@@ -3833,9 +3834,7 @@ ad_proc -private hf_monitor_statistics {
     # hf_monitor_statistics is called for final analysis and to determine health (percentile) 
 
 
-    # and returns stats for..
-    # call hf_monitor_statistics
-    #     which generates data for hf_monitor_status
+
 
 ##code
     # Data are put into separate tables,
