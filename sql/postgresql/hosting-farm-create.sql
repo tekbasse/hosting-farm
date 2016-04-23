@@ -624,7 +624,7 @@ CREATE TABLE hf_monitor_freq_dist_curves (
     x_pos            integer not null,
     -- The sum of all delta_x_pct from 0 to this x_pos.
     -- cumulative_pct increases to 1.0 (from 0 to 100 percentile)
-    cumulative_pct   numeric not null,
+    cumulative_pct   numeric,
     -- Sum of all delta_x_pct equals 1.0
     -- delta_x_pct may have some values near low limits of 
     -- digitial representation, so only delta_x values are stored.
