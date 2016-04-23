@@ -3548,7 +3548,7 @@ ad_proc -public hf_monitor_distribution {
     {sample_pt_rate "1"}
     {sample_s_rate ""}
 } {
-    Returns an unsorted distribution curve of a monitor_id as a list of lists with first row y,delta_x.
+    Returns an unsorted distribution curve of a monitor_id as a list of lists with first row y,delta_x, report_id, report_time.
     Defaults to most recent contiguous sample (trace). 
     If duration_s (seconds), clips total sample(s) to duration.
     If points_ct is included, results in points_ct most recent data points.
@@ -3556,6 +3556,10 @@ ad_proc -public hf_monitor_distribution {
     A sample_pt_rate of "1" is default ie no points skipped. If sample_pt_rate is 2, then every other point is skipped etc.
     sample_s_rate is number of seconds between samples. sample_s_rate is ignored if sample_pt_rate is also specified.
     Errors return empty list.
+    Note: report_id is derived from tcl \[clock seconds\] which provides a practical way to handle timing procedures --as long as there is only
+    one machine running the system.  report_time is in timestampz, so there is a way to recover or integrate data if multiple machines
+    or multiple time references require transformations.
+
 } {
     # in oscilloscope terms, if hf_monitor_update is "signal in", then hf_monitor_distribution returns a sample trace of signal.
 
@@ -3709,17 +3713,28 @@ ad_proc -public hf_monitor_distribution {
         }
         
         # Create final distribution y, delta_x
+        # list: health report_id report_time significant_change
         set t0 [lindex $row_i_prev 1]
         for {set i $boundary_i} {$i > 0 } {incr i -1 } {
-            set row_i [lindex $raw_lists $i]
-            set t1 [lindex $row_i 1]
+            set row_i_list [lindex $raw_lists $i]
+            # health is y
+            set health [lindex $row_i_list 0]
+            # report_id is t1
+            set t1 [lindex $row_i_list 1]
+            set report_time [lindex $row_i_list 2]
+            # delta_t is delta x
             set delta_t [expr { abs( $t1 - $t0 ) } ]
-            set dist_row [list [lindex $row_i 0] $delta_t]
+            #set dist_row [list [lindex $row_i_list 0] $delta_t]
+            set dist_row [list $health $delta_t $t1 $report_time]
             lappend dist_lists $dist_row
             set t0 $t1
         }
         # Add headers
-        set dist_lists [linsert $dist_lists 0 [list y x]]
+        # If only y,x where y=health and x=delta_t:
+        #set dist_lists [linsert $dist_lists 0 [list y x]]
+        # But adding report_id and report_time from query, since they might be useful.
+        # Query columns were: health, report_id, report_time, significant_change
+        set dist_lists [linsert $dist_lists 0 [list y x report_id report_time]]
 
     }
     return $dist_lists
@@ -3797,12 +3812,10 @@ ad_proc -private hf_monitor_statistics {
     
     
     if { !$error_p } {
-        # Convert to cobbler list by sortying by y
-        # Remove header
-        set normed_lists [lrange $dist_lists 1 end]
-        set normed_lists [lsort -index 0 -real $normed_lists]
+        # Convert to cobbler list by sortying by y, after removing header
+        set normed_lists [lsort -index 0 -real [lrange $dist_lists 1 end]]
         # re-insert heading
-        set normed_lists [linsert $normed_lists 0 [list y x] ]
+        set normed_lists [linsert $normed_lists 0 [lrange $dist_lists 0 0]]
 
         # Determine health_percentile
         set health_latest [lindex [lindex $raw_lists 0] 0]
