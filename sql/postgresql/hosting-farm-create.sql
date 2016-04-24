@@ -616,7 +616,12 @@ create index hf_monitor_statistics_analysis_id_idx on hf_monitor_statistics (ana
 CREATE TABLE hf_monitor_freq_dist_curves (
     instance_id      integer not null,
     monitor_id       integer not null,
+    -- analysis_id might contribute 1 or a few points
     analysis_id      integer not null,
+    -- distribution_id represents a distribution between
+    -- hf_monitor_log.significant_change flags
+    -- because this is a static distribution -no new points can be added.
+    distribution_id  integer not null,
     -- position x is a sequential position below curve
     -- median is where cumulative_pct = 0.50 
     -- x_pos is unlikely to be sampled from intervals of exact same size.

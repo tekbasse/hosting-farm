@@ -9,9 +9,10 @@ ad_library {
     @address: po box 20, Marylhurst, OR 97036-0020 usa
     @email: tekbasse@yahoo.com
     
-    # DEVELOPER NOTE change before year 2036
+    # DEVELOPER NOTE change order. Required before year 2036
     # Instead of using tcl scan to convert times for detla t values,
     # at least until 2036, hf_monitor_log.report_id is using machine time seconds.
+    # The db type should be switched to bigint. (not bigserial as this is not a sequence.)
     # We can sanity check for machine time since the 
     # list has already been sorted by time.
     # And then subtract report_ids for faster, approximate delta t.
@@ -3563,6 +3564,56 @@ ad_proc -public hf_monitor_distribution {
 } {
     # in oscilloscope terms, if hf_monitor_update is "signal in", then hf_monitor_distribution returns a sample trace of signal.
 
+    # At some point, it may be beneficial to cache static distributions.
+    # Static distributions are distributions that have been made static by the introduction
+    # of a significant_change flag in a newer record.
+    # A significant_change implies that sample (data) between significant_change flags have 
+    # a unique set of parameters that may indicate a unique distribution. 
+    # Here is a pre-defined table for the cache, should it be implemented:
+
+    # qaf_discrete_dist_report expects delta_x and y.
+    #-- Curves are normalized to 1.0
+    #-- Percents are represented decimally 0.01 is one percent
+    #-- Maybe one day "Per mil" notation should be used instead of percent.
+    #-- http://en.wikipedia.org/wiki/Permille
+    #-- curve resolution is count of points
+    #-- This model keeps old curves, to help with long-term performance insights
+    #-- see accounts-finance  qaf_discrete_dist_report 
+    #CREATE TABLE hf_monitor_freq_dist_curves (
+    #    instance_id      integer not null,
+    #    monitor_id       integer not null,
+    #    -- analysis_id might contribute 1 or a few points
+    #    analysis_id      integer not null,
+    #    -- distribution_id represents a distribution between
+    #    -- hf_monitor_log.significant_change flags
+    #    -- because this is a static distribution -no new points can be added.
+    #    distribution_id  integer not null,
+    #    -- position x is a sequential position below curve
+    #    -- median is where cumulative_pct = 0.50 
+    #    -- x_pos is unlikely to be sampled from intervals of exact same size.
+    #    -- initial cases assume x_pos is a system time in seconds.
+    #    x_pos            integer not null,
+    #    -- The sum of all delta_x_pct from 0 to this x_pos.
+    #    -- cumulative_pct increases to 1.0 (from 0 to 100 percentile)
+    #    cumulative_pct   numeric,
+    #    -- Sum of all delta_x_pct equals 1.0
+    #    -- delta_x_pct may have some values near low limits of 
+    #    -- digitial representation, so only delta_x values are stored.
+    #    -- delta_x values might be equal, or not,
+    #    -- Depends on how distribution is obtained.
+    #    -- Initial use assumes delta_x is in seconds.
+    #    delta_x      numeric not null,
+    #    -- Duplicate of hf_monitor_log.health.
+    #    -- Avoids excessive table joins and provides a clearer
+    #    -- boundary between admin and user accessible table queries.
+    #    monitor_y        numeric not null
+    #);
+    
+    # A proc hf_monitor_distribution_history (asset_id monitor_id instance_id distro_id_list analysis_id_list)
+    # might return a list of specific distribution_id or distributions that include a list of analysis_id
+    # These distributions should be queried with "order by monitor_y ascending"
+
+
     # permissions
     set nc_p [ns_conn isconnected]
     if { $nc_p } {
@@ -3756,19 +3807,6 @@ ad_proc -private hf_monitor_statistics {
 } {
     # generates data for hf_monitor_status and hf_monitor_report
 
-    # Currently, this paradigm assumes a new curve with each new log entry.
-    # Each distribution is not re-saved.
-    # For scaling at some point in the future, it may be useful to 
-    # schedule distributions for saving in db at some interval, perhaps updating
-    # only as data points reach near trigger outliers, or when 
-    # a significant change flags the end of changes of a distribution sample.
-
-
-    # collect from hf_monitor_log:
-    #   user_id, asset_id, report_id, health
-    # The proc calling this proc should have this info,
-    # so try to collect it via parameter instead of db.
-
     # permissions
     set nc_p [ns_conn isconnected]
     if { $nc_p } {
@@ -3804,6 +3842,15 @@ ad_proc -private hf_monitor_statistics {
     
 
     if { !$error_p } {
+        # collect from hf_monitor_log:
+        #   user_id, asset_id, report_id, health
+        
+        # Currently, this paradigm assumes a new curve with each new log entry.
+        # Each distribution is not re-saved.
+        # For scaling at some point in the future, it may be useful to 
+        # schedule distributions for saving in db at some interval, perhaps updating
+        # only as data points reach near trigger outliers, or when 
+        # a significant change flags the end of changes of a distribution sample.
         set dist_lists [hf_monitor_distribution $asset_id $monitor_id $instance_id "1" "" "" "1" $interval_s ]
         if { [llength $dist_lists] == 0 } {
             # error logged by hf_monitor_distribution
@@ -3823,58 +3870,12 @@ ad_proc -private hf_monitor_statistics {
         set health_percentile [qaf_p_at_y_of_dist_curve $health_latest $normed_lists]
     }
 
-    # calculate expected_health? No. local procs do that. ie. the ones that get the raw data
-    # from hf_monitor_status:
-    # expected_health is expected to have been calculated by a proc in hosting-farm-local-procs.tcl, just prior to
-    #    requires quota and dependencies, if there is one.
-    # because local procs know if there is a quota? They don't. expected_health should be determined during analysis.
-    # because that is when other info, such as is_quota_p and quota_interval, and quota_current_point is available.
-    # actually, no. quota info should be available to an hf::monitor::do, because it is based on asset info..
-
-    # hf_monitor_statistics is called for final analysis and to determine health (percentile) 
-
-
-
-
 ##code
     # Data are put into separate tables,
     # hf_monitor_status for simple status queries
     # hf_monitor_statistics for indepth status queries
-    # hf_monitor_freq_dist_curves for distribution curves
 
-    # qaf_discrete_dist_report expects delta_x and y.
-    #-- Curves are normalized to 1.0
-    #-- Percents are represented decimally 0.01 is one percent
-    #-- Maybe one day "Per mil" notation should be used instead of percent.
-    #-- http://en.wikipedia.org/wiki/Permille
-    #-- curve resolution is count of points
-    #-- This model keeps old curves, to help with long-term performance insights
-    #-- see accounts-finance  qaf_discrete_dist_report 
 
-    #CREATE TABLE hf_monitor_freq_dist_curves (
-    #    instance_id      integer not null,
-    #    monitor_id       integer not null,
-    #    analysis_id      integer not null,
-    #    -- position x is a sequential position below curve
-    #    -- median is where cumulative_pct = 0.50 
-    #    -- x_pos is unlikely to be sampled from intervals of exact same size.
-    #    -- initial cases assume x_pos is a system time in seconds.
-    #    x_pos            integer not null,
-    #    -- The sum of all delta_x_pct from 0 to this x_pos.
-    #    -- cumulative_pct increases to 1.0 (from 0 to 100 percentile)
-    #    cumulative_pct   numeric not null,
-    #    -- Sum of all delta_x_pct equals 1.0
-    #    -- delta_x_pct may have some values near low limits of 
-    #    -- digitial representation, so only delta_x values are stored.
-    #    -- delta_x values might be equal, or not,
-    #    -- Depends on how distribution is obtained.
-    #    -- Initial use assumes delta_x is in seconds.
-    #    delta_x      numeric not null,
-    #    -- Duplicate of hf_monitor_log.health.
-    #    -- Avoids excessive table joins and provides a clearer
-    #    -- boundary between admin and user accessible table queries.
-    #    monitor_y        numeric not null
-    #);
 
 
     # CREATE TABLE hf_monitor_status (
@@ -3943,8 +3944,8 @@ ad_proc -private hf_monitor_report_read {
     Returns statistical distribution curve resulting from analysis of status info.
     analysis_id assumes most recent analysis. Can return a range of monitor history.
 } {
-    #  hf_monitor_statistics creates the curve at the same time it generates statistics
-    # no. Uses curve from hf_monitor_freq_dist_curves 
+    #  hf_monitor_statistics generates a temporary curve at the same time it generates statistics
+    #  via hf_monitor_freq_dist_curves 
 
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -3954,31 +3955,6 @@ ad_proc -private hf_monitor_report_read {
         set user_id [ad_conn user_id]
     }
     
-
-    #CREATE TABLE hf_monitor_freq_dist_curves (
-    #    instance_id      integer not null,
-    #    monitor_id       integer not null,
-    #    analysis_id      integer not null,
-    #    -- position x is a sequential position below curve
-    #    -- median is where cumulative_pct = 0.50 
-    #    -- x_pos is unlikely to be sampled from intervals of exact same size.
-    #    -- initial cases assume x_pos is a system time in seconds.
-    #    x_pos            integer not null,
-    #    -- The sum of all delta_x_pct from 0 to this x_pos.
-    #    -- cumulative_pct increases to 1.0 (from 0 to 100 percentile)
-    #    cumulative_pct   numeric not null,
-    #    -- Sum of all delta_x_pct equals 1.0
-    #    -- delta_x_pct may have some values near low limits of 
-    #    -- digitial representation, so only delta_x values are stored.
-    #    -- delta_x values might be equal, or not,
-    #    -- Depends on how distribution is obtained.
-    #    -- Initial use assumes delta_x is in seconds.
-    #    delta_x      numeric not null,
-    #    -- Duplicate of hf_monitor_log.health.
-    #    -- Avoids excessive table joins and provides a clearer
-    #    -- boundary between admin and user accessible table queries.
-    #    monitor_y        numeric not null
-    #);
     
     
     ##code
