@@ -3852,7 +3852,8 @@ ad_proc -private hf_monitor_statistics {
         # only as data points reach near trigger outliers, or when 
         # a significant change flags the end of changes of a distribution sample.
         set dist_lists [hf_monitor_distribution $asset_id $monitor_id $instance_id "1" "" "" "1" $interval_s ]
-        if { [llength $dist_lists] == 0 } {
+        set dist_lists_len [llength $dist_lists]
+        if { $dist_lists_len == 0 } {
             # error logged by hf_monitor_distribution
             set error_p 1
         }
@@ -3860,6 +3861,25 @@ ad_proc -private hf_monitor_statistics {
     
     
     if { !$error_p } {
+        # Calculations to populate a record of hf_monitor_status
+
+        # CREATE TABLE hf_monitor_status (
+        #    instance_id                integer not null,
+        #    monitor_id                 integer unique not null,
+        #    asset_id                   varchar(19) not null DEFAULT '',
+        #    --  analysis_id at p0
+        #    analysis_id_p0                  varchar(19) not null DEFAULT '',
+        #    -- most recent analysis_id ie at p1
+        #    analysis_id_p1                  varchar(19) not null DEFAULT '',
+        #    -- health at p0
+        #    health_p0                  varchar(19) not null DEFAULT '',
+        #    -- for calculating differential, p1 is always 1, just as p0 is 0
+        #    -- health at p1
+        #    health_p1                  varchar(19) not null DEFAULT '',
+        #    -- 
+        #    expected_health            varchar(19) not null DEFAULT ''
+        #);
+
         # Convert to cobbler list by sortying by y, after removing header
         set normed_lists [lsort -index 0 -real [lrange $dist_lists 1 end]]
         # re-insert heading
@@ -3868,35 +3888,31 @@ ad_proc -private hf_monitor_statistics {
         # Determine health_percentile
         set health_latest [lindex [lindex $raw_lists 0] 0]
         set health_percentile [qaf_p_at_y_of_dist_curve $health_latest $normed_lists]
+
+
+        # calculate a new record for hf_monitor_status
+        # including a new analysis_id
+        if { $dist_lists_len > 2 } {
+            # two points exist. Calculate p0 and p1 points
+            # row_list columns: (y aka health) (x aka delta_t) report_id report_time
+            set row0_list [lindex $dist_lists 1]
+            set health_p0 [lindex $row0_list 0]
+            set row1_list [lindex $dist_lists 2]
+            set health_p1 [lindex $row1_list 0]
+        } else {
+            # set p0 to same as p1
+
+        }
+
     }
 
 ##code
-    # Data are put into separate tables,
+    # Data are put into separate tables. A smaller status table for faster referencing and updates.
     # hf_monitor_status for simple status queries
     # hf_monitor_statistics for indepth status queries
 
-
-
-
-    # CREATE TABLE hf_monitor_status (
-    #    instance_id                integer not null,
-    #    monitor_id                 integer unique not null,
-    #    asset_id                   varchar(19) not null DEFAULT '',
-    #    --  analysis_id at p0
-    #    analysis_id_p0                  varchar(19) not null DEFAULT '',
-    #    -- most recent analysis_id ie at p1
-    #    analysis_id_p1                  varchar(19) not null DEFAULT '',
-    #    -- health at p0
-    #    health_p0                  varchar(19) not null DEFAULT '',
-    #    -- for calculating differential, p1 is always 1, just as p0 is 0
-    #    -- health at p1
-    #    health_p1                  varchar(19) not null DEFAULT '',
-    #    -- 
-    #    expected_health            varchar(19) not null DEFAULT ''
-    #);
-
     #  hf_monitor_configs_read contains hf_monitor_configs.interval_s for timing (next) expected_health 
-    # ie time interval between p1 and p0.
+    # It might not be the same as the time interval between p1 and p0.
     #  If monitor has a quota, the quota end point should be the point for projected health.
 
 
@@ -3906,8 +3922,7 @@ ad_proc -private hf_monitor_statistics {
     #    -- A hf_monitor_log.significant_change flags boundary
     #    monitor_id      integer not null,
     #    -- same as hf_monitor_status.analysis_id_p1
-    #    -- This ref is used to point to a distribution of points in 
-    #    -- hf_monitor_freq_dist_curves
+    #    -- This ref is used to point to identify a specific hf_monitor_statistics analysis
     #    analysis_id     integer not null,
     #    sample_count    varchar(19) not null DEFAULT '',
     #    -- range_min is minimum value of hf_monitor_log.report_id used.

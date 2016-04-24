@@ -580,8 +580,6 @@ CREATE TABLE hf_monitor_statistics (
     -- A hf_monitor_log.significant_change flags boundary
     monitor_id      integer not null,
     -- same as hf_monitor_status.analysis_id_p1
-    -- This ref is used to point to a distribution of points in 
-    -- hf_monitor_freq_dist_curves
     analysis_id     integer not null,
     sample_count    varchar(19) not null DEFAULT '',
     -- range_min is minimum value of hf_monitor_log.report_id used.
@@ -616,7 +614,9 @@ create index hf_monitor_statistics_analysis_id_idx on hf_monitor_statistics (ana
 CREATE TABLE hf_monitor_freq_dist_curves (
     instance_id      integer not null,
     monitor_id       integer not null,
-    -- analysis_id might contribute 1 or a few points
+    -- analysis_id might contribute 1 or a few points to a distribution
+    -- This provides a way to drill back into the logs to get more specific info.
+    -- This is the same as hf_monitor_status.analysis_id_p1
     analysis_id      integer not null,
     -- distribution_id represents a distribution between
     -- hf_monitor_log.significant_change flags
