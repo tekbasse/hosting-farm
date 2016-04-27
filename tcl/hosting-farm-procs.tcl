@@ -3806,6 +3806,10 @@ ad_proc -private hf_monitor_statistics {
     returns analysis_id. Analysis_id can be retrieved via hf_monitor_report_read
 } {
     # generates data for hf_monitor_status and hf_monitor_report
+    # Data are put into separate tables for faster referencing and updates.
+    # hf_monitor_status for simple status queries and raw log data
+    # hf_monitor_statistics for indepth status queries
+
 
     # permissions
     set nc_p [ns_conn isconnected]
@@ -3904,12 +3908,7 @@ ad_proc -private hf_monitor_statistics {
 
         }
 
-    }
-
 ##code
-    # Data are put into separate tables. A smaller status table for faster referencing and updates.
-    # hf_monitor_status for simple status queries
-    # hf_monitor_statistics for indepth status queries
 
     #  hf_monitor_configs_read contains hf_monitor_configs.interval_s for timing (next) expected_health 
     # It might not be the same as the time interval between p1 and p0.
@@ -3935,10 +3934,19 @@ ad_proc -private hf_monitor_statistics {
     #    health_median   numeric
     #); 
 
+    }
+
+    if { !$error_p } {
+        # save calculations to hf_monitor_status and hf_monitor_statistics
+        
+        # generate a new analysis_id
+    }    
+
 
     # check triggers. ie hf_monitor_config_n_control.health_percentile_trigger and .health_threashold  
     # Either one will trigger event. 
 
+    ## these should be db writes, not reads
     if { $monitor_id_p } {
         if { $analysis_id_p } {
             set statistics_lists [db_list_of_lists hf_monitor_stats_get "select sample_count, range_min, range_max, health_min, health_max, health_average, health_median, analysis_id, monitor_id from hf_monitor_statistics where instance_id=:instance_id and monitor_id=:monitor_id and analysis_id=:analysis_id"]
@@ -3953,26 +3961,36 @@ ad_proc -private hf_monitor_statistics {
 
 ad_proc -private hf_monitor_report_read {
     monitor_id 
-    analysis_id
+    {analysis_id ""}
     {instance_id ""}
 } {
-    Returns statistical distribution curve resulting from analysis of status info.
+    Returns statistics resulting from analysis of status info.
     analysis_id assumes most recent analysis. Can return a range of monitor history.
 } {
-    #  hf_monitor_statistics generates a temporary curve at the same time it generates statistics
-    #  via hf_monitor_freq_dist_curves 
-
-    if { $instance_id eq "" } {
+    # validate input
+    if { ![qf_is_natural_number $instance_id] } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
     }
-    
-    
-    
-    ##code
+    set monitor_id_p [qf_is_natural_number $monitor_id]
+    set analysis_id_p [qf_is_natural_number $analysis_id]
+
+    # initializations
+    set statistics_list [list ]
+
+    if { $monitor_id_p } {
+        if { $analysis_id_p } {
+            set statistics_lists [db_list_of_lists hf_monitor_stats_get "select sample_count, range_min, range_max, health_min, health_max, health_average, health_median, analysis_id, monitor_id from hf_monitor_statistics where instance_id=:instance_id and monitor_id=:monitor_id and analysis_id=:analysis_id"]
+        } else {
+            # set analysis_id to the latest
+            set statistics_lists [db_list_of_lists hf_monitor_stats_get "select sample_count, range_min, range_max, health_min, health_max, health_average, health_median, analysis_id, monitor_id from hf_monitor_statistics where instance_id=:instance_id and monitor_id=:monitor_id order by analysis_id desc limit 1"]
+        }
+        set statistics_list [lindex $statistics_lists 0]
+    }
+    return $statistics_list
 }
 
 
