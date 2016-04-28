@@ -3857,6 +3857,9 @@ ad_proc -private hf_monitor_statistics {
         set configs_list [hf_monitor_configs_read $monitor_id]
         # portions_count = max number of sample points
         set portions_count [lindex $configs_list 5]
+        #  hf_monitor_configs_read contains hf_monitor_configs.interval_s for timing (next) expected_health 
+        #  The sceduled time interval between p1 and p0 may depend on monitor stack priorities
+        set config_interval_s [lindex $configs_list 9]
         
         # Currently, this paradigm assumes a new curve with each new log entry.
         # Each distribution is not re-saved.
@@ -3865,6 +3868,7 @@ ad_proc -private hf_monitor_statistics {
         # only as data points reach near trigger outliers, or when 
         # a significant change flags the end of changes of a distribution sample.
         set dist_lists [hf_monitor_distribution $asset_id $monitor_id $instance_id "1" "" $portions_count "1" $interval_s ]
+        # Returns: row y, delta_x, report_id, report_time
         set dist_lists_len [llength $dist_lists]
         if { $dist_lists_len == 0 } {
             # error logged by hf_monitor_distribution
@@ -3907,37 +3911,31 @@ ad_proc -private hf_monitor_statistics {
         # calculate a new record for hf_monitor_status
         # including a new analysis_id
         if { $dist_lists_len > 2 } {
+            set first_log_point_p 0
             # two points exist. Calculate p0 and p1 points
             # row_list columns: (y aka health) (x aka delta_t) report_id report_time
             set row0_list [lindex $dist_lists 1]
             set health_p0 [lindex $row0_list 0]
+            set analysis_id_p0 [lindex $row0_list 2]
             set row1_list [lindex $dist_lists 2]
             set health_p1 [lindex $row1_list 0]
+            set analysis_id_p1 [lindex $row1_list 2]
         } else {
+            set first_log_point_p 1
             # This is a new analysis distribution
             # set p0 to same as p1
             set row0_list [lindex $dist_lists 1]
             set health_p0 [lindex $row0_list 0]
             set health_p1 $health_p0
-
+            set analysis_id_p1 [lindex $row0_list 2]
+            set analysis_id_p0 [expr { $analysis_id_p1 - $config_interval_s } ]
         }
 
-
-        set config_interval_s [lindex $configs_list 9]
-        if { $health_p1 == $health_p0 } {
-            #  hf_monitor_configs_read contains hf_monitor_configs.interval_s for timing (next) expected_health 
-            #  The sceduled time interval between p1 and p0 may depend on monitor stack priorities
-            set delta_t $config_interval_s
-        } else {
-            # analysis_id is a time based integer derived from tcl clock scan
-            set delta_t [expr { $analysis_id_p1 - $analysis_id_p0 } ]
-        }
         set health_percentile_trigger [lindex $configs_list 7]
         set health_threashold [lindex $configs_list 8]
 
-
-        #  Determine expected_health ie health projected out one interval ahead or
-        #  If monitor has a quota, the quota end point should be the point for projected health.
+        # Determine expected_health ie health projected out one interval ahead or
+        # If monitor has a quota, the quota end point should be the point for projected health.
         # Any quota parameters should be passed via calc_switches to avoid extra db queries.
         set calc_switches [lindex $configs_list 6]
         # Currently, only VMs have performance quotas.
@@ -3951,6 +3949,14 @@ ad_proc -private hf_monitor_statistics {
         }
 
 
+        # analysis_id is a time based integer derived from tcl clock scan
+        # Delta t in seconds for latest two analysis, should always be positive
+        set delta_t [expr { $analysis_id_p1 - $analysis_id_p0 } ]
+        if { $delta_t < $config_interval_s } {
+            # delta_t shouldn't ever be less than config_interval_s. Log a warning
+            ns_log Warning "hf_monitor_statistics(3957): delta_t ${delta_t} for monitor_id ${monitor_id} asset_id ${asset_id}. Reset to config_interval_s ${config_interval_s}"
+            set delta_t $config_interval_s
+        }
         # Use seconds as the minimum time unit for maximum practical granularity in proportions.
         # Partial period calculations use these defaults.
         # a year is considered 365.25 days
@@ -3975,30 +3981,55 @@ ad_proc -private hf_monitor_statistics {
         # Costs/expenses and usage (resource burn estimates) are calculated in a separate, less frequent process.
         # Partly, this is because prices per burn unit vary contractually, where
         # a month may be defined from aniversary day to day, or a consistent N number of days, or some other duration.
+        # Cost calculations tend to include references to a start and end period, so don't want to 
+        # drag extra complexity into frequent logging.
+
+        # If we want, we can look at the prior week's performance for predictive purposes, and maybe average with
+        # current expected_health.
+        # Performance patterns tend to be most pronounced by day and day of week, so we can use a week
+        # for estimating performance specs. 
+        # For now, we keep it simple. Base next by extrapolating current trend.
+
+        # extrapolate from points p0 and p1 to p2
+
+        # Caculate the next approximate point based on delta_t
+        set analysis_id_p2 [expr { $analysis_id_p1 + $delta_t } ]
         switch -exact -- $calc_type {
             T  { 
-
+                # Traffic
+                # ..is accumulative, or a snapshot of a period. Assume a snapshot count for delta_t
+                # so value can rise or fall.
+                set expected_health [qaf_extrapolate_p1p2_at_x $analysis_id_p0 $health_p0 $analysis_id_p1 $health_p1 $analysis_id_p2]
             }
             S  { 
-
+                # Storage
+                # ..is accumulative, or a snapshot of a period. Assume a snapshot count for delta_t
+                # so value can rise or fall.
+                set expected_health [qaf_extrapolate_p1p2_at_x $analysis_id_p0 $health_p0 $analysis_id_p1 $health_p1 $analysis_id_p2]
             }
             M  {
-
+                # Memory
+                # ..is accumulative, or a snapshot of a period. Assume a snapshot count for delta_t
+                # so value can rise or fall.
+                set expected_health [qaf_extrapolate_p1p2_at_x $analysis_id_p0 $health_p0 $analysis_id_p1 $health_p1 $analysis_id_p2]
             }
             default {
-                
+                # Assume value can rise or fall with performance. Extrapolate.
+                set expected_health [qaf_extrapolate_p1p2_at_x $analysis_id_p0 $health_p0 $analysis_id_p1 $health_p1 $analysis_id_p2]
             }
         }
         
         
-        # determine how far we are into 
-        
-
-        # extrapolate from points p0 and p1 to p2
-        set expected
         ##code
+        if { $first_log_point_p } {
+            # create values for hf_monitor_statistics. Set min/max based on $calc_type
+            # Either from history of other cases, or defaults from hf_monitor_config_n_control,
+            # or set based on current value only, or..
 
-    
+        } else {
+            # get last analysis_id (analysis_id_0) from hf_monitor_statistics
+            # and adjust min/max ranges
+        }
     
     
 
