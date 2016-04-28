@@ -34,6 +34,18 @@ ad_proc -private hf_nc_go_ahead {
 }
 
 
+ad_proc -private hf_nc_asset_type_id {
+    asset_id
+} {
+    Returns asset_type_id
+} {
+    set success_p [hf_nc_go_ahead ]
+    set asset_type_id ""
+    if { $success_p } {
+        set success_p [db_0or1row hf_assets_asset_type_id_r "select asset_type_id from hf_assets where instance_id=:instance_id and id=:asset_id"]
+        return $asset_type_id
+    }
+
 ad_proc -private hf_nc_ip_read {
     ip_id
     instance_id
@@ -275,8 +287,10 @@ ad_proc -private hf_asset_properties {
         set user_id [ad_conn user_id]
     }
 
-    set success_p [db_0or1row hf_assets_asset_type_id_r "select asset_type_id from hf_assets where instance_id=:instance_id and id=:asset_id"]
-    if { $success_p } {
+    set asset_type_id [hf_nc_asset_type_id $asset_id]
+    set success_p 0
+    if { $asset_type_id ne "" } {
+        set success_p 1
         # Don't use hf_* API here. Create queries specific to system call requirements.
         set asset_prop_list [list ]
         switch -- $asset_type_id {

@@ -3511,6 +3511,7 @@ ad_proc -private hf_monitor_update {
 ad_proc -private hf_monitor_status {
     {monitor_id_list ""}
     {instance_id ""}
+    {most_recent_ct ""}
 } {
     Analyzes data from unprocessed hf_monitor_update, posts to hf_monitor_status, hf_monitor_freq_dist_curves, and hf_monitor_statistics
     Standardizes analysis (ie change of health ) of standardized info health reported from hf_monitor_update.
@@ -3527,15 +3528,18 @@ ad_proc -private hf_monitor_status {
     # issuing an hf_monitor_update.
 
     # hf_monitor_statistics is called for final analysis and to determine health (percentile) 
-
+    
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
     # validation
     set monitor_id_list [hf_monitor_logs $monitor_ids]
-    set status_lists [db_list_of_lists hf_monitor_status_read "select monitor_id, asset_id, report_id, health_p0, health_p1,expected_health from hf_monitor_status where instance_id=:instance_id and monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list])"]
+    if { [qf_is_natural_number $most_recent_ct] } {
+        set limit_sql "limit :most_recent_ct"
+    }
 
+    set status_lists [db_list_of_lists hf_monitor_status_current "select monitor_id, asset_id,analysis_id_p0, analysis_id_p1, health_p0, health_p1,expected_health from hf_monitor_status where instance_id=:instance_id and monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list]) order by analysis_id_p1 desc ${limit_sql}"]
     return $status_lists
 }
 
@@ -3804,6 +3808,7 @@ ad_proc -private hf_monitor_statistics {
 } {
     Analyse most recent hf_monitor_update in context of distribution curve.
     returns analysis_id. Analysis_id can be retrieved via hf_monitor_report_read
+    interval_s refers to distribution sampling.
 } {
     # generates data for hf_monitor_status and hf_monitor_report
     # Data are put into separate tables for faster referencing and updates.
@@ -3848,6 +3853,10 @@ ad_proc -private hf_monitor_statistics {
     if { !$error_p } {
         # collect from hf_monitor_log:
         #   user_id, asset_id, report_id, health
+
+        set configs_list [hf_monitor_configs_read $monitor_id]
+        # portions_count = max number of sample points
+        set portions_count [lindex $configs_list 5]
         
         # Currently, this paradigm assumes a new curve with each new log entry.
         # Each distribution is not re-saved.
@@ -3855,7 +3864,7 @@ ad_proc -private hf_monitor_statistics {
         # schedule distributions for saving in db at some interval, perhaps updating
         # only as data points reach near trigger outliers, or when 
         # a significant change flags the end of changes of a distribution sample.
-        set dist_lists [hf_monitor_distribution $asset_id $monitor_id $instance_id "1" "" "" "1" $interval_s ]
+        set dist_lists [hf_monitor_distribution $asset_id $monitor_id $instance_id "1" "" $portions_count "1" $interval_s ]
         set dist_lists_len [llength $dist_lists]
         if { $dist_lists_len == 0 } {
             # error logged by hf_monitor_distribution
@@ -3866,6 +3875,8 @@ ad_proc -private hf_monitor_statistics {
     
     if { !$error_p } {
         # Calculations to populate a record of hf_monitor_status
+
+        # get previous status.  (Already queried from hf_monitor_distribution)
 
         # CREATE TABLE hf_monitor_status (
         #    instance_id                integer not null,
@@ -3893,7 +3904,6 @@ ad_proc -private hf_monitor_statistics {
         set health_latest [lindex [lindex $raw_lists 0] 0]
         set health_percentile [qaf_p_at_y_of_dist_curve $health_latest $normed_lists]
 
-
         # calculate a new record for hf_monitor_status
         # including a new analysis_id
         if { $dist_lists_len > 2 } {
@@ -3904,40 +3914,107 @@ ad_proc -private hf_monitor_statistics {
             set row1_list [lindex $dist_lists 2]
             set health_p1 [lindex $row1_list 0]
         } else {
+            # This is a new analysis distribution
             # set p0 to same as p1
+            set row0_list [lindex $dist_lists 1]
+            set health_p0 [lindex $row0_list 0]
+            set health_p1 $health_p0
 
         }
 
-##code
 
-    #  hf_monitor_configs_read contains hf_monitor_configs.interval_s for timing (next) expected_health 
-    # It might not be the same as the time interval between p1 and p0.
-    #  If monitor has a quota, the quota end point should be the point for projected health.
+        set config_interval_s [lindex $configs_list 9]
+        if { $health_p1 == $health_p0 } {
+            #  hf_monitor_configs_read contains hf_monitor_configs.interval_s for timing (next) expected_health 
+            #  The sceduled time interval between p1 and p0 may depend on monitor stack priorities
+            set delta_t $config_interval_s
+        } else {
+            # analysis_id is a time based integer derived from tcl clock scan
+            set delta_t [expr { $analysis_id_p1 - $analysis_id_p0 } ]
+        }
+        set health_percentile_trigger [lindex $configs_list 7]
+        set health_threashold [lindex $configs_list 8]
 
 
-    #CREATE TABLE hf_monitor_statistics (
-    #    instance_id     integer not null,
-    #    -- only most recent status statistics are reported here 
-    #    -- A hf_monitor_log.significant_change flags boundary
-    #    monitor_id      integer not null,
-    #    -- same as hf_monitor_status.analysis_id_p1
-    #    -- This ref is used to point to identify a specific hf_monitor_statistics analysis
-    #    analysis_id     integer not null,
-    #    sample_count    varchar(19) not null DEFAULT '',
-    #    -- range_min is minimum value of hf_monitor_log.report_id used.
-    #    range_min       varchar(19) not null DEFAULT '',
-    #    -- range_max is current hf_monitor_log.report_id
-    #    range_max       varchar(19) not null DEFAULT '',
-    #    health_max      varchar(19) not null DEFAULT '',
-    #    health_min      varchar(19) not null DEFAULT '',
-    #    health_average  numeric,
-    #    health_median   numeric
-    #); 
+        #  Determine expected_health ie health projected out one interval ahead or
+        #  If monitor has a quota, the quota end point should be the point for projected health.
+        # Any quota parameters should be passed via calc_switches to avoid extra db queries.
+        set calc_switches [lindex $configs_list 6]
+        # Currently, only VMs have performance quotas.
+        #-- Reserved for VM quota calcs, 'T' for traffic 'S' for storage 'M' for memory
+        #-- A VM monitor should start with only one of T,S,M followed by an aniversary date YYYYMMDD.
+        set calc_type [string range $calc_switches 0 0]
 
+        # Partial period calculations use these defaults.
+        # a year is considered 365.25 days
+        # a year in seconds: expr 365.25 * 24 * 60 * 60 
+        set year_s 31557600.0
+        # a month in seconds: expr 365.25 * 24 * 60 * 60 / 12  =
+        set month_s 2629800.0
+        # a day in seconds: 24 * 60 * 60
+        set day_s 86400.0
+        # a week is 7 days: 24 * 60 * 60 * 7
+        set week_s 604800.0
+        set hour_s 3600.0
+        set now_s [clock seconds]
+        set now_yyyymmdd_hhmmss [clock format $datetime_s -format "%Y%m%d %H%M%S"]
+        set month_f [string range $now_yyyymmdd_hhmmss 4 5]
+        set year_f [string range $now_yyyymmdd_hhmmss 0 3]
+        # days in current month
+        set days_in_month dt_num_days_in_month $year_f $month_f
+        
+        
+        switch -exact -- $calc_type {
+            T  { 
+            }
+            S  { 
+            }
+            M  {
+            }
+            default {
+                
+            }
+        }
+        
+        
+        # determine how far we are into 
+        
+
+        # extrapolate from points p0 and p1 to p2
+        set expected
+        ##code
+
+    
+    
+    
+
+        
+        #CREATE TABLE hf_monitor_statistics (
+        #    instance_id     integer not null,
+        #    -- only most recent status statistics are reported here 
+        #    -- A hf_monitor_log.significant_change flags boundary
+        #    monitor_id      integer not null,
+        #    -- same as hf_monitor_status.analysis_id_p1
+        #    -- This ref is used to point to identify a specific hf_monitor_statistics analysis
+        #    analysis_id     integer not null,
+        #    sample_count    varchar(19) not null DEFAULT '',
+        #    -- range_min is minimum value of hf_monitor_log.report_id used.
+        #    range_min       varchar(19) not null DEFAULT '',
+        #    -- range_max is current hf_monitor_log.report_id
+        #    range_max       varchar(19) not null DEFAULT '',
+        #    health_max      varchar(19) not null DEFAULT '',
+        #    health_min      varchar(19) not null DEFAULT '',
+        #    health_average  numeric,
+        #    health_median   numeric
+        #); 
+        
     }
 
     if { !$error_p } {
         # save calculations to hf_monitor_status and hf_monitor_statistics
+        # update analysis_id for new record
+        #set analysis_id_0 $analysis_id_1
+        #set analysis_id_1 $now_s
         
         # generate a new analysis_id
     }    
@@ -3959,7 +4036,7 @@ ad_proc -private hf_monitor_statistics {
     return $statistics_list
 }
 
-ad_proc -private hf_monitor_report_read {
+ad_proc -private hf_monitor_stats_read {
     monitor_id 
     {analysis_id ""}
     {instance_id ""}

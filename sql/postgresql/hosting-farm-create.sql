@@ -507,6 +507,8 @@ CREATE TABLE hf_monitor_config_n_control (
     -- number of portions to use in frequency distribution curve
     portions_count            integer not null,
     -- allow some control over how the distribution curves are represented:
+    -- Reserved for VM quota calcs, 'T' for traffic 'S' for storage 'M' for memory
+    -- A monitor should start with only one of those flags followed by an aniversary date YYYYMMDD.
     calculation_switches      varchar(20),
     -- Following 2 are used to suggest hf_monitor_status.expected_health:
     -- the percentile rank that triggers an alarm
