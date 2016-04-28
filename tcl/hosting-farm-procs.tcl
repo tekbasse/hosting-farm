@@ -3943,8 +3943,15 @@ ad_proc -private hf_monitor_statistics {
         # Currently, only VMs have performance quotas.
         #-- Reserved for VM quota calcs, 'T' for traffic 'S' for storage 'M' for memory
         #-- A VM monitor should start with only one of T,S,M followed by an aniversary date YYYYMMDD.
-        set calc_type [string range $calc_switches 0 0]
+        set calc_type ""
+        if { [string match {[TSM][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]*} $calc_switches] } {
+            set calc_type [string range $calc_switches 0 0]
+            set month_aniv [string trim [string range $calc_switches 5 6] "0 "]
+            set day_aniv  [string trim [string range $calc_switches 7 8] "0 "]
+        }
 
+
+        # Use seconds as the minimum time unit for maximum practical granularity in proportions.
         # Partial period calculations use these defaults.
         # a year is considered 365.25 days
         # a year in seconds: expr 365.25 * 24 * 60 * 60 
@@ -3960,16 +3967,23 @@ ad_proc -private hf_monitor_statistics {
         set now_yyyymmdd_hhmmss [clock format $datetime_s -format "%Y%m%d %H%M%S"]
         set month_f [string range $now_yyyymmdd_hhmmss 4 5]
         set year_f [string range $now_yyyymmdd_hhmmss 0 3]
+        set day_f [string range $now_yyyymmdd_hhmmss 6 7]
+
         # days in current month
-        set days_in_month dt_num_days_in_month $year_f $month_f
-        
-        
+        set days_in_month [dt_num_days_in_month $year_f $month_f]
+
+        # Costs/expenses and usage (resource burn estimates) are calculated in a separate, less frequent process.
+        # Partly, this is because prices per burn unit vary contractually, where
+        # a month may be defined from aniversary day to day, or a consistent N number of days, or some other duration.
         switch -exact -- $calc_type {
             T  { 
+
             }
             S  { 
+
             }
             M  {
+
             }
             default {
                 
