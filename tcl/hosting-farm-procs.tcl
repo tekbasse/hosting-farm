@@ -4022,20 +4022,27 @@ ad_proc -private hf_monitor_statistics {
         }
         set expected_percentile [qaf_p_at_y_of_dist_curve $expected_health $normed_lists]
         
-        
-        ##code
+        set range_min $analysis_id_p0
+        set range_max $analysis_id_p1
+
+        # create values for hf_monitor_statistics. Set min/max.        
         if { $first_log_point_p } {
-            # create values for hf_monitor_statistics. Set min/max based on $calc_type
-            # Either from history of other cases, or defaults from hf_monitor_config_n_control,
-            # or set based on current value only, or..
-
+            set sample_count 1
+            set health_max $health_p1
+            set health_min $health_p0
+            set health_average $health_p1
         } else {
-            # get last analysis_id (analysis_id_0) from hf_monitor_statistics
-            # and adjust min/max ranges
+            set sample_count [expr { $dist_lists_len - 1 } ]
+            set row_y_low [lindex $normed_lists 1]
+            set health_min [lindex $row_y_low 0]
+            set row_y_high [lindex $normed_lists end]
+            set health_max [lindex $row_y_high 0]
+            # Here, average means where half of time-weighted values are above and below value.
+            # ie. a variation of mathematical "mode".
+            set health_average [qaf_y_of_x_dist_curve 0.5 $normed_lists 0]
+            # Here, median means time-weighted median.
+            set health_median [qaf_y_of_x_dist_curve 0.5 $normed_lists 1]
         }
-    
-    
-
         
         #CREATE TABLE hf_monitor_statistics (
         #    instance_id     integer not null,
@@ -4056,9 +4063,6 @@ ad_proc -private hf_monitor_statistics {
         #    health_median   numeric
         #); 
         
-    }
-
-    if { !$error_p } {
         # save calculations to hf_monitor_status and hf_monitor_statistics
         # update analysis_id for new record
         #set analysis_id_0 $analysis_id_1
