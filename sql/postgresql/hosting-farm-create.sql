@@ -558,16 +558,18 @@ CREATE TABLE hf_monitor_status (
     monitor_id                 integer unique not null,
     asset_id                   varchar(19) not null DEFAULT '',
     --  analysis_id at p0
-    analysis_id_p0                  varchar(19) not null DEFAULT '',
+    analysis_id_p0             varchar(19) not null DEFAULT '',
     -- most recent analysis_id ie at p1
-    analysis_id_p1                  varchar(19) not null DEFAULT '',
+    analysis_id_p1             varchar(19) not null DEFAULT '',
     -- health at p0
     health_p0                  varchar(19) not null DEFAULT '',
     -- for calculating differential, p1 is always 1, just as p0 is 0
     -- health at p1
     health_p1                  varchar(19) not null DEFAULT '',
+    health_percentile          varchar(19) not null DEFAULT '',
     -- 
-    expected_health            varchar(19) not null DEFAULT ''
+    expected_health            varchar(19) not null DEFAULT '',
+    expected_percentile        varchar(19) not null DEFAULT ''
 );
 
 create index hf_monitor_status_instance_id_idx on hf_monitor_status (instance_id);

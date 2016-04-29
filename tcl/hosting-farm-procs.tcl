@@ -3516,7 +3516,7 @@ ad_proc -private hf_monitor_status {
     Analyzes data from unprocessed hf_monitor_update, posts to hf_monitor_status, hf_monitor_freq_dist_curves, and hf_monitor_statistics
     Standardizes analysis (ie change of health ) of standardized info health reported from hf_monitor_update.
     Data is in list of lists format, where each list represents a monitor_id and contains this ordered info:
-    monitor_id, asset_id, report_id, health_p0, health_p1, expected_health.
+    monitor_id, asset_id, report_id, health_p0, health_p1, expected_health, health_percentile, expected_percentile
     Where report_id is id of most recent hf_monitor_update.
     health_p0 is the health value previous to current health.
     health_p1 is the most recent (current) health value.
@@ -3539,7 +3539,7 @@ ad_proc -private hf_monitor_status {
         set limit_sql "limit :most_recent_ct"
     }
 
-    set status_lists [db_list_of_lists hf_monitor_status_current "select monitor_id, asset_id,analysis_id_p0, analysis_id_p1, health_p0, health_p1,expected_health from hf_monitor_status where instance_id=:instance_id and monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list]) order by analysis_id_p1 desc ${limit_sql}"]
+    set status_lists [db_list_of_lists hf_monitor_status_current "select monitor_id, asset_id,analysis_id_p0, analysis_id_p1, health_p0, health_p1,expected_health,health_percentile,expected_percentile from hf_monitor_status where instance_id=:instance_id and monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list]) order by analysis_id_p1 desc ${limit_sql}"]
     return $status_lists
 }
 
@@ -3880,23 +3880,25 @@ ad_proc -private hf_monitor_statistics {
     if { !$error_p } {
         # Calculations to populate a record of hf_monitor_status
 
-        # get previous status.  (Already queried from hf_monitor_distribution)
+        # get previous status info. (Already queried from hf_monitor_distribution)
 
-        # CREATE TABLE hf_monitor_status (
+        #CREATE TABLE hf_monitor_status (
         #    instance_id                integer not null,
         #    monitor_id                 integer unique not null,
         #    asset_id                   varchar(19) not null DEFAULT '',
         #    --  analysis_id at p0
-        #    analysis_id_p0                  varchar(19) not null DEFAULT '',
+        #    analysis_id_p0             varchar(19) not null DEFAULT '',
         #    -- most recent analysis_id ie at p1
-        #    analysis_id_p1                  varchar(19) not null DEFAULT '',
+        #    analysis_id_p1             varchar(19) not null DEFAULT '',
         #    -- health at p0
         #    health_p0                  varchar(19) not null DEFAULT '',
         #    -- for calculating differential, p1 is always 1, just as p0 is 0
         #    -- health at p1
         #    health_p1                  varchar(19) not null DEFAULT '',
+        #    health_percentile          varchar(19) not null DEFAULT '',
         #    -- 
-        #    expected_health            varchar(19) not null DEFAULT ''
+        #    expected_health            varchar(19) not null DEFAULT '',
+        #    expected_percentile        varchar(19) not null DEFAULT ''
         #);
 
         # Convert to cobbler list by sortying by y, after removing header
@@ -4018,6 +4020,7 @@ ad_proc -private hf_monitor_statistics {
                 set expected_health [qaf_extrapolate_p1p2_at_x $analysis_id_p0 $health_p0 $analysis_id_p1 $health_p1 $analysis_id_p2]
             }
         }
+        set expected_percentile [qaf_p_at_y_of_dist_curve $expected_health $normed_lists]
         
         
         ##code
