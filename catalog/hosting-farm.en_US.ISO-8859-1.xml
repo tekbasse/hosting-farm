@@ -6,4 +6,5 @@
   <msg key="Quota">Quota</msg>
   <msg key="Projected">Projected</msg>
   <msg key="Health_Score">Health Score</msg>
+  <msg key="Asset_Monitor">Asset Monitor</msg>
 </message_catalog>

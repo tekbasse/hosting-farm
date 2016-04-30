@@ -3833,6 +3833,7 @@ ad_proc -private hf_monitor_statistics {
     # initializations
     set statistics_list [list ]
     set error_p 0
+    set success_p 1
 
     # validate
     set monitor_id_p [qf_is_natural_number $monitor_id]
@@ -4037,9 +4038,7 @@ ad_proc -private hf_monitor_statistics {
             set health_min [lindex $row_y_low 0]
             set row_y_high [lindex $normed_lists end]
             set health_max [lindex $row_y_high 0]
-            # Here, average means where half of time-weighted values are above and below value.
-            # ie. a variation of mathematical "mode".
-            set health_average [qaf_y_of_x_dist_curve 0.5 $normed_lists 0]
+            set health_average [expr{ ( $health_max + $health_min ) / 2. } ]
             # Here, median means time-weighted median.
             set health_median [qaf_y_of_x_dist_curve 0.5 $normed_lists 1]
         }
@@ -4064,28 +4063,36 @@ ad_proc -private hf_monitor_statistics {
         #); 
         
         # save calculations to hf_monitor_status and hf_monitor_statistics
-        # update analysis_id for new record
-        #set analysis_id_0 $analysis_id_1
-        #set analysis_id_1 $now_s
-        
-        # generate a new analysis_id
+        # use latest hf_monitor_log.report_id for analysis_id for new record ie analysis_id_1
+        db_transaction {
+            db_dml hf_monitor_status_add { insert into hf_monitor_status
+                ( instance_id,monitor_id,asset_id,analysis_id_p0,analysis_id_p1,health_p0,health_p1,health_percentile,expected_health,expected_percentile)
+                (:instance_id,:monitor_id,:asset_id,:analysis_id_p0,:analysis_id_p1,:health_p0,:health_p1,:health_percentile,:expected_health,:expected_percentile)
+            }
+            db_dml hf_monitor_statistics_add { insert into hf_monitor_statistics
+                ( instance_id,monitor_id,analysis_id,sample_count,range_min,range_max,health_max,health_min,health_average,health_median )
+                values (:instance_id,:monitor_id,:analysis_id_p1,:sample_count,:range_min,:range_max,:health_max,:health_min,:health_average,:health_median)
+            }
+
+        }
+
+        # check triggers. ie hf_monitor_config_n_control.health_percentile_trigger and .health_threashold  
+        # Either one will trigger event. 
+        if { $health_p1 > $health_theashold } {
+            # flag immediate
+            hf_log_create $asset_id "#hosting-farm.Asset_Monitor#" "alert" "id ${monitor_id} Message: ${alert_message}" $user_id $instance_id
+##code
+        }
+        if { $health_percentile > $health_percentile_trigger } {
+            # send immediate notification
+##code
+        }
     }    
 
-
-    # check triggers. ie hf_monitor_config_n_control.health_percentile_trigger and .health_threashold  
-    # Either one will trigger event. 
-
-    ## these should be db writes, not reads
-    if { $monitor_id_p } {
-        if { $analysis_id_p } {
-            set statistics_lists [db_list_of_lists hf_monitor_stats_get "select sample_count, range_min, range_max, health_min, health_max, health_average, health_median, analysis_id, monitor_id from hf_monitor_statistics where instance_id=:instance_id and monitor_id=:monitor_id and analysis_id=:analysis_id"]
-        } else {
-            # set analysis_id to the latest
-            set statistics_lists [db_list_of_lists hf_monitor_stats_get "select sample_count, range_min, range_max, health_min, health_max, health_average, health_median, analysis_id, monitor_id from hf_monitor_statistics where instance_id=:instance_id and monitor_id=:monitor_id order by analysis_id desc limit 1"]
-        }
-        set statistics_list [lindex $statistics_lists 0]
+    if { $error_p } {
+        set success_p 0
     }
-    return $statistics_list
+    return $success_p
 }
 
 ad_proc -private hf_monitor_stats_read {

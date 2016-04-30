@@ -12,6 +12,20 @@ ad_library {
     Temporary comment about git commit comments: http://xkcd.com/1296/
 }
 
+ad_proc -private hf_user_id {
+    asset_id
+} {
+    Returns primary user_id for asset_id, or empty string if not found.
+} {
+    # log_read needs to be adjusted so monitor notifications work for anyone with admin role for asset_id
+} {
+    set user_id ""
+    set status [qf_is_natural_number $asset_id]
+    db_0or1row hf_assets_read_uid "select user_id from hf_assets where asset_id=:status_id"
+    return $user_id
+}
+
+}
 ad_proc -private hf_log_create {
     asset_id
     action_code
@@ -32,19 +46,27 @@ ad_proc -private hf_log_create {
             }
             if { $user_id eq "" } {
                 ns_log Notice "hf_log_create.451: user_id ''"
-                set user_id [ad_conn user_id]
+                if { [ns_conn isconnected] } {
+                    set user_id [ad_conn user_id]
+                } else {
+                    set user_id [hf_user_id_from_asset_id $asset_id]
+                }
             }
-            set id [db_nextval hf_sched_id_seq]
-            set trashed_p 0
-            set nowts [dt_systime -gmt 1]
-            set action_code [qf_abbreviate $action_code 38]
-            set action_title [qf_abbreviate $action_title 78]
-            db_dml hf_process_log_create { insert into hf_process_log
-                (id,asset_id,instance_id,user_id,trashed_p,name,title,created,last_modified,log_entry)
-                values (:id,:asset_id,:instance_id,:user_id,:trashed_p,:action_code,:action_title,:nowts,:nowts,:entry_text) }
-            ns_log Notice "hf_log_create.46: posting to hf_process_log: action_code ${action_code} action_title ${action_title} '$entry_text'"
+            if { $user_id ne "" } {
+                set id [db_nextval hf_sched_id_seq]
+                set trashed_p 0
+                set nowts [dt_systime -gmt 1]
+                set action_code [qf_abbreviate $action_code 38]
+                set action_title [qf_abbreviate $action_title 78]
+                db_dml hf_process_log_create { insert into hf_process_log
+                    (id,asset_id,instance_id,user_id,trashed_p,name,title,created,last_modified,log_entry)
+                    values (:id,:asset_id,:instance_id,:user_id,:trashed_p,:action_code,:action_title,:nowts,:nowts,:entry_text) }
+                ns_log Notice "hf_log_create.46: posting to hf_process_log: action_code ${action_code} action_title ${action_title} '$entry_text'"
+            } else {
+                ns_log Warning "hf_log_create.47: ignored an attempt to post a log message without connection or user_id for asset_id '${asset_id}'"
+            }
         } else {
-            ns_log Warning "hf_log_create.48: attempt to post an empty log message has been ignored."
+            ns_log Warning "hf_log_create.48: ignored an attempt to post an empty log message."
         }
     } else {
         ns_log Warning "hf_log_create.51: asset_id '$asset_id' is not a natural number reference. Log message '${entry_text}' ignored."

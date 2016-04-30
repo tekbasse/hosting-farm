@@ -89,12 +89,11 @@ ad_proc -private hf::monitor::do {
     
     # If no proc called by hf::monitor::do is active (check hf_beat_stack_active.id ),
     # call the next monitor proc in the stack (from hosting-farm-local-procs.tcl)
-    # the called procedue calls hf_monitor_configs_read and gets asset parameters, then calls hf_call_read to determine appropriate call_name for monitor
+    # the called procedure calls hf_monitor_configs_read and gets asset parameters, then calls hf_call_read to determine appropriate call_name for monitor
     # then calls returned proc_name
-    # proc_name grabs info from external server, normalizes and saves info via hf_montor_update,
-    # proc_name then calls hf_monitor_statistics, calls hf_monitor_status_create
-    # (those are done in proc_name proc to efficiently use available resources etc.)
-    # if monitor config data says to flag an alert, report it in the same hf monitor logs and perhaps flag a notification.
+    # proc_name grabs info from external server, normalizes and saves info via hf_monitor_update,
+    # At less frequent intervals, hf::monitor::do (or theoretically hf::scheduled::do) can call hf_monitor_statistics
+    # If monitor config data indicates to flag an alert, flag a notification.
 
     # First, check if a monitor process is running and get status of debug_p
     hf::monitor::check
