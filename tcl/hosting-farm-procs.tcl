@@ -4080,11 +4080,14 @@ ad_proc -private hf_monitor_statistics {
         # Either one will trigger event. 
         if { $health_p1 > $health_theashold } {
             # flag immediate
-            hf_log_create $asset_id "#hosting-farm.Asset_Monitor#" "alert" "id ${monitor_id} Message: ${alert_message}" $user_id $instance_id
+
+            hf_monitor_alert_trigger
 ##code
         }
         if { $health_percentile > $health_percentile_trigger } {
             # send immediate notification
+            hf_monitor_alert_trigger
+
 ##code
         }
     }    
@@ -4129,6 +4132,21 @@ ad_proc -private hf_monitor_stats_read {
     return $statistics_list
 }
 
+ad_proc -private hf_monitor_alert_trigger {
+    {monitor_id ""}
+} {
+    notifications for alerts from monitors (and quota overage notices)
+} {
+    # sender email is systemowner
+    # to get user_id of systemowner:
+    # party::get_by_email -email $email
+    acs_mail_lite::send 
+    hf_log_create $asset_id "#hosting-farm.Asset_Monitor#" "alert" "id ${monitor_id} Message: ${alert_message}" $user_id $instance_id    
+
+    return $success_p
+}
+    # hf_monitor_alerts_status
+
 
 ad_proc -public hf_monitors_inactivate {
     monitor_ids
@@ -4152,66 +4170,3 @@ ad_proc -public hf_monitors_inactivate {
     ##code
 }
 
-ad_proc -private hf_customer_subsite_add {
-    customer_id
-    {instance_id ""}
-    {user_id ""}
-} {
-    NOTES ONLY. DOES NOT WORK. Intended to Create a customer subsite. Mount subsite, forums, creates a support forum
-} {
-    # These are essentially notes for expanding package to allow
-    # enterprise customers to have a dedicated subsite to help provide
-    # flexible notifications and inter-organizational communications with ams assets
-    # Much of this from openacs.org/forums/message-view?message_id=116231
-
-    # get customer_abbrev as label, customer_name as name
-    set subsite_id [site_node::instantiate_and_mount -node_name $label -package_name $name -package_key "acs-susite"]
-    # This also creates rational segments "Members" and "Administrators"
-
-    # To get the "Members" segment 
-    set u_seg [db_string rel_seg_id_get {
-        select segment_id
-        from rel_segments
-        where group_id = :app_grp
-        and rel_type= 'membership_rel'
-    } -default ""]
-    # To  remove the create privilege (If this needs to be done)
-    permission::revoke -party_id $u_seg \
-        -object_id $comm_obj_id -privilege create
-
-    # Get the "Administrators" segment
-    set a_seg [db_string rel_seg_id_get {
-        select segment_id
-        from rel_segments
-        where group_id = :app_grp
-        and rel_type= 'admin_rel'
-    } -default ""]
-
-
-    # Do not inherit permissions from the main site
-    permission::set_not_inherit -object_id $subsite_id
-    # Get the subsite application group
-    set app_grp [application_group::group_id_from_package_id \
-                     -package_id $comm_obj_id]
-    
-    # Set subsite application group join_policy to "needs approval"
-    db_dml update_join_policy {
-        update groups
-        set join_policy = 'needs approval'
-        where group_id = :app_grp
-    }
-    # There is another location to set the join policy?
-    # Oh well, for good measure...
-    parameter::set_value -package_id $comm_obj_id \
-        -parameter RegistrationRequiresApprovalP -value 1
-
-    # Be sure to add the primary user_id as admin
-    # Add a user in a role
-    relation_add -member_state "approved" \
-        $role $app_grp $member_id
-
-    #  There's also:
-    # Remove a user from a role
-    relation_remove $rel_id
-    return 0
-}
