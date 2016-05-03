@@ -61,9 +61,11 @@ ad_proc -private hf::monitor::check {
         #       -- when checking for active_id, can also get a dynamic value for debug_p with low overhead
         #       debug_p varchar(1) 
         #)
-        
+
+
+        # set defaults
         set active_id ""
-        # set debug_p to 0 to reduce repeated log noise
+        # set debug_p to 1 for more log info
         set debug_p 1
         set priority_threashold 13
 

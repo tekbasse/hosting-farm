@@ -4134,13 +4134,19 @@ ad_proc -private hf_monitor_stats_read {
 
 ad_proc -private hf_monitor_alert_trigger {
     {monitor_id ""}
+    {immediate_p "0"}
 } {
     notifications for alerts from monitors (and quota overage notices)
 } {
     # sender email is systemowner
     # to get user_id of systemowner:
     # party::get_by_email -email $email
-    acs_mail_lite::send 
+    if { $immediate_p } {
+        # Should alert messages be scanned by a system monitor proc, and batch sent every few minutes
+        # to avoid alert emails flooding the system?
+        acs_mail_lite::send 
+    }
+
     hf_log_create $asset_id "#hosting-farm.Asset_Monitor#" "alert" "id ${monitor_id} Message: ${alert_message}" $user_id $instance_id    
 
     return $success_p

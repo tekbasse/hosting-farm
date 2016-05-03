@@ -40,6 +40,13 @@ create index hf_process_log_viewed_instance_id_idx on hf_process_log_viewed (ins
 create index hf_process_log_viewed_user_id_idx on hf_process_log_viewed (user_id);
 create index hf_process_log_viewed_asset_id_idx on hf_process_log_viewed (asset_id);
 
+CREATE TABLE hf_sched_params (
+       -- a dynamic value for debug_p with low overhead
+       debug_p varchar(1) default '0',
+       -- How frequent should the schedule re-prioritize and check for new operations?
+       -- in seconds.
+       frequency_base integer default '180'
+);
 
 CREATE TABLE hf_sched_proc_stack (
        id integer primary key,

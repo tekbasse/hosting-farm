@@ -36,20 +36,49 @@ namespace eval hf::schedule {}
 
 # set id [db_nextval hf_sched_id_seq]
 
+
+ad_proc -private hf::schedule::check {
+
+} {
+    Returns current values from hf_stack_params table (debug_p, frequency_base)  into the calling environment
+} {
+    upvar 1 debug_p debug_p 
+    upvar 1 frequency_base frequency_base
+    if { ![db_0or1row hf_beat_stack_bus_ck "select debug_p,frequency_base from hf_sched_params limit 1"] } {
+
+        # CREATE TABLE hf_sched_params (
+        #        -- a dynamic value for debug_p with low overhead
+        #        debug_p varchar(1) default '0',
+        #        -- How frequent should the schedule re-prioritize and check for new operations?
+        #        -- in seconds.
+        #        frequency_base integer default '180'
+        # );
+        
+        # set defaults
+        # set debug_p to 0 to reduce repeated log noise
+        set debug_p 0
+        set frequency_base [expr { 3 * 60 } ]
+        
+        # create the row
+        db_dml hf_sched_params_cr { insert into hf_sched_params (debug_p,frequency_base) values (:debug_p,:frequency_base) }
+    }
+    return 1
+}
+
+
 ad_proc -private hf::schedule::do {
 
 } { 
     Process any scheduled procedures. Future batches are suspended until this process reports batch complete.
 } {
-    set cycle_time 13
+    hf::schedule::check
     incr cycle_time -1
     set success_p 0
     set batch_lists [db_list_of_lists hf_sched_proc_stack_read_adm_p0_s { select id,proc_name,user_id,instance_id, priority, order_time, started_time from hf_sched_proc_stack where completed_time is null order by started_time asc, priority asc , order_time asc } ]
     set batch_lists_len [llength $batch_lists]
     set dur_sum 0
     set first_started_time [lindex [lindex $batch_lists 0] 6]
-    # set debug_p to 0 to reduce repeated log noise:
-    set debug_p 1
+    # debug_p set by hf::schedule_check
     if { $debug_p } {
         ns_log Notice "hf::schedule::do.39: first_started_time '${first_started_time}' batch_lists_len ${batch_lists_len}"
     }
@@ -112,6 +141,7 @@ ad_proc -private hf::schedule::do {
                         # We don't have session_id available.. and it may have changed or not exist..
                         # Email?  that would create too many alerts for lots of quick jobs.
                         # auth::sync::job::* api does this.
+                        # Integrage with hf_monitor_alert_trigger..
                         # Create another package for user conveniences like active alerts..
                         # maybe hook into util_user_message after querying users.n_sessions or something..
                     }
