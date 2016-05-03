@@ -18,14 +18,12 @@ ad_proc -private hf_user_id {
     Returns primary user_id for asset_id, or empty string if not found.
 } {
     # log_read needs to be adjusted so monitor notifications work for anyone with admin role for asset_id
-} {
     set user_id ""
     set status [qf_is_natural_number $asset_id]
     db_0or1row hf_assets_read_uid "select user_id from hf_assets where asset_id=:status_id"
     return $user_id
 }
 
-}
 ad_proc -private hf_log_create {
     asset_id
     action_code
