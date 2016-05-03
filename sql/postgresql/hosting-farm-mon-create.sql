@@ -13,7 +13,23 @@ CREATE TABLE hf_beat_log (
     instance_id integer,
     user_id integer,
     asset_id integer,
+    -- If there is a monitor_id associated, include it.
+    monitor_id integer,
     trashed_p varchar(1) default '0',
+    alert_p varchar(1) default '0',
+    -- Is this a system alert or critical message requiring
+    -- a flag for extra presentation handling?
+    critical_alert_p varchar(1) default '0',
+    -- If the alert needs a confirmation from a user
+    confirm_p varchar(1) default '0',
+    -- If confirmation required, confirmation received?
+    confirmed_p varchar(1) default '0',
+    -- send an email/sms etc with alert?
+    message_p varchar(1) default '0',
+    -- Was the email sent?
+    -- This allows the system to batch multiple outbound messages to one user
+    -- and potentially skip sending messages already received on screen.
+    message_sent_p varchar(1) default '0',
     name varchar(40),
     title varchar(80),
     created timestamptz default now(),
@@ -25,7 +41,9 @@ create index hf_beat_log_id_idx on hf_beat_log (id);
 create index hf_beat_log_instance_id_idx on hf_beat_log (instance_id);
 create index hf_beat_log_user_id_idx on hf_beat_log (user_id);
 create index hf_beat_log_asset_id_idx on hf_beat_log (asset_id);
+create index hf_beat_log_monitor_id_idx on hf_beat_log (monitor_id);
 create index hf_beat_log_trashed_p_idx on hf_beat_log (trashed_p);
+create index hf_beat_log_alert_p_idx on hf_beat_log (alert_p);
 
 CREATE TABLE hf_beat_log_viewed (
      id integer not null,
@@ -66,6 +84,7 @@ CREATE TABLE hf_beat_stack (
        -- relative priority kicks in after threashold priority procs have been exhausted for the interval
        proc_name varchar(40),
        asset_id integer,
+       monitor_id integer,
        proc_args text,
        proc_out text,
        user_id integer,
@@ -105,3 +124,4 @@ CREATE index hf_beat_stack_priority_key on hf_beat_stack(priority);
 --);
 
 --CREATE index hf_beat_args_stack_id on hf_beat_args(stack_id);
+

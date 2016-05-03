@@ -13,6 +13,8 @@ DROP index hf_sched_proc_stack_id_key;
 
 DROP TABLE hf_sched_proc_stack;
 
+DROP TABLE hf_sched_params;
+
 DROP index hf_process_log_id_idx;
 DROP index hf_process_log_instance_id_idx;
 DROP index hf_process_log_user_id_idx;
@@ -23,8 +25,15 @@ DROP index hf_process_log_viewed_instance_id_idx;
 DROP index hf_process_log_viewed_user_id_idx;
 DROP index hf_process_log_viewed_table_tid_idx;
 
-DROP TABLE hf_process_log;
 DROP TABLE hf_process_log_viewed;
+
+DROP index hf_process_log_id_idx;
+DROP index hf_process_log_instance_id_idx;
+DROP index hf_process_log_user_id_idx;
+DROP index hf_process_log_asset_id_idx;
+DROP index hf_process_log_trashed_p_idx;
+
+DROP TABLE hf_process_log;
 
 DROP SEQUENCE hf_sched_id_seq;
 

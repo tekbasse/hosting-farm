@@ -19,7 +19,9 @@ drop index hf_beat_log_viewed_id_idx;
 DROP TABLE hf_beat_log_viewed;
 
 drop index hf_beat_log_trashed_p_idx;
+drop index hf_beat_log_alert_p_idx;
 drop index hf_beat_log_asset_id_idx;
+drop index hf_beat_log_monitor_id_idx;
 drop index hf_beat_log_user_id_idx;
 drop index hf_beat_log_instance_id_idx;
 drop index hf_beat_log_id_idx;
