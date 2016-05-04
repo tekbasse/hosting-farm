@@ -17,27 +17,176 @@ namespace eval hf::monitor {}
 
 # once every few seconds, hf::monitor::do is called. ( see tcl/hosting-farm-scheduled-init.tcl )
 
-     
-#CREATE TABLE hf_beat_log (
-#    id integer not null primary key,
-#    instance_id integer,
-#    user_id integer,
-#    asset_id integer,
-#    trashed_p varchar(1) default '0',
-#    name varchar(40),
-#    title varchar(80),
-#    created timestamptz default now(),
-#    last_modified timestamptz,
-#    log_entry text
-#);
-#
-#CREATE TABLE hf_beat_log_viewed (
-#     id integer not null,
+ad_proc -private hf_monitor_log_create {
+    asset_id
+    action_code
+    action_title
+    entry_text
+    {user_id ""}
+    {instance_id ""}
+} {
+    Log an entry for a hf process. Returns unique entry_id if successful, otherwise returns empty string.
+} {
+    set id ""
+    set status [qf_is_natural_number $asset_id]
+    if { $status } {
+        if { $entry_text ne "" } {
+            if { $instance_id eq "" } {
+                ns_log Notice "hf_monitor_log_create.451: instance_id ''"
+                set instance_id [ad_conn package_id]
+            }
+            if { $user_id eq "" } {
+                ns_log Notice "hf_monitor_log_create.451: user_id ''"
+                if { [ns_conn isconnected] } {
+                    set user_id [ad_conn user_id]
+                } else {
+                    set user_id [hf_user_id_from_asset_id $asset_id]
+                }
+            }
+            if { $user_id ne "" } {
+                set id [db_nextval hf_sched_id_seq]
+                set trashed_p 0
+                set nowts [dt_systime -gmt 1]
+                set action_code [qf_abbreviate $action_code 38]
+                set action_title [qf_abbreviate $action_title 78]
+
+# -- For monitor process logs
+# CREATE TABLE hf_beat_log (
+#     id integer not null primary key,
 #     instance_id integer,
 #     user_id integer,
-#     asset_id integer, 
-#     last_viewed timestamptz
-#);
+#     asset_id integer,
+#     -- If there is a monitor_id associated, include it.
+#     monitor_id integer,
+#     trashed_p varchar(1) default '0',
+#     alert_p varchar(1) default '0',
+#     -- Is this a system alert or critical message requiring
+#     -- a flag for extra presentation handling?
+#     critical_alert_p varchar(1) default '0',
+#     -- If the alert needs a confirmation from a user
+#     confirm_p varchar(1) default '0',
+#     -- If confirmation required, confirmation received?
+#     confirmed_p varchar(1) default '0',
+#     -- send an email/sms etc with alert?
+#     message_p varchar(1) default '0',
+#     -- Was the email sent?
+#     -- This allows the system to batch multiple outbound messages to one user
+#     -- and potentially skip sending messages already received on screen.
+#     message_sent_p varchar(1) default '0',
+#     name varchar(40),
+#     title varchar(80),
+#     created timestamptz default now(),
+#     last_modified timestamptz,
+#     log_entry text
+# );
+
+
+                db_dml hf_process_log_create { insert into hf_process_log
+                    (id,asset_id,instance_id,user_id,trashed_p,name,title,created,last_modified,log_entry)
+                    values (:id,:asset_id,:instance_id,:user_id,:trashed_p,:action_code,:action_title,:nowts,:nowts,:entry_text) }
+                ns_log Notice "hf_monitor_log_create.46: posting to hf_process_log: action_code ${action_code} action_title ${action_title} '$entry_text'"
+            } else {
+                ns_log Warning "hf_monitor_log_create.47: ignored an attempt to post a log message without connection or user_id for asset_id '${asset_id}'"
+            }
+        } else {
+            ns_log Warning "hf_monitor_log_create.48: ignored an attempt to post an empty log message."
+        }
+    } else {
+        ns_log Warning "hf_monitor_log_create.51: asset_id '$asset_id' is not a natural number reference. Log message '${entry_text}' ignored."
+    }
+    return $id
+}
+
+ad_proc -public hf_monitor_log_read {
+    asset_id
+    {max_old "1"}
+    {user_id ""}
+    {instance_id ""}
+} {
+    Returns any new log entries as a list via util_user_message, otherwise returns most recent max_old number of log entries.
+    Returns empty string if no entry exists.
+} {
+    set return_lol [list ]
+    set alert_p 0
+    set nowts [dt_systime -gmt 1]
+    set valid1_p [qf_is_natural_number $asset_id] 
+    set valid2_p [qf_is_natural_number $asset_id]
+    if { $valid1_p && $valid2_p } {
+        if { $instance_id eq "" } {
+            set instance_id [ad_conn package_id]
+            ns_log Notice "hf_monitor_log_read.493: instance_id ''"
+        }
+        if { $user_id eq "" } {
+            set user_id [ad_conn user_id]
+            ns_log Notice "hf_monitor_log_read.497: user_id ''"
+        }
+        set return_lol [list ]
+        set last_viewed ""
+        set alert_msg_count 0
+
+
+# CREATE TABLE hf_beat_log_viewed (
+#      id integer not null,
+#      instance_id integer,
+#      user_id integer,
+#      asset_id integer, 
+#      last_viewed timestamptz
+# );
+
+
+
+        set viewing_history_p [db_0or1row hf_process_log_viewed_last { select last_viewed from hf_process_log_viewed where instance_id = :instance_id and asset_id = :asset_id and user_id = :user_id } ]
+        # set new view history time
+        if { $viewing_history_p } {
+
+            set last_viewed [string range $last_viewed 0 18]
+            if { $last_viewed ne "" } {
+                
+                set entries_lol [db_list_of_lists hf_process_log_read_new { 
+                    select id, name, title, log_entry, last_modified from hf_process_log 
+                    where instance_id = :instance_id and asset_id =:asset_id and last_modified > :last_viewed order by last_modified desc } ]
+                
+                ns_log Notice "hf_monitor_log_read.80: last_viewed ${last_viewed}  entries_lol $entries_lol"
+                
+                if { [llength $entries_lol ] > 0 } {
+                    set alert_p 1
+                    set alert_msg_count [llength $entries_lol]
+                    foreach row $entries_lol {
+                        set message_txt "[lc_time_system_to_conn [string range [lindex $row 4] 0 18]] [lindex $row 3]"
+                        set last_modified [lindex $row 4]
+                        ns_log Notice "hf_monitor_log_read.79: last_modified ${last_modified}"
+                        util_user_message -message $message_txt
+                        ns_log Notice "hf_monitor_log_read.88: message '${message_txt}'"
+                    }
+                    set entries_lol [list ]
+                } 
+            }
+            
+            set max_old [expr { $max_old + $alert_msg_count } ]
+            set entries_lol [db_list_of_lists hf_process_log_read_one { 
+                select id, name, title, log_entry, last_modified from hf_process_log 
+                where instance_id = :instance_id and asset_id =:asset_id order by last_modified desc limit :max_old } ]
+            foreach row [lrange $entries_lol $alert_msg_count end] {
+                set message_txt [lindex $row 2]
+                append message_txt " ([lindex $row 1])"
+                append message_txt " posted: [lc_time_system_to_conn [string range [lindex $row 4] 0 18]]\n "
+                append message_txt [lindex $row 3]
+                ns_log Notice "hf_monitor_log_read.100: message '${message_txt}'"
+                lappend return_lol $message_txt
+            }
+            
+            # last_modified ne "", so update
+            db_dml hf_process_log_viewed_update { update hf_process_log_viewed set last_viewed = :nowts where instance_id = :instance_id and asset_id = :asset_id and user_id = :user_id }
+        } else {
+            # create history
+            set id [db_nextval hf_sched_id_seq]
+            db_dml hf_process_log_viewed_create { insert into hf_process_log_viewed
+                ( id, instance_id, user_id, asset_id, last_viewed )
+                values ( :id, :instance_id, :user_id, :asset_id, :nowts ) }
+        }
+    }
+    return $return_lol
+}
 
 
 # set id [db_nextval hf_beat_id_seq]
