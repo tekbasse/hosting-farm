@@ -17,7 +17,7 @@ namespace eval hf::monitor {}
 
 # once every few seconds, hf::monitor::do is called. ( see tcl/hosting-farm-scheduled-init.tcl )
 
-ad_proc -private hf_monitor_log_create {
+ad_proc -private hf_beat_log_create {
     asset_id
     monitor_id
     user_id
@@ -29,18 +29,18 @@ ad_proc -private hf_monitor_log_create {
     title
     log_entry
 } {
-    Log an entry for a hf_monitor_log process. Returns unique entry_id if successful, otherwise returns empty string.
+    Log an entry for a hf_beat_log process. Returns unique entry_id if successful, otherwise returns empty string.
 } {
     set id ""
     set asset_id_p [qf_is_natural_number $asset_id]
     if { $asset_id_p } {
         if { $log_entry ne "" } {
             if { ![qf_is_natural_number $instance_id] } {
-                ns_log Notice "hf_monitor_log_create.451: instance_id '${instance_id}' changing.."
+                ns_log Notice "hf_beat_log_create.451: instance_id '${instance_id}' changing.."
                 set instance_id [ad_conn package_id]
             }
             if { ![qf_is_natural_number $user_id] } {
-                ns_log Notice "hf_monitor_log_create.451: user_id was '${user_id}' changing.."
+                ns_log Notice "hf_beat_log_create.451: user_id was '${user_id}' changing.."
                 if { [ns_conn isconnected] } {
                     set user_id [ad_conn user_id]
                 } else {
@@ -69,7 +69,7 @@ ad_proc -private hf_monitor_log_create {
                     set message_p "1"
                 }
 
-                # -- For monitor process logs
+                # -- For beat process logs
                 # CREATE TABLE hf_beat_log (
                 #     id integer not null primary key,
                 #     instance_id integer,
@@ -99,31 +99,31 @@ ad_proc -private hf_monitor_log_create {
                 #     log_entry text
                 # );
                 if { $monitor_id_p } {
-                    db_dml hf_monitor_log_cr_w_id { insert into hf_beat_log
+                    db_dml hf_beat_log_cr_w_id { insert into hf_beat_log
                         (id,instance_id,user_id,asset_id,monitor_id,trashed_p,alert_p,critical_alert_p,confirm_p,confirmed_p,message_p,message_sent_p,name,title,created,last_modified,log_entry)
                         values (:id,:instance_id,:user_id,:asset_id,:monitor_id,:trashed_p,:alert_p,:critical_alert_p,:confirm_p,:confirmed_p,:message_p,:message_sent_p,:name,:title,:nowts,:nowts,:log_entry)
                     }
-                    ns_log Notice "hf_monitor_log_create.104: posting to hf_beat_log: monitor_id '${monitor_id}' user_id '${user_id}' name '${name}' log_entry '${log_entry}'"
+                    ns_log Notice "hf_beat_log_create.104: posting to hf_beat_log: monitor_id '${monitor_id}' user_id '${user_id}' name '${name}' log_entry '${log_entry}'"
                 } else {
-                    db_dml hf_monitor_log_cr_wo_id { insert into hf_beat_log
+                    db_dml hf_beat_log_cr_wo_id { insert into hf_beat_log
                         (id,instance_id,user_id,asset_id,trashed_p,alert_p,critical_alert_p,confirm_p,confirmed_p,message_p,message_sent_p,name,title,created,last_modified,log_entry)
                         values (:id,:instance_id,:user_id,:asset_id,:trashed_p,:alert_p,:critical_alert_p,:confirm_p,:confirmed_p,:message_p,:message_sent_p,:name,:title,:nowts,:nowts,:log_entry)
                     }
-                    ns_log Notice "hf_monitor_log_create.112: posting to hf_beat_log: monitor_id '' user_id '${user_id}' name '${name}' log_entry '${log_entry}'"
+                    ns_log Notice "hf_beat_log_create.112: posting to hf_beat_log: monitor_id '' user_id '${user_id}' name '${name}' log_entry '${log_entry}'"
                 }
             } else {
-                ns_log Warning "hf_monitor_log_create.115: ignored an attempt to post a log message without connection or user_id for asset_id '${asset_id}'"
+                ns_log Warning "hf_beat_log_create.115: ignored an attempt to post a log message without connection or user_id for asset_id '${asset_id}'"
             }
         } else {
-            ns_log Warning "hf_monitor_log_create.118: ignored an attempt to post an empty log message."
+            ns_log Warning "hf_beat_log_create.118: ignored an attempt to post an empty log message."
         }
     } else {
-        ns_log Warning "hf_monitor_log_create.121: asset_id '$asset_id' is not a natural number reference. Log message '${log_entry}' ignored."
+        ns_log Warning "hf_beat_log_create.121: asset_id '$asset_id' is not a natural number reference. Log message '${log_entry}' ignored."
     }
     return $id
 }
 
-ad_proc -public hf_monitor_log_read {
+ad_proc -public hf_beat_log_read {
     asset_id
     {max_old "0"}
     {user_id ""}
@@ -132,8 +132,8 @@ ad_proc -public hf_monitor_log_read {
     If max_old is 0, only returns any new log entries as a list via util_user_message. Otherwise returns a list of up to max_old items.
     Returns empty list if no entry exists.
 } {
-    # due to the more complex implementation of monitor log alerts of hf_monitor_log_read (than its predecessor hf_process_log_read) 
-    # hf_monitor_log_read has been split into hf_monitor_log_alert_q and hf_monitor_log_read
+    # due to the more complex implementation of beat log alerts of hf_beat_log_read (than its predecessor hf_process_log_read) 
+    # hf_beat_log_read has been split into hf_beat_log_alert_q and hf_beat_log_read
 
 
     set return_lol [list ]
@@ -144,11 +144,11 @@ ad_proc -public hf_monitor_log_read {
     if { $valid1_p && $valid2_p } {
         if { $instance_id eq "" } {
             set instance_id [ad_conn package_id]
-            ns_log Notice "hf_monitor_log_read.493: instance_id ''"
+            ns_log Notice "hf_beat_log_read.493: instance_id ''"
         }
         if { $user_id eq "" } {
             set user_id [ad_conn user_id]
-            ns_log Notice "hf_monitor_log_read.497: user_id ''"
+            ns_log Notice "hf_beat_log_read.497: user_id ''"
         }
         set return_lol [list ]
         set last_viewed ""
@@ -173,7 +173,7 @@ ad_proc -public hf_monitor_log_read {
                     select id, name, title, log_entry, last_modified from hf_beat_log 
                     where instance_id = :instance_id and asset_id =:asset_id and last_modified > :last_viewed order by last_modified desc } ]
                 
-                ns_log Notice "hf_monitor_log_read.80: last_viewed ${last_viewed}  entries_lol $entries_lol"
+                ns_log Notice "hf_beat_log_read.80: last_viewed ${last_viewed}  entries_lol $entries_lol"
                 
                 if { [llength $entries_lol ] > 0 } {
                     set alert_p 1
@@ -181,9 +181,9 @@ ad_proc -public hf_monitor_log_read {
                     foreach row $entries_lol {
                         set message_txt "[lc_time_system_to_conn [string range [lindex $row 4] 0 18]] [lindex $row 3]"
                         set last_modified [lindex $row 4]
-                        ns_log Notice "hf_monitor_log_read.79: last_modified ${last_modified}"
+                        ns_log Notice "hf_beat_log_read.79: last_modified ${last_modified}"
                         util_user_message -message $message_txt
-                        ns_log Notice "hf_monitor_log_read.88: message '${message_txt}'"
+                        ns_log Notice "hf_beat_log_read.88: message '${message_txt}'"
                     }
                     set entries_lol [list ]
                 } 
@@ -202,7 +202,7 @@ ad_proc -public hf_monitor_log_read {
                 append message_txt " ([lindex $row 1])"
                 append message_txt " posted: [lc_time_system_to_conn [string range [lindex $row 4] 0 18]]\n "
                 append message_txt [lindex $row 3]
-                ns_log Notice "hf_monitor_log_read.100: message '${message_txt}'"
+                ns_log Notice "hf_beat_log_read.100: message '${message_txt}'"
                 lappend return_lol $message_txt
             }
             
