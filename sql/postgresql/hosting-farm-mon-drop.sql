@@ -11,7 +11,6 @@ DROP TABLE hf_beat_stack;
 
 DROP TABLE hf_beat_stack_bus;
 
-drop index hf_beat_log_viewed_asset_id_idx;
 drop index hf_beat_log_viewed_user_id_idx;
 drop index hf_beat_log_viewed_instance_id_idx;
 drop index hf_beat_log_viewed_id_idx;
