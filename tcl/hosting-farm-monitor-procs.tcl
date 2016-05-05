@@ -124,97 +124,64 @@ ad_proc -private hf_beat_log_create {
 }
 
 ad_proc -public hf_beat_log_read {
-    asset_id
-    {max_old "0"}
+    max_old
     {user_id ""}
     {instance_id ""}
 } {
-    If max_old is 0, only returns any new log entries as a list via util_user_message. Otherwise returns a list of up to max_old items.
+    max_old is max count. It's named max_old, because it only returns logs that have already been viewed.
+    If max_old is empty, returns all logs (no count limit).
     Returns empty list if no entry exists.
+    Set all_p to 1 to return all logs for user_id including logs not previously viewed.
 } {
-    # due to the more complex implementation of beat log alerts of hf_beat_log_read (than its predecessor hf_process_log_read) 
     # hf_beat_log_read has been split into hf_beat_log_alert_q and hf_beat_log_read
+    # due to the more complex implementation of beat log alerts of hf_beat_log_read than its predecessor hf_process_log_read.
 
-
-    set return_lol [list ]
-    set alert_p 0
     set nowts [dt_systime -gmt 1]
-    set valid1_p [qf_is_natural_number $asset_id] 
-    set valid2_p [qf_is_natural_number $max_old]
-    if { $valid1_p && $valid2_p } {
-        if { $instance_id eq "" } {
-            set instance_id [ad_conn package_id]
-            ns_log Notice "hf_beat_log_read.493: instance_id ''"
-        }
-        if { $user_id eq "" } {
+    if { ![qf_is_natural_number $instance_id] } {
+        ns_log Notice "hf_beat_log_create.451: instance_id '${instance_id}' changing.."
+        set instance_id [ad_conn package_id]
+    }
+    if { ![qf_is_natural_number $user_id] } {
+        ns_log Notice "hf_beat_log_create.451: user_id was '${user_id}' changing.."
+        if { [ns_conn isconnected] } {
             set user_id [ad_conn user_id]
-            ns_log Notice "hf_beat_log_read.497: user_id ''"
-        }
-        set return_lol [list ]
-        set last_viewed ""
-        set alert_msg_count 0
-
-        # CREATE TABLE hf_beat_log_viewed (
-        #      id integer not null,
-        #      instance_id integer,
-        #      user_id integer,
-        #      asset_id integer, 
-        #      last_viewed timestamptz
-        # );
-
-        set viewing_history_p [db_0or1row hf_beat_log_viewed_last { select last_viewed from hf_beat_log_viewed where instance_id = :instance_id and asset_id = :asset_id and user_id = :user_id } ]
-        # set new view history time
-        if { $viewing_history_p } {
-
-            set last_viewed [string range $last_viewed 0 18]
-            if { $last_viewed ne "" } {
-                
-                set entries_lol [db_list_of_lists hf_beat_log_read_new { 
-                    select id, name, title, log_entry, last_modified from hf_beat_log 
-                    where instance_id = :instance_id and asset_id =:asset_id and last_modified > :last_viewed order by last_modified desc } ]
-                
-                ns_log Notice "hf_beat_log_read.80: last_viewed ${last_viewed}  entries_lol $entries_lol"
-                
-                if { [llength $entries_lol ] > 0 } {
-                    set alert_p 1
-                    set alert_msg_count [llength $entries_lol]
-                    foreach row $entries_lol {
-                        set message_txt "[lc_time_system_to_conn [string range [lindex $row 4] 0 18]] [lindex $row 3]"
-                        set last_modified [lindex $row 4]
-                        ns_log Notice "hf_beat_log_read.79: last_modified ${last_modified}"
-                        util_user_message -message $message_txt
-                        ns_log Notice "hf_beat_log_read.88: message '${message_txt}'"
-                    }
-                    set entries_lol [list ]
-                } 
-            }
-            
-            if { $max_old > 0 } {
-                # Re query db with previously viewed history to max_old entries.
-                set max_old [expr { $max_old + $alert_msg_count } ]
-                set entries_lol [db_list_of_lists hf_beat_log_read_one { 
-                    select id, name, title, log_entry, last_modified from hf_beat_log 
-                    where instance_id = :instance_id and asset_id =:asset_id order by last_modified desc limit :max_old } ]
-            }
-            # prepare messages for display
-            foreach row [lrange $entries_lol $alert_msg_count end] {
-                set message_txt [lindex $row 2]
-                append message_txt " ([lindex $row 1])"
-                append message_txt " posted: [lc_time_system_to_conn [string range [lindex $row 4] 0 18]]\n "
-                append message_txt [lindex $row 3]
-                ns_log Notice "hf_beat_log_read.100: message '${message_txt}'"
-                lappend return_lol $message_txt
-            }
-            
-            # last_modified ne "", so update
-            db_dml hf_beat_log_viewed_update { update hf_beat_log_viewed set last_viewed = :nowts where instance_id = :instance_id and asset_id = :asset_id and user_id = :user_id }
         } else {
-            # create history
-            set id [db_nextval hf_beat_id_seq]
-            db_dml hf_beat_log_viewed_create { insert into hf_beat_log_viewed
-                ( id, instance_id, user_id, asset_id, last_viewed )
-                values ( :id, :instance_id, :user_id, :asset_id, :nowts ) }
+            set user_id [hf_user_id_from_asset_id $asset_id]
         }
+    }
+    set return_lol [list ]
+    set last_viewed ""
+    set extra_sql ""
+    if { [qf_is_natural_number $max_old ] } {
+        set extra_sql "limit :max_old"
+    }
+    # CREATE TABLE hf_beat_log_viewed (
+    #      id integer not null,
+    #      instance_id integer,
+    #      user_id integer,
+    #      last_viewed timestamptz
+    # );
+    
+    set viewing_history_p [db_0or1row hf_beat_log_viewed_last { select last_viewed from hf_beat_log_viewed where instance_id = :instance_id and user_id = :user_id } ]
+    # View history is not reset, because all these logs have already been viewed once.
+    # These queries check view history against created time, since last_modified could have been revised to newer than last_viewed
+    if { $viewing_history_p } {
+        set last_viewed [string range $last_viewed 0 18]
+            
+        set entries_lol [db_list_of_lists hf_beat_log_read_old  
+            "select id, name, title, log_entry, asset_id, monitor_id, critical_alert_p,confirm_p,confirmed_p, created from hf_beat_log 
+            where instance_id = :instance_id and user_id =:user_id and trashed_p='0' and alert_p='1' and created < :last_viewed order by created desc ${extra_sql}" ]
+        
+        ns_log Notice "hf_beat_log_read.173: last_viewed ${last_viewed}  entries_lol $entries_lol"
+
+    } else {
+
+        # same query, but without created > :last_viewed
+        set entries_lol [db_list_of_lists hf_beat_log_read_old0  
+            "select id, name, title, log_entry, asset_id, monitor_id, critical_alert_p,confirm_p,confirmed_p, created from hf_beat_log 
+            where instance_id = :instance_id and user_id =:user_id and trashed_p='0' and alert_p='1' order by created desc ${extra_sql}" ]
+        
+        ns_log Notice "hf_beat_log_read.181: entries_lol $entries_lol"
     }
     return $return_lol
 }
@@ -227,11 +194,9 @@ ad_proc -public hf_beat_log_alert_q {
     Returns any new log entries as a list via util_user_message.
     Returns empty list if no entry exists.
 } {
-    # due to the more complex implementation of beat log alerts of hf_beat_log_read (than its predecessor hf_process_log_read) 
     # hf_beat_log_read has been split into hf_beat_log_alert_q and hf_beat_log_read
+    # due to the more complex implementation of beat log alerts of hf_beat_log_read than its predecessor hf_process_log_read.
 
-    set return_lol [list ]
-    set alert_p 1
     set nowts [dt_systime -gmt 1]
     if { ![qf_is_natural_number $instance_id] } {
         ns_log Notice "hf_beat_log_create.451: instance_id '${instance_id}' changing.."
@@ -252,56 +217,53 @@ ad_proc -public hf_beat_log_alert_q {
     #      id integer not null,
     #      instance_id integer,
     #      user_id integer,
-    #      asset_id integer, 
     #      last_viewed timestamptz
     # );
     
     set viewing_history_p [db_0or1row hf_beat_log_viewed_last { select last_viewed from hf_beat_log_viewed where instance_id = :instance_id and user_id = :user_id } ]
-        # set new view history time
-        if { $viewing_history_p } {
+    # set new view history time
+    if { $viewing_history_p } {
 
-            set last_viewed [string range $last_viewed 0 18]
-            if { $last_viewed ne "" } {
-                
-                set entries_lol [db_list_of_lists hf_beat_log_read_new { 
-                    select id, name, title, log_entry, asset_id, monitor_id, critical_alert_p,confirm_p,confirmed_p, last_modified from hf_beat_log 
-                    where instance_id = :instance_id and user_id =:user_id and trashed_p='0' and alert_p='1' and ( last_modified > :last_viewed or ( confirm_p='1' and confirmed_p='0' ) ) order by last_modified desc } ]
-                
-                ns_log Notice "hf_beat_log_read.80: last_viewed ${last_viewed}  entries_lol $entries_lol"
-                
-                if { [llength $entries_lol ] > 0 } {
-                    foreach row $entries_lol {
-                        set message_txt "[lc_time_system_to_conn [string range [lindex $row 4] 0 18]] [lindex $row 3]"
-                        set last_modified [lindex $row 4]
-                        ns_log Notice "hf_beat_log_read.79: last_modified ${last_modified}"
-                        util_user_message -message $message_txt
-                        ns_log Notice "hf_beat_log_read.88: message '${message_txt}'"
-                    }
-                    set entries_lol [list ]
-                } 
-            } else {
-                # same query, but without last_modified > :last_viewed or confirm_p and confirmed_p
-            }
+        set last_viewed [string range $last_viewed 0 18]
+        if { $last_viewed ne "" } {
             
-            # prepare messages for display
-            foreach row [lrange $entries_lol $alert_msg_count end] {
-                set message_txt [lindex $row 2]
-                append message_txt " ([lindex $row 1])"
-                append message_txt " posted: [lc_time_system_to_conn [string range [lindex $row 4] 0 18]]\n "
-                append message_txt [lindex $row 3]
-                ns_log Notice "hf_beat_log_read.100: message '${message_txt}'"
-                lappend return_lol $message_txt
-            }
+            set entries_lol [db_list_of_lists hf_beat_log_read_new { 
+                select id, name, title, log_entry, asset_id, monitor_id, critical_alert_p,confirm_p,confirmed_p, last_modified from hf_beat_log 
+                where instance_id = :instance_id and user_id =:user_id and trashed_p='0' and alert_p='1' and ( last_modified > :last_viewed or ( confirm_p='1' and confirmed_p='0' ) ) order by last_modified desc } ]
             
-            # last_modified ne "", so update
-            db_dml hf_beat_log_viewed_update { update hf_beat_log_viewed set last_viewed = :nowts where instance_id = :instance_id and asset_id = :asset_id and user_id = :user_id }
+            ns_log Notice "hf_beat_log_read.267: last_viewed ${last_viewed}  entries_lol $entries_lol"
+           
         } else {
-            # create history
-            set id [db_nextval hf_beat_id_seq]
-            db_dml hf_beat_log_viewed_create { insert into hf_beat_log_viewed
-                ( id, instance_id, user_id, asset_id, last_viewed )
-                values ( :id, :instance_id, :user_id, :asset_id, :nowts ) }
+            # same query, but without last_modified > :last_viewed or confirm_p and confirmed_p
+            set entries_lol [db_list_of_lists hf_beat_log_read_new0 { 
+                select id, name, title, log_entry, asset_id, monitor_id, critical_alert_p,confirm_p,confirmed_p, last_modified from hf_beat_log 
+                where instance_id = :instance_id and user_id =:user_id and trashed_p='0' and alert_p='1' order by last_modified desc } ]
+            
+            ns_log Notice "hf_beat_log_read.275: last_viewed ${last_viewed}  entries_lol $entries_lol"
+
         }
+        # prepare messages for display
+        if { [llength $entries_lol ] > 0 } {
+            
+            foreach row $entries_lol {
+                set message_txt "posted: [lc_time_system_to_conn [string range [lindex $row 4] 0 18]]:\n [lindex $row 3]"
+                set last_modified [lindex $row 4]
+                ns_log Notice "hf_beat_log_read.79: last_modified ${last_modified}"
+                util_user_message -message $message_txt
+                ns_log Notice "hf_beat_log_read.88: message '${message_txt}'"
+            }
+        } 
+        
+        # last_modified ne "", so update
+        db_dml hf_beat_log_viewed_update { 
+            update hf_beat_log_viewed set last_viewed = :nowts where instance_id = :instance_id and user_id = :user_id 
+        }
+    } else {
+        # create history
+        set id [db_nextval hf_beat_id_seq]
+        db_dml hf_beat_log_viewed_create { insert into hf_beat_log_viewed
+            ( id, instance_id, user_id, asset_id, last_viewed )
+            values ( :id, :instance_id, :user_id, :asset_id, :nowts ) }
     }
     return $return_lol
 }
@@ -428,7 +390,7 @@ ad_proc -private hf::monitor::do {
                 while { $bi < $batch_lists_len && $dur_sum < $cycle_time } {
                     set mon_list [lindex $batch_lists $bi]
                     # set proc_list lindex combo from sched_list
-                   
+                    
                     set allowed_procs [parameter::get -parameter MonitorProcsAllowed -package_id $instance_id]
                     # added comma and period to "split" to screen external/private references and poorly formatted lists
                     set allowed_procs_list [split $allowed_procs " ,."]
