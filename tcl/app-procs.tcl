@@ -78,14 +78,14 @@ ad_proc -public hf_log_read {
     {user_id ""}
     {instance_id ""}
 } {
-    Returns any new log entries as a list via util_user_message, otherwise returns most recent max_old number of log entries.
+    Returns any new log entries as a list via util_user_message, otherwise returns most recent max_old number of log entries with any new entries.
     Returns empty string if no entry exists.
 } {
     set return_lol [list ]
     set alert_p 0
     set nowts [dt_systime -gmt 1]
     set valid1_p [qf_is_natural_number $asset_id] 
-    set valid2_p [qf_is_natural_number $asset_id]
+    set valid2_p [qf_is_natural_number $max_old]
     if { $valid1_p && $valid2_p } {
         if { $instance_id eq "" } {
             set instance_id [ad_conn package_id]
@@ -124,23 +124,47 @@ ad_proc -public hf_log_read {
                     set entries_lol [list ]
                 } 
             }
-            
-            set max_old [expr { $max_old + $alert_msg_count } ]
-            set entries_lol [db_list_of_lists hf_process_log_read_one { 
-                select id, name, title, log_entry, last_modified from hf_process_log 
-                where instance_id = :instance_id and asset_id =:asset_id order by last_modified desc limit :max_old } ]
-            foreach row [lrange $entries_lol $alert_msg_count end] {
-                set message_txt [lindex $row 2]
-                append message_txt " ([lindex $row 1])"
-                append message_txt " posted: [lc_time_system_to_conn [string range [lindex $row 4] 0 18]]\n "
-                append message_txt [lindex $row 3]
-                ns_log Notice "hf_log_read.100: message '${message_txt}'"
-                lappend return_lol $message_txt
+
+            if { $max_old > 0 } {
+                set max_old [expr { $max_old + $alert_msg_count } ]
+                # query again, a little further this time
+                set entries_lol [db_list_of_lists hf_process_log_read_one { 
+                    select id, name, title, log_entry, last_modified from hf_process_log 
+                    where instance_id = :instance_id and asset_id =:asset_id order by last_modified desc limit :max_old } ]
+                foreach row [lrange $entries_lol $alert_msg_count end] {
+                    set message_txt [lindex $row 2]
+                    append message_txt " ([lindex $row 1])"
+                    append message_txt " posted: [lc_time_system_to_conn [string range [lindex $row 4] 0 18]]\n "
+                    append message_txt [lindex $row 3]
+                    ns_log Notice "hf_log_read.100: message '${message_txt}'"
+                    lappend return_lol $message_txt
+                }
             }
             
             # last_modified ne "", so update
             db_dml hf_process_log_viewed_update { update hf_process_log_viewed set last_viewed = :nowts where instance_id = :instance_id and asset_id = :asset_id and user_id = :user_id }
+
         } else {
+
+            # No history or max_old, get everything
+            set entries_lol [db_list_of_lists hf_process_log_read_all { 
+                select id, name, title, log_entry, last_modified from hf_process_log 
+                where instance_id = :instance_id and asset_id =:asset_id order by last_modified desc } ]
+            
+            # This part same as code block after hf_log_read.80
+            if { [llength $entries_lol ] > 0 } {
+                set alert_p 1
+                set alert_msg_count [llength $entries_lol]
+                foreach row $entries_lol {
+                    set message_txt "[lc_time_system_to_conn [string range [lindex $row 4] 0 18]] [lindex $row 3]"
+                    set last_modified [lindex $row 4]
+                    ns_log Notice "hf_log_read.159: last_modified ${last_modified}"
+                    util_user_message -message $message_txt
+                    ns_log Notice "hf_log_read.168: message '${message_txt}'"
+                }
+                set entries_lol [list ]
+            } 
+
             # create history
             set id [db_nextval hf_sched_id_seq]
             db_dml hf_process_log_viewed_create { insert into hf_process_log_viewed
