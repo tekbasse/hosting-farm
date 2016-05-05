@@ -36,11 +36,11 @@ ad_proc -private hf_monitor_log_create {
     if { $asset_id_p } {
         if { $log_entry ne "" } {
             if { ![qf_is_natural_number $instance_id] } {
-                ns_log Notice "hf_monitor_log_create.451: instance_id '${instance_id}'"
+                ns_log Notice "hf_monitor_log_create.451: instance_id '${instance_id}' changing.."
                 set instance_id [ad_conn package_id]
             }
             if { ![qf_is_natural_number $user_id] } {
-                ns_log Notice "hf_monitor_log_create.451: user_id '${user_id}'"
+                ns_log Notice "hf_monitor_log_create.451: user_id was '${user_id}' changing.."
                 if { [ns_conn isconnected] } {
                     set user_id [ad_conn user_id]
                 } else {
@@ -48,9 +48,10 @@ ad_proc -private hf_monitor_log_create {
                 }
             }
             if { $user_id ne "" } {
-                set id [db_nextval hf_sched_id_seq]
+                set id [db_nextval hf_beat_id_seq]
                 set trashed_p 0
                 set message_sent_p 0
+                set confirmed_p 0
                 set nowts [dt_systime -gmt 1]
                 set name [qf_abbreviate $name 38]
                 set title [qf_abbreviate $title 78]
@@ -98,42 +99,48 @@ ad_proc -private hf_monitor_log_create {
                 #     log_entry text
                 # );
                 if { $monitor_id_p } {
-                    db_dml hf_monitor_log_create { insert into hf_monitor_log
-                        (id,asset_id,instance_id,user_id,trashed_p,name,title,created,last_modified,log_entry)
-                        values (:id,:asset_id,:instance_id,:user_id,:trashed_p,:action_code,:action_title,:nowts,:nowts,:log_entry) }
-                    ns_log Notice "hf_monitor_log_create.46: posting to hf_monitor_log: action_code ${action_code} action_title ${action_title} '$log_entry'"
+                    db_dml hf_monitor_log_cr_w_id { insert into hf_beat_log
+                        (id,instance_id,user_id,asset_id,monitor_id,trashed_p,alert_p,critical_alert_p,confirm_p,confirmed_p,message_p,message_sent_p,name,title,created,last_modified,log_entry)
+                        values (:id,:instance_id,:user_id,:asset_id,:monitor_id,:trashed_p,:alert_p,:critical_alert_p,:confirm_p,:confirmed_p,:message_p,:message_sent_p,:name,:title,:nowts,:nowts,:log_entry)
+                    }
+                    ns_log Notice "hf_monitor_log_create.104: posting to hf_beat_log: monitor_id '${monitor_id}' user_id '${user_id}' name '${name}' log_entry '${log_entry}'"
                 } else {
-                    db_dml hf_monitor_log_create { insert into hf_monitor_log
-                        (id,asset_id,instance_id,user_id,trashed_p,name,title,created,last_modified,log_entry)
-                        values (:id,:asset_id,:instance_id,:user_id,:trashed_p,:action_code,:action_title,:nowts,:nowts,:log_entry) }
-                    ns_log Notice "hf_monitor_log_create.46: posting to hf_monitor_log: action_code ${action_code} action_title ${action_title} '"
+                    db_dml hf_monitor_log_cr_wo_id { insert into hf_beat_log
+                        (id,instance_id,user_id,asset_id,trashed_p,alert_p,critical_alert_p,confirm_p,confirmed_p,message_p,message_sent_p,name,title,created,last_modified,log_entry)
+                        values (:id,:instance_id,:user_id,:asset_id,:trashed_p,:alert_p,:critical_alert_p,:confirm_p,:confirmed_p,:message_p,:message_sent_p,:name,:title,:nowts,:nowts,:log_entry)
+                    }
+                    ns_log Notice "hf_monitor_log_create.112: posting to hf_beat_log: monitor_id '' user_id '${user_id}' name '${name}' log_entry '${log_entry}'"
                 }
             } else {
-                ns_log Warning "hf_monitor_log_create.47: ignored an attempt to post a log message without connection or user_id for asset_id '${asset_id}'"
+                ns_log Warning "hf_monitor_log_create.115: ignored an attempt to post a log message without connection or user_id for asset_id '${asset_id}'"
             }
         } else {
-            ns_log Warning "hf_monitor_log_create.48: ignored an attempt to post an empty log message."
+            ns_log Warning "hf_monitor_log_create.118: ignored an attempt to post an empty log message."
         }
     } else {
-        ns_log Warning "hf_monitor_log_create.51: asset_id '$asset_id' is not a natural number reference. Log message '${log_entry}' ignored."
+        ns_log Warning "hf_monitor_log_create.121: asset_id '$asset_id' is not a natural number reference. Log message '${log_entry}' ignored."
     }
     return $id
 }
 
 ad_proc -public hf_monitor_log_read {
     asset_id
-    {max_old "1"}
+    {max_old "0"}
     {user_id ""}
     {instance_id ""}
 } {
-    Returns any new log entries as a list via util_user_message, otherwise returns most recent max_old number of log entries.
-    Returns empty string if no entry exists.
+    If max_old is 0, only returns any new log entries as a list via util_user_message. Otherwise returns a list of up to max_old items.
+    Returns empty list if no entry exists.
 } {
+    # due to the more complex implementation of monitor log alerts of hf_monitor_log_read (than its predecessor hf_process_log_read) 
+    # hf_monitor_log_read has been split into hf_monitor_log_alert_q and hf_monitor_log_read
+
+
     set return_lol [list ]
     set alert_p 0
     set nowts [dt_systime -gmt 1]
     set valid1_p [qf_is_natural_number $asset_id] 
-    set valid2_p [qf_is_natural_number $asset_id]
+    set valid2_p [qf_is_natural_number $max_old]
     if { $valid1_p && $valid2_p } {
         if { $instance_id eq "" } {
             set instance_id [ad_conn package_id]
@@ -147,26 +154,23 @@ ad_proc -public hf_monitor_log_read {
         set last_viewed ""
         set alert_msg_count 0
 
+        # CREATE TABLE hf_beat_log_viewed (
+        #      id integer not null,
+        #      instance_id integer,
+        #      user_id integer,
+        #      asset_id integer, 
+        #      last_viewed timestamptz
+        # );
 
-# CREATE TABLE hf_beat_log_viewed (
-#      id integer not null,
-#      instance_id integer,
-#      user_id integer,
-#      asset_id integer, 
-#      last_viewed timestamptz
-# );
-
-
-
-        set viewing_history_p [db_0or1row hf_process_log_viewed_last { select last_viewed from hf_process_log_viewed where instance_id = :instance_id and asset_id = :asset_id and user_id = :user_id } ]
+        set viewing_history_p [db_0or1row hf_beat_log_viewed_last { select last_viewed from hf_beat_log_viewed where instance_id = :instance_id and asset_id = :asset_id and user_id = :user_id } ]
         # set new view history time
         if { $viewing_history_p } {
 
             set last_viewed [string range $last_viewed 0 18]
             if { $last_viewed ne "" } {
                 
-                set entries_lol [db_list_of_lists hf_process_log_read_new { 
-                    select id, name, title, log_entry, last_modified from hf_process_log 
+                set entries_lol [db_list_of_lists hf_beat_log_read_new { 
+                    select id, name, title, log_entry, last_modified from hf_beat_log 
                     where instance_id = :instance_id and asset_id =:asset_id and last_modified > :last_viewed order by last_modified desc } ]
                 
                 ns_log Notice "hf_monitor_log_read.80: last_viewed ${last_viewed}  entries_lol $entries_lol"
@@ -185,10 +189,14 @@ ad_proc -public hf_monitor_log_read {
                 } 
             }
             
-            set max_old [expr { $max_old + $alert_msg_count } ]
-            set entries_lol [db_list_of_lists hf_process_log_read_one { 
-                select id, name, title, log_entry, last_modified from hf_process_log 
-                where instance_id = :instance_id and asset_id =:asset_id order by last_modified desc limit :max_old } ]
+            if { $max_old > 0 } {
+                # Re query db with previously viewed history to max_old entries.
+                set max_old [expr { $max_old + $alert_msg_count } ]
+                set entries_lol [db_list_of_lists hf_beat_log_read_one { 
+                    select id, name, title, log_entry, last_modified from hf_beat_log 
+                    where instance_id = :instance_id and asset_id =:asset_id order by last_modified desc limit :max_old } ]
+            }
+            # prepare messages for display
             foreach row [lrange $entries_lol $alert_msg_count end] {
                 set message_txt [lindex $row 2]
                 append message_txt " ([lindex $row 1])"
@@ -199,11 +207,11 @@ ad_proc -public hf_monitor_log_read {
             }
             
             # last_modified ne "", so update
-            db_dml hf_process_log_viewed_update { update hf_process_log_viewed set last_viewed = :nowts where instance_id = :instance_id and asset_id = :asset_id and user_id = :user_id }
+            db_dml hf_beat_log_viewed_update { update hf_beat_log_viewed set last_viewed = :nowts where instance_id = :instance_id and asset_id = :asset_id and user_id = :user_id }
         } else {
             # create history
-            set id [db_nextval hf_sched_id_seq]
-            db_dml hf_process_log_viewed_create { insert into hf_process_log_viewed
+            set id [db_nextval hf_beat_id_seq]
+            db_dml hf_beat_log_viewed_create { insert into hf_beat_log_viewed
                 ( id, instance_id, user_id, asset_id, last_viewed )
                 values ( :id, :instance_id, :user_id, :asset_id, :nowts ) }
         }
