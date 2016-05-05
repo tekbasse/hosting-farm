@@ -19,24 +19,28 @@ namespace eval hf::monitor {}
 
 ad_proc -private hf_monitor_log_create {
     asset_id
-    action_code
-    action_title
-    entry_text
-    {user_id ""}
-    {instance_id ""}
+    monitor_id
+    user_id
+    alert_p
+    critical_alert_p
+    {confirm_p "0"}
+    message_p
+    name
+    title
+    log_entry
 } {
-    Log an entry for a hf process. Returns unique entry_id if successful, otherwise returns empty string.
+    Log an entry for a hf_monitor_log process. Returns unique entry_id if successful, otherwise returns empty string.
 } {
     set id ""
-    set status [qf_is_natural_number $asset_id]
-    if { $status } {
-        if { $entry_text ne "" } {
-            if { $instance_id eq "" } {
-                ns_log Notice "hf_monitor_log_create.451: instance_id ''"
+    set asset_id_p [qf_is_natural_number $asset_id]
+    if { $asset_id_p } {
+        if { $log_entry ne "" } {
+            if { ![qf_is_natural_number $instance_id] } {
+                ns_log Notice "hf_monitor_log_create.451: instance_id '${instance_id}'"
                 set instance_id [ad_conn package_id]
             }
-            if { $user_id eq "" } {
-                ns_log Notice "hf_monitor_log_create.451: user_id ''"
+            if { ![qf_is_natural_number $user_id] } {
+                ns_log Notice "hf_monitor_log_create.451: user_id '${user_id}'"
                 if { [ns_conn isconnected] } {
                     set user_id [ad_conn user_id]
                 } else {
@@ -46,45 +50,64 @@ ad_proc -private hf_monitor_log_create {
             if { $user_id ne "" } {
                 set id [db_nextval hf_sched_id_seq]
                 set trashed_p 0
+                set message_sent_p 0
                 set nowts [dt_systime -gmt 1]
-                set action_code [qf_abbreviate $action_code 38]
-                set action_title [qf_abbreviate $action_title 78]
+                set name [qf_abbreviate $name 38]
+                set title [qf_abbreviate $title 78]
+                set monitor_id_p [qf_is_natural_number $monitor_id]
+                if { $alert_p ne "0" } {
+                    set $alert_p "1"
+                }
+                if { $critical_alert_p ne "0" } {
+                    set critical_alert_p "1"
+                }
+                if { $confirm_p ne "1" } {
+                    set confirm_p "0"
+                }
+                if { $message_p ne "0" } {
+                    set message_p "1"
+                }
 
-# -- For monitor process logs
-# CREATE TABLE hf_beat_log (
-#     id integer not null primary key,
-#     instance_id integer,
-#     user_id integer,
-#     asset_id integer,
-#     -- If there is a monitor_id associated, include it.
-#     monitor_id integer,
-#     trashed_p varchar(1) default '0',
-#     alert_p varchar(1) default '0',
-#     -- Is this a system alert or critical message requiring
-#     -- a flag for extra presentation handling?
-#     critical_alert_p varchar(1) default '0',
-#     -- If the alert needs a confirmation from a user
-#     confirm_p varchar(1) default '0',
-#     -- If confirmation required, confirmation received?
-#     confirmed_p varchar(1) default '0',
-#     -- send an email/sms etc with alert?
-#     message_p varchar(1) default '0',
-#     -- Was the email sent?
-#     -- This allows the system to batch multiple outbound messages to one user
-#     -- and potentially skip sending messages already received on screen.
-#     message_sent_p varchar(1) default '0',
-#     name varchar(40),
-#     title varchar(80),
-#     created timestamptz default now(),
-#     last_modified timestamptz,
-#     log_entry text
-# );
-
-
-                db_dml hf_process_log_create { insert into hf_process_log
-                    (id,asset_id,instance_id,user_id,trashed_p,name,title,created,last_modified,log_entry)
-                    values (:id,:asset_id,:instance_id,:user_id,:trashed_p,:action_code,:action_title,:nowts,:nowts,:entry_text) }
-                ns_log Notice "hf_monitor_log_create.46: posting to hf_process_log: action_code ${action_code} action_title ${action_title} '$entry_text'"
+                # -- For monitor process logs
+                # CREATE TABLE hf_beat_log (
+                #     id integer not null primary key,
+                #     instance_id integer,
+                #     user_id integer,
+                #     asset_id integer,
+                #     -- If there is a monitor_id associated, include it.
+                #     monitor_id integer,
+                #     trashed_p varchar(1) default '0',
+                #     alert_p varchar(1) default '0',
+                #     -- Is this a system alert or critical message requiring
+                #     -- a flag for extra presentation handling?
+                #     critical_alert_p varchar(1) default '0',
+                #     -- If the alert needs a confirmation from a user
+                #     confirm_p varchar(1) default '0',
+                #     -- If confirmation required, confirmation received?
+                #     confirmed_p varchar(1) default '0',
+                #     -- send an email/sms etc with alert?
+                #     message_p varchar(1) default '0',
+                #     -- Was the email sent?
+                #     -- This allows the system to batch multiple outbound messages to one user
+                #     -- and potentially skip sending messages already received on screen.
+                #     message_sent_p varchar(1) default '0',
+                #     name varchar(40),
+                #     title varchar(80),
+                #     created timestamptz default now(),
+                #     last_modified timestamptz,
+                #     log_entry text
+                # );
+                if { $monitor_id_p } {
+                    db_dml hf_monitor_log_create { insert into hf_monitor_log
+                        (id,asset_id,instance_id,user_id,trashed_p,name,title,created,last_modified,log_entry)
+                        values (:id,:asset_id,:instance_id,:user_id,:trashed_p,:action_code,:action_title,:nowts,:nowts,:log_entry) }
+                    ns_log Notice "hf_monitor_log_create.46: posting to hf_monitor_log: action_code ${action_code} action_title ${action_title} '$log_entry'"
+                } else {
+                    db_dml hf_monitor_log_create { insert into hf_monitor_log
+                        (id,asset_id,instance_id,user_id,trashed_p,name,title,created,last_modified,log_entry)
+                        values (:id,:asset_id,:instance_id,:user_id,:trashed_p,:action_code,:action_title,:nowts,:nowts,:log_entry) }
+                    ns_log Notice "hf_monitor_log_create.46: posting to hf_monitor_log: action_code ${action_code} action_title ${action_title} '"
+                }
             } else {
                 ns_log Warning "hf_monitor_log_create.47: ignored an attempt to post a log message without connection or user_id for asset_id '${asset_id}'"
             }
@@ -92,7 +115,7 @@ ad_proc -private hf_monitor_log_create {
             ns_log Warning "hf_monitor_log_create.48: ignored an attempt to post an empty log message."
         }
     } else {
-        ns_log Warning "hf_monitor_log_create.51: asset_id '$asset_id' is not a natural number reference. Log message '${entry_text}' ignored."
+        ns_log Warning "hf_monitor_log_create.51: asset_id '$asset_id' is not a natural number reference. Log message '${log_entry}' ignored."
     }
     return $id
 }
