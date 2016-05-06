@@ -13,10 +13,12 @@
 # Scheduled proc scheduling:
 # Nightly pi time + 1 = 4:14am
 
-#ns_schedule_daily -thread 4 14 hf::proc...
+set debug_p 0
 
+#ns_schedule_daily -thread 4 14 hf::proc...
 hf::schedule::check
 ad_schedule_proc -thread t $frequency_base hf::schedule::do
+
 
 # set cycle_time:
 hf::monitor::check

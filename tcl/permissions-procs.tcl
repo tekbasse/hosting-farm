@@ -32,7 +32,7 @@ ad_proc -public hf_customer_ids_for_user {
         set user_id [ad_conn user_id]
     }
     #qal_customer_id defined by qal_customer.id accounts-ledger/sql/postgresql/entities-channels-create.sql
-    set qal_customer_ids_list [db_list qal_customer_ids_get "select qal_customer_id from hf_user_customer_map where instance_id = :instance_id and user_id =:user_id"]
+    set qal_customer_ids_list [db_list qal_customer_ids_get "select qal_customer_id from hf_user_roles_map where instance_id = :instance_id and user_id =:user_id"]
     return $qal_customer_ids_list
 }
 

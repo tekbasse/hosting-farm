@@ -33,6 +33,72 @@ ad_proc -private hf_nc_go_ahead {
     return $go_ahead
 }
 
+ad_proc -private hf_nc_users_from_asset_id {
+    asset_id
+    instance_id
+    {privilege ""}
+    {role ""}
+} {
+    Returns a list of user_ids, or empty string if there are none. 
+    If privilege is included, users are filtered to the ones allowed to perform privilege on the asset. Privilege is the kind provided by hf_permissions system, ie read, write, admin.
+    If role is included, users are filtered to the ones assigned the role. If role and privilege are specified, users are only filtered by role, since role is the most specific.  For example, if privilege were "write", admin and manager roles allowed to work with asset_type would qualify. Whereas specifying a single manager or admin role will result in fewer users with same privilege.
+} {
+    #  If asset_type_id is included, returns users with roles assigned to asset_id's type.
+    #  If role_id and asset_type_id is included, returns users with assigned role for asset_id.
+
+    set success_p [hf_nc_go_ahead ]
+    set user_ids_list [list ]
+    set role_ids_list [list ]
+    if { $success_p } {
+        if { $privilege ne "" && $role eq "" } {
+            # filter by privilege ie get a filtered role_ids_list 
+            
+            # Get asset_type_id
+            set asset_type_id [hf_nc_asset_type_id $asset_id]
+            set property_id_exists_p [db_0or1row hf_assets_type_users_r "select property_id from hf_property where asset_type_id=:asset_type_id"]
+
+            if { $property_id_exists_p } {
+                # property_id_exists_p should be true. It is looked up in a table.
+                
+                set role_ids_list [db_list hf_roles_ids_from_prop_priv_r "select role_id from hf_property_role_privilege_map where property_id=:property_id and privilege=:privilege"]
+
+            } 
+
+            if { [llength $role_ids_list] == 0 } {
+                # Either :
+                # property_id_exists_p is false
+                # Or, no role exists for property_id and privilege.
+                set success_p 0
+            }
+
+        } elseif { $role ne "" } {
+
+            set role_exists_p [db_0or1row hf_role_id_from_label_r "select id from hf_role where label=:role"]
+            if { $role_exists_p } {
+                set role_ids_list [list $id]
+            } else {
+                # role not found.
+                set success_p 0
+            }
+
+        } else {
+            # privilege and role not specified
+
+            set role_ids_list [db_list hf_roles_ids_from_property_r "select role_id from hf_property_role_privilege_map where property_id=:property_id"]
+        }
+
+        if { $success_p && [llength $role_ids_list] > 0 } {
+            set customer_id [hf_customer_id_of_asset_id $asset_id $instance_id]
+            # get user_ids limited by hf_role_id in one query
+            set user_ids_list [db_list hf_user_role_from_customer_id_r "select user_id from hf_user_roles_map where instance_id = :instance_id and qal_customer_id=:customer_id and role_id in ([template::util::tcl_to_sql_list $role_ids_list)"]
+            
+        }
+    }
+    
+    return $user_ids_list
+}
+
+
 
 ad_proc -private hf_nc_asset_type_id {
     asset_id

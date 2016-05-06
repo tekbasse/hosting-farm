@@ -4142,11 +4142,13 @@ ad_proc -private hf_monitor_alert_trigger {
     # to get user_id of systemowner:
     # party::get_by_email -email $email
 
-    # hf_customer_id_of_asset_id $asset_id $instance_id
-    # hf_user_id $asset_id    Returns primary user_id
+
+    # hf_nc_users_from_asset_id $asset_id $instance_id ($privilege) ($role)
 
 
-    # hf_admins_of_asset_id  Returns tech admins of asset_id (TBD)
+
+
+
 
 
     if { $immediate_p } {
