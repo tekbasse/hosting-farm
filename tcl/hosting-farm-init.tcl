@@ -21,6 +21,7 @@ while { $roles_lists_len == 0 && $db_read_count < 2 } {
         # This is the first run of the first instance. Insert defaults
         # here instead of via sql files to minimize permissions files timestamp changes.
         # To help detect any system tampering during operation.
+        # role is <division>_<role_level> where role_level are privileges.
         set roles_defaults_list [list \
                                      [list main_admin "Main Admin" "Primary administrator"] \
                                      [list main_manager "Main Manager" "Primary manager"] \
@@ -95,7 +96,7 @@ while { $privs_lists_len == 0 && $db_read_count < 2 } {
         set privs_larr(manager) [list "read" "write"]
         set privs_larr(staff) [list "read"]
 
-        set property_types_list [list tech billing main]
+        set division_types_list [list tech billing main]
         set props_larr(tech) [list tech_contact_record assets non_assets published]
         set props_larr(billing) [list admin_contact_record non_assets published]
         #set props_larr(main)  is in all general cases, 
@@ -104,29 +105,43 @@ while { $privs_lists_len == 0 && $db_read_count < 2 } {
         foreach role_list $roles_lists {
             set role_id [lindex $role_list 0]
             set role_label [lindex $role_list 1]
-            set u_idx [string first "-" $role_label]
+            set u_idx [string first "_" $role_label]
             incr u_idx
-            set priviledge [string range $role_label $u_idx end]
-            set role [string range $role_label 0 $u_idx-2]
+            set role_level [string range $role_label $u_idx end]
+            set division [string range $role_label 0 $u_idx-2]
+            if { $division eq "technical" } {
+                # division abbreviates technical
+                set division "tech"
+            }
             foreach prop_list $props_lists {
                 set asset_type_id [lindex $prop_list 0]
                 set property_id [lindex $prop_list 1]
-                # For each role_id and property_id create priviledges
-                # Priviledges are base on $privs_larr($role) and props_larr(asset_type_id)
-                foreach property_type $property_types_list {
-                    if { [lsearch $props_larr($property_type) $asset_type_id ] > -1 } {
-                        # This property type has priviledges.
-                        # Add privileges for the role_id
-                        foreach priv $privs_larr($role) {
-                            db_dml default_priviledges_cr {
-                                insert into hf_property_role_priviledge_map
-                                (property_id,role_id,privilege)
-                                values (:property_id,:role_id,:priv)
+                # For each role_id and property_id create privileges
+                # Privileges are base on $privs_larr($role) and props_larr(asset_type_id)
+                # For example,  $privs_larr(manager) = list read write
+                #               $props_larr(billing) = admin_contact_record non_assets published
+
+                if { [lsearch $props_larr($division) $asset_type_id ] > -1 } {
+                    # This division has privileges.
+                    # Add privileges for the role_id
+                    if { $role_level ne "" } {
+                        foreach priv $privs_larr($role_level) {
+                            set exists_p [db_0or1row default_privileges_check { select property_id as test from hf_property_role_privilege_map where property_id=:property_id and role_id=:role_id and privilege=:priv } ]
+                            if { !$exists_p } {
+                                db_dml default_privileges_cr {
+                                    insert into hf_property_role_privilege_map
+                                    (property_id,role_id,privilege)
+                                    values (:property_id,:role_id,:priv)
+                                }
                             }
+                            ns_log Notice "hosting-farm/tcl/hosting-farm-init.tcl.127: Added privilege '${priv}' to role '${division}' role_id '${role_id}' role_label '${role_label}'"
                         }
+                    } else {
+                        ns_log Notice "hosting-farm/tcl/hosting-farm-init.tcl.130: No role_level (admin/manager/staff) for role_id '${role_id}' role_label '${role_label}'"
                     }
                 }
             }
         }
-    }    
-}
+    }
+}    
+

@@ -297,7 +297,7 @@ ad_proc -private hf::monitor::check {
 
         set cycle_time [expr { int( 5 * 60 ) } ]
         # cycle_time varies with active monitors at time of start
-        db_1row hf_active_assets_count { select count(monitor_id) as monitor_count from hf_monitor_config_n_control where active_p == '1' }
+        db_1row hf_active_assets_count { select count(monitor_id) as monitor_count from hf_monitor_config_n_control where active_p = '1' }
         if { $monitor_count > 0 } {
             set cycle_time [expr { int( $cycle_time / $monitor_count ) + 1 } ] 
         } 
@@ -324,6 +324,7 @@ ad_proc -private hf::monitor::do {
     # If monitor config data indicates to flag an alert, flag a notification.
 
     # First, check if a monitor process is running and get status of debug_p
+    set debug_p 0
     hf::monitor::check
     if { $active_id eq "" } {
         set success_p 0
@@ -336,7 +337,7 @@ ad_proc -private hf::monitor::do {
         #       -- trigger_s is  ( last_started_clock_s + last_process_s - interval_s ) 
         set clock_sec [clock seconds]
         # consider separating this into two separate queries, so if first query with priority is empty, then query for dynamic_priority..
-        set batch_lists [db_list_of_lists hf_beat_stack_read_adm_p0_s { select id,proc_name,asset_id,user_id,instance_id, priority, order_clock_s, last_started_clock_s,last_completed_clock_s,last_process_s,interval_s,(priority - (:clock_sec - last_completed_clock_s) /greatest('1',interval_s ) + last_process_s) as dynamic_priority , trigger_s from hf_beat_stack where trigger_s < :clock_sec, order by priority asc, dynamic_priority asc } ]
+        set batch_lists [db_list_of_lists hf_beat_stack_read_adm_p0_s { select id,proc_name,asset_id,user_id,instance_id, priority, order_clock_s, last_started_clock_s,last_completed_clock_s,last_process_s,interval_s,(priority - (:clock_sec - last_completed_clock_s) /greatest('1',interval_s ) + last_process_s) as dynamic_priority , trigger_s from hf_beat_stack where trigger_s < :clock_sec order by priority asc, dynamic_priority asc } ]
 
         #CREATE TABLE hf_beat_stack (
         #       id integer primary key,
@@ -458,14 +459,12 @@ ad_proc -private hf::monitor::do {
                     incr bi
                 }
             } else {
-                # if do is idle, delete some (limit 100 or so) used args in hf_sched_proc_args. Ids may have more than 1 arg..
+                # if do is idle. Here's an opportunity to do some background maintenance.
+                # Nothing for now.
                 if { $debug_p } {
-                    ns_log Notice "hf::monitor::do.91: Idle. Entering passive maintenance mode. deleting up to 60 used args, if any."
+                    ns_log Notice "hf::monitor::do.91: Idle. Entering passive maintenance mode."
                 }
                 set success_p 1
-                db_dml hf_sched_proc_args_delete { delete from hf_sched_proc_args 
-                    where stack_id in ( select id from hf_beat_stack where process_seconds is not null order by id limit 60 ) 
-                }
             }
         } else {
             ns_log Notice "hf::monitor::do.97: Previous hf::monitor::do still processing. Stopping."

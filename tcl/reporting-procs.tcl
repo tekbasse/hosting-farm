@@ -14,7 +14,7 @@ ad_proc -private hf_peek_pop_stack {
 } {
     returns the first value in a list, and removes the value from the same referenced list.
 } {
-    upvar $ref_list the_list
+    upvar 1 $ref_list the_list
     set last_out [lindex $the_list end]
     set the_list [lrange $the_list 0 end-1]
     return $last_out

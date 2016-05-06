@@ -65,7 +65,9 @@ CREATE TABLE hf_beat_stack_bus (
        debug_p varchar(1) default '1',
        -- What is the lowest priority that takes precedence in scheduling over all other delayed 
        -- priorities? Highest priority is 1, Lowest is a high integer.
-       priority_threashold integer default '13'
+       priority_threashold integer default '13',
+       -- scheduled cycle time in seconds
+       cycle_time integer default '300'
 );
 
 

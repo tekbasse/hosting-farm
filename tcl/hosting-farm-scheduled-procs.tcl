@@ -44,7 +44,8 @@ ad_proc -private hf::schedule::check {
 } {
     upvar 1 debug_p debug_p 
     upvar 1 frequency_base frequency_base
-    if { ![db_0or1row hf_beat_stack_bus_ck "select debug_p,frequency_base from hf_sched_params limit 1"] } {
+    set exists_p [db_0or1row hf_beat_stack_bus_ck "select debug_p,frequency_base from hf_sched_params limit 1"]
+    if { !$exists_p } {
 
         # CREATE TABLE hf_sched_params (
         #        -- a dynamic value for debug_p with low overhead
@@ -71,6 +72,7 @@ ad_proc -private hf::schedule::do {
 } { 
     Process any scheduled procedures. Future batches are suspended until this process reports batch complete.
 } {
+    set debug 0
     hf::schedule::check
     incr cycle_time -1
     set success_p 0
