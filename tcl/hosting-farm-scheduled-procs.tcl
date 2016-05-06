@@ -168,7 +168,7 @@ ad_proc -private hf::schedule::do {
         # the previous hf::schedule::do is still working. Don't clobber. Quit.
         set success_p 1
     }
-    if { $debug_p || !$success_p } {
+    if { $debug_p || $success_p == 0 } {
         ns_log Notice "hf::schedule::do.99: returning success_p ${success_p}"
     }
     return $success_p

@@ -292,7 +292,7 @@ ad_proc -private hf::monitor::check {
         # set defaults
         set active_id ""
         # set debug_p to 1 for more log info
-        set debug_p 1
+        set debug_p 0
         set priority_threashold 13
 
         set cycle_time [expr { int( 5 * 60 ) } ]
