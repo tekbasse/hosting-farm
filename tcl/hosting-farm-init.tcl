@@ -65,7 +65,14 @@ while { $props_lists_len == 0 && $db_read_count < 2 } {
                                       [list permissions_privileges "Permissions privileges"] \
                                       [list non_assets "non-assets ie customer records etc."] \
                                       [list published "World viewable"] \
-                                      [list assets "Assets"] ]
+                                      [list assets "Assets"] \
+                                      [list ss "Asset: Software as a service"] \
+                                      [list dc "Asset: Data center"] \
+                                      [list hw "Asset: Hardware"] \
+                                      [list vm "Asset: Virtual machine"] \
+                                      [list vh "Asset: Virtual host"] \
+                                      [list ns "Asset: Domain name record"] \
+                                      [list ot "Asset: other"] ]
         foreach def_prop_list $props_defaults_lists {
             set asset_type_id [lindex $def_prop_list 0]
             set title [lindex $def_prop_list 1]
@@ -97,7 +104,7 @@ while { $privs_lists_len == 0 && $db_read_count < 2 } {
         set privs_larr(staff) [list "read"]
 
         set division_types_list [list tech billing main]
-        set props_larr(tech) [list tech_contact_record assets non_assets published]
+        set props_larr(tech) [list tech_contact_record assets non_assets published ss dc hw vm vh ns ot]
         set props_larr(billing) [list admin_contact_record non_assets published]
         #set props_larr(main)  is in all general cases, 
         set props_larr(main) [list main_contact_record admin_contact_record non_assets tech_contact_record assets non_assets published]
