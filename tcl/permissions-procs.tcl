@@ -275,7 +275,7 @@ ad_proc -private hf_privilege_create {
     user_id
     role_id
 } {
-    Create a priviledge ie assign a customer's role to a user. Returns 1 if succeeds.
+    Create a privilege ie assign a customer's role to a user. Returns 1 if succeeds.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -305,7 +305,7 @@ ad_proc -private hf_privilege_delete {
     role_id
     {instance_id ""}
 } {
-    Deletes a priviledge ie deletes's a customer's role to a user. Returns 1 if succeeds.
+    Deletes a privilege ie deletes's a customer's role to a user. Returns 1 if succeeds.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -533,7 +533,7 @@ ad_proc -private hf_permission_p {
       primary_staff, and
       site_developer.
     Each asset is associated with a customer, and each user assigned roles.
-    This proc confirms that one of roles assigned to user_id can do priviledge on customer's property_label.
+    This proc confirms that one of roles assigned to user_id can do privilege on customer's property_label.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
