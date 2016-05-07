@@ -3244,7 +3244,7 @@ ad_proc -private hf_monitor_configs_read {
 } {
     Read the configuration parameters of one  hf monitored service or system. 
     id is either a monitor_id or asset_id.
-    returns an ordered list: instance_id, monitor_id, asset_id, label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threashold, interval_s. Returns empty list if not found.
+    returns an ordered list: instance_id, monitor_id, asset_id, label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threashold, interval_s, alert_by_privilege, alert_by_role. Returns empty list if not found.
 } {
     set return_list [list ]
     # validate system
@@ -3280,18 +3280,20 @@ ad_proc -private hf_monitor_configs_read {
         #    health_percentile_trigger numeric,
         #    -- the health_value matching health_percentile_trigger
         #    health_threshold          integer
-        # -- any monitor value equal or greather than health_percentile_trigger or health_thread
-        # -- triggers an alert.
-        # priority varchar(19) default '' not null,
-        # -- interval in seconds
-        # interval_s varchar(19) default '' not null,
+        #    -- any monitor value equal or greather than health_percentile_trigger or health_thread
+        #    -- triggers an alert.
+        #    priority varchar(19) default '' not null,
+        #    -- interval in seconds
+        #    interval_s varchar(19) default '' not null,
+        #    -- If privilege specified, all users with permission of type privilege get notified.
+        #    alert_by_privilege     varchar(12),
+        #    -- If not null, alerts are sent to specified user(s) of specified role
+        #    alert_by_role varchar(300)
         #);
 
         if { $admin_p && [qf_is_natural_number $instance_id ] } {
-            set success_p [db_0or1row hf_mon_con_n_ctrl_get1 "select label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threashold, interval_s from hf_monitor_config_n_control where instance_id=:instance_id and (monitor_id=:id or asset_id=:id)"]
-            if { $success_p } {
-                set return_list [list $instance_id $monitor_id $asset_id $label $active_p $portions_count $calculation_switches $health_percentile_trigger $health_threashold $interval_s]
-            }
+            set return_list [db_list_of_lists hf_mon_con_n_ctrl_get1 "select label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threashold, interval_s, alert_by_privilege, alert_by_role from hf_monitor_config_n_control where instance_id=:instance_id and (monitor_id=:id or asset_id=:id) limit 1"]
+            set return_list [lindex $return_list 0]
         }
     }    
     return $return_list
@@ -4133,7 +4135,10 @@ ad_proc -private hf_monitor_stats_read {
 }
 
 ad_proc -private hf_monitor_alert_trigger {
-    {monitor_id ""}
+    monitor_id
+    asset_id
+    alert_message
+    {instance_id ""}
     {immediate_p "0"}
 } {
     notifications for alerts from monitors (and quota overage notices)
@@ -4141,27 +4146,44 @@ ad_proc -private hf_monitor_alert_trigger {
     # sender email is systemowner
     # to get user_id of systemowner:
     # party::get_by_email -email $email
+    set sysowner_email [ad_system_owner]
+    set sysowner_user_id [party::get_by_email -email $sysowner_email]
 
-
-    # hf_nc_users_from_asset_id $asset_id $instance_id ($privilege) ($role)
-
-
-
-
-
-
-
-    if { $immediate_p } {
-        # Should alert messages be scanned by a system monitor proc, and batch sent every few minutes
-        # to avoid alert emails flooding the system?
-        acs_mail_lite::send 
+    # What users to send alert to?
+    set config_list [hf_monitor_configs_read $asset_id $instance_id]
+    if { [llength $config_list] > 0 } {
+        set alert_by_privilege [lindex $config_list 7]
+        set alert_by_role [lindex $config_list 8]
+        set
+    } else {
+        set label "#hosting-farm.Asset# id ${asset_id}"
     }
+    set users_list [hf_nc_users_from_asset_id $asset_id $instance_id $alert_by_privilege $alert_by_role]
+    if { [llength $users_list ] == 0 } {
+        set user_id [hf_user_id $asset_id]
+        set users_list [list $user_id]
+    }
+    set 
+    if { [llength $users_list] > 0 } {
+        # get TO emails from user_id
+        set email_addrs_list [list ]
+        foreach uid $users_list {
+            lappend email_addrs_list [party::email -party_id $uid]
+        }
+        
+        # What else is needed to send alert message?
+        set subject "#hosting-farm.Alert# #hosting-farm.Asset_Monitor# id ${monitor_id} for ${label}"
+        set body $alert_message
+        # post to logged in user pages 
+        hf_log_create $asset_id "#hosting-farm.Asset_Monitor#" "alert" "id ${monitor_id} Message: ${alert_message}" $user_id $instance_id    
 
-    hf_log_create $asset_id "#hosting-farm.Asset_Monitor#" "alert" "id ${monitor_id} Message: ${alert_message}" $user_id $instance_id    
-
-    return $success_p
+        # send email message
+        acs_mail_lite::send -send_immediately $immediate_p -to_addr $email_addrs_list -from_addr $sysowner_email -subject $subject -body $body
+    }
+    return 1
 }
-    # hf_monitor_alerts_status
+
+# hf_monitor_alerts_status
 
 
 ad_proc -public hf_monitors_inactivate {
