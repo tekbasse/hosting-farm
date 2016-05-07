@@ -65,7 +65,7 @@ CREATE TABLE hf_beat_stack_bus (
        debug_p varchar(1) default '1',
        -- What is the lowest priority that takes precedence in scheduling over all other delayed 
        -- priorities? Highest priority is 1, Lowest is a high integer.
-       priority_threashold integer default '13',
+       priority_threshold integer default '13',
        -- scheduled cycle time in seconds
        cycle_time integer default '300'
 );
@@ -82,7 +82,7 @@ CREATE TABLE hf_beat_stack (
        -- time must be > last time + interval_s + last_process_time_s
        -- priority
        -- relative priority: priority - (now - last_completed_time )/ interval_s + last_process_s
-       -- relative priority kicks in after threashold priority procs have been exhausted for the interval
+       -- relative priority kicks in after threshold priority procs have been exhausted for the interval
        proc_name varchar(40),
        asset_id integer,
        monitor_id integer,

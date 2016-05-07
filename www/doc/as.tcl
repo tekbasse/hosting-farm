@@ -31,7 +31,7 @@ set ss_key_list [list instance_id ss_id server_name service_name daemon_ref prot
 
 set ua_key_list [list instance_id us_id details connection_type]
 
-set monitor_config_n_control_key_list [list instance_id monitor_id asset_id label active_p portions_count calculation_switches health_percentile_trigger health_threashold]
+set monitor_config_n_control_key_list [list instance_id monitor_id asset_id label active_p portions_count calculation_switches health_percentile_trigger health_threshold]
 
 set monitor_log_key_list [list instance_id monitor_id user_id asset_id report_id reported_by report_time health report significant_change]
 

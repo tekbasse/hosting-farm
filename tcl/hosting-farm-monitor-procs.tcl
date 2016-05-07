@@ -271,14 +271,14 @@ ad_proc -public hf_beat_log_alert_q {
 ad_proc -private hf::monitor::check {
 
 } {
-    Returns current values from hf_beat_stack_bus table (active_id, debug_p, priority_threashold, cycle_time)  into the calling environment
+    Returns current values from hf_beat_stack_bus table (active_id, debug_p, priority_threshold, cycle_time)  into the calling environment
 } {
     upvar 1 active_id active_id 
     upvar 1 debug_p debug_p 
-    upvar 1 priority_threashold priority_threashold
+    upvar 1 priority_threshold priority_threshold
     upvar 1 cycle_time cycle_time
     set active_id ""
-    if { ![db_0or1row hf_beat_stack_bus_ck "select active_id, debug_p,priority_threashold,cycle_time from hf_beat_stack_bus limit 1"] } {
+    if { ![db_0or1row hf_beat_stack_bus_ck "select active_id, debug_p,priority_threshold,cycle_time from hf_beat_stack_bus limit 1"] } {
 
         #CREATE TABLE hf_beat_stack_bus (
         #       -- instead of querying hf_beat_stack for active proc
@@ -293,7 +293,7 @@ ad_proc -private hf::monitor::check {
         set active_id ""
         # set debug_p to 1 for more log info
         set debug_p 0
-        set priority_threashold 13
+        set priority_threshold 13
 
         set cycle_time [expr { int( 5 * 60 ) } ]
         # cycle_time varies with active monitors at time of start
@@ -303,7 +303,7 @@ ad_proc -private hf::monitor::check {
         } 
         
         # create the row
-        db_dml hf_beat_stack_bus_cr { insert into hf_beat_stack_bus (active_id,debug_p,priority_threashold,cycle_time) values (:active_id,:debug_p,:priority_threashold,:cycle_time) }
+        db_dml hf_beat_stack_bus_cr { insert into hf_beat_stack_bus (active_id,debug_p,priority_threshold,cycle_time) values (:active_id,:debug_p,:priority_threshold,:cycle_time) }
     }
     return 1
 }
@@ -333,7 +333,7 @@ ad_proc -private hf::monitor::do {
         #       -- time must be > last time + interval_s + last_completed_time 
         #       -- priority
         #       -- relative priority: priority - (now - last_completed_time )/ interval_s - last_completed_time
-        #       -- relative priority kicks in after threashold priority procs have been exhausted for the interval
+        #       -- relative priority kicks in after threshold priority procs have been exhausted for the interval
         #       -- trigger_s is  ( last_started_clock_s + last_process_s - interval_s ) 
         set clock_sec [clock seconds]
         # consider separating this into two separate queries, so if first query with priority is empty, then query for dynamic_priority..
@@ -350,7 +350,7 @@ ad_proc -private hf::monitor::do {
         #       -- time must be > last time + interval_s + last_process_time_s
         #       -- priority
         #       -- relative priority: priority - (now - last_completed_time )/ interval_s + last_process_s
-        #       -- relative priority kicks in after threashold priority procs have been exhausted for the interval
+        #       -- relative priority kicks in after threshold priority procs have been exhausted for the interval
         #       proc_name varchar(40),
         #       asset_id integer,
         #       proc_args text,

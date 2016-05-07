@@ -1,4 +1,4 @@
-Note about parameter priorityThreashold in monitoring. The default is 3. This allows all priority level 0,1, and 2 monitoring priorities to not be interrupted in schedule by a lower priority call that has been delayed for some time. Dynamic priority is priority - delay in seconds / interval_seconds. If Dynamic priority is below priorityThreashold, dynamic priority is set to priorityThreashold+1. 
+Note about parameter priorityThreshold in monitoring. The default is 3. This allows all priority level 0,1, and 2 monitoring priorities to not be interrupted in schedule by a lower priority call that has been delayed for some time. Dynamic priority is priority - delay in seconds / interval_seconds. If Dynamic priority is below priorityThreshold, dynamic priority is set to priorityThreshold+1. 
 
 create a refresh button (circle w/arrow) and a cancel button (red circle w light grey x)
 

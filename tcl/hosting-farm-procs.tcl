@@ -3244,7 +3244,7 @@ ad_proc -private hf_monitor_configs_read {
 } {
     Read the configuration parameters of one  hf monitored service or system. 
     id is either a monitor_id or asset_id.
-    returns an ordered list: instance_id, monitor_id, asset_id, label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threashold, interval_s, alert_by_privilege, alert_by_role. Returns empty list if not found.
+    returns an ordered list: instance_id, monitor_id, asset_id, label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threshold, interval_s, alert_by_privilege, alert_by_role. Returns empty list if not found.
 } {
     set return_list [list ]
     # validate system
@@ -3292,7 +3292,7 @@ ad_proc -private hf_monitor_configs_read {
         #);
 
         if { $admin_p && [qf_is_natural_number $instance_id ] } {
-            set return_list [db_list_of_lists hf_mon_con_n_ctrl_get1 "select label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threashold, interval_s, alert_by_privilege, alert_by_role from hf_monitor_config_n_control where instance_id=:instance_id and (monitor_id=:id or asset_id=:id) limit 1"]
+            set return_list [db_list_of_lists hf_mon_con_n_ctrl_get1 "select label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threshold, interval_s, alert_by_privilege, alert_by_role from hf_monitor_config_n_control where instance_id=:instance_id and (monitor_id=:id or asset_id=:id) limit 1"]
             set return_list [lindex $return_list 0]
         }
     }    
@@ -3305,7 +3305,7 @@ ad_proc -private hf_monitor_configs_write {
     portions_count
     calculation_switches
     health_percentile_trigger
-    health_threashold
+    health_threshold
     interval_s
     {asset_id ""}
     {monitor_id ""}
@@ -3340,7 +3340,7 @@ ad_proc -private hf_monitor_configs_write {
             } 
             set instance_id_p [qf_is_natural_number $instance_id] 
             set interval_s_p [qf_is_natural_number $interval_id] 
-            set health_threashold_p [qf_is_natural_number $health_threashold] 
+            set health_threshold_p [qf_is_natural_number $health_threshold] 
             set hpt_p [qf_is_decimal $health_percentile_trigger]
             
             # check permissions
@@ -3348,7 +3348,7 @@ ad_proc -private hf_monitor_configs_write {
             if { !$nc_p } {
                 set admin_p [hf_permission_p $user_id "" assets admin $instance_id]
             } 
-            if { ( $admin_p || $nc_p ) && $label_p && $cs_p && $active_p_p && $instance_id_p && $interval_s_p && $health_threashold_p && $hpt_p } {
+            if { ( $admin_p || $nc_p ) && $label_p && $cs_p && $active_p_p && $instance_id_p && $interval_s_p && $health_threshold_p && $hpt_p } {
 
                 # confirm/get index parameters
 
@@ -3373,20 +3373,20 @@ ad_proc -private hf_monitor_configs_write {
                 if { $mon_id_exists_p || $asset_id_count > 0 } {
                     # update record
                     db_dml { 
-                        update hf_monitor_config_n_control set label=:label,active_p=:active_p,portions_count=:portions_count,calculation_switches=:calculation_switches,health_percentile_trigger=:health_percentile_trigger,health_threashold=:health_threashold,interval_s=:interval_s where instance_id=:instance_id and monitor_id=:monitor_id and asset_id=:asset_id
+                        update hf_monitor_config_n_control set label=:label,active_p=:active_p,portions_count=:portions_count,calculation_switches=:calculation_switches,health_percentile_trigger=:health_percentile_trigger,health_threshold=:health_threshold,interval_s=:interval_s where instance_id=:instance_id and monitor_id=:monitor_id and asset_id=:asset_id
                     }
                 } else  {
                     # create new record
                     db_dml { 
                         insert into hf_monitor_config_n_control 
-                        (label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threashold, interval_s, instance_id, monitor_id, asset_id )
-                        values (:label,:active_p,:portions_count,:calculation_switches,:health_percentile_trigger,:health_threashold,:interval_s,:instance_id,:monitor_id,:asset_id)
+                        (label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threshold, interval_s, instance_id, monitor_id, asset_id )
+                        values (:label,:active_p,:portions_count,:calculation_switches,:health_percentile_trigger,:health_threshold,:interval_s,:instance_id,:monitor_id,:asset_id)
                     }
                 }
                 set return_id $monitor_id
             } else {
                 ns_log Warning "hf_monitor_configs_write(3383): could not write. admin_p '${admin_p}' nc_p '${nc_p}' asset_id '${asset_id}' monitor_id '${monitor_id}' label '${label}' active_p '${active_p}'"
-                ns_log Warning "hf_monitor_configs_write(3384): .. portions '${portions_count}' calc sws '${calculation_switches}' health% trigger '${health_percentile_trigger}' health threash. '${health_threashold}' interval_s '${interval_s}'"
+                ns_log Warning "hf_monitor_configs_write(3384): .. portions '${portions_count}' calc sws '${calculation_switches}' health% trigger '${health_percentile_trigger}' health threash. '${health_threshold}' interval_s '${interval_s}'"
             }
         }
     }
@@ -3937,7 +3937,7 @@ ad_proc -private hf_monitor_statistics {
         }
 
         set health_percentile_trigger [lindex $configs_list 7]
-        set health_threashold [lindex $configs_list 8]
+        set health_threshold [lindex $configs_list 8]
 
         # Determine expected_health ie health projected out one interval ahead or
         # If monitor has a quota, the quota end point should be the point for projected health.
@@ -4078,19 +4078,20 @@ ad_proc -private hf_monitor_statistics {
 
         }
 
-        # check triggers. ie hf_monitor_config_n_control.health_percentile_trigger and .health_threashold  
-        # Either one will trigger event. 
-        if { $health_p1 > $health_theashold } {
+        # check triggers. ie hf_monitor_config_n_control.health_percentile_trigger and .health_threshold  
+        # Either one will trigger a notification, but only one message per event.
+        if { $health_p1 > $health_threshold } {
             # flag immediate
+            set alert_title "#hosting-farm.Health_Score#: ${health}"
+            set alert_message "#hosting-farm.Health_Score#: ${health} #hosting-farm.passed_alert_threshold#."
+            ns_log Notice "hf_monitor_statistics.4085: asset_id '${asset_id} monitor_id '${monitor_id}' health_p1 '${health_p1}' health_threshold '${health_threshold}' Sending immediate notice."
+            hf_monitor_alert_trigger $monitor_id $asset_id $alert_title $alert_message 1 $instance_id
 
-            hf_monitor_alert_trigger
-##code
-        }
-        if { $health_percentile > $health_percentile_trigger } {
-            # send immediate notification
-            hf_monitor_alert_trigger
+        } elseif { $health_percentile > $health_percentile_trigger } {
+            # send notification
+            ns_log Notice "hf_monitor_statistics.4090: asset_id '${asset_id} monitor_id '${monitor_id}' health_percentile '${health_percentile}' health_percentile_trigger '${health_percentile_trigger}' Sending notice."
+            hf_monitor_alert_trigger $monitor_id $asset_id $alert_title $alert_message 0 $instance_id
 
-##code
         }
     }    
 
@@ -4137,11 +4138,12 @@ ad_proc -private hf_monitor_stats_read {
 ad_proc -private hf_monitor_alert_trigger {
     monitor_id
     asset_id
+    alert_title
     alert_message
-    {instance_id ""}
     {immediate_p "0"}
+    {instance_id ""}
 } {
-    notifications for alerts from monitors (and quota overage notices)
+    Send notification for alerts from monitors (and quota overage notices).
 } {
     # sender email is systemowner
     # to get user_id of systemowner:
@@ -4172,10 +4174,10 @@ ad_proc -private hf_monitor_alert_trigger {
         }
         
         # What else is needed to send alert message?
-        set subject "#hosting-farm.Alert# #hosting-farm.Asset_Monitor# id ${monitor_id} for ${label}"
+        set subject "#hosting-farm.Alert# #hosting-farm.Asset_Monitor# id ${monitor_id} for ${label}: ${alert_title}"
         set body $alert_message
         # post to logged in user pages 
-        hf_log_create $asset_id "#hosting-farm.Asset_Monitor#" "alert" "id ${monitor_id} Message: ${alert_message}" $user_id $instance_id    
+        hf_log_create $asset_id "#hosting-farm.Asset_Monitor#" "alert" "id ${monitor_id} ${alert_title} \n Message: ${alert_message}" $user_id $instance_id    
 
         # send email message
         acs_mail_lite::send -send_immediately $immediate_p -to_addr $email_addrs_list -from_addr $sysowner_email -subject $subject -body $body

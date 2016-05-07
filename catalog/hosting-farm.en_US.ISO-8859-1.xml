@@ -8,5 +8,6 @@
   <msg key="Projected">Projected</msg>
   <msg key="Quota">Quota</msg>
   <msg key="Server_farm">Server Farm</msg>
+  <msg key="passed_alert_threshold">passed alert threshold</msg>
   <msg key="server_farm">server farm</msg>
 </message_catalog>
