@@ -4089,6 +4089,8 @@ ad_proc -private hf_monitor_statistics {
 
         } elseif { $health_percentile > $health_percentile_trigger } {
             # send notification
+            set alert_title "#hosting-farm.Health_Percentile#: ${health_percentile}"
+            set alert_message "#hosting-farm.Health_Percentile#: ${health_percentile} #hosting-farm.passed_alert_threshold#."
             ns_log Notice "hf_monitor_statistics.4090: asset_id '${asset_id} monitor_id '${monitor_id}' health_percentile '${health_percentile}' health_percentile_trigger '${health_percentile_trigger}' Sending notice."
             hf_monitor_alert_trigger $monitor_id $asset_id $alert_title $alert_message 0 $instance_id
 
@@ -4177,9 +4179,10 @@ ad_proc -private hf_monitor_alert_trigger {
         set subject "#hosting-farm.Alert# #hosting-farm.Asset_Monitor# id ${monitor_id} for ${label}: ${alert_title}"
         set body $alert_message
         # post to logged in user pages 
-        hf_log_create $asset_id "#hosting-farm.Asset_Monitor#" "alert" "id ${monitor_id} ${alert_title} \n Message: ${alert_message}" $user_id $instance_id    
+        hf_log_create $asset_id "#hosting-farm.Asset_Monitor#" "alert" "id ${monitor_id} ${subject} \n Message: ${body}" $user_id $instance_id 
 
         # send email message
+        append body "#hosting-farm.Alerts_can_be_customized#. #hosting-farm.See_asset_configuration_for_details#."
         acs_mail_lite::send -send_immediately $immediate_p -to_addr $email_addrs_list -from_addr $sysowner_email -subject $subject -body $body
     }
     return 1

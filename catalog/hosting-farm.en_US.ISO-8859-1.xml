@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <message_catalog package_key="hosting-farm" locale="en_US" charset="ISO-8859-1">
   <msg key="Alert">Alert</msg>
+  <msg key="Alerts_can_be_customized">Alerts can be customized</msg>
   <msg key="Asset">Asset</msg>
   <msg key="Asset_Monitor">Asset Monitor</msg>
+  <msg key="Health_Percentile">Health Percentile</msg>
   <msg key="Health_Score">Health Score</msg>
   <msg key="Metric">Metric</msg>
+  <msg key="Percentile">Percentile</msg>
   <msg key="Projected">Projected</msg>
   <msg key="Quota">Quota</msg>
+  <msg key="Score">Score</msg>
+  <msg key="See_asset_configuration_for_details">See asset configuration for details</msg>
   <msg key="Server_farm">Server Farm</msg>
   <msg key="passed_alert_threshold">passed alert threshold</msg>
   <msg key="server_farm">server farm</msg>
