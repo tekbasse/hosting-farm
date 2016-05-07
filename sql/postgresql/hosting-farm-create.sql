@@ -515,7 +515,11 @@ CREATE TABLE hf_monitor_config_n_control (
     -- 0% rarely triggers, 100% triggers on most everything.
     health_percentile_trigger numeric,
     -- the health_value matching health_percentile_trigger
-    health_threshold          varchar(19) not null DEFAULT ''
+    health_threshold          varchar(19) not null DEFAULT '',
+    -- If privilege specified, all users with permission of type privilege get notified.
+    alert_by_privilege     varchar(12),
+    -- If not null, alerts are sent to specified user(s) of specified role
+    alert_by_role varchar(300)
 );
 
 create index hf_monitor_config_n_control_instance_id_idx on hf_monitor_config_n_control (instance_id);
