@@ -129,9 +129,8 @@ ad_proc -public hf_beat_log_read {
     {instance_id ""}
 } {
     max_old is max count. It's named max_old, because it only returns logs that have already been viewed.
-    If max_old is empty, returns all logs (no count limit).
+    If max_old is empty, returns all unseen logs for user. (no count limit).
     Returns empty list if no entry exists.
-    Set all_p to 1 to return all logs for user_id including logs not previously viewed.
 } {
     # hf_beat_log_read has been split into hf_beat_log_alert_q and hf_beat_log_read
     # due to the more complex implementation of beat log alerts of hf_beat_log_read than its predecessor hf_process_log_read.

@@ -31,7 +31,9 @@ while { $roles_lists_len == 0 && $db_read_count < 2 } {
                                      [list technical_staff "Technical Staff" "Monitors asset performance etc"] \
                                      [list billing_admin "Billing Admin" "Primary billing administrator"] \
                                      [list billing_manager "Billing Manager" "Oversees daily billing operations"] \
-                                     [list billing_staff "Billing Staff" "Monitors billing, bookkeeping etc."] ]
+                                     [list billing_staff "Billing Staff" "Monitors billing, bookkeeping etc."] \
+                                     [list site_developer "Site Developer" "Builds websites etc"] ]
+        
         # admin to have admin permissions, manager to have read/write permissions, staff to have read permissions
         foreach def_role_list $roles_defaults_list {
             # No need for instance_id since these are system defaults
@@ -99,16 +101,19 @@ while { $privs_lists_len == 0 && $db_read_count < 2 } {
         # admin roles to have admin permissions, manager to have read/write permissions, staff to have read permissions
         # techs to have write privileges on tech stuff, admins to have write privileges on contact stuff
         # write includes trash, admin includes create where appropriate
-        set privs_larr(admin) [list "read" "write" "admin"]
+        set privs_larr(admin) [list "create" "read" "write" "admin"]
+        set privs_larr(developer) [list "create" "read" "write"]
         set privs_larr(manager) [list "read" "write"]
         set privs_larr(staff) [list "read"]
 
-        set division_types_list [list tech billing main]
+        set division_types_list [list tech billing main site]
         set props_larr(tech) [list tech_contact_record assets non_assets published ss dc hw vm vh ns ot]
         set props_larr(billing) [list admin_contact_record non_assets published]
         #set props_larr(main)  is in all general cases, 
         set props_larr(main) [list main_contact_record admin_contact_record non_assets tech_contact_record assets non_assets published]
+        set props_larr(site) [list non_assets published]
         # perimissions_* are for special cases where tech admins need access to set special case permissions.
+
         foreach role_list $roles_lists {
             set role_id [lindex $role_list 0]
             set role_label [lindex $role_list 1]

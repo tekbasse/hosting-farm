@@ -4184,11 +4184,55 @@ ad_proc -private hf_monitor_alert_trigger {
         # send email message
         append body "#hosting-farm.Alerts_can_be_customized#. #hosting-farm.See_asset_configuration_for_details#."
         acs_mail_lite::send -send_immediately $immediate_p -to_addr $email_addrs_list -from_addr $sysowner_email -subject $subject -body $body
+
+        # log/update alert status
+        if { $immediate_p } {
+            # show email has been sent
+            
+        } else {
+            # show email has been scheduled for sending.
+
+            ##code in hf_monitor_alerts_status: when a user in users_list logs reads hf_log_create message, the alert status s/b updated to show message sent.
+
+        }
     }
     return 1
 }
 
-# hf_monitor_alerts_status
+ad_proc -public hf_monitor_alerts_status {
+    {user_id ""}
+    {instance_id ""}
+    {history_count ""}
+} {
+    Checks monitor alerts for user_id. 
+    When a user reads hf_log_create message, the alert status for user_id should be updated to show message sent --even if it is shared with other users.
+    If user_id is an admin, this returns a list of lists of up to history_count messages not followed up with a user login. This allows the system to monitor for flags that are not responded to, allowing an opportunity for a sysadmin to check logs etc for proactive monitoring. List is sorted by critical alerts first.
+    
+} {
+    set admin_p 0
+    if { $user_id ne "" } {
+        set user_id [ad_conn user_id]
+    }
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { [qf_is_natural_number $history_count] } {
+        set admin_p [hf_permission_p $user_id "" assets admin $instance_id]
+        ##code
+    }
+    # display messages for user
+    # This is redundant for admins, but then, admins get more messages, so this is an additional 
+    # chance to get the latest alerts
+    hf_beat_log_alert_q $user_id $instance_id
+
+    if { $admin_p } {
+        # "All users" refers to all users ie customers where the admin has an admin role.
+        # If user_id is a site admin, then that's all users.
+        set site_admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
+    }
+    return 1
+}
 
 
 ad_proc -public hf_monitors_inactivate {
@@ -4200,16 +4244,22 @@ ad_proc -public hf_monitors_inactivate {
 } {
     # validate
     set nc_p [ns_conn isconnected]
-    if { !$nc_p } {
+    if { $nc_p } {
+        set admin_p 1
+    } else {
         set user_id [ad_conn user_id]
         # try and make it work
         if { $instance_id eq "" } {
             # set instance_id package_id
             set instance_id [ad_conn package_id]
         }
+        set admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
     }
+
     # if an asset_id, also force off monitor_p in hf_assets to indicate monitoring is not happening. 
-    # Creating a ns_log warning if hf_assets.monitor_p was 1.
+    # Creating a ns_log warning if hf_assets.monitor_p was 0.
+
+
     ##code
 }
 
