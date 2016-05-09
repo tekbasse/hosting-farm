@@ -128,3 +128,69 @@ ad_proc -private hfl_asset_halt_example {
 }
 
 
+# hfl_system_swap_monitor_ex
+
+
+ad_proc -private hfl_system_cpu {
+    {asset_id "" }
+    {user_id ""}
+    {instance_id ""}
+} {
+    Get cpu usage last 5 10 15 minutes.
+    # permissions ck
+    hfl_allow_q
+
+    # Assumes local system
+    set system_type [ns_eval uname]
+    set spc_idx [string first " " $system_type]
+    if { $spc_id > -1 } {
+        set system_type [string trim [string tolower [string range $system_type 0 $spc_idx]]
+    } else {
+        set system_type [string trim [string tolower $system_type]]
+    }
+    if { $system_type eq "linux" } {
+        set cmd "uptime"
+        set since_cmd "uptime -s"
+    }
+    if { $system_type eq "freebsd" } {
+
+        set cmd "uptime"
+    }
+    
+}
+
+ad_proc -private hfl_system_memory {
+    {asset_id "" }
+    {user_id ""}
+    {instance_id ""}
+} {
+    Get memory usage
+    # permissions ck
+    hfl_allow_q
+
+    # Assumes local system
+    set system_type [ns_eval uname]
+    set spc_idx [string first " " $system_type]
+    if { $spc_id > -1 } {
+        set system_type [string trim [string tolower [string range $system_type 0 $spc_idx]]
+    } else {
+        set system_type [string trim [string tolower $system_type]]
+    }
+    if { $system_type eq "linux" } {
+        set cmd "top -b -n1"
+    }
+    if { $system_type eq "freebsd" } {
+        set cmd "top -n"
+    }
+    
+}
+
+# test cases:
+# hfl_problem_server_cpu
+# hfl_problem_server_storage
+# hfl_problem_server_traffic
+
+# using 7*24*3600 second cycles in x seconds ie fastforward_rate_s = 7*24*3600/x
+    # using a cyclic, noisy function, something like:
+# f(t) = min + (max-min) * sigma(for n=1 to 7*24) of 2pi * delta_t_s * N / t) + random
+# in addition to sin, cos, there is also acc_fin::pos_sine_cycle, and thrashing with fibonacci or other progression as factor for example.
