@@ -157,3 +157,58 @@ while { $privs_lists_len == 0 && $db_read_count < 2 } {
     }
 }    
 
+set as_types_lists_len 0
+set db_read_count 0
+# This is in a loop so that one db query handles both cases.
+while { $as_types_lists_len == 0 && $db_read_count < 2 } {
+    incr db_read_count
+    set as_types_lists [db_list_of_lists get_all_as_types_defaults "select id,label,title from hf_asset_type limit 2"]
+    set as_types_lists_len [llength $as_types_lists]
+    if { $as_types_lists_len == 0 } {
+        # This is the first run of the first instance. 
+        set as_types_defaults_lists [list \
+                                      [list ss "#hosting-farm.SAAS#" "#hosting-farm.Software_as_a_service#"] \
+                                      [list dc "#hosting-farm.DC#" "#hosting-farm.Data_Center#"] \
+                                      [list hw "#hosting-farm.HW#" "#hosting-farm.Hardware#"] \
+                                      [list vm "#hosting-farm.VM#" "#hosting-farm.Virtual_Machine#"] \
+                                      [list vh "#hosting-farm.VH#" "#hosting-farm.Virtual_Host#"] \
+                                      [list ns "#hosting-farm.NS#" "#hosting-farm.Name_Service#"] \
+                                      [list ot "#hosting-farm.OT#" "#hosting-farm.Other#"] ]
+        foreach def_as_type_list $as_types_defaults_lists {
+            set asset_type_id [lindex $def_as_type_list 0]
+            set label [lindex $def_as_type_list 1]
+            set title [lindex $def_as_type_list 2]
+            db_dml default_as_types_cr {
+                insert into hf_asset_type
+                (id,label,title)
+                values (:asset_type_id,:label,:title)
+            }
+        }
+    }
+}
+
+
+
+set assets_lists_len 0
+set db_read_count 0
+# This is in a loop so that one db query handles both cases.
+while { $assets_lists_len == 0 && $db_read_count < 2 } {
+    incr db_read_count
+    set assets_lists [db_list_of_lists get_all_assets_defaults "select asset_type_id,label from hf_assets limit 2"]
+    set assets_lists_len [llength $assets_lists]
+    if { $assets_lists_len == 0 } {
+        # This is the first run of the first instance. 
+        set assets_defaults_lists [list \
+                                       [list ss "HostingFarm"] ]
+        foreach def_asset_list $assets_defaults_lists {
+            set asset_type_id [lindex $def_asset_list 0]
+            set label [lindex $def_asset_list 1]
+            db_dml default_assets_cr {
+                insert into hf_asseterty
+                (asset_type_id,label)
+                values (:asset_type_id,:label)
+            }
+        }
+    }
+}
+
