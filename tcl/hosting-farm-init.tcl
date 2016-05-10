@@ -57,6 +57,11 @@ if [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt }
                     insert into hf_role
                     (label,title,description)
                     values (:label,:title,:description)
+                db_dml default_roles_cr_i {
+                    insert into hf_role
+                    (label,title,description,instance_id)
+                    values (:label,:title,:description,:instance_id)
+
                 }
             }
         }
@@ -95,6 +100,12 @@ if [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt }
                     insert into hf_property
                     (asset_type_id,title)
                     values (:asset_type_id,:title)
+                }
+
+                db_dml default_props_cr_i {
+                    insert into hf_property
+                    (asset_type_id,title,instance_id)
+                    values (:asset_type_id,:title,:instance_id)
                 }
             }
         }
@@ -153,10 +164,15 @@ if [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt }
                             foreach priv $privs_larr($role_level) {
                                 set exists_p [db_0or1row default_privileges_check { select property_id as test from hf_property_role_privilege_map where property_id=:property_id and role_id=:role_id and privilege=:priv } ]
                                 if { !$exists_p } {
-                                    db_dml default_privileges_cr {
+                                     db_dml default_privileges_cr {
                                         insert into hf_property_role_privilege_map
                                         (property_id,role_id,privilege)
                                         values (:property_id,:role_id,:priv)
+                                    }
+                                     db_dml default_privileges_cr_i {
+                                        insert into hf_property_role_privilege_map
+                                        (property_id,role_id,privilege,instance_id)
+                                        values (:property_id,:role_id,:priv,:instance_id)
                                     }
                                 }
                                 ns_log Notice "hosting-farm/tcl/hosting-farm-init.tcl.127: Added privilege '${priv}' to role '${division}' role_id '${role_id}' role_label '${role_label}'"
@@ -196,6 +212,12 @@ if [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt }
                     (id,label,title)
                     values (:asset_type_id,:label,:title)
                 }
+                db_dml default_as_types_cr_i {
+                    insert into hf_asset_type
+                    (id,label,title,instance_id)
+                    values (:asset_type_id,:label,:title,:instance_id)
+                }
+
             }
         }
     }
@@ -215,12 +237,15 @@ if [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt }
                                            [list ss "HostingFarm"] ]
             foreach def_asset_list $assets_defaults_lists {
                 set asset_type_id [lindex $def_asset_list 0]
-                set label [lindex $def_asset_list 1]
-                db_dml default_assets_cr {
-                    insert into hf_asseterty
-                    (asset_type_id,label)
-                    values (:asset_type_id,:label)
-                }
+                set name [lindex $def_asset_list 1]
+                set label [string tolower $name]
+                set instance_name [apm_instance_name_from_id $instance_id]
+#                db_dml default_assets_cr {
+#                    insert into hf_assets
+#                    (asset_type_id,label,user_id,instance_id)
+#                    values (:asset_type_id,:label,:sysowner_user_id,:instance_id)
+#                }
+                hf_asset_create $label $name $asset_type_id $instance_name "" "" "this package" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
             }
         }
     }
