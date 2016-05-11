@@ -534,7 +534,7 @@ CREATE TABLE hf_monitor_log (
     user_id              integer not null,
     asset_id             integer not null,
     -- increases by 1 for each monitor_id's report of asset_id
-    report_id            integer not null,
+    report_id            bigint not null,
     -- reported_by provides means to identify/verify reporting source
     reported_by          varchar(120),
     report_time          timestamptz,
@@ -588,7 +588,7 @@ CREATE TABLE hf_monitor_statistics (
     -- A hf_monitor_log.significant_change flags boundary
     monitor_id      integer not null,
     -- same as hf_monitor_status.analysis_id_p1
-    analysis_id     integer not null,
+    analysis_id     bigint not null,
     sample_count    varchar(19) not null DEFAULT '',
     -- range_min is minimum value of hf_monitor_log.report_id used.
     range_min       varchar(19) not null DEFAULT '',
@@ -625,7 +625,7 @@ CREATE TABLE hf_monitor_freq_dist_curves (
     -- analysis_id might contribute 1 or a few points to a distribution
     -- This provides a way to drill back into the logs to get more specific info.
     -- This is the same as hf_monitor_status.analysis_id_p1
-    analysis_id      integer not null,
+    analysis_id      bigint not null,
     -- distribution_id represents a distribution between
     -- hf_monitor_log.significant_change flags
     -- because this is a static distribution -no new points can be added.
@@ -634,7 +634,7 @@ CREATE TABLE hf_monitor_freq_dist_curves (
     -- median is where cumulative_pct = 0.50 
     -- x_pos is unlikely to be sampled from intervals of exact same size.
     -- initial cases assume x_pos is a system time in seconds.
-    x_pos            integer not null,
+    x_pos            bigint not null,
     -- The sum of all delta_x_pct from 0 to this x_pos.
     -- cumulative_pct increases to 1.0 (from 0 to 100 percentile)
     cumulative_pct   numeric,
