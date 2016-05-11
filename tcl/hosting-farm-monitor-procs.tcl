@@ -418,17 +418,35 @@ ad_proc -private hf::monitor::do {
                             # getasset type
                             set asset_type_id [hf_nc_asset_type_id $asset_id]
 
-                            # switch $asset_type ...
+                            # See hf_asset_do for user-admin directed changes
+
+                            # Load info before calling custom proc.
                             switch -exact $asset_type_id {
-
-
+                                dc { 
+                                    hf_nc_dc_read $asset_id $instance_id asset_prop_arr
+                                    hf_nc_ip_read $asset_id $instance_id asset_prop_arr
+                                   # hf_nc_asset_read $asset_id $instance_id asset_prop-arr
+                                }
+                                hw { 
+                                    hf_nc_hw_read $asset_id $instance_id asset_prop_arr
+                                    hf_nc_ni_read $asset_id $instance_id asset_prop_arr
+                                    hf_nc_os_read $asset_id $instance_id asset_prop_arr
+                                }
+                                ss { 
+                                    hf_nc_ss_read $asset_id $instance_id asset_prop_arr
+                                }
+                                vh { 
+                                    hf_nc_vh_read $asset_id $instance_id asset_prop_arr
+                                }
+                                vm { 
+                                    hf_nc_vm_read $asset_id $instance_id asset_prop_arr
+                                }
+                                default { 
+                                    # ot etc
+                                    hf_nc_asset_read $asset_id $instance_id asset_prop-arr
+                                }
                             }
-                            # ss { hf_ss_read $id} ...
-                            #
-                    # see also hf_asset_do for user-admin directed changes
 ##code
-
-
 
                             if {  [catch { set calc_value [eval $proc_name] } this_err_text] } {
                                 ns_log Warning "hf::monitor::do.71: id $id Eval '${proc_list}' errored with ${this_err_text}."

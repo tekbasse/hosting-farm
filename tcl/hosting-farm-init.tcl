@@ -76,6 +76,8 @@ if [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt }
         set props_lists_len [llength $props_lists]
         if { $props_lists_len == 0 } {
             # This is the first run of the first instance. 
+            # ns could be an asset or not. For now, it is a property (ie requires an asset besides the ns), but 
+            # maybe we give it special permissions or other asset-like qualities for now
             set props_defaults_lists [list \
                                           [list main_contact_record "Main Contact Record"] \
                                           [list admin_contact_record "Administrative Contact Record"] \
@@ -91,7 +93,7 @@ if [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt }
                                           [list hw "Asset: Hardware"] \
                                           [list vm "Asset: Virtual machine"] \
                                           [list vh "Asset: Virtual host"] \
-                                          [list ns "Asset: Domain name record"] \
+                                          [list ns "Asset property: Domain name record"] \
                                           [list ot "Asset: other"] ]
             foreach def_prop_list $props_defaults_lists {
                 set asset_type_id [lindex $def_prop_list 0]

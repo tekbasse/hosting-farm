@@ -114,7 +114,7 @@ ad_proc -private hf_nc_asset_type_id {
 }
 
 ad_proc -private hf_nc_ip_read {
-    ip_id
+    asset_id
     instance_id
     arr_name
 } {
@@ -157,6 +157,30 @@ ad_proc -private hf_nc_asset_read {
     }
     return $success
 }
+
+
+ad_proc -private hf_nc_dc_read {
+    asset_id
+    instance_id
+    arr_name
+} {
+    Adds elements to an array. Creates array if it doesn't exist.
+} {
+    upvar 1 $arr_name obj_arr
+    set success [hf_nc_go_ahead ]
+    if { $success } {
+        # element list
+        set dc_el_list [list affix description]
+        set dc_list [db_list_of_lists hf_data_center_prop_get1 "select affix, description from hf_data_centers where instance_id=:instance_id and dc_id=:asset_id)"]
+        set dc_el_len [llength $dc_el_list]
+        for {set i 0} {$i < $dc_el_len} {incr i} {
+            set el [lindex $dc_el_list $i]
+            set $obj_arr(${el}) [lindex $dc_list $i]
+        }
+    }
+    return $success
+}
+
 
 ad_proc -private hf_nc_hw_read {
     asset_id
