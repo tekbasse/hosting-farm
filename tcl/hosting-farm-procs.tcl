@@ -315,7 +315,7 @@ ad_proc -private hf_asset_do {
     process an hfl_ procedure on asset_id
 } {
     ## check permission passed to executable
-
+##code
     #see hf_call_roles_read
 
     if { $instance_id eq "" } {

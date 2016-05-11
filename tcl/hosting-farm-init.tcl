@@ -245,7 +245,13 @@ if [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt }
 #                    (asset_type_id,label,user_id,instance_id)
 #                    values (:asset_type_id,:label,:sysowner_user_id,:instance_id)
 #                }
-                hf_asset_create $label $name $asset_type_id $instance_name "" "" "this package" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
+                # use the api
+                hf_asset_create $label $name ss $instance_name "" "" "this package" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
+                hf_asset_create problemvm ProblemVM vm "Problem VM" "" "" "Demo/vm system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
+                hf_asset_create problemhw ProblemHW hw "Problem HW" "" "" "Demo/hw system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
+                hf_asset_create problemvh ProblemVH vh "Problem VH" "" "" "Demo/vh system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
+                hf_asset_create problemns ProblemNS ns "Problem NS" "" "" "Demo/ns system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
+                hf_asset_create problemdc ProblemDC dc "Problem DC" "" "" "Demo/dc system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
             }
         }
     }

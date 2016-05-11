@@ -416,11 +416,20 @@ ad_proc -private hf::monitor::do {
                             # This works in tcl env. should work here:
                             # get asset attributes
                             # getasset type
-                            # Make this a proc.. useful for generalizing app ui
-                            db_1row "select asset_type_id from hf_assets where asset_id = "
+                            set asset_type_id [hf_nc_asset_type_id $asset_id]
 
                             # switch $asset_type ...
+                            switch -exact $asset_type_id {
+
+
+                            }
                             # ss { hf_ss_read $id} ...
+                            #
+                    # see also hf_asset_do for user-admin directed changes
+##code
+
+
+
                             if {  [catch { set calc_value [eval $proc_name] } this_err_text] } {
                                 ns_log Warning "hf::monitor::do.71: id $id Eval '${proc_list}' errored with ${this_err_text}."
                                 # don't time an error. This provides a way to manually identify errors via sql sort
