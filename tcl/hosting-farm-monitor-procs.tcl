@@ -470,13 +470,15 @@ ad_proc -private hf::monitor::do {
                                 }
                                 ns_log Notice "hf::monitor::do.83: id $id completed in circa ${dur_sec} seconds."
                             }
+                            # clear asset properties buffer
+                            array unset asset_prop_arr
+
                             # Alert user that job is done?  
                             # util_user_message doesn't accept user_id instance_id, only session_id
                             # We don't have session_id available.. and it may have changed or not exist..
                             # Email?  that would create too many alerts for lots of quick jobs.
                             # auth::sync::job::* api does this.
-                            # Create another package for user conveniences like active alerts..
-                            # maybe hook into util_user_message after querying users.n_sessions or something..
+                            # hf::schedule::api is available for user conveniences like active alerts..
                         }
                     } else {
                         ns_log Warning "hf::monitor::do.87: id $id proc_name '${proc_name}' attempted but not allowed. user_id ${user_id} instance_id ${instance_id}"
