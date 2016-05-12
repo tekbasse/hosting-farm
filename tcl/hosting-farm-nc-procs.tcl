@@ -121,8 +121,8 @@ ad_proc -private hf_nc_ip_read {
     Adds elements to an array. Creates array if it doesn't exist.
 } {
     upvar 1 $arr_name obj_arr
-    set success [hf_nc_go_ahead ]
-    if { $success } {
+    set success_p [hf_nc_go_ahead ]
+    if { $success_p } {
         # element list
         set ip_var_list [list ipv4_addr ipv4_status ipv6_addr ipv6_status]
         # Multiple ip_ids could have been specified in hf_nc_dc etc, but there is would be no check on
@@ -132,10 +132,18 @@ ad_proc -private hf_nc_ip_read {
         # Check for case of hf_asset_id.ip_id carried over from hf_nc_asset_read
         if { [info exists obj_arr(ip_id)] } {
             if { $obj_arr(ip_id) ne "" } {
-                if { [lsearch $ip_id_list $obj_arr(ip_id)] == -1 } {
+                if { [lsearch -exact $ip_id_list $obj_arr(ip_id)] == -1 } {
                     # obj_arr(ip_id) is unique
                     lappend ip_id_list $obj_arr(ip_id)
                 }
+            }
+        }
+        # check for case of hf_virtual_machines.ip_id
+        set vm_ip_id_p [db_0or1row hf_vm_ip_id_read "select ip_id from hf_virtual_machines where vm_id=:asset_id"]
+        if { $vm_ip_id_p } {
+            if { [lsearch -exact $ip_id_list $ip_id] == -1 } {
+                # ip_id is unique
+                lappend ip_id_list $ip_id
             }
         }
 
@@ -165,7 +173,7 @@ ad_proc -private hf_nc_ip_read {
             }
         }
     }
-    return $success
+    return $success_p
 }
 
 ad_proc -private hf_nc_asset_read {
@@ -176,15 +184,15 @@ ad_proc -private hf_nc_asset_read {
     Adds elements to an array. Creates array if it doesn't exist.
 } {
     upvar 1 $arr_name obj_arr
-    set success [hf_nc_go_ahead ]
-    if { $success } {
+    set success_p [hf_nc_go_ahead ]
+    if { $success_p } {
         # element list
-        set as_var_list [list label templated_p template_p flags ns_id ua_id op_status]
-        set as_lists [db_list_of_lists hf_as_prop_get1 "select label, templated_p, template_p, flags, ns_id, ua_id, op_status from hf_assets where instance_id=:instance_id and id=:asset_id"] 
+        set as_var_list [list asset_type_id label templated_p template_p flags ns_id ua_id op_status]
+        set as_lists [db_list_of_lists hf_as_prop_get1 "select asset_type_id, label, templated_p, template_p, flags, ns_id, ua_id, op_status from hf_assets where instance_id=:instance_id and id=:asset_id"] 
         set as_lists_len [llength $as_var_list]
         if { $as_lists_len > 1 } {
             ns_log Warning "hf_nc_asset_read: multiple assets found with same asset_id '${asset_id}'. This should not happen."
-            set success 0
+            set success_p 0
         } else {
             set as1_list [lindex $as_lists 0]
             set i 0
@@ -194,7 +202,7 @@ ad_proc -private hf_nc_asset_read {
             }
         }
     }
-    return $success
+    return $success_p
 }
 
 
@@ -206,15 +214,15 @@ ad_proc -private hf_nc_dc_read {
     Adds elements to an array. Creates array if it doesn't exist.
 } {
     upvar 1 $arr_name obj_arr
-    set success [hf_nc_go_ahead ]
-    if { $success } {
+    set success_p [hf_nc_go_ahead ]
+    if { $success_p } {
         # element list
         set dc_var_list [list affix description]
         set dc_lists [db_list_of_lists hf_data_center_prop_get1 "select affix, description from hf_data_centers where instance_id=:instance_id and dc_id=:asset_id)"]
         set dc_lists_len [llength $dc_lists_len]
         if { $dc_lists_len > 1 } {
             ns_log Warning "hf_nc_dc_read: multiple assets found with same asset_id '${asset_id}'. This should not happen."
-            set success 0
+            set success_p 0
         } else {
             set dc1_list [lindex $dc_lists 0]
             set i 0
@@ -222,10 +230,9 @@ ad_proc -private hf_nc_dc_read {
                 set obj_arr(${dc_var}) [lindex $dc1_list $i]
                 incr i
             }
-            # check for ni_id list
         }
     }
-    return $success
+    return $success_p
 }
 
 
@@ -237,15 +244,15 @@ ad_proc -private hf_nc_hw_read {
     Adds elements to an array. Creates array if it doesn't exist.
 } {
     upvar 1 $arr_name obj_arr
-    set success [hf_nc_go_ahead ]
-    if { $success } {
+    set success_p [hf_nc_go_ahead ]
+    if { $success_p } {
         # element list
-        set hw_var_list [list system_name backup_sys ns_id os_id]
-        set hw_lists [db_list_of_lists hf_hardware_prop_get1 "select system_name, backup_sys, ns_id, os_id from hf_hardware where instance_id=:instance_id and hw_id=:asset_id)"]
+        set hw_var_list [list system_name backup_sys os_id ni_id]
+        set hw_lists [db_list_of_lists hf_hardware_prop_get1 "select system_name, backup_sys, os_id, ns_id from hf_hardware where instance_id=:instance_id and hw_id=:asset_id)"]
         set hw_lists_len [llength $hw_var_list]
         if { $hw_lists_len > 1 } {
             ns_log Warning "hf_nc_hw_read: multiple assets found with same asset_id '${asset_id}'. This should not happen."
-            set success 0
+            set success_p 0
         } else {
             set hw1_list [lindex $hw_lists 0]
             set i 0
@@ -253,15 +260,9 @@ ad_proc -private hf_nc_hw_read {
                 set obj_arr(${hw_var}) [lindex $hw1_list $i]
                 incr i
             }
-            # check for ni_id list
-            set ni_id_list [db_lists hf_hw_ni_map_nc_read "select ni_id from hf_hw_ni_map where instance_id=:instance_id and hw_id=:asset_id"]
-            if { [llength $ni_id_list] > 0 } {
-                # Temporarily pass the ni_id list to hf_nc_ni_read (where this array element will be unset).
-                set obj_arr(_ni_id_list) $ni_id_list
-            }
         }
     }
-    return $success
+    return $success_p
 }
 
 ad_proc -private hf_nc_ni_read {
@@ -272,8 +273,8 @@ ad_proc -private hf_nc_ni_read {
     Adds elements to an array. Creates array if it doesn't exist.
 } {
     upvar 1 $arr_name obj_arr
-    set success [hf_nc_go_ahead ]
-    if { $success } {
+    set success_p [hf_nc_go_ahead ]
+    if { $success_p } {
         set ni_id_list [list ]
         # element list
         set ni_var_list [list os_dev_ref bia_mac_address ul_mac_address ipv4_addr_range ipv6_addr_range ]
@@ -291,20 +292,23 @@ ad_proc -private hf_nc_ni_read {
                 }
             }
         }
-        set ni_lists [db_list_of_lists hf_network_interfaces_prop_get1 "select os_dev_ref, bia_mac_address, ul_mac_address ipv4_addr_range, ipv6_addr_range, ni_id from hf_network_interfaces where instance_id=:instance_id and ni_id in ([template::util::tcl_to_sql_list $ni_id_list])"]
+        set ni_lists [db_list_of_lists hf_network_interfaces_prop_get1 "select os_dev_ref, bia_mac_address, ul_mac_address, ipv4_addr_range, ipv6_addr_range, ni_id from hf_network_interfaces where instance_id=:instance_id and ni_id in ([template::util::tcl_to_sql_list $ni_id_list])"]
         set ni_lists_len [llength $ni_lists]
         if { $ni_lists_len > 1 } {
+            set new_ni_id_list [list ]
             for {set j 0} {$j < $ni_lists_len} {incr j} {
                 set ni1_list [lindex $ni_lists $j]
-                set ni_id [lindex $ni1_list 4]
+                lappend new_ni_id_list [lindex $ni1_list 5]
                 foreach ni_var $ni_var_list {
                     # Adding ni_id to field_name to prevent name collison in returnning array.
                     set obj_arr(${ni_var}_${ni_id}) [lindex $ni1_list $i]
                     incr i
                 }
             }
+            set obj_arr(ni_ids_list) $new_ni_id_list
         } else {
             set ni1_list [lindex $ni_lists 0]
+            set obj_arr(ni_id) [lindex $ni1_list 5]
             set i 0
             foreach ni_var $ni_var_list {
                 set obj_arr(${ni_var}) [lindex $ni1_list $i]
@@ -312,7 +316,7 @@ ad_proc -private hf_nc_ni_read {
             }
         }
     }
-    return $success
+    return $success_p
 }
 
 ad_proc -private hf_nc_os_read {
@@ -323,8 +327,8 @@ ad_proc -private hf_nc_os_read {
     Adds elements to an array. Creates array if it doesn't exist.
 } {
     upvar 1 $arr_name obj_arr
-    set success [hf_nc_go_ahead ]
-    if { $success } {
+    set success_p [hf_nc_go_ahead ]
+    if { $success_p } {
         # element list
         set os_var_list [list label brand version kernel orphaned_p requires_upgrade_p]
         set os_lists [db_list_of_lists hf_operating_systems_prop_get1 "select label, brand, version, kernel, orphaned_p, requires_upgrade_p from hf_operating_systems where instance_id=:instance_id and os_id=:os_id"]
@@ -334,59 +338,70 @@ ad_proc -private hf_nc_os_read {
             set obj_arr(${el}) [lindex $os_list $i]
         }
     }
-    return $success
+    return $success_p
 }
 
 ad_proc -private hf_nc_vm_read {
-    vm_id
+    asset_id
     instance_id
     arr_name
 } {
     Adds elements to an array. Creates array if it doesn't exist.
 } {
     upvar 1 $arr_name obj_arr
-    set success [hf_nc_go_ahead ]
-    if { $success } {
+    set success_p [hf_nc_go_ahead ]
+    if { $success_p } {
         # element list
         set vm_var_list [list domain_name type_id resource_path mount_union ip_id ni_id os_id]
         set vm_lists [db_list_of_lists hf_virtual_machines_prop_get1 "select domain_name, type_id, resource_path, mount_union, ip_id, ni_id, ns_id, os_id from hf_virtual_machines where instance_id=:instance_id and vm_id=:vm_id"]
-        set vm_lists_len [llength $vm_var_list]
-        for {set i 0} {$i < $vm_lists_len} {incr i} {
-            set el [lindex $vm_var_list $i]
-            set obj_arr(${el}) [lindex $vm_list $i]
-        }
-            # check for ni_id list
-            set ni_id_list [db_lists hf_vm_ni_map_nc_read "select ni_id from hf_vm_ni_map where instance_id=:instance_id and vm_id=:asset_id"]
-            if { [llength $ni_id_list] > 0 } {
-                # Temporarily pass the ni_id list to hf_nc_ni_read (where this array element will be unset).
-                set obj_arr(_ni_id_list) $ni_id_list
+        set vm_lists_len [llength $vm_lists]
+        if { $vm_lists_len > 1 } {
+            ns_log Warning "hf_nc_vm_read: multiple assets found with same asset_id '${asset_id}'. This should not happen."
+            set success_p 0
+        } else {
+            set vm1_list [lindex $vm_lists 0]
+            for {set i 0} {$i < $vm_lists_len} {incr i} {
+                set var [lindex $vm_var_list $i]
+                set obj_arr(${var}) [lindex $vm_list $i]
             }
-
+        }
     }
-    return $success
+    return $success_p
 }
 
 
 ad_proc -private hf_nc_vh_read {
-    vh_id
+    asset_id
     instance_id
     arr_name
 } {
     Adds elements to an array. Creates array if it doesn't exist.
 } {
     upvar 1 $arr_name obj_arr
-    set success [hf_nc_go_ahead ]
-    if { $success } {
+    set success_p [hf_nc_go_ahead ]
+    if { $success_p } {
         # element list
         set vh_var_list [list ua_id ns_id domain_name ]
-        set vh_lists [db_list_of_lists hf_vh_prop_get1 "select ua_id, ns_id, domain_name from hf_vhosts where instance_id=:instance_id and vh_id=:vh_id"]
-        set vh_lists_len [llength $vh_var_list]
-        for {set i 0} {$i < $vh_lists_len} {incr i} {
-            set el [lindex $vh_var_list $i]
-            set obj_arr(${el}) [lindex $vh_list $i]
+        set vh_lists [db_list_of_lists hf_vh_prop_get1 "select ua_id, ns_id, domain_name from hf_vhosts where instance_id=:instance_id and vh_id=:asset_id"]
+        set vh_lists_len [llength $vh_list]
+        if { $vh_lists_len > 1 } {
+            ns_log Warning "hf_nc_vh_read: multiple assets found with same asset_id '${asset_id}'. This should not happen."
+            set success_p 0
+        } else {
+            set vh1_list [lindex $vh_lists 0]
+            for {set i 0} {$i < $vh_lists_len} {incr i} {
+                set var [lindex $vh_var_list $i]
+                set obj_arr(${var}) [lindex $vh_list $i]
+            }
+            if { ![info exists obj_arr(vm_id)] } {
+                set has_vm_p [db_0or1row hf_vm_vh_map_nc_read "select vm_id from hf_vm_vh_map where vh_id=:asset_id and instance_id=:instance_id"]
+                if { $has_vm_p } {
+                    set obj_arr(vm_id) $vm_id
+                }
+            }
         }
     }
-    return $success
+    return $success_p
 }
 
 
@@ -398,62 +413,91 @@ ad_proc -private hf_nc_ns_read {
     Adds elements to an array. Creates array if it doesn't exist.
 } {
     upvar 1 $arr_name obj_arr
-    set success [hf_nc_go_ahead ]
-    if { $success } {
+    set success_p [hf_nc_go_ahead ]
+    if { $success_p } {
         # element list
         set ns_var_list [list active_p name_record ]
         set ns_lists [db_list_of_lists hf_ns_prop_get1 "select active_p name_record from hf_ns_records where instance_id=:instance_id and id=:ns_id"]
-        set ns_lists_len [llength $ns_var_list]
-        for {set i 0} {$i < $ns_lists_len} {incr i} {
-            set el [lindex $ns_var_list $i]
-            set obj_arr(${el}) [lindex $ns_list $i]
+        set ns_lists_len [llength $ns_lists]
+        if { $ns_var_len > 1 } {
+            ns_log Warning "hf_nc_ns_read: multiple assets found with same asset_id '${asset_id}'. This should not happen."
+            set success_p 0
+        } else {
+            set ns1_list [lindex $ns_lists 0]
+            for {set i 0} {$i < $ns_lists_len} {incr i} {
+                set var [lindex $ns_var_list $i]
+                set obj_arr(${var}) [lindex $ns_list $i]
+            }
         }
     }
-    return $success
+    return $success_p
 }
 
+
 ad_proc -private hf_nc_ss_read {
-    ss_id
+    asset_id
     instance_id
     arr_name
 } {
     Adds elements to an array. Creates array if it doesn't exist.
 } {
     upvar 1 $arr_name obj_arr
-    set success [hf_nc_go_ahead ]
-    if { $success } {
+    set success_p [hf_nc_go_ahead ]
+    if { $success_p } {
         # element list
         set ss_var_list [list server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes ]
-        set ss_lists [db_list_of_lists hf_ss_prop_get1 "select server_name, service_name, daemon_ref, protocol, port, ua_id, ss_type, ss_subtype, ss_undersubtype, ss_ultrasubtype, config_uri, memory_bytes from hf_services where instance_id=:instance_id and ss_id=:ss_id"]
-        set ss_lists_len [llength $ss_var_list]
-        for {set i 0} {$i < $ss_lists_len} {incr i} {
-            set el [lindex $ss_var_list $i]
-            set obj_arr(${el}) [lindex $ss_list $i]
+        set ss_lists [db_list_of_lists hf_ss_prop_get1 "select server_name, service_name, daemon_ref, protocol, port, ua_id, ss_type, ss_subtype, ss_undersubtype, ss_ultrasubtype, config_uri, memory_bytes, ss_id from hf_services where instance_id=:instance_id and ( ss_id=:asset_id or ss_id in (select ss_id from hf_ss_map where instance_id=:instance_id and hf_id=:asset_id)"]
+        set ss_lists_len [llength $ss_lists]
+        if { $ss_lists_len > 1 } {
+            set new_ss_id_list [list ]
+            for {set j 0} {$j < $ss_lists_len} {incr j} {
+                set ss1_list [lindex $ss_lists $j]
+                lappend new_ss_id_list [lindex $ss1_list 12]
+                foreach ss_var $ss_var_list {
+                    # Adding ss_id to field_name to prevent name collison in returnning array.
+                    set obj_arr(${ss_var}_${ss_id}) [lindex $ss1_list $i]
+                    incr i
+                }
+            }
+            set obj_arr(ss_ids_list) $new_ss_id_list
+        } else {
+            set ss1_list [lindex $ss_lists 0]
+            set obj_arr(ss_id) [lindex $ss1_list 12]
+            set i 0
+            foreach ss_var $ss_var_list {
+                set obj_arr(${ss_var}) [lindex $ss1_list $i]
+                incr i
+            }
         }
     }
-    return $success
+    return $success_p
 }
 
 ad_proc -private hf_nc_ns_read {
-    ns_id
+    asset_id
     instance_id
     arr_name
 } {
     Adds elements to an array. Creates array if it doesn't exist.
 } {
     upvar 1 $arr_name obj_arr
-    set success [hf_nc_go_ahead ]
-    if { $success } {
+    set success_p [hf_nc_go_ahead ]
+    if { $success_p } {
         # element list
         set ns_var_list [list active_p name_record ]
         set ns_lists [db_list_of_lists hf_ns_prop_get1 "select active_p name_record from hf_ns_records where instance_id=:instance_id and id=:asset_id"]
-        set ns_lists_len [llength $ns_var_list]
-        for {set i 0} {$i < $ns_lists_len} {incr i} {
-            set el [lindex $ns_var_list $i]
-            set obj_arr(${el}) [lindex $ns_list $i]
+        set ns_lists_len [llength $ns_lists]
+        if { $ns_lists_len > 1 } 
+            ns_log Warning "hf_nc_ns_read: multiple records found with same asset_id '${asset_id}'. This should not happen."
+            set success_p 0
+        } else {
+            for {set i 0} {$i < $ns_lists_len} {incr i} {
+                set var [lindex $ns_var_list $i]
+                set obj_arr(${var}) [lindex $ns_list $i]
+            }
         }
     }
-    return $success
+    return $success_p
 }
 
 
@@ -498,21 +542,21 @@ ad_proc -private hf_asset_properties {
                     # split query into separate tables to handle more dynamics
                     # h_assets  hf_asset_ip_map hf_ip_addresses hf_virutal_machines hf_ua hf_up 
                     hf_nc_asset_read $asset_id $instance_id named_arr
-                    hf_nc_vm_read $asset_id $instance_id named_arr
-                    hf_ua_read $named_arr(ua_id) "" "" $instance_id 1 named_arr
+                    if { [hf_nc_vm_read $asset_id $instance_id named_arr] } {
+                        hf_nc_ip_read $vm_id $instance_id named_arr
+                        hf_nc_os_read $named_arr(os_id) $instance_id named_arr
+                        hf_nc_ns_read $asset_id $instance_id named_arr
+                        hf_ua_read $named_arr(ua_id) "" "" $instance_id 1 named_arr
+                    }
                 }
                 vh {
                     #set asset_prop_list [hf_vhs $instance_id "" $asset_id]
                     set named_arr(os_id) ""
-                    set vm_id ""
-                    db_0or1row hf_vm_vh_map_asset_get "select vm_id from hf_vm_vh_map where instance_id=:instance_id and vh_id=:asset_id"
-                    if { $vm_id ne "" } {
-                        set named_arr(vm_id) $vm_id
-                        hf_nc_asset_read $vm_id $instance_id named_arr
-                        hf_nc_vm_read $vm_id $instance_id named_arr
+                    hf_nc_asset_read $vm_id $instance_id named_arr
+                    if { [hf_nc_vh_read $vm_id $instance_id named_arr] } {
                         hf_nc_ip_read $vm_id $instance_id named_arr
                         hf_nc_os_read $named_arr(os_id) $instance_id named_arr
-                        hf_nc_vh_read $asset_id $instance_id named_arr
+                        hf_nc_vm_read $asset_id $instance_id named_arr
                         hf_nc_ns_read $asset_id $instance_id named_arr
                         hf_ua_read $named_arr(ua_id) "" "" $instance_id 1 named_arr
                     }
@@ -521,17 +565,17 @@ ad_proc -private hf_asset_properties {
                     # see ss, hs hosting service is saas: ss
                     # hf_ss_map ss_id, hf_id, hf_services,
                     # maybe ua_id hf_up
-                    set hf_id ""
-                    db_0or1row hf_vm_vh_map_asset_get "select hf_id from hf_ss_map where instance_id=:instance_id and ss_id=:asset_id"
-                    # hf_id is main asset_id, if it exists
-                    if { $hf_id ne "" } {
-                        set named_arr(ss_id) $asset_id
-                        set asset_id $hf_id
-                    } else {
-                        set named_arr(ss_id) $asset_id
+                    hf_nc_asset_read $vm_id $instance_id named_arr
+                    if { [hf_nc_ss_read $asset_id $instance_id named_arr] } {
+                        if { [info exists named_arr(vm_id) ] } {
+                            set vm_id $named_arr(vm_id)
+                            hf_nc_vm_read $vm_id $instance_id named_arr
+                            hf_nc_ip_read $vm_id $instance_id named_arr
+                            hf_nc_os_read $named_arr(os_id) $instance_id named_arr
+
+                        hf_nc_ns_read $asset_id $instance_id named_arr
+                        hf_ua_read $named_arr(ua_id) "" "" $instance_id 1 named_arr
                     }
-                    hf_nc_ss_read $named_arr(ss_id) $instance_id named_arr
-                    hf_ua_read $named_arr(ua_id) "" "" $instance_id 1 named_arr
                 }
                 ns {
                     # ns , custom domain name service records

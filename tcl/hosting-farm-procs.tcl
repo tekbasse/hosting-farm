@@ -2473,25 +2473,25 @@ ad_proc -private hf_vm_quota_write {
     set over_traffic_sku [string range $over_traffic_sku 0 39]
     set over_memory_sku [string range $over_memory_sku 0 39]
     if { ![qf_is_integer $storage_unit] } {
-        set sucess_p 0
+        set success_p 0
     }
     if { ![qf_is_integer $traffic_unit] } {
-        set sucess_p 0
+        set success_p 0
     }
     if { ![qf_is_integer $memory_unit] } {
-        set sucess_p 0
+        set success_p 0
     }
     if { ![qf_is_integer $qemu_memory] } {
-        set sucess_p 0
+        set success_p 0
     }
     if { ![qf_is_integer $status_id] } {
-        set sucess_p 0
+        set success_p 0
     }
     if { ![qf_is_integer $vm_type] } {
-        set sucess_p 0
+        set success_p 0
     }
     if { ![qf_is_integer $max_domain] } {
-        set sucess_p 0
+        set success_p 0
     }
     if { $private_vps ne "1" } {
         set private_vps "0"
@@ -2512,7 +2512,7 @@ ad_proc -private hf_vm_quota_write {
             }
         }
     } else {
-        ns_log Notice "hf_vm_quota_write: sucess_p 0 at least one value doesn't fit: '${instance_id}' '${plan_id}' '${description}' '${base_storage}' '${base_traffic}' '${base_memory}' '${base_sku}' '${over_storage_sku}' '${over_traffic_sku}' '${over_memory_sku}' '${storage_unit}' '${traffic_unit}' '${memory_unit}' '${qemu_memory}' '${status_id}' '${vm_type}' '${max_domain}' '${private_vps}'"
+        ns_log Notice "hf_vm_quota_write: success_p 0 at least one value doesn't fit: '${instance_id}' '${plan_id}' '${description}' '${base_storage}' '${base_traffic}' '${base_memory}' '${base_sku}' '${over_storage_sku}' '${over_traffic_sku}' '${over_memory_sku}' '${storage_unit}' '${traffic_unit}' '${memory_unit}' '${qemu_memory}' '${status_id}' '${vm_type}' '${max_domain}' '${private_vps}'"
     }
     return $success_p
 }
