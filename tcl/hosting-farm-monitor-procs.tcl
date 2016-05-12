@@ -420,33 +420,8 @@ ad_proc -private hf::monitor::do {
 
                             # See hf_asset_do for user-admin directed changes
 
-                            # Load info before calling custom proc.
-                            switch -exact $asset_type_id {
-                                dc { 
-                                    hf_nc_dc_read $asset_id $instance_id asset_prop_arr
-                                    hf_nc_ip_read $asset_id $instance_id asset_prop_arr
-                                   # hf_nc_asset_read $asset_id $instance_id asset_prop-arr
-                                }
-                                hw { 
-                                    hf_nc_hw_read $asset_id $instance_id asset_prop_arr
-                                    hf_nc_ni_read $asset_id $instance_id asset_prop_arr
-                                    hf_nc_os_read $asset_id $instance_id asset_prop_arr
-                                }
-                                ss { 
-                                    hf_nc_ss_read $asset_id $instance_id asset_prop_arr
-                                }
-                                vh { 
-                                    hf_nc_vh_read $asset_id $instance_id asset_prop_arr
-                                }
-                                vm { 
-                                    hf_nc_vm_read $asset_id $instance_id asset_prop_arr
-                                }
-                                default { 
-                                    # ot etc
-                                    hf_nc_asset_read $asset_id $instance_id asset_prop-arr
-                                }
-                            }
-##code
+                            # Load properties into an array "buffer" before calling custom proc.
+                            hf_asset_properties $asset_id asset_prop_arr $instance_id $user_id
 
                             if {  [catch { set calc_value [eval $proc_name] } this_err_text] } {
                                 ns_log Warning "hf::monitor::do.71: id $id Eval '${proc_list}' errored with ${this_err_text}."
@@ -470,15 +445,16 @@ ad_proc -private hf::monitor::do {
                                 }
                                 ns_log Notice "hf::monitor::do.83: id $id completed in circa ${dur_sec} seconds."
                             }
-                            # clear asset properties buffer
-                            array unset asset_prop_arr
-
                             # Alert user that job is done?  
                             # util_user_message doesn't accept user_id instance_id, only session_id
                             # We don't have session_id available.. and it may have changed or not exist..
                             # Email?  that would create too many alerts for lots of quick jobs.
                             # auth::sync::job::* api does this.
                             # hf::schedule::api is available for user conveniences like active alerts..
+
+
+                            # Empty asset properties buffer
+                            array unset asset_prop_arr
                         }
                     } else {
                         ns_log Warning "hf::monitor::do.87: id $id proc_name '${proc_name}' attempted but not allowed. user_id ${user_id} instance_id ${instance_id}"
