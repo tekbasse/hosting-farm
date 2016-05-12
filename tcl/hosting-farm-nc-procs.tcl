@@ -125,21 +125,39 @@ ad_proc -private hf_nc_ip_read {
     if { $success } {
         # element list
         set ip_var_list [list ipv4_addr ipv4_status ipv6_addr ipv6_status]
-        set asset_id $ip_id
-        set ip_lists [db_list_of_lists hf_ip_address_prop_get1 "select ipv4_addr, ipv4_status, ipv6_addr, ipv6_status, ip_id from hf_ip_addresses where instance_id=:instance_id and ip_id in (select ip_id from hf_asset_ip_map where asset_id=:asset_id and instance_id=:instance_id)"]
+        # Multiple ip_ids could have been specified in hf_nc_dc etc, but there is would be no check on
+        # a query at this point. By collecting additional mapped ip_id here, only values related to same
+        # asset are returned.
+        set ip_id_list [db_list hf_asset_ip_map_read_star "select ip_id from hf_asset_ip_map where asset_id=:asset_id and instance_id=:instance_id"]
+        # Check for case of hf_asset_id.ip_id carried over from hf_nc_asset_read
+        if { [info exists obj_arr(ip_id)] } {
+            if { $obj_arr(ip_id) ne "" } {
+                if { [lsearch $ip_id_list $obj_arr(ip_id)] == -1 } {
+                    # obj_arr(ip_id) is unique
+                    lappend ip_id_list $obj_arr(ip_id)
+                }
+            }
+        }
+
+        set ip_lists [db_list_of_lists hf_ip_address_prop_get1 "select ipv4_addr, ipv4_status, ipv6_addr, ipv6_status, ip_id from hf_ip_addresses where instance_id=:instance_id and ip_id in ([template::util::tcl_to_sql_list $ip_id_list])"]
         set ip_lists_len [llength $ip_lists]
         if { $ip_lists_len > 1 } {
+            set new_ip_id_list [list ]
             for {set j 0} {$j < $ip_lists_len} {incr j} {
                 set ip1_list [lindex $ip_lists $j]
-                set ip_id [lindex $ip1_list end]
+                set ip_id [lindex $ip1_list 4]
+                lappend new_ip_id_list $ip_id
                 foreach ip_var $ip_var_list {
                     # Adding ip_id to field_name to prevent name collison in returnning array.
                     set obj_arr(${ip_var}_${ip_id}) [lindex $ip1_list $i]
                     incr i
                 }
             }
+            # Just add the ip_ids that were found.
+            set obj_arr(ip_ids_list) $new_ip_id_list
         } else {
             set ip1_list [lindex $ip_lists 0]
+            set obj_arr(ip_id) [lindex $ip1_list 4]
             set i 0
             foreach ip_var $ip_var_list {
                 set obj_arr(${ip_var}) [lindex $ip1_list $i]
@@ -205,11 +223,6 @@ ad_proc -private hf_nc_dc_read {
                 incr i
             }
             # check for ni_id list
-            set ni_id_list [db_lists hf_dc_ni_map_nc_read "select ni_id from hf_dc_ni_map where instance_id=:instance_id and dc_id=:asset_id"]
-            if { [llength $ni_id_list] > 0 } {
-                # Temporarily pass the ni_id list to hf_nc_ni_read (where this array element will be unset).
-                set obj_arr(_ni_id_list) $ni_id_list
-            }
         }
     }
     return $success
@@ -252,7 +265,7 @@ ad_proc -private hf_nc_hw_read {
 }
 
 ad_proc -private hf_nc_ni_read {
-    ns_id_list
+    asset_id
     instance_id
     arr_name
 } {
@@ -261,21 +274,29 @@ ad_proc -private hf_nc_ni_read {
     upvar 1 $arr_name obj_arr
     set success [hf_nc_go_ahead ]
     if { $success } {
-        # is ns_id a valid id?
-        if { [qf_is_natural_number $ns_id ] } {
-            set ns_id_p 1
-        } else {
-            set ns_id ""
-            set ns_id_p 0
-        }
+        set ni_id_list [list ]
         # element list
         set ni_var_list [list os_dev_ref bia_mac_address ul_mac_address ipv4_addr_range ipv6_addr_range ]
-        set ni_lists [db_list_of_lists hf_network_interfaces_prop_get1 "select os_dev_ref, bia_mac_address, ul_mac_address ipv4_addr_range, ipv6_addr_range, ns_id from hf_network_interfaces where instance_id=:instance_id and ( ni_id=:ni_id"]
+        if { ![info exists obj_arr(asset_type_id)] } {
+            set obj_arr(asset_type_id) [hf_nc_asset_type_id $asset_id]
+        }
+        if { [info exists obj_arr(asset_type_id) ] && $obj_arr(asset_type_id) ne "" } {
+            switch -exact $obj_arr(asset_type_id) {
+                dc {
+                    set ni_id_list [db_lists hf_dc_ni_map_nc_read "select ni_id from hf_dc_ni_map where instance_id=:instance_id and dc_id=:asset_id"] 
+                    
+                }
+                hw {
+                    set ni_id_list [db_lists hf_hw_ni_map_nc_read "select ni_id from hf_hw_ni_map where instance_id=:instance_id and hw_id=:asset_id"] 
+                }
+            }
+        }
+        set ni_lists [db_list_of_lists hf_network_interfaces_prop_get1 "select os_dev_ref, bia_mac_address, ul_mac_address ipv4_addr_range, ipv6_addr_range, ni_id from hf_network_interfaces where instance_id=:instance_id and ni_id in ([template::util::tcl_to_sql_list $ni_id_list])"]
         set ni_lists_len [llength $ni_lists]
         if { $ni_lists_len > 1 } {
             for {set j 0} {$j < $ni_lists_len} {incr j} {
                 set ni1_list [lindex $ni_lists $j]
-                set ni_id [lindex $ni1_list end]
+                set ni_id [lindex $ni1_list 4]
                 foreach ni_var $ni_var_list {
                     # Adding ni_id to field_name to prevent name collison in returnning array.
                     set obj_arr(${ni_var}_${ni_id}) [lindex $ni1_list $i]
@@ -442,24 +463,24 @@ ad_proc -private hf_asset_properties {
     {instance_id ""}
     {user_id ""}
 } {
-    passes properties of an asset into array_name; creates array_name if it doesn't exist. Returns 1 if asset is returned, otherwise returns 0.
+   Passes properties of an asset into array_name; creates array_name if it doesn't exist. Returns 1 if asset is returned, otherwise returns 0.
 } {
     upvar $array_name named_arr
     set success_p [hf_nc_go_ahead ]
     if { $success_p } {
+
         set asset_type_id [hf_nc_asset_type_id $asset_id]
         if { $asset_type_id eq "" } {
             set success_p 0
         }
         if { $success_p } {
             # Don't use hf_* API here. Create queries specific to system call requirements.
-            set asset_prop_list [list ]
             switch -- $asset_type_id {
-                ###  move these db calls into procs in hosting-farm-scheduled-procs.tcl as private procs with permission only for no ns_conn or admin_p true. (create proc: is_admin_p )
                 dc {
                     #set asset_prop_list hf_dcs $instance_id "" $asset_id
-                    hf_nc_ip_read $asset_id $instance_id named_arr
                     hf_nc_asset_read $asset_id $instance_id named_arr
+                    hf_nc_ip_read $asset_id $instance_id named_arr
+                    hf_nc_ni_read $asset_id $instance_id named_arr
                 }
                 hw {
                     #set asset_prop_list [hf_hws $instance_id "" $asset_id]
@@ -467,7 +488,7 @@ ad_proc -private hf_asset_properties {
                     if { [hf_nc_hw_read $asset_id $instance_id named_arr ] } {
                         set named_arr(ns_id) ""
                         set named_arr(os_id) ""
-                        hf_nc_ni_read $named_arr(ns_id) $instance_id named_arr
+                        hf_nc_ni_read $asset_id $instance_id named_arr
                         hf_nc_ip_read $asset_id $instance_id named_arr
                         hf_nc_os_read $named_arr(os_id) $instance_id named_arr
                     }

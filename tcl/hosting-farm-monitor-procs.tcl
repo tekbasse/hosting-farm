@@ -413,12 +413,6 @@ ad_proc -private hf::monitor::do {
                             }
                             
                             #ns_log Notice "hf::monitor::do.69: id $id to Eval: '${proc_list}' list len [llength $proc_list]."
-                            # This works in tcl env. should work here:
-                            # get asset attributes
-                            # getasset type
-                            set asset_type_id [hf_nc_asset_type_id $asset_id]
-
-                            # See hf_asset_do for user-admin directed changes
 
                             # Load properties into an array "buffer" before calling custom proc.
                             hf_asset_properties $asset_id asset_prop_arr $instance_id $user_id
