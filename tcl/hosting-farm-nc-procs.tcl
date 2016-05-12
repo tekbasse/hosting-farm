@@ -488,13 +488,12 @@ ad_proc -private hf_nc_ns_read {
         set ns_lists [db_list_of_lists hf_ns_prop_get1 "select active_p name_record from hf_ns_records where instance_id=:instance_id and id=:asset_id"]
         set ns_lists_len [llength $ns_lists]
         if { $ns_lists_len > 1 } 
-            ns_log Warning "hf_nc_ns_read: multiple records found with same asset_id '${asset_id}'. This should not happen."
-            set success_p 0
-        } else {
-            for {set i 0} {$i < $ns_lists_len} {incr i} {
-                set var [lindex $ns_var_list $i]
-                set obj_arr(${var}) [lindex $ns_list $i]
-            }
+        ns_log Warning "hf_nc_ns_read: multiple records found with same asset_id '${asset_id}'. This should not happen."
+        set success_p 0
+    } else {
+        for {set i 0} {$i < $ns_lists_len} {incr i} {
+            set var [lindex $ns_var_list $i]
+            set obj_arr(${var}) [lindex $ns_list $i]
         }
     }
     return $success_p
@@ -507,7 +506,7 @@ ad_proc -private hf_asset_properties {
     {instance_id ""}
     {user_id ""}
 } {
-   Passes properties of an asset into array_name; creates array_name if it doesn't exist. Returns 1 if asset is returned, otherwise returns 0.
+    Passes properties of an asset into array_name; creates array_name if it doesn't exist. Returns 1 if asset is returned, otherwise returns 0.
 } {
     upvar $array_name named_arr
     set success_p [hf_nc_go_ahead ]
@@ -573,21 +572,23 @@ ad_proc -private hf_asset_properties {
                             hf_nc_ip_read $vm_id $instance_id named_arr
                             hf_nc_os_read $named_arr(os_id) $instance_id named_arr
 
-                        hf_nc_ns_read $asset_id $instance_id named_arr
-                        hf_ua_read $named_arr(ua_id) "" "" $instance_id 1 named_arr
+                            hf_nc_ns_read $asset_id $instance_id named_arr
+                            hf_ua_read $named_arr(ua_id) "" "" $instance_id 1 named_arr
+                        }
                     }
-                }
-                ns {
-                    # ns , custom domain name service records
-                    hf_nc_ns_read $asset_id $instance_id named_arr
-                }
-                ot { 
-                    # other, nothing specific. Supply generic info.
-                    hf_nc_asset_read $asset_id $instance_id named_arr
-                }
-                
-                default {
-                    ns_log Warning "hf_asset_properties: missing useful asset_type_id in switch options. asset_type_id '${asset_type_id}'"
+                    ns {
+                        # ns , custom domain name service records
+                        hf_nc_ns_read $asset_id $instance_id named_arr
+                    }
+                    ot { 
+                        # other, nothing specific. Supply generic info.
+                        hf_nc_asset_read $asset_id $instance_id named_arr
+                    }
+                    
+                    default {
+                        ns_log Warning "hf_asset_properties: missing useful asset_type_id in switch options. asset_type_id '${asset_type_id}'"
+                    }
+             
                 }
             }
         } else {
