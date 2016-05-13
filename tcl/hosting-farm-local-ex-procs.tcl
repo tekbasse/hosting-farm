@@ -294,7 +294,8 @@ ad_proc -private hfl_problem_server_cpu {
     set h6 [expr { sin( $k / $cycle_7_s + $one_7th * 5. ) } ]
     set noise [expr { ( [random] - .5 ) * 14. } ]
     set health [expr { 50. + 10. * ( $h0 + $h1 + $h2 + $h3 + $h4 + $h5 + $h6 ) + $noise } ]
-    
+    set health [f::max 0 $health]
+
     # A healthy signal amplitude is somewhere between 1 and 99, ie 7 * 7 * 2
 
     # In addition to sin, and cos, acc_fin::pos_sine_cycle, thrashing can be simulated with fibonacci or 
@@ -386,15 +387,18 @@ ad_proc -private hfl_problem_server_traffic {
     set h0 [expr { sin( $k / $cycle_s ) } ]
     set cycle_7_s [expr { $cycle_s / 7. } ]
     set cycle_3_s [expr { $cycle_7_s * 3. } ]
+
+    set h0 [expr { 5 * sin( $k / $cycle_s ) } ]
     set h1 [expr { sin( $k / $cycle_7_s ) } ]
-    set h2 [expr { sin( $k / $cycle_3_s + $one_7th ) } ]
-    set h3 [expr { sin( $k / $cycle_7_s + $one_7th * 2. ) } ]
-    set h4 [expr { sin( $k / $cycle_3_s + $one_7th * 3. ) } ]
-    set h5 [expr { sin( $k / $cycle_3_s + $one_7th * 4. ) } ]
-    set h6 [expr { sin( $k / $cycle_7_s + $one_7th * 5. ) } ]
-    set noise [expr { ( [random] - .5 ) * 14. } ]
-    set health [expr { 50. + 10. * ( $h0 + $h1 + $h2 + $h3 + $h4 + $h5 + $h6 ) + $noise } ]
-    
+    set h2 [expr { sin( $k / $cycle_3_s + $one_7th ) / 5. } ]
+    set h3 [expr { sin( $k / $cycle_7_s + $one_7th * 2. ) / 5. } ]
+    set h4 [expr { sin( $k / $cycle_3_s + $one_7th * 3. ) / 5. } ]
+    set h5 [expr { sin( $k / $cycle_3_s + $one_7th * 4. ) / 5. } ]
+    set h6 [expr { sin( $k / $cycle_7_s + $one_7th * 5. ) / 5. } ]
+    set noise [expr { pow( ( [random] - .5 ) * 3. , 2. ) } ]
+    set health [expr { 50. + 14 * ( $h0 + $h1 + $h2 + $h3 + $h4 + $h5 + $h6 ) + $noise } ]
+    set health [f::max 0 $health]
+
     # A healthy signal amplitude is somewhere between 1 and 99, ie 7 * 7 * 2
 
     # In addition to sin, and cos, acc_fin::pos_sine_cycle, thrashing can be simulated with fibonacci or 
