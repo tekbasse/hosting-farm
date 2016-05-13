@@ -158,7 +158,7 @@ ad_proc -private hfl_system_memory {
     set cmd ""
     set args ""
     set health 0
-    set which $which
+    set which "which"
     set cmd "top"
     set cmd [exec $which $cmd]
     if { [string match -nocase "*linux*" $os_label] } {
@@ -170,8 +170,11 @@ ad_proc -private hfl_system_memory {
         set arg1 "-n"
         set arg2 ""
     }
-    if { ![string match -nocase "*error*" $cmd] && $cmd eq "" } {
-        set raw [exec [list $cmd $arg1 $arg2]]
+    if { [string match -nocase "*error*" $cmd] || $cmd eq "" } {
+        # There is a problem with cmd setup.
+        set raw ""
+    } else {
+        set raw [exec $cmd $arg1 $arg2]
     }
     if { $raw eq "" } {
         set report "System error hfl_system_memory. Report error to technical administrator."
@@ -221,7 +224,7 @@ ad_proc -private hfl_system_memory {
         set used_u [string trim [string range $raw $used_low_idx $used_high_idx]]
         set used_bytes [hf_convert_to_iec_bytes $used_u $unit]
         set total_bytes [hf_convert_to_iec_bytes $total_u $unit]
-        set health [expr { round( $used_bytes / $total_bytes) } ]
+        set health [expr { round( 100. * $used_bytes / $total_bytes) } ]
         set report $raw
     } elseif { $os_label eq "freebsd" } {
         # set unit
@@ -233,8 +236,9 @@ ad_proc -private hfl_system_memory {
         set total_high_idx [string first "Wired" $raw $low_idx]
         incr used_low_idx 8
         set used_high_idx [string first "Inact" $raw $low_idx]
+        set total_low_idx $used_high_idx
+        incr total_low_idx 7
         incr used_high_idx -1
-        set total_low_idx $used_low_idx
         incr total_high_idx -1
         set total_u [string trim [string range $raw $total_low_idx $total_high_idx]]
         set used_u [string trim [string range $raw $used_low_idx $used_high_idx]]
@@ -244,7 +248,7 @@ ad_proc -private hfl_system_memory {
         set total_u [string range $total_u 0 end-1]
         set used_bytes [hf_convert_to_unit_metric $used_u $used_unit]
         set total_bytes [hf_convert_to_unit_metric $total_u $total_unit]
-        set health [expr { round( $used_bytes / $total_bytes) } ]
+        set health [expr { round( 100. * $used_bytes / $total_bytes) } ]
         set report $raw
     }
     hf_monitor_update $asset_id $monitor_id hfl_system_memory $health $report "" "" $instance_id
