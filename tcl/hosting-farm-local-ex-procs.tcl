@@ -149,6 +149,8 @@ ad_proc -private hfl_system_memory {
     monitor_id
     instance_id
 } {
+    Returns monitor health. Example case of local monitor proc to retrieve local memory usage.
+} {
     upvar 1 asset_prop_arr obj_arr
 
     # Get memory usage
@@ -209,7 +211,6 @@ ad_proc -private hfl_system_memory {
     }
     if { $os_label eq "linux" } {
         # set unit
-        set unit "KiB"
         set low_idx [string first "Mem" $raw]
         incr low_idx 4
         set high_idx [string first "Swap" $raw]
@@ -228,7 +229,6 @@ ad_proc -private hfl_system_memory {
         set report $raw
     } elseif { $os_label eq "freebsd" } {
         # set unit
-        set unit "KiB"
         set low_idx [string first "Mem" $raw]
         incr low_idx 4
         set high_idx [string first "Swap" $raw]
@@ -254,12 +254,152 @@ ad_proc -private hfl_system_memory {
     hf_monitor_update $asset_id $monitor_id hfl_system_memory $health $report "" "" $instance_id
 }
 
-# test cases:
-# hfl_problem_server_cpu
-# hfl_problem_server_storage
-# hfl_problem_server_traffic
+ad_proc -private hfl_problem_server_cpu {
+    asset_id
+    monitor_id
+    instance_id
+} {
+    Returns cpu health. This is a example local procedure for testing a phantom problem server.
+} {
+    upvar 1 asset_prop_arr obj_arr
 
-# using 7*24*3600 second cycles in x seconds ie fastforward_rate_s = 7*24*3600/x
-# using a cyclic, noisy function, something like:
-# f(t) = min + (max-min) * sigma(for n=1 to 7*24) of 2pi * delta_t_s * N / t) + random
-# in addition to sin, cos, there is also acc_fin::pos_sine_cycle, and thrashing with fibonacci or other progression as factor for example.
+    # Get memory usage
+    # permissions ck
+    hfl_allow_q
+
+
+    # Using 1 week ( 7*24*3600=604800 second ) cycles.
+    # If a day passes in 7 hours, then a week in 49 hours.
+    # If a day passes in 3 hours, then a week in 21 hours ( 75600 seconds). 
+    # A 24 hour test cycle should provide
+    # sufficient resolution to detect bugs.
+    # The cycle can start most anywhere in the timeline.
+
+    set cycle_s 75600
+    #expr acos(0) * 2. =
+    set twopi 3.141592653589793
+    set one_7th 0.14285714285714285 
+    set time_s [clock seconds]
+    set cycle_t [expr { fmod( $time_s , $cycle_s ) } ]
+    set t_pct [expr { $cycle_t / $cycle_s } ]
+    set k [expr { $cycle_t * $twopi } ]
+    set h0 [expr { sin( $k / $cycle_s ) } ]
+    set cycle_7_s [expr { $cycle_s / 7. } ]
+    set cycle_3_s [expr { $cycle_7_s * 3. } ]
+    set h1 [expr { sin( $k / $cycle_7_s ) } ]
+    set h2 [expr { sin( $k / $cycle_3_s + $one_7th ) } ]
+    set h3 [expr { sin( $k / $cycle_7_s + $one_7th * 2. ) } ]
+    set h4 [expr { sin( $k / $cycle_3_s + $one_7th * 3. ) } ]
+    set h5 [expr { sin( $k / $cycle_3_s + $one_7th * 4. ) } ]
+    set h6 [expr { sin( $k / $cycle_7_s + $one_7th * 5. ) } ]
+    set noise [expr { ( [random] - .5 ) * 14. } ]
+    set health [expr { 50. + 10. * ( $h0 + $h1 + $h2 + $h3 + $h4 + $h5 + $h6 ) + $noise } ]
+    
+    # A healthy signal amplitude is somewhere between 1 and 99, ie 7 * 7 * 2
+
+    # In addition to sin, and cos, acc_fin::pos_sine_cycle, thrashing can be simulated with fibonacci or 
+    # other progression as factor for example.
+
+    hf_monitor_update $asset_id $monitor_id hfl_system_memory $health $report "" "" $instance_id
+    return 1
+}
+
+ad_proc -private hfl_problem_server_storage {
+    asset_id
+    monitor_id
+    instance_id
+} {
+    Returns cpu health. This is a example local procedure for testing a phantom problem server.
+} {
+    upvar 1 asset_prop_arr obj_arr
+
+    # Get storage usage
+    # permissions ck
+    hfl_allow_q
+
+    # Using 1 week ( 7*24*3600=604800 second ) cycles.
+    # If a day passes in 7 hours, then a week in 49 hours.
+    # If a day passes in 3 hours, then a week in 21 hours ( 75600 seconds). 
+    # A 24 hour test cycle should provide
+    # sufficient resolution to detect bugs.
+    # The cycle can start most anywhere in the timeline.
+
+    set cycle_s 75600
+    #expr acos(0) * 2. =
+    set twopi 3.141592653589793
+    set one_7th 0.14285714285714285 
+    set time_s [clock seconds]
+    set cycle_t [expr { fmod( $time_s + $one_7th * $cycle_s , $cycle_s ) } ]
+    set t_pct [expr { $cycle_t / $cycle_s } ]
+    set k [expr { $cycle_t * $twopi } ]
+    set cycle_7_s [expr { $cycle_s / 7. } ]
+    set cycle_3_s [expr { $cycle_7_s * 3. } ]
+
+    set h0 [expr { sin( $k / $cycle_s ) } ]
+    set h1 [expr { sin( $k / $cycle_7_s ) } ]
+    set h2 [expr { sin( $k / $cycle_3_s + $one_7th ) } ]
+    set h3 [expr { sin( $k / $cycle_7_s + $one_7th * 2. ) } ]
+    set h4 [expr { sin( $k / $cycle_3_s + $one_7th * 3. ) } ]
+    set h5 [expr { sin( $k / $cycle_3_s + $one_7th * 4. ) } ]
+    set h6 [expr { sin( $k / $cycle_7_s + $one_7th * 5. ) } ]
+    set noise [expr { ( [random] - .5 ) * 14. } ]
+    set health [expr { 50. + 14 * ( $h0 + $h1 + $h2 + $h3 + $h4 + $h5 + $h6 ) + $noise } ]
+    set health [f::max 0 $health]
+
+    # A healthy signal amplitude is somewhere between 1 and 99, ie 7 * 7 * 2
+
+    # In addition to sin, and cos, acc_fin::pos_sine_cycle, thrashing can be simulated with fibonacci or 
+    # other progression as factor for example.
+
+    hf_monitor_update $asset_id $monitor_id hfl_system_memory $health $report "" "" $instance_id
+    return 1
+}
+
+ad_proc -private hfl_problem_server_traffic {
+    asset_id
+    monitor_id
+    instance_id
+} {
+    Returns cpu health. This is a example local procedure for testing a phantom problem server.
+} {
+    upvar 1 asset_prop_arr obj_arr
+
+    # Get traffic
+
+    # permissions ck
+    hfl_allow_q
+    # Using 1 week ( 7*24*3600=604800 second ) cycles.
+    # If a day passes in 7 hours, then a week in 49 hours.
+    # If a day passes in 3 hours, then a week in 21 hours ( 75600 seconds). 
+    # A 24 hour test cycle should provide
+    # sufficient resolution to detect bugs.
+    # The cycle can start most anywhere in the timeline.
+
+    set cycle_s 75600
+    #expr acos(0) * 2. =
+    set twopi 3.141592653589793
+    set one_7th 0.14285714285714285 
+    set time_s [clock seconds]
+    set cycle_t [expr { fmod( $time_s + $one_7th * $cycle_s , $cycle_s ) } ]
+    set t_pct [expr { $cycle_t / $cycle_s } ]
+    set k [expr { $cycle_t * $twopi } ]
+    set h0 [expr { sin( $k / $cycle_s ) } ]
+    set cycle_7_s [expr { $cycle_s / 7. } ]
+    set cycle_3_s [expr { $cycle_7_s * 3. } ]
+    set h1 [expr { sin( $k / $cycle_7_s ) } ]
+    set h2 [expr { sin( $k / $cycle_3_s + $one_7th ) } ]
+    set h3 [expr { sin( $k / $cycle_7_s + $one_7th * 2. ) } ]
+    set h4 [expr { sin( $k / $cycle_3_s + $one_7th * 3. ) } ]
+    set h5 [expr { sin( $k / $cycle_3_s + $one_7th * 4. ) } ]
+    set h6 [expr { sin( $k / $cycle_7_s + $one_7th * 5. ) } ]
+    set noise [expr { ( [random] - .5 ) * 14. } ]
+    set health [expr { 50. + 10. * ( $h0 + $h1 + $h2 + $h3 + $h4 + $h5 + $h6 ) + $noise } ]
+    
+    # A healthy signal amplitude is somewhere between 1 and 99, ie 7 * 7 * 2
+
+    # In addition to sin, and cos, acc_fin::pos_sine_cycle, thrashing can be simulated with fibonacci or 
+    # other progression as factor for example.
+
+    hf_monitor_update $asset_id $monitor_id hfl_system_memory $health $report "" "" $instance_id
+    return 1
+}
