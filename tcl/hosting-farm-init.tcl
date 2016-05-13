@@ -263,16 +263,26 @@ if [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt }
                 set ss_nsd_file [ns_info nsd]
                 set ss_nsd_name [ns_info name]
                 set os_id [hf_os_write "" $label $system_type2 $system_type 0 0 "Default example SAAS system" $instance_id]
-                set ss_id [hf_ss_write "" $name $title $asset_type_id "key words" "description" "conent" "comments" 0 "" 0 0 0 0 0 0 "" "" "" "" "" $instance_id $user_id "" "" $ss_nsd_name $name $ss_nsd_file "http" $http_port "" "" "" "" "" $ss_config_file "" ""]
-                if { $ss_id eq "" } {
-                    ns_log Notice "hosting-farm/tcl/hosting-farm-init.tcl.266: hf_ss_write failed. Trying to write as simple asset."
-                    set ss_id [hf_asset_create $label $name ss $instance_name "" "" "this package" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""]
-                }
+                set ss_id [hf_ss_write "" $ss_nsd_name $name $ss_nsd_file $asset_type_id "key words" "description" "content" "comments" 0 "" 0 0 0 0 0 0 "" "" "" "" "" $instance_id $user_id "" "" $ss_nsd_name $name $ss_nsd_file "http" $http_port "" "" "" "" "" $ss_config_file "" "" ]
+# ss_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created ss_server_name ss_service_name ss_daemon_ref ss_protocol ss_port ss_ua_id ss_ss_type ss_ss_subtype ss_ss_undersubtype ss_ss_ultrasubtype ss_config_uri ss_memory_bytes ss_details 
+
                 hf_asset_create problemvm ProblemVM vm "Problem VM" "" "" "Demo/vm system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
+                hf_vm_write vm_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created vm_domain_name vm_ip_id vm_ni_id vm_ns_id vm_type_id vm_resource_path vm_mount_union vm_details
+# vm_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created vm_domain_name vm_ip_id vm_ni_id vm_ns_id vm_type_id vm_resource_path vm_mount_union vm_details
+
                 hf_asset_create problemhw ProblemHW hw "Problem HW" "" "" "Demo/hw system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
+                hf_hw_write hw_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created hw_system_name hw_backup_sys hw_ni_id hw_os_id hw_description hw_details 
+# hw_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created hw_system_name hw_backup_sys hw_ni_id hw_os_id hw_description hw_details 
+
                 hf_asset_create problemvh ProblemVH vh "Problem VH" "" "" "Demo/vh system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
+
                 hf_asset_create problemns ProblemNS ns "Problem NS" "" "" "Demo/ns system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
+                hf_ns_write ns_id name_record active_p {instance_id ""} 
+# ns_id name_record active_p {instance_id ""} 
+
                 hf_asset_create problemdc ProblemDC dc "Problem DC" "" "" "Demo/dc system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
+                hf_dc_write dc_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created dc_affix dc_description dc_details 
+# dc_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created dc_affix dc_description dc_details 
             }
         }
     }
