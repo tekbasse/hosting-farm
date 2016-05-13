@@ -20,6 +20,27 @@ ad_proc -private hf_peek_pop_stack {
     return $last_out
 }
 
+ad_proc -public hf_convert_to_iec_bytes {
+    number
+    unit
+    {pretty_p "0"}
+} { 
+    Converts bytes with large numbers to whole bytes. Returns a pretty string if pretty_p is 1.
+} {
+    set abbrev_list [list B KiB MiB GiB TiB PiB EiB ZiB YiB]
+    # convert to units of one
+    set unit_index [lsearch -exact $abbrev_list $unit]
+    set number [expr { wide( $number ) } ]
+    if { $unit_index > 0 } {
+        set number [expr { $number * pow(1000,$unit_index) } ]
+        set unit "B"
+    }
+    if { $pretty_p } {
+        append number " ${unit}"
+    }
+    return $number
+}
+
 ad_proc -private hf_health_html { 
     health_score
     {message ""}

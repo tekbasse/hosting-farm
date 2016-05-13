@@ -330,7 +330,7 @@ ad_proc -private hf_nc_os_read {
     set success_p [hf_nc_go_ahead ]
     if { $success_p } {
         # element list
-        set os_var_list [list label brand version kernel orphaned_p requires_upgrade_p]
+        set os_var_list [list os_label os_brand os_version os_kernel os_orphaned_p os_requires_upgrade_p]
         set os_lists [db_list_of_lists hf_operating_systems_prop_get1 "select label, brand, version, kernel, orphaned_p, requires_upgrade_p from hf_operating_systems where instance_id=:instance_id and os_id=:os_id"]
         set os_lists_len [llength $os_var_list]
         for {set i 0} {$i < $os_lists_len} {incr i} {

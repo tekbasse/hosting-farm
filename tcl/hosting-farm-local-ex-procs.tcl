@@ -160,29 +160,60 @@ ad_proc -private hfl_system_cpu {
 }
 
 ad_proc -private hfl_system_memory {
-    {asset_id "" }
-    {user_id ""}
-    {instance_id ""}
+    asset_id
+    monitor_id
+    instance_id
 } {
-    Get memory usage
+    upvar 1 asset_prop_arr obj_arr
+
+    # Get memory usage
     # permissions ck
     hfl_allow_q
-
-    # Assumes local system
-    set system_type [ns_eval uname]
-    set spc_idx [string first " " $system_type]
-    if { $spc_id > -1 } {
-        set system_type [string trim [string tolower [string range $system_type 0 $spc_idx]]
-    } else {
-        set system_type [string trim [string tolower $system_type]]
-    }
-    if { $system_type eq "linux" } {
+    set cmd ""
+    set health 0
+    if { [string match -nocase "*linux*" $obj_arr(os_label)] } {
         set cmd "top -b -n1"
-    }
-    if { $system_type eq "freebsd" } {
+    } elseif { [string match -nocase "*freebsd*" $obj_arr(os_label)] } {
         set cmd "top -n"
     }
-    
+
+    if { $cmd ne "" } {
+        set raw [eval $cmd]
+        if { $raw eq "" } {
+            # For some reason, eval results aren't returned to variable. 
+            # use some static data from local system
+            set raw {EXAMPLE DATA Tasks: 201 total,   1 running, 200 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  0.0 us,  0.0 sy,  0.0 ni,100.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
+KiB Mem:   6101420 total,  1392588 used,  4708832 free,   278264 buffers
+KiB Swap:  8380412 total,        0 used,  8380412 free.   572532 cached Mem
+
+  PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND  \n
+    1 root      20   0   33912   4536   2720 S   0.0  0.1   0:03.06 init     \n
+    2 root      20   0       0      0      0 S   0.0  0.0   0:00.00 kthreadd \n
+    3 root      20   0       0      0      0 S   0.0  0.0   0:05.89 ksoftirqd/0 ...}
+            # set unit
+            set unit "KiB"
+            set low_idx [string first "Mem" $raw]
+            incr low_idx 4
+            set high_idx [string first "Swap" $raw]
+            set used_low_idx [string first "total" $raw $low_idx]
+            set total_high_idx $used_low_idx
+            incr used_low_idx 6
+            set used_high_idx [string first "used" $raw $low_idx]
+            incr used_high_idx -1
+            set total_low_idx $low_idx
+            incr total_high_idx -1
+            set total_u [string trim [string range $raw $total_low_idx $total_high_idx]]
+            set used_u [string trim [string range $raw $used_low_idx $used_high_idx]]
+            set used_bytes [hf_convert_to_iec_bytes $used_u $unit]
+            set total_bytes [hf_convert_to_iec_bytes $total_u $unit]
+            set health [expr { round( $used_bytes / $total_bytes) } ]
+            set report $raw
+        }
+    } else {
+        set report "*error* system not freebsd or linux. Report error to technical administrator."
+    }
+    hf_monitor_update $asset_id $monitor_id hfl_system_memory $health $report "" "" $instance_id
 }
 
 # test cases:

@@ -241,14 +241,32 @@ if [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt }
                 set asset_type_id [lindex $def_asset_list 0]
                 set name [lindex $def_asset_list 1]
                 set label [string tolower $name]
-                set instance_name [apm_instance_name_from_id $instance_id]
+                # instance name:
+                set title [apm_instance_name_from_id $instance_id]
 #                db_dml default_assets_cr {
 #                    insert into hf_assets
 #                    (asset_type_id,label,user_id,instance_id)
 #                    values (:asset_type_id,:label,:sysowner_user_id,:instance_id)
 #                }
                 # use the api
-                hf_asset_create $label $name ss $instance_name "" "" "this package" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
+                # Make an example local system profile
+                set system_type [ns_eval uname]
+                set spc_idx [string first " " $system_type]
+                if { $spc_id > -1 } {
+                    set system_type2 [string trim [string tolower [string range $system_type 0 $spc_idx]]]
+                } else {
+                    set system_type2 [string trim [string tolower $system_type]]
+                }
+                set http_port [ns_config -int nssock port 80]
+                set ss_config_file [ns_info config]
+                set ss_nsd_file [ns_info nsd]
+                set ss_nsd_name [ns_info name]
+                set os_id [hf_os_write "" $label $system_type2 $system_type 0 0 "Default example SAAS system" $instance_id]
+                set ss_id [hf_ss_write "" $name $title $asset_type_id "key words" "description" "conent" "comments" 0 "" 0 0 0 0 0 0 "" "" "" "" "" $instance_id $user_id "" "" $ss_nsd_name $name $ss_nsd_file "http" $http_port "" "" "" "" "" $ss_config_file "" ""]
+                if { $ss_id eq "" } {
+                    ns_log Notice "hosting-farm/tcl/hosting-farm-init.tcl.266: hf_ss_write failed. Trying to write as simple asset."
+                    set ss_id [hf_asset_create $label $name ss $instance_name "" "" "this package" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""]
+                }
                 hf_asset_create problemvm ProblemVM vm "Problem VM" "" "" "Demo/vm system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
                 hf_asset_create problemhw ProblemHW hw "Problem HW" "" "" "Demo/hw system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
                 hf_asset_create problemvh ProblemVH vh "Problem VH" "" "" "Demo/vh system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
