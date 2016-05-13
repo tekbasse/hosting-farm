@@ -103,7 +103,7 @@ ad_proc -private hfl_asset_halt_example {
 
                     # example system call
                     set daemon_uri "/usr/local/bin/vm-api halt"
-                    safe_eval [list $daemon_uri $obj_arr(domain_name)]
+                    exec [list $daemon_uri $obj_arr(domain_name)]
                 }
                 vh,ss {
                     # prep or call for halting vh or service
@@ -141,22 +141,7 @@ ad_proc -private hfl_system_cpu {
     hfl_allow_q
 
     # Assumes local system
-    set system_type [ns_eval uname]
-    set spc_idx [string first " " $system_type]
-    if { $spc_id > -1 } {
-        set system_type [string trim [string tolower [string range $system_type 0 $spc_idx]]
-    } else {
-        set system_type [string trim [string tolower $system_type]]
-    }
-    if { $system_type eq "linux" } {
-        set cmd "uptime"
-        set since_cmd "uptime -s"
-    }
-    if { $system_type eq "freebsd" } {
-
-        set cmd "uptime"
-    }
-    
+    ## code
 }
 
 ad_proc -private hfl_system_memory {
@@ -169,49 +154,98 @@ ad_proc -private hfl_system_memory {
     # Get memory usage
     # permissions ck
     hfl_allow_q
+    set os_label $obj_arr(os_label)
     set cmd ""
+    set args ""
     set health 0
-    if { [string match -nocase "*linux*" $obj_arr(os_label)] } {
-        set cmd "top -b -n1"
-    } elseif { [string match -nocase "*freebsd*" $obj_arr(os_label)] } {
-        set cmd "top -n"
+    set which $which
+    set cmd "top"
+    set cmd [exec $which $cmd]
+    if { [string match -nocase "*linux*" $os_label] } {
+        set os_label "linux"
+        set arg1 "-b"
+        set arg2 "-n1"
+    } elseif { [string match -nocase "*freebsd*" $os_label] } {
+        set os_label "freebsd"
+        set arg1 "-n"
+        set arg2 ""
     }
-
-    if { $cmd ne "" } {
-        set raw [eval $cmd]
-        if { $raw eq "" } {
-            # For some reason, eval results aren't returned to variable. 
+    if { ![string match -nocase "*error*" $cmd] && $cmd eq "" } {
+        set raw [exec [list $cmd $arg1 $arg2]]
+    }
+    if { $raw eq "" } {
+        set report "System error hfl_system_memory. Report error to technical administrator."
+        if { $os_label eq "linux" } {
+            # For some reason, results aren't returned to variable. 
             # use some static data from local system
             set raw {EXAMPLE DATA Tasks: 201 total,   1 running, 200 sleeping,   0 stopped,   0 zombie
-%Cpu(s):  0.0 us,  0.0 sy,  0.0 ni,100.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
-KiB Mem:   6101420 total,  1392588 used,  4708832 free,   278264 buffers
-KiB Swap:  8380412 total,        0 used,  8380412 free.   572532 cached Mem
+                %Cpu(s):  0.0 us,  0.0 sy,  0.0 ni,100.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
+                KiB Mem:   6101420 total,  1392588 used,  4708832 free,   278264 buffers
+                KiB Swap:  8380412 total,        0 used,  8380412 free.   572532 cached Mem
+                
+                PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND  \n
+                1 root      20   0   33912   4536   2720 S   0.0  0.1   0:03.06 init     \n
+                2 root      20   0       0      0      0 S   0.0  0.0   0:00.00 kthreadd \n
+                3 root      20   0       0      0      0 S   0.0  0.0   0:05.89 ksoftirqd/0 ...}
 
-  PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND  \n
-    1 root      20   0   33912   4536   2720 S   0.0  0.1   0:03.06 init     \n
-    2 root      20   0       0      0      0 S   0.0  0.0   0:00.00 kthreadd \n
-    3 root      20   0       0      0      0 S   0.0  0.0   0:05.89 ksoftirqd/0 ...}
-            # set unit
-            set unit "KiB"
-            set low_idx [string first "Mem" $raw]
-            incr low_idx 4
-            set high_idx [string first "Swap" $raw]
-            set used_low_idx [string first "total" $raw $low_idx]
-            set total_high_idx $used_low_idx
-            incr used_low_idx 6
-            set used_high_idx [string first "used" $raw $low_idx]
-            incr used_high_idx -1
-            set total_low_idx $low_idx
-            incr total_high_idx -1
-            set total_u [string trim [string range $raw $total_low_idx $total_high_idx]]
-            set used_u [string trim [string range $raw $used_low_idx $used_high_idx]]
-            set used_bytes [hf_convert_to_iec_bytes $used_u $unit]
-            set total_bytes [hf_convert_to_iec_bytes $total_u $unit]
-            set health [expr { round( $used_bytes / $total_bytes) } ]
-            set report $raw
+        } elseif { $os_label eq "freebsd" } {
+            set raw {last pid: 87140;  load averages:  1.93,  1.99,  1.98  up 13+06:56:39    02:31:20
+            29 processes:  1 running, 28 sleeping
+                
+            Mem: 886M Active, 11G Inact, 86G Wired, 131M Cache, 27G Free
+            ARC: 73G Total, 29G MFU, 37G MRU, 5817K Anon, 383M Header, 6737M Other
+            Swap: 16G Total, 16G Free
+
+
+            PID USERNAME    THR PRI NICE   SIZE    RES STATE   C   TIME    WCPU COMMAND
+            9196 openacs      18  20    0   518M   243M uwait   0   4:55   0.00% nsd
+            7650 pgsql         1  20    0 39792K  7340K select 12   0:34   0.00% postgres
+            7582 pgsql         1  20    0   180M 17220K select 15   0:20   0.00% postgres
+            7741 cyrus         1  20    0 58580K  5784K select  1   0:09   0.00% master ... }
         }
-    } else {
-        set report "*error* system not freebsd or linux. Report error to technical administrator."
+    }
+    if { $os_label eq "linux" } {
+        # set unit
+        set unit "KiB"
+        set low_idx [string first "Mem" $raw]
+        incr low_idx 4
+        set high_idx [string first "Swap" $raw]
+        set used_low_idx [string first "total" $raw $low_idx]
+        set total_high_idx $used_low_idx
+        incr used_low_idx 6
+        set used_high_idx [string first "used" $raw $low_idx]
+        incr used_high_idx -1
+        set total_low_idx $low_idx
+        incr total_high_idx -1
+        set total_u [string trim [string range $raw $total_low_idx $total_high_idx]]
+        set used_u [string trim [string range $raw $used_low_idx $used_high_idx]]
+        set used_bytes [hf_convert_to_iec_bytes $used_u $unit]
+        set total_bytes [hf_convert_to_iec_bytes $total_u $unit]
+        set health [expr { round( $used_bytes / $total_bytes) } ]
+        set report $raw
+    } elseif { $os_label eq "freebsd" } {
+        # set unit
+        set unit "KiB"
+        set low_idx [string first "Mem" $raw]
+        incr low_idx 4
+        set high_idx [string first "Swap" $raw]
+        set used_low_idx [string first "Active" $raw $low_idx]
+        set total_high_idx [string first "Wired" $raw $low_idx]
+        incr used_low_idx 8
+        set used_high_idx [string first "Inact" $raw $low_idx]
+        incr used_high_idx -1
+        set total_low_idx $used_low_idx
+        incr total_high_idx -1
+        set total_u [string trim [string range $raw $total_low_idx $total_high_idx]]
+        set used_u [string trim [string range $raw $used_low_idx $used_high_idx]]
+        set total_unit [string range $total_u end end]
+        set used_unit [string range $used_u end end]
+        set used_u [string range $used_u 0 end-1]
+        set total_u [string range $total_u 0 end-1]
+        set used_bytes [hf_convert_to_unit_metric $used_u $used_unit]
+        set total_bytes [hf_convert_to_unit_metric $total_u $total_unit]
+        set health [expr { round( $used_bytes / $total_bytes) } ]
+        set report $raw
     }
     hf_monitor_update $asset_id $monitor_id hfl_system_memory $health $report "" "" $instance_id
 }
@@ -222,6 +256,6 @@ KiB Swap:  8380412 total,        0 used,  8380412 free.   572532 cached Mem
 # hfl_problem_server_traffic
 
 # using 7*24*3600 second cycles in x seconds ie fastforward_rate_s = 7*24*3600/x
-    # using a cyclic, noisy function, something like:
+# using a cyclic, noisy function, something like:
 # f(t) = min + (max-min) * sigma(for n=1 to 7*24) of 2pi * delta_t_s * N / t) + random
 # in addition to sin, cos, there is also acc_fin::pos_sine_cycle, and thrashing with fibonacci or other progression as factor for example.

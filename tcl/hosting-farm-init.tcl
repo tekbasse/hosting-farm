@@ -250,7 +250,8 @@ if [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt }
 #                }
                 # use the api
                 # Make an example local system profile
-                set system_type [ns_eval uname]
+                set uname $uname
+                set system_type [exec $uname]
                 set spc_idx [string first " " $system_type]
                 if { $spc_id > -1 } {
                     set system_type2 [string trim [string tolower [string range $system_type 0 $spc_idx]]]

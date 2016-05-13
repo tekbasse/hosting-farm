@@ -41,6 +41,48 @@ ad_proc -public hf_convert_to_iec_bytes {
     return $number
 }
 
+ad_proc -public hf_convert_to_dec_bytes {
+    number
+    unit
+    {pretty_p "0"}
+} { 
+    Converts bytes with large numbers to whole bytes. Returns a pretty string if pretty_p is 1.
+} {
+    set abbrev_list [list B kB MB GB TB PB EB ZB YB]
+    # convert to units of one
+    set unit_index [lsearch -exact $abbrev_list $unit]
+    set number [expr { wide( $number ) } ]
+    if { $unit_index > 0 } {
+        set number [expr { $number * pow(1000,$unit_index) } ]
+        set unit "B"
+    }
+    if { $pretty_p } {
+        append number " ${unit}"
+    }
+    return $number
+}
+
+ad_proc -public hf_convert_to_unit_metric {
+    number
+    unit
+    {pretty_p "0"}
+} { 
+    Converts bytes with large numbers to whole bytes. Returns a pretty string if pretty_p is 1.
+} {
+    set abbrev_list [list B K M G T P E Z Y]
+    # convert to units of one
+    set unit_index [lsearch -exact $abbrev_list $unit]
+    set number [expr { wide( $number ) } ]
+    if { $unit_index > 0 } {
+        set number [expr { $number * pow(1000,$unit_index) } ]
+        set unit "B"
+    }
+    if { $pretty_p } {
+        append number " ${unit}"
+    }
+    return $number
+}
+
 ad_proc -private hf_health_html { 
     health_score
     {message ""}
