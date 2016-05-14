@@ -9,14 +9,14 @@ ad_library {
     @address: po box 20, Marylhurst, OR 97036-0020 usa
     @email: tekbasse@yahoo.com
     
-    # DEVELOPER NOTE change order. Required before year 2036
+    # DEVELOPER NOTE. Year 2036 may have subtle bug.
     # Instead of using tcl scan to convert times for detla t values,
-    # at least until 2036, hf_monitor_log.report_id is using machine time seconds.
-    # The db type should be switched to bigint. (not bigserial as this is not a sequence.)
+    # hf_monitor_log.report_id uses machine time seconds.
+    # The db type uses bigint or varchar(19) --not bigserial as report_id is not a sequence.
     # We can sanity check for machine time since the 
     # list has already been sorted by time.
     # And then subtract report_ids for faster, approximate delta t.
-
+    # Thereby, issues and delays of using 'clock scan' are avoided.
 
     # UI for one click (web-based) installers
     # installers install/update/monitor/activate/de-activate software, ie hosted service (hs) or software as a service (ss)
