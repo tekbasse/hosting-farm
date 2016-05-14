@@ -312,71 +312,91 @@ ad_proc -private hf_asset_do {
     hfl_proc_name
     {instance_id ""}
 } {
-    process an hfl_ procedure on asset_id
+    Process an hfl_ procedure on asset_id.
 } {
-    ## check permission passed to executable
-##code
-    #see hf_call_roles_read
-
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
-    set asset_stats_list [hf_asset_stats $asset_id $instance_id]
-    # name, title, asset_type_id, keywords, description, template_p, templated_p, trashed_p, trashed_by, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, instance_id, user_id, last_modified, created, flags
-    set asset_type_id [lindex $asset_stats_list 2]
-    set asset_template_p [lindex $asset_stats_list 5]
-    set asset_templated_p [lindex $asset_stats_list 6]
-    set asset_template_id [lindex $asset_stats_list 23]
+    set admin_p [hf_permission_p $user_id $customer_id assets admin $instance_id]
+    set success_p 0
+    if { $admin_p } {
+        set asset_stats_list [hf_asset_stats $asset_id $instance_id]
+        # name, title, asset_type_id, keywords, description, template_p, templated_p, trashed_p, trashed_by, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, instance_id, user_id, last_modified, created, flags
+        set asset_type_id [lindex $asset_stats_list 2]
+        set asset_template_p [lindex $asset_stats_list 5]
+        set asset_templated_p [lindex $asset_stats_list 6]
+        set asset_template_id [lindex $asset_stats_list 23]
+        
+        set template_ids_name_list [db_list_of_lists hf_calls_read_asset_type_choices { select asset_template_id, asset_id, proc_name from hf_calls where instance_id =:instance_id and asset_type_id =:id } ]
+        
+        set counter_max [llength $template_ids_name_list ]
+        set counter 0
+        ## first check all asset_ids
+        set proc_name_template ""
+        set proc_name_type ""
+        # Do we have to loop through all choice cases?  
+        # Yes.. Unless we create 3 separate queries instead of one.
+        # Unspecific cases would require all three queries. 
+        # This loop is instead of 3 separate trips to the db (queries).
+        while { $proc_name eq "" && $counter < $counter_max } {
+            set choice_list [lindex $template_ids_name_list $counter]
+            # a template_ids_name_list row: asset_template_id asset_id proc_name
+            set c_asset_template_id [lindex $choice_list 0]
+            set c_asset_id [lindex $choice_list 1]
 
-    set template_ids_name_list [db_list_of_lists hf_calls_read_asset_type_choices { select asset_template_id, asset_id, proc_name from hf_calls where instance_id =:instance_id and asset_type_id =:id } ]
-    
-    set counter_max [llength $template_ids_name_list ]
-    set counter 0
-    ## first check all asset_ids   REDO following
-    set proc_name_template ""
-    set proc_name_type ""
-    while { $proc_name eq "" && $counter < $counter_max } {
-        set choice_list [lindex $template_ids_name_list $counter]
-        set c_asset_template_id [lindex $choice_list 0]
-        set c_asset_id [lindex $choice_list 1]
-        # each of these if's should only be true a maximimum of once.
-        if { $c_asset_id eq $asset_id } {
-            set proc_name [lindex $choice_list 2]
-        } elseif { $asset_template_id eq $c_asset_template_id } {
-            #  then all template_ids, 
-            set proc_name_template [lindex $choice_list 2]
-        } elseif { $c_asset_id eq "" && $c_asset_template_id eq "" } {
-            # then go with asset_type_id 
-            set proc_name_type  [lindex $choice_list 2]
+            # Find the most specific proc_name assignment.
+
+            # Each of these if's should only be true a maximimum of once.
+            # Is there a most fine grained (specific) proc_name assigned to this asset_id?
+            if { $c_asset_id eq $asset_id } {
+                # asset_id is most specific
+                set proc_name [lindex $choice_list 2]
+
+                # Does the template of this asset_id have an assigned proc_name?
+            } elseif { $asset_template_id eq $c_asset_template_id } {
+                # template_id is the next most specific ie all asset_ids with this template_id
+                set proc_name_template [lindex $choice_list 2]
+
+                # If other choices aren't available, go with asset_type_id
+            } elseif { $c_asset_id eq "" && $c_asset_template_id eq "" } {
+                # then go with asset_type_id 
+                set proc_name_type  [lindex $choice_list 2]
+            }
+            incr counter
+        }
+        # Assign the most specific proc_name
+        if { $proc_name eq "" } {
+            if { $proc_name_template ne "" } {
+                set proc_name $proc_name_template
+            } elseif { $proc_name_type ne "" } {
+                set proc_name $proc_name_type
+            }
+        }
+
+        if { $proc_name ne "" } {
+            #  add to operations stack that is listened to by an ad_scheduled_proc procedure working in short interval cycles
+            # proc_name should be mostly defined in hosting-farm-local-procs
+            set success_p [hf::schedule::add $proc_name [list $asset_id $user_id $instance_id] $user_id $instance_id $priority]
         }
     }
-    if { $proc_name eq "" } {
-        if { $proc_name_template ne "" } {
-            set proc_name $proc_name_template
-        } elseif { $proc_name_type ne "" } {
-            set proc_name $proc_name_type
-        }
-    }
-
-    if { $proc_name ne "" } {
-        #  add to operations stack that is listened to by an ad_scheduled_proc procedure working in short interval cycles
-        # proc_name should be mostly defined in hosting-farm-local-procs
-        hf::schedule_add $proc_name [list $asset_id $user_id $instance_id] $user_id $instance_id $priority
-    }
-    
-
+    return $success_p
 }
-## make procs that return the asset objects given one or more asset ids.
-# info tables: 
+
+# These procs should return data in list of list "table" format about an asset given one or more asset ids.
+# These procs could pass variables using a named array with upvar, or by using tcl's new lassign.
+# However, these procs should only be used with code in apps generated by a developer.
+# The extra burden of having a developer copy the list of proc parameters and substitute values 
+# is less of a burden then for an external entity to try to do the same.
+
 ad_proc -private hf_dcs {
     {instance_id ""}
     {customer_id_list ""}
     {asset_id_list ""}
     {inactives_included_p 0}
 } {
-    returns an ordered list of lists of data centers and their direct properties. No duplicate properties are in the list.
+    Returns an ordered list of lists of data centers and their direct properties. No duplicate properties are in the list.
     If an asset consists of multiple DCs, each dc is a separate list (ie an asset can take up more than one line or list).
     Ordered list of properties consists of: id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,template_p,time_start,time_stop,trashed_p,trashed_by,flags,publish_p, ni_id_count, hw_id_count
 } {
@@ -1419,9 +1439,8 @@ ad_proc -private hf_asset_features {
 
 
 # basic API
-##code:
-# With each asset change, call hf_monitor_log_create {
-#    asset_id, reported_by, user_id .. monitor_id=0}
+
+##code With each asset change, call hf_monitor_log_create { asset_id, reported_by, user_id .. monitor_id=0, significant_change_p=1}
 ad_proc -private hf_asset_type_write {
     label
     title
@@ -3476,9 +3495,6 @@ ad_proc -private hf_monitor_update {
         }
     }
     if { ![qf_is_natural_number $report_id ] } {
-        # this will return a valid chronological number to year 2037, when db integer type will be over limit.
-        ## THIS WILL NEED REVISED BY 2036
-        ## grep 2036 for other places that depend on this use of report_id.
         set report_id [clock seconds]
     } else {
         set report_id [expr { $report_id + 1 } ]
