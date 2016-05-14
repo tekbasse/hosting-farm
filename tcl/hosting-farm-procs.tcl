@@ -122,8 +122,10 @@ ad_proc -private hf_asset_create_from_asset_template {
     asset_label_new
     {instance_id ""}
 } {
-    Creates a new asset based on an existing template.
+    Creates a new asset record based on an existing template. Also schedules a scheduled proc for system maintenance part of process.
 } {
+    # How is this diff
+
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
@@ -148,13 +150,21 @@ ad_proc -private hf_asset_create_from_asset_template {
             set status_p [hf_asset_create $asset_label_new $aa(2) $aa(1) $aa(5) $aa(3) $aa(4) $aa(6) 0 $aa(10) 0 $aa(12) 0 $aa(14) "" $aa(16) $aa(17) $aa(18) $customer_id "" "" $instance_id $user_id]
             # params: name, asset_type_id, title, content, keywords, description, comments, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, {template_id ""}, {flags ""}, {instance_id ""}, {user_id ""}
             if { $status_p } {
-                ##code: create should not include the same ns_id or ua_id. 
+                ##code:
+                # if publish_p is 1, copy relevant data (done afaik)
+                # if monitor_p is 1, copy the monitor settings
                 # Create a new entry in hf_ua and hf_ns tables. 
                 #            hf_ua_write
                 #            hf_ns_write
+                # create should copy ns_id or ua_id,
 
-                # if publish_p is 1, copy relevant data (done afaik)
-                # if monitor_p is 1, copy the monitor settings
+                
+
+                # Schedule process that performs system maintenance part.
+                # password and ns changes should take place here, to keep process sequential
+                # and not be broken by a process prioritization re-sort.
+
+
             }
         }
     }
@@ -166,26 +176,11 @@ ad_proc -private hf_asset_create_from_asset_label {
     asset_label_new
     {instance_id ""}
 } {
-    Creates a new asset_label based on an existing asset. Returns 1 if successful, otherwise 0.
+    Creates a new asset with asset_label based on an existing asset. Also scheduels a scheduled proc for system maintenance part of process. Returns 1 if successful, otherwise 0.
 } {
-
-
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    set customer_ids_list [hf_customer_ids_for_user $user_id]
-
-    ##code: basically duplicate hf_asset_create_from_asset_template, getting id from hf_asset_id_from_label
-    #     hf_asset_read instance_id asset_id
-    #     hf_asset_create new_label
-
-
-    # set asset_id_orig [hf_asset_id_from_label $asset_label_orig $instance_id]
-
+    set asset_id_orig [hf_asset_id_from_label $asset_label_orig $instance_id]
+    set status_p [hf_asset_create_from-asset_template $customer_id $asset_label_orig $asset_label_new $instance_id]
+    return $status_p
 }
 
 ad_proc -private hf_asset_templates {
@@ -1444,7 +1439,9 @@ ad_proc -private hf_asset_features {
 
 # basic API
 
-##code With each asset change, call hf_monitor_log_create { asset_id, reported_by, user_id .. monitor_id=0, significant_change_p=1}
+# With each asset change, call hf_monitor_log_create with significant_change_p=1 ?
+# No. This should be done at the hfl_nc_* proc level, and/or admin specified via UI.
+
 ad_proc -private hf_asset_type_write {
     label
     title
