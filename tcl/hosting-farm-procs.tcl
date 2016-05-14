@@ -122,7 +122,7 @@ ad_proc -private hf_asset_create_from_asset_template {
     asset_label_new
     {instance_id ""}
 } {
-    this should be a proc equivalent to a page that loads template and creates new.. 
+    Creates a new asset based on an existing template.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -133,7 +133,7 @@ ad_proc -private hf_asset_create_from_asset_template {
     # customer_id of asset_id doesn't matter, because this may a copy of another's asset or template.
     set read_p [hf_permission_p $user_id "" published read $instance_id]
     set create_p [hf_permission_p $user_id $customer_id assets create $instance_id]
-    set status $create_p
+    set status_p $create_p
     if { $create_p } {
         set asset_list [hf_asset_read $instance_id $asset_id]
         # returns: name0,title1,asset_type_id2,keywords3,description4,content5,comments6,trashed_p7,trashed_by8,template_p9,templated_p10,publish_p11,monitor_p12,popularity13,triage_priority14,op_status15,ua_id16,ns_id17,qal_product_id18,qal_customer_id19,instance_id20,user_id21,last_modified22,created23
@@ -145,10 +145,11 @@ ad_proc -private hf_asset_create_from_asset_template {
             }
 
             # template_p, publish_p, popularity should be false(0) for all copy cases,  op_status s/b ""
-            set status [hf_asset_create $asset_label_new $aa(2) $aa(1) $aa(5) $aa(3) $aa(4) $aa(6) 0 $aa(10) 0 $aa(12) 0 $aa(14) "" $aa(16) $aa(17) $aa(18) $customer_id "" "" $instance_id $user_id]
+            set status_p [hf_asset_create $asset_label_new $aa(2) $aa(1) $aa(5) $aa(3) $aa(4) $aa(6) 0 $aa(10) 0 $aa(12) 0 $aa(14) "" $aa(16) $aa(17) $aa(18) $customer_id "" "" $instance_id $user_id]
             # params: name, asset_type_id, title, content, keywords, description, comments, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, {template_id ""}, {flags ""}, {instance_id ""}, {user_id ""}
-            if { $status } {
-                ## TODO: create should not include the same ns_id or ua_id. create a new entry in hf_ua and hf_ns tables. Delay coding until these procs created:
+            if { $status_p } {
+                ##code: create should not include the same ns_id or ua_id. 
+                # Create a new entry in hf_ua and hf_ns tables. 
                 #            hf_ua_write
                 #            hf_ns_write
 
@@ -157,7 +158,7 @@ ad_proc -private hf_asset_create_from_asset_template {
             }
         }
     }
-    return $status
+    return $status_p
 }
 
 ad_proc -private hf_asset_create_from_asset_label {
@@ -165,9 +166,9 @@ ad_proc -private hf_asset_create_from_asset_label {
     asset_label_new
     {instance_id ""}
 } {
-    creates a new asset_label based on an existing asset. Returns 1 if successful, otherwise 0.
+    Creates a new asset_label based on an existing asset. Returns 1 if successful, otherwise 0.
 } {
-    ## TODO code: basically duplicate hf_asset_create_from_asset_template, getting id from hf_asset_id_from_label
+
 
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -177,8 +178,11 @@ ad_proc -private hf_asset_create_from_asset_label {
         set user_id [ad_conn user_id]
     }
     set customer_ids_list [hf_customer_ids_for_user $user_id]
+
+    ##code: basically duplicate hf_asset_create_from_asset_template, getting id from hf_asset_id_from_label
     #     hf_asset_read instance_id asset_id
     #     hf_asset_create new_label
+
 
     # set asset_id_orig [hf_asset_id_from_label $asset_label_orig $instance_id]
 
@@ -982,7 +986,7 @@ ad_proc -private hf_vhs {
     return $vh_detail_list
 }
 
-##code api hf_vh_* _write/create _read  missing
+##code api hf_vh_* _write/create (missing)
 
 ad_proc -private hf_m_uas {
     {instance_id ""}
