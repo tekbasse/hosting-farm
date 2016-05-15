@@ -1,3 +1,9 @@
+Rationalization on using scheduler instead of callbacks: If callbacks are interrupted, a progression will not be polled to pickup where left off if interrupted --and delays are not as easily detected in a callback system vs. a system forced to use a scheduling process.
+
+Make a table showing representation between db ref and tcl object_arr(element) returned in
+hf_nc_* procs ie possibly available to hfl_local_* procs when called.
+
+
 Note about parameter priorityThreshold in monitoring. The default is 3. This allows all priority level 0,1, and 2 monitoring priorities to not be interrupted in schedule by a lower priority call that has been delayed for some time. Dynamic priority is priority - delay in seconds / interval_seconds. If Dynamic priority is below priorityThreshold, dynamic priority is set to priorityThreshold+1. 
 
 create a refresh button (circle w/arrow) and a cancel button (red circle w light grey x)

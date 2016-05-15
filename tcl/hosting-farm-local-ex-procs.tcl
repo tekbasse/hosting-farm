@@ -96,7 +96,7 @@ ad_proc -private hfl_asset_halt_example {
             hf_asset_properties $asset_id obj_arr $instance_id
 
             # one way to filter by asset_type_id:
-            switch -- $asset_type_id { 
+            switch -exact -- $asset_type_id { 
                 vm  {
                     # prep or call for halting virtual machine
                     # call proc, passing object info

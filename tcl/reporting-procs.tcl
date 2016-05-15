@@ -118,7 +118,7 @@ ad_proc -private hf_health_html {
     set icon_name [lindex $health_name_list $health_score]
     set url_dir "/resources/hosting-farm/icons"
     set work_dir [file join [acs_root_dir] www $url_dir]
-    switch -exact $theme {
+    switch -exact -- $theme {
         rock {
             set extension ".png"
             set icon_name "rock-${icon_name}${extension}"
@@ -498,7 +498,7 @@ ad_proc -private hf_as_type_html {
         set icon_name $as_type
         set url_dir "/resources/hosting-farm/icons"
         set work_dir [file join [acs_root_dir] www $url_dir]
-        switch -exact $theme {
+        switch -exact -- $theme {
             hf {
                 set extension ".png"
                 set icon_name "[string tolower ${as_type}]${extension}"

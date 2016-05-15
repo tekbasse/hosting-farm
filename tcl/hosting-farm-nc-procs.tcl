@@ -282,7 +282,7 @@ ad_proc -private hf_nc_ni_read {
             set obj_arr(asset_type_id) [hf_nc_asset_type_id $asset_id]
         }
         if { [info exists obj_arr(asset_type_id) ] && $obj_arr(asset_type_id) ne "" } {
-            switch -exact $obj_arr(asset_type_id) {
+            switch -exact -- $obj_arr(asset_type_id) {
                 dc {
                     set ni_id_list [db_lists hf_dc_ni_map_nc_read "select ni_id from hf_dc_ni_map where instance_id=:instance_id and dc_id=:asset_id"] 
                     
@@ -518,12 +518,19 @@ ad_proc -private hf_asset_properties {
         }
         if { $success_p } {
             # Don't use hf_* API here. Create queries specific to system call requirements.
-            switch -- $asset_type_id {
+            switch -exact -- $asset_type_id {
                 dc {
+                    # Subtle difference between dc and hw.
+                    # A dc can have 1 property exposed without
+                    # necessitating a specific hw asset.
                     #set asset_prop_list hf_dcs $instance_id "" $asset_id
                     hf_nc_asset_read $asset_id $instance_id named_arr
-                    hf_nc_ip_read $asset_id $instance_id named_arr
+                    hf_nc_hw_read $asset_id $instance_id named_arr
+                    set named_arr(ns_id) ""
+                    set named_arr(os_id) ""
                     hf_nc_ni_read $asset_id $instance_id named_arr
+                    hf_nc_ip_read $asset_id $instance_id named_arr
+                    hf_nc_os_read $named_arr(os_id) $instance_id named_arr
                 }
                 hw {
                     #set asset_prop_list [hf_hws $instance_id "" $asset_id]
