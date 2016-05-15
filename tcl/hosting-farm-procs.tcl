@@ -59,14 +59,12 @@ ad_library {
     # objects can easily be passed to procs via an array and upvar
     #  array references don't work in sql, so these use ordered lists
 
-    # For dynamically generated objects, a proc should be written
-    # to write a series of avariables to an array, and an array to a set of variables equal to the indexes.
-    # somthing similar to qf_get_inputs_as_array, or set array but where the pairs are in separate lists
-    # for eks: qf_get_inputs_as_array but added to the q-forms help-procs section:
-    # qf_vars_from_array, qf_array_from_vars, qf_array_from_ordered_lists $key_list $value_list 
-    # Just found existing ones in acs-templating library:
-    # template::util::list_to_array
-    # template::util::array_to_vars
+    # These procs may be handy when manipulating the long lists of procedure parameters:
+    # template::util::list_to_array $values_list array_name $keys_list
+    # template::util::array_to_vars array_name
+    # list of values direct to variables:
+    # lassign $values_list varName1 varName2.. varNameN
+    # array
 }
 
 # following defined in permissions-procs.tcl
