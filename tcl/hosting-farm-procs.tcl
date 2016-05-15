@@ -1835,6 +1835,7 @@ ad_proc -private hf_vm_write {
         } 
     } else {
         ns_log Notice "hf_vm_write.1815: Wrong asset_type_id '${asset_type_id}'. Write denied. label '${label}' name '${name}' title '${title}' content '${content}' keywords '${keywords}' description '${description}' comments '${comments}' template_p '${template_p}' templated_p '${templated_p}' publish_p '${publish_p}' monitor_p '${monitor_p}' popularity '${popularity}' triage_priority '${triage_priority}' op_status '${op_status}' ua_id '${ua_id}' ns_id '${ns_id}' qal_product_id '${qal_product_id}' qal_customer_id '${qal_customer_id}' template_id '${template_id}' vm_id '${vm_id}' flags '${flags}' instance_id '${instance_id}' usr_id '${user_id}'"
+    }
     return $vm_id_new
 }
 

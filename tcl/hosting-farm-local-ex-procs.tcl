@@ -136,12 +136,61 @@ ad_proc -private hfl_system_cpu {
     {user_id ""}
     {instance_id ""}
 } {
-    Get cpu usage last 5 10 15 minutes.
+    Get cpu usage last 5 minutes.
     # permissions ck
     hfl_allow_q
 
     # Assumes local system
-    ## code
+    # uptime
+    # "The uptime utility displays the current time, the length of time the sys-
+    # tem has been up, the number of users, and the load average of the system
+    # over the last 1, 5, and 15 minutes.
+
+    # linux output example:
+    # 16:01:42 up 4 days, 7 min,  4 users,  load average: 0.03, 0.02, 0.05
+    # freebsd example:
+    # 11:03PM  up 15 days,  3:29, 1 user, load averages: 3.00, 2.58, 2.02
+
+    set os_label $obj_arr(os_label)
+    set load_5m ""
+    set uptime "uptime"
+    set report [exec $uptime]
+    regexp -- {.*[\:][\ ]+([0-9\.]+)[, ]+([0-9\.]+)[, ]+([0-9\.]+).*} $report scratch load_5m load_10m load_15m
+
+    # how many cpu's max?
+ 
+    # guess a default:
+    set cpu_count 8
+    set cmd "guess"
+    set report2 "default used"
+    set health 0
+    set success_p 0
+    if { $os_label eq "freebsd" } {
+        # 'sysctl hw.ncpu' returns:
+        # hw.ncpu: 16
+        set cmd "sysctl" 
+        set arg1 "hw.ncpu"
+        set report2 [exec $cmd $arg1]
+        set spc_idx [string first " " $report2]
+        if { $spc_idx > -1 } {
+            set cpu_count [string trim [string range $report2 $spc_idx end]]
+        }
+    } elseif { $os_label eq "linux" } {
+        set cmd "grep"
+        set arg1 "-c"
+        set arg2 "'^processor'"
+        set arg3 "/proc/cpuinfo"
+        set report2 [exec $cmd $arg1 $arg2 $arg3]
+        set cpu_count [string trim $report2]
+    }
+    append report "\ncpu_count ${cmd}: ${report2}"
+    if { [qf_is_decimal $load_5m ] } {
+        # add 1 percent to prevent health of 0 on an idle system --insignificant on heavy loads
+        set health [expr { round( 100. * ( $load_5m + 0.0149 * $cpu_count ) / $cpu_count ) } ]
+        set success_p 1
+    } 
+    hf_monitor_update $asset_id $monitor_id hfl_system_memory $health $report "" "" $instance_id
+    return $success_p
 }
 
 ad_proc -private hfl_system_memory {
