@@ -238,6 +238,7 @@ ad_proc -private hf_asset_create_from_asset_template {
 #                        hf_nc_asset_read $asset_id $instance_id named_arr
 #                    }
                 }
+            }
 
                 ##code:
                 # monitor_p is $aa(12)
