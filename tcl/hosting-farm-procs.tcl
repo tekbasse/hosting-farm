@@ -139,113 +139,104 @@ ad_proc -private hf_asset_create_from_asset_template {
     set status_p $create_p
     if { $create_p } {
         set asset_list [hf_asset_read $instance_id $asset_id]
-        # returns: name0,title1,asset_type_id2,keywords3,description4,content5,comments6,trashed_p7,trashed_by8,template_p9,templated_p10,publish_p11,monitor_p12,popularity13,triage_priority14,op_status15,ua_id16,ns_id17,qal_product_id18,qal_customer_id19,instance_id20,user_id21,last_modified22,created23
-        # Note: the above list has a sequence number as suffix to each argument
-        if { [llength $asset_list] > 1 } {
-            # Asset read and write have a different order of args, etc, 
-            # so make an abbreviated reference array.
-            set i 0
-            foreach arg $asset_list {
-                set aa($i) $arg
-                incr i
-            }
+        qf_lists_to_vars $asset_list [hf_asset_read_keys]
+        
+        # template_p, publish_p, popularity should start false(0) for all copy cases,  op_status s/b ""
+        set new_asset_id [hf_asset_create $asset_label_new $asset_type_id $title $content $keywords $description $comments 0 $templated_p 0 $monitor_p 0 $triage_priority "" $ua_id $ns_id $qal_product_id $customer_id "" "" $instance_id $user_id]
+        #hf_asset_create params: name, asset_type_id, title, content, keywords, description, comments, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, {template_id ""}, {flags ""}, {instance_id ""}, {user_id ""}
+        if { $new_asset_id > 0 } {
+            #if { publish_p } {
+            # Copy relevant data.
+            # This should already be done by copying asset's main object elements.
+            #}
 
-            # template_p, publish_p, popularity should be false(0) for all copy cases,  op_status s/b ""
-            set new_asset_id [hf_asset_create $asset_label_new $aa(2) $aa(1) $aa(5) $aa(3) $aa(4) $aa(6) 0 $aa(10) 0 $aa(12) 0 $aa(14) "" $aa(16) $aa(17) $aa(18) $customer_id "" "" $instance_id $user_id]
-            # params: name, asset_type_id, title, content, keywords, description, comments, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, {template_id ""}, {flags ""}, {instance_id ""}, {user_id ""}
-            if { $new_asset_id > 0 } {
-                # publish_p is $aa(11)
-                #if { $aa(11) } {
-                    # if publish_p is 1, copy relevant data.
-                    # This should already be done by copying asset's main object elements.
-                #}
-
-                # Copy other tables linked to asset.
-                # See hf_asset_properties for possibilities by type.
-                # asset_type_id = $aa(2)
-            switch -exact -- $aa(2) {
+            # Copy other tables linked to asset.
+            # The usual hf_{asset_type_id}_read doesn't work here, because
+            # hf_dc, hf_hw and friends are designed for UI exposure of limited variables,
+            # whereas the hf_nc_* and copying an asset must include all subsystems and parts.
+            # See hf_asset_properties for possibilities by type.
+            switch -exact -- $asset_type_id {
                 dc {
-#                    # Subtle difference between dc and hw.
-#                    # A dc can have 1 property exposed without
-#                    # necessitating a specific hw asset.
-#                    #set asset_prop_list hf_dcs $instance_id "" $asset_id
-#                    hf_nc_asset_read $asset_id $instance_id named_arr
-#                    hf_nc_hw_read $asset_id $instance_id named_arr
-#                    set named_arr(ns_id) ""
-#                    set named_arr(os_id) ""
-#                    hf_nc_ni_read $asset_id $instance_id named_arr
-#                    hf_nc_ip_read $asset_id $instance_id named_arr
-#                    hf_nc_os_read $named_arr(os_id) $instance_id named_arr
+                    #                    # Subtle difference between dc and hw.
+                    #                    # A dc can have 1 property exposed without
+                    #                    # necessitating a specific hw asset.
+                    #                    #set asset_prop_list hf_dcs $instance_id "" $asset_id
+                    #                    hf_nc_asset_read $asset_id $instance_id named_arr
+                    #                    hf_nc_hw_read $asset_id $instance_id named_arr
+                    #                    set named_arr(ns_id) ""
+                    #                    set named_arr(os_id) ""
+                    #                    hf_nc_ni_read $asset_id $instance_id named_arr
+                    #                    hf_nc_ip_read $asset_id $instance_id named_arr
+                    #                    hf_nc_os_read $named_arr(os_id) $instance_id named_arr
 
                 }
                 hw {
-#                    #set asset_prop_list [hf_hws $instance_id "" $asset_id]
-#                    hf_nc_asset_read $asset_id $instance_id named_arr
-#                    if { [hf_nc_hw_read $asset_id $instance_id named_arr ] } {
-#                        set named_arr(ns_id) ""
-#                        set named_arr(os_id) ""
-#                        hf_nc_ni_read $asset_id $instance_id named_arr
-#                        hf_nc_ip_read $asset_id $instance_id named_arr
-#                        hf_nc_os_read $named_arr(os_id) $instance_id named_arr
-#                    }
+                    #                    #set asset_prop_list [hf_hws $instance_id "" $asset_id]
+                    #                    hf_nc_asset_read $asset_id $instance_id named_arr
+                    #                    if { [hf_nc_hw_read $asset_id $instance_id named_arr ] } {
+                    #                        set named_arr(ns_id) ""
+                    #                        set named_arr(os_id) ""
+                    #                        hf_nc_ni_read $asset_id $instance_id named_arr
+                    #                        hf_nc_ip_read $asset_id $instance_id named_arr
+                    #                        hf_nc_os_read $named_arr(os_id) $instance_id named_arr
+                    #                    }
                 }
                 vm {
-#                    #set asset_prop_list [hf_vms $instance_id "" $asset_id]
-#                    # split query into separate tables to handle more dynamics
-#                    # h_assets  hf_asset_ip_map hf_ip_addresses hf_virutal_machines hf_ua hf_up 
-#                    hf_nc_asset_read $asset_id $instance_id named_arr
-#                    if { [hf_nc_vm_read $asset_id $instance_id named_arr] } {
-#                        hf_nc_ip_read $vm_id $instance_id named_arr
-#                        hf_nc_os_read $named_arr(os_id) $instance_id named_arr
-#                        hf_nc_ns_read $asset_id $instance_id named_arr
-#                        hf_ua_read $named_arr(ua_id) "" "" $instance_id 1 named_arr
-#                    }
+                    #                    #set asset_prop_list [hf_vms $instance_id "" $asset_id]
+                    #                    # split query into separate tables to handle more dynamics
+                    #                    # h_assets  hf_asset_ip_map hf_ip_addresses hf_virutal_machines hf_ua hf_up 
+                    #                    hf_nc_asset_read $asset_id $instance_id named_arr
+                    #                    if { [hf_nc_vm_read $asset_id $instance_id named_arr] } {
+                    #                        hf_nc_ip_read $vm_id $instance_id named_arr
+                    #                        hf_nc_os_read $named_arr(os_id) $instance_id named_arr
+                    #                        hf_nc_ns_read $asset_id $instance_id named_arr
+                    #                        hf_ua_read $named_arr(ua_id) "" "" $instance_id 1 named_arr
+                    #                    }
                 }
                 vh {
-#                    #set asset_prop_list [hf_vhs $instance_id "" $asset_id]
-#                    set named_arr(os_id) ""
-#                    hf_nc_asset_read $vm_id $instance_id named_arr
-#                    if { [hf_nc_vh_read $vm_id $instance_id named_arr] } {
-#                        hf_nc_ip_read $vm_id $instance_id named_arr
-#                        hf_nc_os_read $named_arr(os_id) $instance_id named_arr
-#                        hf_nc_vm_read $asset_id $instance_id named_arr
-#                        hf_nc_ns_read $asset_id $instance_id named_arr
-#                        hf_ua_read $named_arr(ua_id) "" "" $instance_id 1 named_arr
-#                    }
+                    #                    #set asset_prop_list [hf_vhs $instance_id "" $asset_id]
+                    #                    set named_arr(os_id) ""
+                    #                    hf_nc_asset_read $vm_id $instance_id named_arr
+                    #                    if { [hf_nc_vh_read $vm_id $instance_id named_arr] } {
+                    #                        hf_nc_ip_read $vm_id $instance_id named_arr
+                    #                        hf_nc_os_read $named_arr(os_id) $instance_id named_arr
+                    #                        hf_nc_vm_read $asset_id $instance_id named_arr
+                    #                        hf_nc_ns_read $asset_id $instance_id named_arr
+                    #                        hf_ua_read $named_arr(ua_id) "" "" $instance_id 1 named_arr
+                    #                    }
                 }
                 hs,ss {
-#                    # see ss, hs hosting service is saas: ss
-#                    # hf_ss_map ss_id, hf_id, hf_services,
-#                    # maybe ua_id hf_up
-#                    hf_nc_asset_read $vm_id $instance_id named_arr
-#                    if { [hf_nc_ss_read $asset_id $instance_id named_arr] } {
-#                        if { [info exists named_arr(vm_id) ] } {
-#                            set vm_id $named_arr(vm_id)
-#                            hf_nc_vm_read $vm_id $instance_id named_arr
-#                            hf_nc_ip_read $vm_id $instance_id named_arr
-#                            hf_nc_os_read $named_arr(os_id) $instance_id named_arr
-#
-#                            hf_nc_ns_read $asset_id $instance_id named_arr
-#                            hf_ua_read $named_arr(ua_id) "" "" $instance_id 1 named_arr
-#                        }
-#                    }
-#                    ns {
-#                        # ns , custom domain name service records
-#                        hf_nc_ns_read $asset_id $instance_id named_arr
-#                    }
-#                    ot { 
-#                        # other, nothing specific. Supply generic info.
-#                        hf_nc_asset_read $asset_id $instance_id named_arr
-#                    }
+                    #                    # see ss, hs hosting service is saas: ss
+                    #                    # hf_ss_map ss_id, hf_id, hf_services,
+                    #                    # maybe ua_id hf_up
+                    #                    hf_nc_asset_read $vm_id $instance_id named_arr
+                    #                    if { [hf_nc_ss_read $asset_id $instance_id named_arr] } {
+                    #                        if { [info exists named_arr(vm_id) ] } {
+                    #                            set vm_id $named_arr(vm_id)
+                    #                            hf_nc_vm_read $vm_id $instance_id named_arr
+                    #                            hf_nc_ip_read $vm_id $instance_id named_arr
+                    #                            hf_nc_os_read $named_arr(os_id) $instance_id named_arr
+                    #
+                    #                            hf_nc_ns_read $asset_id $instance_id named_arr
+                    #                            hf_ua_read $named_arr(ua_id) "" "" $instance_id 1 named_arr
+                    #                        }
+                    #                    }
+                    #                    ns {
+                    #                        # ns , custom domain name service records
+                    #                        hf_nc_ns_read $asset_id $instance_id named_arr
+                    #                    }
+                    #                    ot { 
+                    #                        # other, nothing specific. Supply generic info.
+                    #                        hf_nc_asset_read $asset_id $instance_id named_arr
+                    #                    }
                 }
             }
 
-                ##code:
-                # monitor_p is $aa(12)
-                if { $aa(12) } {
-                    # Copy the monitor settings
-                    set config_n_control_list [hf_monitor_configs_read $
-                }
+            ##code:
+            if { $monitor_p } {
+                # Copy the monitor settings
+                set config_n_control_list [hf_monitor_configs_read $
+                                       }
                 # Copy hf_ua and hf_ns table entries. 
                 #            hf_ua_write
                 #            hf_ns_write
