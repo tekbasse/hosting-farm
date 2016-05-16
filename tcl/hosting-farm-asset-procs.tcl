@@ -355,6 +355,38 @@ ad_proc -public hf_asset_create {
     return $return_asset_id
 }
 
+ad_proc -public hf_asset_stats_keys {
+} {
+    Returns an ordered list of keys that is parallel to the ordered list returned by hf_asset_stats.
+} {
+    set keys_list [list \
+                       name \
+                       title \
+                       asset_type_id \
+                       keywords \
+                       description \
+                       template_p \
+                       templated_p \
+                       trashed_p \
+                       trashed_by \
+                       publish_p \
+                       monitor_p \
+                       popularity \
+                       triage_priority \
+                       op_status \
+                       ua_id \
+                       ns_id \
+                       qal_product_id \
+                       qal_customer_id \
+                       instance_id \
+                       user_id \
+                       last_modified \
+                       created \
+                       flags \
+                       template_id]
+    return $keys_list
+}
+    
 ad_proc -public hf_asset_stats { 
     asset_id
     {instance_id ""}
@@ -437,6 +469,40 @@ ad_proc -public hf_assets {
     }
     return $return_list
 } 
+
+ad_proc -public hf_asset_read_keys {
+} {
+    Returns an ordered list of keys that is parallel to the ordered list returned by hf_asset_read.
+} {
+    set keys_list [list \
+                       name \
+                       title \
+                       asset_type_id \
+                       keywords \
+                       description \
+                       content \
+                       comments \
+                       trashed_p \
+                       trashed_by \
+                       template_p \
+                       templated_p \
+                       publish_p \
+                       monitor_p \
+                       popularity \
+                       triage_priority \
+                       op_status \
+                       ua_id \
+                       ns_id \
+                       qal_product_id \
+                       qal_customer_id \
+                       instance_id \
+                       user_id \
+                       last_modified \
+                       created \
+                       template_id]
+    return $keys_list
+}
+
 
 ad_proc -public hf_asset_read { 
     asset_id
