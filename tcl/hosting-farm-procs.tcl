@@ -62,6 +62,7 @@ ad_library {
     # These procs may be handy when manipulating the long lists of procedure parameters:
     # template::util::list_to_array $values_list array_name $keys_list
     # template::util::array_to_vars array_name
+    # qf_lists_to_vars $vars_list $keys_list
     # list of values direct to variables:
     # lassign $values_list varName1 varName2.. varNameN
     # key_value_list [array get array_name]
@@ -143,7 +144,7 @@ ad_proc -private hf_asset_create_from_asset_template {
         
         # template_p, publish_p, popularity should start false(0) for all copy cases,  op_status s/b ""
         set new_asset_id [hf_asset_create $asset_label_new $asset_type_id $title $content $keywords $description $comments 0 $templated_p 0 $monitor_p 0 $triage_priority "" $ua_id $ns_id $qal_product_id $customer_id "" "" $instance_id $user_id]
-        #hf_asset_create params: name, asset_type_id, title, content, keywords, description, comments, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, {template_id ""}, {flags ""}, {instance_id ""}, {user_id ""}
+        #hf_asset_create params: name, asset_type_id, title, content, keywords, description, comments, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, template_id, flags, instance_id, user_id
         if { $new_asset_id > 0 } {
             #if { publish_p } {
             # Copy relevant data.
@@ -234,22 +235,27 @@ ad_proc -private hf_asset_create_from_asset_template {
 
             ##code:
             if { $monitor_p } {
-                # Copy the monitor settings
-                set config_n_control_list [hf_monitor_configs_read $
-                                       }
-                # Copy hf_ua and hf_ns table entries. 
-                #            hf_ua_write
-                #            hf_ns_write
-                # create should copy ns_id or ua_id,
-
-                
-
-                # Schedule process that performs system maintenance part.
-                # password and ns changes should take place here, to keep process sequential
-                # and not be broken by a process prioritization re-sort.
-
-
+                #  Identify monitors
+                set monitor_ids_list [hf_monitor_logs $asset_id $instance_id]
+                foreach id $monitor_ids_list {
+                    set config_n_control_list [hf_monitor_configs_read $monitor_id $instance_id]
+                    # db procs don't use arrays, so have to put into vars.
+                    qf_lists_to_vars $config_n_control_list [hf_monitor_configs_keys]
+                    # cnc keys: instance_id monitor_id asset_id label active_p portions_count calculation_switches health_percentile_trigger health_threshold interval_s alert_by_privilege alert_by_role
+                    hf_monitor_configs_write $label $active_p $portions_count $calculation_switches $health_percentile_trigger $health_threashold $interval_s $asset_id "" $instance_id $alert_by_privilege $alert_by_role
+                }
             }
+            # Copy hf_ua and hf_ns table entries. 
+            #            hf_ua_write
+            #            hf_ns_write
+            # create should copy ns_id or ua_id,
+            
+            
+            
+            # Schedule process that performs system maintenance part.
+            # password and ns changes should take place here, to keep process sequential
+            # and not be broken by a process prioritization re-sort.
+
         }
     }
     return $status_p
@@ -3357,8 +3363,13 @@ ad_proc -private hf_call_roles_read {
 # hf_monitor_alert_trigger (notifications and hf_log_create )
 # hf_monitor_alerts_status
 
-
-
+ad_proc -private hf_monitor_configs_keys {
+} {
+    Returns an ordered list of keys that is parallel to the ordered list returned by hf_monitor_configs_read: instance_id monitor_id asset_id label active_p portions_count calculation_switches health_percentile_trigger health_threshold interval_s alert_by_privilege alert_by_role
+} {
+    set keys_list [list instance_id monitor_id asset_id label active_p portions_count calculation_switches health_percentile_trigger health_threshold interval_s alert_by_privilege alert_by_role]
+    return $keys_list
+}
 
 ad_proc -private hf_monitor_configs_read {
     {id}
@@ -3432,6 +3443,8 @@ ad_proc -private hf_monitor_configs_write {
     {asset_id ""}
     {monitor_id ""}
     {instance_id ""}
+    {alert_by_privilege ""}
+    {alert_by_role ""}
 } {
     Writes (updates or creates) configuration parameters of one hf monitored service or system. Returns monitor_id or 0 if unsuccesssful.
     If monitor_id is blank, will assign a new monitor_id.
@@ -3495,14 +3508,14 @@ ad_proc -private hf_monitor_configs_write {
                 if { $mon_id_exists_p || $asset_id_count > 0 } {
                     # update record
                     db_dml { 
-                        update hf_monitor_config_n_control set label=:label,active_p=:active_p,portions_count=:portions_count,calculation_switches=:calculation_switches,health_percentile_trigger=:health_percentile_trigger,health_threshold=:health_threshold,interval_s=:interval_s where instance_id=:instance_id and monitor_id=:monitor_id and asset_id=:asset_id
+                        update hf_monitor_config_n_control set label=:label,active_p=:active_p,portions_count=:portions_count,calculation_switches=:calculation_switches,health_percentile_trigger=:health_percentile_trigger,health_threshold=:health_threshold,interval_s=:interval_s,alert_by_privilege=alert_by_privilage,alert_by_role=:alert_by_role where instance_id=:instance_id and monitor_id=:monitor_id and asset_id=:asset_id
                     }
                 } else  {
                     # create new record
                     db_dml { 
                         insert into hf_monitor_config_n_control 
-                        (label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threshold, interval_s, instance_id, monitor_id, asset_id )
-                        values (:label,:active_p,:portions_count,:calculation_switches,:health_percentile_trigger,:health_threshold,:interval_s,:instance_id,:monitor_id,:asset_id)
+                        (label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threshold, interval_s, instance_id, monitor_id, asset_id, alert_by_privilege, alert_by_role )
+                        values (:label,:active_p,:portions_count,:calculation_switches,:health_percentile_trigger,:health_threshold,:interval_s,:instance_id,:monitor_id,:asset_id,:alert_by_privilege,:alert_by_role)
                     }
                 }
                 set return_id $monitor_id
