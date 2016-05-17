@@ -242,11 +242,23 @@ ad_proc -private hf_asset_create_from_asset_template {
                     # db procs don't use arrays, so have to put into vars.
                     qf_lists_to_vars $config_n_control_list [hf_monitor_configs_keys]
                     # cnc keys: instance_id monitor_id asset_id label active_p portions_count calculation_switches health_percentile_trigger health_threshold interval_s alert_by_privilege alert_by_role
-                    hf_monitor_configs_write $label $active_p $portions_count $calculation_switches $health_percentile_trigger $health_threashold $interval_s $asset_id "" $instance_id $alert_by_privilege $alert_by_role
+                    hf_monitor_configs_write $label $active_p $portions_count $calculation_switches $health_percentile_trigger $health_threashold $interval_s $new_asset_id "" $instance_id $alert_by_privilege $alert_by_role
                 }
             }
-            # Copy hf_ua and hf_ns table entries. 
-            #            hf_ua_write
+            # Copy hf_ua table entry. 
+            if { $ua_id ne "" } {
+                set ua_list [hf_ua_read $ua_id ""]
+                #vars: ua_id ua connection_type instance_id pw details
+                qf_lists_to_vars $ua_list
+                set new_ua_id [hf_ua_write $ua $connection_type "" $instance_id]
+                if { $new_ua_id > 0 } { 
+                    hf_up_write $new_ua_id $pw $instance_id
+                } else {
+                    ns_log Warning "hf_asset_create_from_asset_template.257: Problem creating account for asset_id '${new_asset_id}'"
+                }
+            }
+            
+            # Copy hf_ns table entry. 
             #            hf_ns_write
             # create should copy ns_id or ua_id,
             
@@ -2711,6 +2723,14 @@ ad_proc -private hf_ua_write {
         }
     }
     return $new_ua_id
+}
+
+ad_proc -private hf_ua_keys {
+} {
+    Returns an ordered list of keys that is parallel to the ordered list returned by hf_ua_read: ua_id ua connection_type instance_id pw details
+} {
+    set ua_list [list ua_id ua connection_type instance_id pw details]
+    return $ua_list
 }
 
 ad_proc -private hf_ua_read {
