@@ -143,7 +143,7 @@ ad_proc -private hf_asset_create_from_asset_template {
         qf_lists_to_vars $asset_list [hf_asset_read_keys]
         
         # template_p, publish_p, popularity should start false(0) for all copy cases,  op_status s/b ""
-        set new_asset_id [hf_asset_create $asset_label_new $asset_type_id $title $content $keywords $description $comments 0 $templated_p 0 $monitor_p 0 $triage_priority "" $ua_id $ns_id $qal_product_id $customer_id "" "" $instance_id $user_id]
+        set new_asset_id [hf_asset_create $asset_label_new $asset_type_id $title $content $keywords $description $comments 0 $templated_p 0 $monitor_p 0 $triage_priority "" $ua_id $ns_id $qal_product_id $customer_id $template_id $flags $instance_id $user_id]
         #hf_asset_create params: name, asset_type_id, title, content, keywords, description, comments, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, template_id, flags, instance_id, user_id
         if { $new_asset_id > 0 } {
             #if { publish_p } {
@@ -161,26 +161,17 @@ ad_proc -private hf_asset_create_from_asset_template {
                     #                    # Subtle difference between dc and hw.
                     #                    # A dc can have 1 property exposed without
                     #                    # necessitating a specific hw asset.
-                    #                    #set asset_prop_list hf_dcs $instance_id "" $asset_id
                     #                    hf_nc_asset_read $asset_id $instance_id named_arr
                     #                    hf_nc_hw_read $asset_id $instance_id named_arr
-                    #                    set named_arr(ns_id) ""
-                    #                    set named_arr(os_id) ""
                     #                    hf_nc_ni_read $asset_id $instance_id named_arr
                     #                    hf_nc_ip_read $asset_id $instance_id named_arr
                     #                    hf_nc_os_read $named_arr(os_id) $instance_id named_arr
 
                 }
                 hw {
-                    #                    #set asset_prop_list [hf_hws $instance_id "" $asset_id]
-                    #                    hf_nc_asset_read $asset_id $instance_id named_arr
-                    #                    if { [hf_nc_hw_read $asset_id $instance_id named_arr ] } {
-                    #                        set named_arr(ns_id) ""
-                    #                        set named_arr(os_id) ""
                     #                        hf_nc_ni_read $asset_id $instance_id named_arr
                     #                        hf_nc_ip_read $asset_id $instance_id named_arr
                     #                        hf_nc_os_read $named_arr(os_id) $instance_id named_arr
-                    #                    }
                 }
                 vm {
                     #                    #set asset_prop_list [hf_vms $instance_id "" $asset_id]
@@ -249,7 +240,7 @@ ad_proc -private hf_asset_create_from_asset_template {
             if { $ua_id ne "" } {
                 set ua_list [hf_ua_read $ua_id ""]
                 #vars: ua_id ua connection_type instance_id pw details
-                qf_lists_to_vars $ua_list
+                qf_lists_to_vars $ua_list [hf_ua_keys]
                 set new_ua_id [hf_ua_write $ua $connection_type "" $instance_id]
                 if { $new_ua_id > 0 } { 
                     hf_up_write $new_ua_id $pw $instance_id
@@ -259,11 +250,17 @@ ad_proc -private hf_asset_create_from_asset_template {
             }
             
             # Copy hf_ns table entry. 
-            #            hf_ns_write
-            # create should copy ns_id or ua_id,
-            
-            
-            
+            if { $ns_id ne "" } {
+                set ns_list [hf_ns_read $ns_id $instance_id]
+                qf_lists_to_vars $ns_list [list id active_p name_record]
+                set new_ns_id [hf_ns_write "" $name_record $active_p $instance_id]
+            }
+            #
+            if { $ua_id ne "" || $ns_id ne "" } {
+                # Update new_asset_id with new_ua_id and new_ns_id
+                hf_asset_write $label $name $title $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $new_asset_id $flags $instance_id $user_id
+            }
+
             # Schedule process that performs system maintenance part.
             # password and ns changes should take place here, to keep process sequential
             # and not be broken by a process prioritization re-sort.

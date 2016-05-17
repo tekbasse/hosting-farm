@@ -166,6 +166,7 @@ ad_proc -private hf_nc_ip_read {
         } else {
             set ip1_list [lindex $ip_lists 0]
             set obj_arr(ip_id) [lindex $ip1_list 4]
+            template::util::list_to_array [lrange $ip1_list 0 end-1] obj_arr $ip1_list
             set i 0
             foreach ip_var $ip_var_list {
                 set obj_arr(${ip_var}) [lindex $ip1_list $i]
@@ -195,11 +196,7 @@ ad_proc -private hf_nc_asset_read {
             set success_p 0
         } else {
             set as1_list [lindex $as_lists 0]
-            set i 0
-            foreach as_var $as_var_list {
-                set obj_arr(${as_var}) [lindex $as1_list $i]
-                incr i
-            }
+            template::util::list_to_array $as1_list obj_arr $as_var_list
         }
     }
     return $success_p
@@ -225,11 +222,7 @@ ad_proc -private hf_nc_dc_read {
             set success_p 0
         } else {
             set dc1_list [lindex $dc_lists 0]
-            set i 0
-            foreach dc_var $dc_var_list {
-                set obj_arr(${dc_var}) [lindex $dc1_list $i]
-                incr i
-            }
+            template::util::list_to_array $dc1_list obj_arr $dc_var_list
         }
     }
     return $success_p
@@ -255,11 +248,7 @@ ad_proc -private hf_nc_hw_read {
             set success_p 0
         } else {
             set hw1_list [lindex $hw_lists 0]
-            set i 0
-            foreach hw_var $hw_var_list {
-                set obj_arr(${hw_var}) [lindex $hw1_list $i]
-                incr i
-            }
+            temmplate::util::list_to_array $hw1_list obj_arr $hw_var_list
         }
     }
     return $success_p
@@ -309,11 +298,7 @@ ad_proc -private hf_nc_ni_read {
         } else {
             set ni1_list [lindex $ni_lists 0]
             set obj_arr(ni_id) [lindex $ni1_list 5]
-            set i 0
-            foreach ni_var $ni_var_list {
-                set obj_arr(${ni_var}) [lindex $ni1_list $i]
-                incr i
-            }
+            template::util::list_to_array [lrange $ni1_list 0 end-1] ob_arr $ni_var_list
         }
     }
     return $success_p
@@ -332,11 +317,8 @@ ad_proc -private hf_nc_os_read {
         # element list
         set os_var_list [list os_label os_brand os_version os_kernel os_orphaned_p os_requires_upgrade_p]
         set os_lists [db_list_of_lists hf_operating_systems_prop_get1 "select label, brand, version, kernel, orphaned_p, requires_upgrade_p from hf_operating_systems where instance_id=:instance_id and os_id=:os_id"]
-        set os_lists_len [llength $os_var_list]
-        for {set i 0} {$i < $os_lists_len} {incr i} {
-            set el [lindex $os_var_list $i]
-            set obj_arr(${el}) [lindex $os_list $i]
-        }
+        set os1_list [lindex $os_lists 0]
+        tempate::util::list_to_array $os1_list obj_arr $os_var_list
     }
     return $success_p
 }
@@ -360,10 +342,7 @@ ad_proc -private hf_nc_vm_read {
             set success_p 0
         } else {
             set vm1_list [lindex $vm_lists 0]
-            for {set i 0} {$i < $vm_lists_len} {incr i} {
-                set var [lindex $vm_var_list $i]
-                set obj_arr(${var}) [lindex $vm_list $i]
-            }
+            template::util::list_to_array $mv1_list obj_arr $vm_var_list
         }
     }
     return $success_p
@@ -389,10 +368,7 @@ ad_proc -private hf_nc_vh_read {
             set success_p 0
         } else {
             set vh1_list [lindex $vh_lists 0]
-            for {set i 0} {$i < $vh_lists_len} {incr i} {
-                set var [lindex $vh_var_list $i]
-                set obj_arr(${var}) [lindex $vh_list $i]
-            }
+            template::util::list_to_array $vh1_list obj_arr $vh_var_list
             if { ![info exists obj_arr(vm_id)] } {
                 set has_vm_p [db_0or1row hf_vm_vh_map_nc_read "select vm_id from hf_vm_vh_map where vh_id=:asset_id and instance_id=:instance_id"]
                 if { $has_vm_p } {
@@ -424,10 +400,7 @@ ad_proc -private hf_nc_ns_read {
             set success_p 0
         } else {
             set ns1_list [lindex $ns_lists 0]
-            for {set i 0} {$i < $ns_lists_len} {incr i} {
-                set var [lindex $ns_var_list $i]
-                set obj_arr(${var}) [lindex $ns_list $i]
-            }
+            template::util::list_to_array $ns1_list obj_arr $ns_var_list
         }
     }
     return $success_p
@@ -463,11 +436,7 @@ ad_proc -private hf_nc_ss_read {
         } else {
             set ss1_list [lindex $ss_lists 0]
             set obj_arr(ss_id) [lindex $ss1_list 12]
-            set i 0
-            foreach ss_var $ss_var_list {
-                set obj_arr(${ss_var}) [lindex $ss1_list $i]
-                incr i
-            }
+            template::util::list_to_array [lrange $ss1_list 0 end-1] obj_arr $ss_var_list
         }
     }
     return $success_p
@@ -491,10 +460,8 @@ ad_proc -private hf_nc_ns_read {
         ns_log Warning "hf_nc_ns_read: multiple records found with same asset_id '${asset_id}'. This should not happen."
         set success_p 0
     } else {
-        for {set i 0} {$i < $ns_lists_len} {incr i} {
-            set var [lindex $ns_var_list $i]
-            set obj_arr(${var}) [lindex $ns_list $i]
-        }
+        set ns1_lists [lindex $ns_lists 0]
+        template::util::list_to_array $ns1_list obj_arr $ns_var_list
     }
     return $success_p
 }
