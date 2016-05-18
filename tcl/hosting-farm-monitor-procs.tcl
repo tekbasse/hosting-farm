@@ -17,6 +17,16 @@ namespace eval hf::monitor {}
 
 # once every few seconds, hf::monitor::do is called. ( see tcl/hosting-farm-scheduled-init.tcl )
 
+# DEVELOPER NOTE. Year 2036 may have subtle bug.
+# Instead of using tcl scan to convert times for detla t values,
+# hf_monitor_log.report_id uses machine time seconds.
+# The db type uses bigint or varchar(19) --not bigserial as report_id is not a sequence.
+# We can sanity check for machine time since the 
+# list has already been sorted by time.
+# And then subtract report_ids for faster, approximate delta t.
+# Thereby, issues and delays of using 'clock scan' are avoided.
+
+
 ad_proc -private hf_beat_log_create {
     asset_id
     monitor_id
@@ -628,4 +638,1067 @@ ad_proc -private hf::monitor::list {
     return $process_stats_list
 }
 
+
+# monitoring procs
+# hf::monitor::do
+# hf::monitor::read
+# hf::monitor::trash
+# hf::monitor::add
+# hf::monitor::list
+
+#   hf_monitor_configs_read   Read monitor configuration
+#   hf_monitor_configs_write  Write monitor configuration
+
+#   hf_monitor_update         Write an update to a log (this includes distribution curve info, ie time as delta-t)
+#   hf_monitor_status         Read status of asset_id, defaults to most recent status (like read, just status number)
+
+#   hf_monitor_statistics     Analyse most recent hf_monitor_update in context of distribution curve
+#                             Returns distribution curve of most recent configuration (table hf_monitor_freq_dist_curves)
+#                             Save an Analysis an hf_monitor_update (or FLAG ERROR)
+
+#   hf_monitor_logs           Returns monitor_ids of logs indirectly associated with an asset (direct is 1:1 via asset properties)
+
+#   hf_monitor_report         Returns a range of monitor history
+#   hf_monitor_status_history  Returns a range of status history
+
+#   hf_monitor_asset_from_id  Returns asset_id of monitor_id
+
+
+
+
+# triggers are configured in hf_monitor_configs_read
+# hf_monitor_alert_trigger (notifications and hf_log_create )
+# hf_monitor_alerts_status
+
+ad_proc -private hf_monitor_configs_keys {
+} {
+    Returns an ordered list of keys that is parallel to the ordered list returned by hf_monitor_configs_read: instance_id monitor_id asset_id label active_p portions_count calculation_switches health_percentile_trigger health_threshold interval_s alert_by_privilege alert_by_role
+} {
+    set keys_list [list instance_id monitor_id asset_id label active_p portions_count calculation_switches health_percentile_trigger health_threshold interval_s alert_by_privilege alert_by_role]
+    return $keys_list
+}
+
+ad_proc -private hf_monitor_configs_read {
+    {id}
+    {instance_id ""}
+} {
+    Read the configuration parameters of one  hf monitored service or system. 
+    id is either a monitor_id or asset_id.
+    returns an ordered list: instance_id, monitor_id, asset_id, label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threshold, interval_s, alert_by_privilege, alert_by_role. Returns empty list if not found.
+} {
+    set return_list [list ]
+    # validate system
+    if { [qf_is_natural_number $id] } {
+
+        # check permissions
+        set admin_p 1
+
+        #either admin or scheduled_proc (no user_id)
+        if { [ns_conn isconnected] } {
+            set user_id [ad_conn user_id]
+            # try and make it work
+            if { $instance_id eq "" } {
+                # set instance_id package_id
+                set instance_id [ad_conn package_id]
+            }
+            set admin_p [hf_permission_p $user_id "" assets admin $instance_id]
+        } 
+        
+        #CREATE TABLE hf_monitor_config_n_control (
+        #    instance_id               integer,
+        #    monitor_id                integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+        #    asset_id                  integer not null,
+        #    label                     varchar(200) not null,
+        #    active_p                  varchar(1) not null,
+        #    -- (MAX) number of portions to use in frequency distribution curve
+        #    portions_count            integer not null,
+        #    -- allow some control over how the distribution curves are represented:
+        #    calculation_switches      varchar(20),
+        #    -- Following 2 are used to suggest hf_monitor_status.expected_health:
+        #    -- the percentile rank that triggers an alarm
+        #    -- 0% rarely triggers, 100% triggers on most everything.
+        #    health_percentile_trigger numeric,
+        #    -- the health_value matching health_percentile_trigger
+        #    health_threshold          integer
+        #    -- any monitor value equal or greather than health_percentile_trigger or health_thread
+        #    -- triggers an alert.
+        #    priority varchar(19) default '' not null,
+        #    -- interval in seconds
+        #    interval_s varchar(19) default '' not null,
+        #    -- If privilege specified, all users with permission of type privilege get notified.
+        #    alert_by_privilege     varchar(12),
+        #    -- If not null, alerts are sent to specified user(s) of specified role
+        #    alert_by_role varchar(300)
+        #);
+
+        if { $admin_p && [qf_is_natural_number $instance_id ] } {
+            set return_list [db_list_of_lists hf_mon_con_n_ctrl_get1 "select label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threshold, interval_s, alert_by_privilege, alert_by_role from hf_monitor_config_n_control where instance_id=:instance_id and (monitor_id=:id or asset_id=:id) limit 1"]
+            set return_list [lindex $return_list 0]
+        }
+    }    
+    return $return_list
+}
+
+ad_proc -private hf_monitor_configs_write {
+    label
+    active_p
+    portions_count
+    calculation_switches
+    health_percentile_trigger
+    health_threshold
+    interval_s
+    {asset_id ""}
+    {monitor_id ""}
+    {instance_id ""}
+    {alert_by_privilege ""}
+    {alert_by_role ""}
+} {
+    Writes (updates or creates) configuration parameters of one hf monitored service or system. Returns monitor_id or 0 if unsuccesssful.
+    If monitor_id is blank, will assign a new monitor_id.
+} {
+    set return_id 0
+    #either admin or scheduled_proc (no user_id)
+    set nc_p [ns_conn isconnected]
+    if { !$nc_p } {
+        set user_id [ad_conn user_id]
+        # try and make it work
+        if { $instance_id eq "" } {
+            # set instance_id package_id
+            set instance_id [ad_conn package_id]
+        }
+    } 
+
+    # validate system
+    set asset_id_p [qf_is_natural_number $asset_id] 
+    set monitor_id_p [qf_is_natural_number $monitor_id]
+
+    if { $asset_id_p || $monitor_id_p } {
+        if { [string length $label ] < 201 && [string length $calculation_switches] < 21 } {
+            set label_p 1
+            set cs_p 1
+            set active_p_p 0
+            if { $active_p eq "1" || $active_p eq "0" } {
+                set active_p_p 1
+            } 
+            set instance_id_p [qf_is_natural_number $instance_id] 
+            set interval_s_p [qf_is_natural_number $interval_id] 
+            set health_threshold_p [qf_is_natural_number $health_threshold] 
+            set hpt_p [qf_is_decimal $health_percentile_trigger]
+            
+            # check permissions
+            set admin_p 0
+            if { !$nc_p } {
+                set admin_p [hf_permission_p $user_id "" assets admin $instance_id]
+            } 
+            if { ( $admin_p || $nc_p ) && $label_p && $cs_p && $active_p_p && $instance_id_p && $interval_s_p && $health_threshold_p && $hpt_p } {
+
+                # confirm/get index parameters
+
+                if { $monitor_id_p && $asset_id_p } {
+                    # if monitor_id_p, does it exist in context of asset_id?
+                    set mon_id_exists_p [db_0or1row hf_monitor_id_ck "select monitor_id from hf_monitor_config_n_control where instance_id=:instance_id and asset_id=:asset_id and monitor_id=:monitor_id" ] 
+                } elseif { $monitor_id_p } {
+                    # While checking monitor_id, define asset_id if monitor_id exists
+                    set mon_id_exists_p [db_0or1row hf_mon_id_ck_w_aid "select asset_id from hf_monitor_config_n_control where instance_id=:instance_id and asset_id=:asset_id and monitor_id=:monitor_id" ] 
+                } else {
+                    # monitor_id doesn't exist, but asset_id is supposed to exist per validation check.
+                    # If hf_monitor_config_n_control.asset_id exists, create a new monitor_id, otherwise assign monitor_id same as asset_id
+                    db_1row hf_asset_ck "select count(*) as asset_id_count from hf_monitor_config_n_control where instance_id=:instance_id and asset_id=:asset_id"
+                    if { $asset_id_count > 0 } {
+                        # Create new  monitor_id
+                        set monitor_id [db_nextval hf_id_seq]
+                    } else {
+                        set monitor_id $asset_id
+                    }
+                }
+                # write db record
+                if { $mon_id_exists_p || $asset_id_count > 0 } {
+                    # update record
+                    db_dml { 
+                        update hf_monitor_config_n_control set label=:label,active_p=:active_p,portions_count=:portions_count,calculation_switches=:calculation_switches,health_percentile_trigger=:health_percentile_trigger,health_threshold=:health_threshold,interval_s=:interval_s,alert_by_privilege=alert_by_privilage,alert_by_role=:alert_by_role where instance_id=:instance_id and monitor_id=:monitor_id and asset_id=:asset_id
+                    }
+                } else  {
+                    # create new record
+                    db_dml { 
+                        insert into hf_monitor_config_n_control 
+                        (label, active_p, portions_count, calculation_switches, health_percentile_trigger, health_threshold, interval_s, instance_id, monitor_id, asset_id, alert_by_privilege, alert_by_role )
+                        values (:label,:active_p,:portions_count,:calculation_switches,:health_percentile_trigger,:health_threshold,:interval_s,:instance_id,:monitor_id,:asset_id,:alert_by_privilege,:alert_by_role)
+                    }
+                }
+                set return_id $monitor_id
+            } else {
+                ns_log Warning "hf_monitor_configs_write(3383): could not write. admin_p '${admin_p}' nc_p '${nc_p}' asset_id '${asset_id}' monitor_id '${monitor_id}' label '${label}' active_p '${active_p}'"
+                ns_log Warning "hf_monitor_configs_write(3384): .. portions '${portions_count}' calc sws '${calculation_switches}' health% trigger '${health_percentile_trigger}' health threash. '${health_threshold}' interval_s '${interval_s}'"
+            }
+        }
+    }
+    return $return_id
+}
+
+
+ad_proc -private hf_monitor_logs {
+    {asset_ids ""}
+    {instance_id ""}
+} {
+    Returns a list of hf_monitor_config_n_control.monitor_ids associated with asset_id(s). List is empty if there are none.
+} {
+    set nc_p [ns_conn isconnected]
+    if { !$nc_p } {
+        set user_id [ad_conn user_id]
+        # try and make it work
+        if { $instance_id eq "" } {
+            # set instance_id package_id
+            set instance_id [ad_conn package_id]
+        }
+    } 
+    # validation
+    set asset_id_list [list ]
+    foreach asset_id_q $asset_ids {
+        if { [qf_is_natural_number $asset_id_q] } {
+            lappend asset_id_list $asset_id_q
+        }
+    }
+    set monitor_id_list [db_list hf_monitor_ids_get "select monitor_id from hf_monitor_config_n_control where instance_id =:instance_id and asset_id in ([template::util::tcl_to_sql_list $asset_id_list])"]
+    # Should be able to look up dependent asset ids via a proc, and then cross-reference in bulk
+    return $monitor_id_list
+}
+
+
+ad_proc -private hf_monitor_update {
+    asset_id
+    monitor_id
+    reported_by
+    health
+    report
+    significant_change_p
+    {report_id ""}
+    {instance_id ""}
+} {
+    Write an update to a monitor log, ie create a new entry. monitor_id is asset_id or hf_monitor_config_n_control.monitor_id
+    Some other proc collects info from server and interprets health status,
+    Said proc is probably defined in hosting-farm-local-procs.tcl
+    Text of args should include calling proc name and version number for adapting to parameter and returned value revisions
+    If report_id is supplied, it will be incremented by 1.
+    Monitor data sets use signficant_change_p set to 1 as boundary, indicating significant change to monitored configuration 
+    implies the possibility of a change in monitoring performance curve.
+    Returns report_id
+} {
+    # validate
+    set nc_p [ns_conn isconnected]
+    if { $nc_p } {
+        set user_id 0
+    } else {
+        set user_id [ad_conn user_id]
+        # try and make it work
+        if { $instance_id eq "" } {
+            # set instance_id package_id
+            set instance_id [ad_conn package_id]
+        }
+        if { $reported_by eq "" } {
+            # feed some connection info
+            set addrs [ad_conn peeraddrs]
+            set reported_by "user_id '${user_id}' instance_id '${instance_id}' peeraddrs '${addrs}'"
+        }
+    }
+    if { ![qf_is_natural_number $report_id ] } {
+        set report_id [clock seconds]
+    } else {
+        set report_id [expr { $report_id + 1 } ]
+    }
+    set reported_by [string range $reported_by 0 119]
+    if { ![qf_is_natural_number $health] } {
+        # log error
+        ns_log Warning "hf_monitor_update(3449): health value unexpected '${health}'. Set to 0 for asset_id '${asset_id}' monitor_id '${monitor_id}'"
+        if { !$nc_p } {
+            ns_log Warning "hf_monitor_update(3450): ..  user_id '${user_id}' instance_id '${instance_id}'"
+        }
+        set health 0
+    }  
+    if { $significant_change_p ne "1" } {
+        set significant_change_p "0"
+    }
+    #CREATE TABLE hf_monitor_log (
+    #    instance_id          integer,
+    #    monitor_id           integer not null,
+    #    -- if monitor_id is 0 such as when adding activity note, user_id should not be 0
+    #    user_id              integer not null,
+    #    asset_id             integer not null,
+    #    -- increases by 1 for each monitor_id's report of asset_id
+    #    report_id            integer not null,
+    #    -- reported_by provides means to identify/verify reporting source
+    #    reported_by          varchar(120),
+    #    report_time          timestamptz,
+    #    -- 0 dead, down, not normal
+    #    -- 10000 nominal, allows for variable performance issues
+    #    -- health = numeric summary index ie indicator determined by hf_procs
+    #    health               integer,
+    #    -- latest report from monitoring
+    #    report text,
+    #    -- sysadmins can log significant changes to asset, such as sw updates
+    #    -- with health=null and/or:
+    #    significant_change   varchar(1)
+    #    -- Changes mark boundaries for data samples
+    #);
+
+    # log it no matter what to not lose info
+    db_dml hf_monitor_log_add { insert into hf_monitor_log 
+        (instance_id,monitor_id,user_id,asset_id,report_id,reported_by,report_time,health,report,significant_change)
+        values (:instance_id,:monitor_id,:user_id,:asset_id,:report_id,:reported_by,now(),:health,:report,:significant_change_p)
+    }
+    
+    return $report_id
+}
+
+ad_proc -private hf_monitor_status {
+    {monitor_id_list ""}
+    {instance_id ""}
+    {most_recent_ct ""}
+} {
+    Analyzes data from unprocessed hf_monitor_update, posts to hf_monitor_status, hf_monitor_freq_dist_curves, and hf_monitor_statistics
+    Standardizes analysis (ie change of health ) of standardized info health reported from hf_monitor_update.
+    Data is in list of lists format, where each list represents a monitor_id and contains this ordered info:
+    monitor_id, asset_id, report_id, health_p0, health_p1, expected_health, health_percentile, expected_percentile
+    Where report_id is id of most recent hf_monitor_update.
+    health_p0 is the health value previous to current health.
+    health_p1 is the most recent (current) health value.
+    expected_health is the projected health value (either at next report, or at quota point if monitor has a quota.)
+} {
+    # in oscilloscope terms, if hf_monitor_update is "signal in", then hf_monitor_status is the data that gets posted to screen output.
+    
+    # expected_health is expected to have been calculated by a proc in hosting-farm-local-procs.tcl, just prior to
+    # issuing an hf_monitor_update.
+
+    # hf_monitor_statistics is called for final analysis and to determine health (percentile) 
+    
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    # validation
+    set monitor_id_list [hf_monitor_logs $monitor_ids]
+    if { [qf_is_natural_number $most_recent_ct] } {
+        set limit_sql "limit :most_recent_ct"
+    }
+
+    set status_lists [db_list_of_lists hf_monitor_status_current "select monitor_id, asset_id,analysis_id_p0, analysis_id_p1, health_p0, health_p1,expected_health,health_percentile,expected_percentile from hf_monitor_status where instance_id=:instance_id and monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list]) order by analysis_id_p1 desc ${limit_sql}"]
+    return $status_lists
+}
+
+ad_proc -public hf_monitor_distribution {
+    asset_id
+    monitor_id
+    {instance_id ""}
+    {sample_ct "1"}
+    {duration_s ""}
+    {points_ct ""}
+    {sample_pt_rate "1"}
+    {sample_s_rate ""}
+} {
+    Returns an unsorted distribution curve of a monitor_id as a list of lists with first row y,delta_x, report_id, report_time.
+    Defaults to most recent contiguous sample (trace). 
+    If duration_s (seconds), clips total sample(s) to duration.
+    If points_ct is included, results in points_ct most recent data points.
+    If sample_ct, duration_s and points_ct is blank, returns all sample points associated with monitor_id.
+    A sample_pt_rate of "1" is default ie no points skipped. If sample_pt_rate is 2, then every other point is skipped etc.
+    sample_s_rate is number of seconds between samples. sample_s_rate is ignored if sample_pt_rate is also specified.
+    Errors return empty list.
+    Note: report_id is derived from tcl \[clock seconds\] which provides a practical way to handle timing procedures --as long as there is only
+    one machine running the system.  report_time is in timestampz, so there is a way to recover or integrate data if multiple machines
+    or multiple time references require transformations.
+
+} {
+    # in oscilloscope terms, if hf_monitor_update is "signal in", then hf_monitor_distribution returns a sample trace of signal.
+
+    # At some point, it may be beneficial to cache static distributions.
+    # Static distributions are distributions that have been made static by the introduction
+    # of a significant_change flag in a newer record.
+    # A significant_change implies that sample (data) between significant_change flags have 
+    # a unique set of parameters that may indicate a unique distribution. 
+    # Here is a pre-defined table for the cache, should it be implemented:
+
+    # qaf_discrete_dist_report expects delta_x and y.
+    #-- Curves are normalized to 1.0
+    #-- Percents are represented decimally 0.01 is one percent
+    #-- Maybe one day "Per mil" notation should be used instead of percent.
+    #-- http://en.wikipedia.org/wiki/Permille
+    #-- curve resolution is count of points
+    #-- This model keeps old curves, to help with long-term performance insights
+    #-- see accounts-finance  qaf_discrete_dist_report 
+    #CREATE TABLE hf_monitor_freq_dist_curves (
+    #    instance_id      integer not null,
+    #    monitor_id       integer not null,
+    #    -- analysis_id might contribute 1 or a few points
+    #    analysis_id      integer not null,
+    #    -- distribution_id represents a distribution between
+    #    -- hf_monitor_log.significant_change flags
+    #    -- because this is a static distribution -no new points can be added.
+    #    distribution_id  integer not null,
+    #    -- position x is a sequential position below curve
+    #    -- median is where cumulative_pct = 0.50 
+    #    -- x_pos is unlikely to be sampled from intervals of exact same size.
+    #    -- initial cases assume x_pos is a system time in seconds.
+    #    x_pos            integer not null,
+    #    -- The sum of all delta_x_pct from 0 to this x_pos.
+    #    -- cumulative_pct increases to 1.0 (from 0 to 100 percentile)
+    #    cumulative_pct   numeric,
+    #    -- Sum of all delta_x_pct equals 1.0
+    #    -- delta_x_pct may have some values near low limits of 
+    #    -- digitial representation, so only delta_x values are stored.
+    #    -- delta_x values might be equal, or not,
+    #    -- Depends on how distribution is obtained.
+    #    -- Initial use assumes delta_x is in seconds.
+    #    delta_x      numeric not null,
+    #    -- Duplicate of hf_monitor_log.health.
+    #    -- Avoids excessive table joins and provides a clearer
+    #    -- boundary between admin and user accessible table queries.
+    #    monitor_y        numeric not null
+    #);
+    
+    # A proc hf_monitor_distribution_history (asset_id monitor_id instance_id distro_id_list analysis_id_list)
+    # might return a list of specific distribution_id or distributions that include a list of analysis_id
+    # These distributions should be queried with "order by monitor_y ascending"
+
+
+    # permissions
+    set nc_p [ns_conn isconnected]
+    if { $nc_p } {
+        set read_p 1
+    } else {
+        set user_id [ad_conn user_id]
+        # try and make it work
+        if { $instance_id eq "" } {
+            # set instance_id package_id
+            set instance_id [ad_conn package_id]
+        }
+        set read_p [hf_permission_p $user_id "" assets read $instance_id]
+    }
+
+    # initializations
+    set error_p 0
+    set sample_sql ""
+    set duration_sql ""
+    set points_sql ""
+    set sql_list [list ]
+    set dist_lists [list ]
+
+    # validate
+    set monitor_id_p [qf_is_natural_number $monitor_id]
+    set asset_id_p [qf_is_natural_number $asset_id]
+    set sample_ct_p [qf_is_decimal_number $sample_ct]
+    set duration_s_p [qf_is_decimal_number $duration_s]
+    set points_ct_p [qf_is_decimal_number $points_ct]
+    set sample_pt_rate_p [qf_is_decimal_number $sample_pt_rate]
+    set sample_s_rate_p [qf_is_decimal_number $sample_s_rate]
+    if { $monitor_id_p } {
+        if { !$asset_id_p } {
+            # get asset_id
+            set asset_id_p [db_0or1row hf_asset_from_monitor_id "select asset_id from hf_monitor_config_n_control where instance_id =:instance_id and monitor_id =:monitor_id"]
+            if { !$asset_id_p } {
+                set error_p 1
+            }
+        }
+    } else {
+        set error_p 1
+    }
+    if { !$error_p } {
+        if { $sample_ct_p } {
+            # get list of significant_change report_times
+            set sc_list [db_list hf_monitor_log_read_sc "select report_time from hf_monitor_log where instance_id=:instance_id and monitor_id=:monitor_id and asset_id=:asset_id order by report_time desc"]
+            # use the report_time as qualifier
+            set i [expr { round( $sample_ct - 1 ) } ]
+            set q_time [lindex $sc_list $i]
+            if { $q_time ne "" } {
+                set sample_sql "report_time > '${q_time}'"
+                lappend sql_list $sample_sql
+            }
+        }
+        if { $duration_s_p } {
+            set now_s [clock seconds]
+            set q2_time [expr { round( $now_s - $duration_s ) } ]
+            set duration_sql "report_time < ${q2_time}"
+            lappend sql_list $duration_sql
+        }
+        if { $points_ct_p } {
+            if { $sample_pt_rate_p } {
+                # ignore sample_s_rate
+                set sample_s_rate_p 0
+
+                # adjust initial sample size to handle later interval sampling
+                # make this abs() to block any case of infinite case in later while loop
+                set sample_pt_rate [expr { round( abs( $sample_pt_rate ) ) } ]
+                if { $sample_pt_rate < 1 } {
+                    set sample_pt_rate 1
+                }
+                set points_ct [expr { round( $points_ct * $sample_pt_rate ) + 1 } ]
+            } else {
+                set points_ct [expr { round( $points_ct ) } ]
+            }
+            set points_sql "limit :points_ct"
+
+            if { $sample_s_rate_p } {
+                # ignore this sql qualifier. count has to be made during sampling in tcl.
+            } else {
+                lappend sql_list $points_sql
+            }
+        }
+        # join sql qualifiers
+        set qualifier_sql [join $sql_list " and "]
+    }
+
+    if { !$error_p } {
+        # get raw distribution from log
+        set raw_lists [db_list_of_lists hf_monitor_log_read_dist "select health,report_id,report_time,significant_change from hf_monitor_log where instance_id=:instance_id and monitor_id=:monitor_id and asset_id=:asset_id order by report_time desc ${points_sql}"]
+        set sample_ct [llength $raw_lists ]
+        if { $sample_ct == 0 } {
+            ns_log Warning "hf_monitor_distribution(3602): no distribution found for asset_id '${asset_id}' instance_id '${instance_id}' monitor_id '${monitor_id}'"
+            set error_p 1
+        }
+    }
+    if { !$error_p } {
+        # set dist_lists \[list \]
+        set i 0
+        if { $sample_s_rate_p } {
+            # to reduce sample by time 
+
+            # If $points_ct, then limit to number of points.
+            # pt_i is number of points minus 1, allowing for faster comparison in while statements.
+            set pt_i -1
+            while { $i < $sample_ct && $pt_i < $points_ct } {
+                set row_list [lindex $raw_lists $i]
+                set sig_change [lindex $row_list 3]
+                set t [lindex $row_list 2]
+                while { $sig_change && $i < $sample_ct } {
+                    incr i
+                    set row_list [lindex $raw_lists $i]
+                    set sig_change [lindex $row_list 3]
+                    set t [lindex $row_list 2]
+                }
+                if { !$sig_change } {
+                    lappend dist_lists $row_list
+                    incr pt_i
+                }
+                # Increment by change in t (delta t or dt) instead of point count.
+                # incr i $sample_pt_rate
+                set dt_s $t
+                while { $dt_s < $sample_s_rate && $i < $sample_ct && $pt_i < $points_ct } {
+                    incr i
+                    set row_list [lindex $raw_lists $i]
+                    set sig_change [lindex $row_list 3]
+                    set t [lindex $row_list 2]
+                    incr dt_s $t
+                }
+            }
+
+        } else {
+            # Maybe reduce the sample size to count per sample (sample_pt_rate).
+            # All cases included, except by sample_s_rate.
+
+            while { $i < $sample_ct } {
+                set row_list [lindex $raw_lists $i]
+                set sig_change [lindex $row_list 3]
+                while { $sig_change && $i < $sample_ct } {
+                    incr i
+                    set row_list [lindex $raw_lists $i]
+                    set sig_change [lindex $row_list 3]
+                }
+                if { !$sig_change } {
+                    lappend dist_lists $row_list
+                }
+                incr i $sample_pt_rate
+            }
+        }
+        
+        # Create final distribution y, delta_x
+        # list: health report_id report_time significant_change
+        set t0 [lindex $row_i_prev 1]
+        for {set i $boundary_i} {$i > 0 } {incr i -1 } {
+            set row_i_list [lindex $raw_lists $i]
+            # health is y
+            set health [lindex $row_i_list 0]
+            # report_id is t1
+            set t1 [lindex $row_i_list 1]
+            set report_time [lindex $row_i_list 2]
+            # delta_t is delta x
+            set delta_t [expr { abs( $t1 - $t0 ) } ]
+            #set dist_row [list [lindex $row_i_list 0] $delta_t]
+            set dist_row [list $health $delta_t $t1 $report_time]
+            lappend dist_lists $dist_row
+            set t0 $t1
+        }
+        # Add headers
+        # If only y,x where y=health and x=delta_t:
+        #set dist_lists [linsert $dist_lists 0 [list y x]]
+        # But adding report_id and report_time from query, since they might be useful.
+        # Query columns were: health, report_id, report_time, significant_change
+        set dist_lists [linsert $dist_lists 0 [list y x report_id report_time]]
+
+    }
+    return $dist_lists
+}
+
+ad_proc -private hf_monitor_statistics {
+    asset_id
+    monitor_id
+    report_id
+    portions_count
+    calculation_switches
+    {interval_s ""}
+    {instance_id ""}
+    {user_id ""}
+    {analysis_id ""}
+} {
+    Analyse most recent hf_monitor_update in context of distribution curve.
+    returns analysis_id. Analysis_id can be retrieved via hf_monitor_report_read
+    interval_s refers to distribution sampling.
+} {
+    # generates data for hf_monitor_status and hf_monitor_report
+    # Data are put into separate tables for faster referencing and updates.
+    # hf_monitor_status for simple status queries and raw log data
+    # hf_monitor_statistics for indepth status queries
+
+
+    # permissions
+    set nc_p [ns_conn isconnected]
+    if { $nc_p } {
+        set admin_p 1
+    } else {
+        set user_id [ad_conn user_id]
+        # try and make it work
+        if { $instance_id eq "" } {
+            # set instance_id package_id
+            set instance_id [ad_conn package_id]
+        }
+        set admin_p [hf_permission_p $user_id "" assets admin $instance_id]
+    }
+
+    # initializations
+    set statistics_list [list ]
+    set error_p 0
+    set success_p 1
+
+    # validate
+    set monitor_id_p [qf_is_natural_number $monitor_id]
+    set asset_id_p [qf_is_natural_number $asset_id]
+    set report_id_p [qf_is_natural_number $report_id]
+    set portions_count_p [qf_is_natural_number $portions_count]
+    set interval_s_p [qf_is_decimal_number $interval_s]
+    set health_p [qf_is_decimal_number $health]
+    set analysis_id_p [qf_is_natural_number $analysis_id]
+    if { [string length $calculation_switches] < 21 } {
+        set calculation_switches_p 1
+    } else {
+        set calculation_switches_p 0
+        set error_p 1
+    }
+    
+
+    if { !$error_p } {
+        # collect from hf_monitor_log:
+        #   user_id, asset_id, report_id, health
+
+        set configs_list [hf_monitor_configs_read $monitor_id]
+        # portions_count = max number of sample points
+        set portions_count [lindex $configs_list 5]
+        #  hf_monitor_configs_read contains hf_monitor_configs.interval_s for timing (next) expected_health 
+        #  The sceduled time interval between p1 and p0 may depend on monitor stack priorities
+        set config_interval_s [lindex $configs_list 9]
+        
+        # Currently, this paradigm assumes a new curve with each new log entry.
+        # Each distribution is not re-saved.
+        # For scaling at some point in the future, it may be useful to 
+        # schedule distributions for saving in db at some interval, perhaps updating
+        # only as data points reach near trigger outliers, or when 
+        # a significant change flags the end of changes of a distribution sample.
+        set dist_lists [hf_monitor_distribution $asset_id $monitor_id $instance_id "1" "" $portions_count "1" $interval_s ]
+        # Returns: row y, delta_x, report_id, report_time
+        set dist_lists_len [llength $dist_lists]
+        if { $dist_lists_len == 0 } {
+            # error logged by hf_monitor_distribution
+            set error_p 1
+        }
+    }
+    
+    
+    if { !$error_p } {
+        # Calculations to populate a record of hf_monitor_status
+
+        # get previous status info. (Already queried from hf_monitor_distribution)
+
+        #CREATE TABLE hf_monitor_status (
+        #    instance_id                integer not null,
+        #    monitor_id                 integer unique not null,
+        #    asset_id                   varchar(19) not null DEFAULT '',
+        #    --  analysis_id at p0
+        #    analysis_id_p0             varchar(19) not null DEFAULT '',
+        #    -- most recent analysis_id ie at p1
+        #    analysis_id_p1             varchar(19) not null DEFAULT '',
+        #    -- health at p0
+        #    health_p0                  varchar(19) not null DEFAULT '',
+        #    -- for calculating differential, p1 is always 1, just as p0 is 0
+        #    -- health at p1
+        #    health_p1                  varchar(19) not null DEFAULT '',
+        #    health_percentile          varchar(19) not null DEFAULT '',
+        #    -- 
+        #    expected_health            varchar(19) not null DEFAULT '',
+        #    expected_percentile        varchar(19) not null DEFAULT ''
+        #);
+
+        # Convert to cobbler list by sortying by y, after removing header
+        set normed_lists [lsort -index 0 -real [lrange $dist_lists 1 end]]
+        # re-insert heading
+        set normed_lists [linsert $normed_lists 0 [lrange $dist_lists 0 0]]
+
+        # Determine health_percentile
+        set health_latest [lindex [lindex $raw_lists 0] 0]
+        set health_percentile [qaf_p_at_y_of_dist_curve $health_latest $normed_lists]
+
+        # calculate a new record for hf_monitor_status
+        # including a new analysis_id
+        if { $dist_lists_len > 2 } {
+            set first_log_point_p 0
+            # two points exist. Calculate p0 and p1 points
+            # row_list columns: (y aka health) (x aka delta_t) report_id report_time
+            set row0_list [lindex $dist_lists 1]
+            set health_p0 [lindex $row0_list 0]
+            set analysis_id_p0 [lindex $row0_list 2]
+            set row1_list [lindex $dist_lists 2]
+            set health_p1 [lindex $row1_list 0]
+            set analysis_id_p1 [lindex $row1_list 2]
+        } else {
+            set first_log_point_p 1
+            # This is a new analysis distribution
+            # set p0 to same as p1
+            set row0_list [lindex $dist_lists 1]
+            set health_p0 [lindex $row0_list 0]
+            set health_p1 $health_p0
+            set analysis_id_p1 [lindex $row0_list 2]
+            set analysis_id_p0 [expr { $analysis_id_p1 - $config_interval_s } ]
+        }
+
+        set health_percentile_trigger [lindex $configs_list 7]
+        set health_threshold [lindex $configs_list 8]
+
+        # Determine expected_health ie health projected out one interval ahead or
+        # If monitor has a quota, the quota end point should be the point for projected health.
+        # Any quota parameters should be passed via calc_switches to avoid extra db queries.
+        set calc_switches [lindex $configs_list 6]
+        # Currently, only VMs have performance quotas.
+        #-- Reserved for VM quota calcs, 'T' for traffic 'S' for storage 'M' for memory
+        #-- A VM monitor should start with only one of T,S,M followed by an aniversary date YYYYMMDD.
+        set calc_type ""
+        if { [string match {[TSM][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]*} $calc_switches] } {
+            set calc_type [string range $calc_switches 0 0]
+            set month_aniv [string trim [string range $calc_switches 5 6] "0 "]
+            set day_aniv  [string trim [string range $calc_switches 7 8] "0 "]
+        }
+
+
+        # analysis_id is a time based integer derived from tcl clock scan
+        # Delta t in seconds for latest two analysis, should always be positive
+        set delta_t [expr { $analysis_id_p1 - $analysis_id_p0 } ]
+        if { $delta_t < $config_interval_s } {
+            # delta_t shouldn't ever be less than config_interval_s. Log a warning
+            ns_log Warning "hf_monitor_statistics(3957): delta_t ${delta_t} for monitor_id ${monitor_id} asset_id ${asset_id}. Reset to config_interval_s ${config_interval_s}"
+            set delta_t $config_interval_s
+        }
+        # Use seconds as the minimum time unit for maximum practical granularity in proportions.
+        # Partial period calculations use these defaults.
+        # a year is considered 365.25 days
+        # a year in seconds: expr 365.25 * 24 * 60 * 60 
+        set year_s 31557600.0
+        # a month in seconds: expr 365.25 * 24 * 60 * 60 / 12  =
+        set month_s 2629800.0
+        # a day in seconds: 24 * 60 * 60
+        set day_s 86400.0
+        # a week is 7 days: 24 * 60 * 60 * 7
+        set week_s 604800.0
+        set hour_s 3600.0
+        set now_s [clock seconds]
+        set now_yyyymmdd_hhmmss [clock format $datetime_s -format "%Y%m%d %H%M%S"]
+        set month_f [string range $now_yyyymmdd_hhmmss 4 5]
+        set year_f [string range $now_yyyymmdd_hhmmss 0 3]
+        set day_f [string range $now_yyyymmdd_hhmmss 6 7]
+
+        # days in current month
+        set days_in_month [dt_num_days_in_month $year_f $month_f]
+
+        # Costs/expenses and usage (resource burn estimates) are calculated in a separate, less frequent process.
+        # Partly, this is because prices per burn unit vary contractually, where
+        # a month may be defined from aniversary day to day, or a consistent N number of days, or some other duration.
+        # Cost calculations tend to include references to a start and end period, so don't want to 
+        # drag extra complexity into frequent logging.
+
+        # If we want, we can look at the prior week's performance for predictive purposes, and maybe average with
+        # current expected_health.
+        # Performance patterns tend to be most pronounced by day and day of week, so we can use a week
+        # for estimating performance specs. 
+        # For now, we keep it simple. Base next by extrapolating current trend.
+
+        # extrapolate from points p0 and p1 to p2
+
+        # Caculate the next approximate point based on delta_t
+        set analysis_id_p2 [expr { $analysis_id_p1 + $delta_t } ]
+        switch -exact -- $calc_type {
+            T  { 
+                # Traffic
+                # ..is accumulative, or a snapshot of a period. Assume a snapshot count for delta_t
+                # so value can rise or fall.
+                set expected_health [qaf_extrapolate_p1p2_at_x $analysis_id_p0 $health_p0 $analysis_id_p1 $health_p1 $analysis_id_p2]
+            }
+            S  { 
+                # Storage
+                # ..is accumulative, or a snapshot of a period. Assume a snapshot count for delta_t
+                # so value can rise or fall.
+                set expected_health [qaf_extrapolate_p1p2_at_x $analysis_id_p0 $health_p0 $analysis_id_p1 $health_p1 $analysis_id_p2]
+            }
+            M  {
+                # Memory
+                # ..is accumulative, or a snapshot of a period. Assume a snapshot count for delta_t
+                # so value can rise or fall.
+                set expected_health [qaf_extrapolate_p1p2_at_x $analysis_id_p0 $health_p0 $analysis_id_p1 $health_p1 $analysis_id_p2]
+            }
+            default {
+                # Assume value can rise or fall with performance. Extrapolate.
+                set expected_health [qaf_extrapolate_p1p2_at_x $analysis_id_p0 $health_p0 $analysis_id_p1 $health_p1 $analysis_id_p2]
+            }
+        }
+        set expected_percentile [qaf_p_at_y_of_dist_curve $expected_health $normed_lists]
+        
+        set range_min $analysis_id_p0
+        set range_max $analysis_id_p1
+
+        # create values for hf_monitor_statistics. Set min/max.        
+        if { $first_log_point_p } {
+            set sample_count 1
+            set health_max $health_p1
+            set health_min $health_p0
+            set health_average $health_p1
+        } else {
+            set sample_count [expr { $dist_lists_len - 1 } ]
+            set row_y_low [lindex $normed_lists 1]
+            set health_min [lindex $row_y_low 0]
+            set row_y_high [lindex $normed_lists end]
+            set health_max [lindex $row_y_high 0]
+            set health_average [expr{ ( $health_max + $health_min ) / 2. } ]
+            # Here, median means time-weighted median.
+            set health_median [qaf_y_of_x_dist_curve 0.5 $normed_lists 1]
+        }
+        
+        #CREATE TABLE hf_monitor_statistics (
+        #    instance_id     integer not null,
+        #    -- only most recent status statistics are reported here 
+        #    -- A hf_monitor_log.significant_change flags boundary
+        #    monitor_id      integer not null,
+        #    -- same as hf_monitor_status.analysis_id_p1
+        #    -- This ref is used to point to identify a specific hf_monitor_statistics analysis
+        #    analysis_id     integer not null,
+        #    sample_count    varchar(19) not null DEFAULT '',
+        #    -- range_min is minimum value of hf_monitor_log.report_id used.
+        #    range_min       varchar(19) not null DEFAULT '',
+        #    -- range_max is current hf_monitor_log.report_id
+        #    range_max       varchar(19) not null DEFAULT '',
+        #    health_max      varchar(19) not null DEFAULT '',
+        #    health_min      varchar(19) not null DEFAULT '',
+        #    health_average  numeric,
+        #    health_median   numeric
+        #); 
+        
+        # save calculations to hf_monitor_status and hf_monitor_statistics
+        # use latest hf_monitor_log.report_id for analysis_id for new record ie analysis_id_1
+        db_transaction {
+            db_dml hf_monitor_status_add { insert into hf_monitor_status
+                ( instance_id,monitor_id,asset_id,analysis_id_p0,analysis_id_p1,health_p0,health_p1,health_percentile,expected_health,expected_percentile)
+                (:instance_id,:monitor_id,:asset_id,:analysis_id_p0,:analysis_id_p1,:health_p0,:health_p1,:health_percentile,:expected_health,:expected_percentile)
+            }
+            db_dml hf_monitor_statistics_add { insert into hf_monitor_statistics
+                ( instance_id,monitor_id,analysis_id,sample_count,range_min,range_max,health_max,health_min,health_average,health_median )
+                values (:instance_id,:monitor_id,:analysis_id_p1,:sample_count,:range_min,:range_max,:health_max,:health_min,:health_average,:health_median)
+            }
+
+        }
+
+        # check triggers. ie hf_monitor_config_n_control.health_percentile_trigger and .health_threshold  
+        # Either one will trigger a notification, but only one message per event.
+        if { $health_p1 > $health_threshold } {
+            # flag immediate
+            set alert_title "#hosting-farm.Health_Score#: ${health}"
+            set alert_message "#hosting-farm.Health_Score#: ${health} #hosting-farm.passed_alert_threshold#."
+            ns_log Notice "hf_monitor_statistics.4085: asset_id '${asset_id} monitor_id '${monitor_id}' health_p1 '${health_p1}' health_threshold '${health_threshold}' Sending immediate notice."
+            hf_monitor_alert_trigger $monitor_id $asset_id $alert_title $alert_message 1 $instance_id
+
+        } elseif { $health_percentile > $health_percentile_trigger } {
+            # send notification
+            set alert_title "#hosting-farm.Health_Percentile#: ${health_percentile}"
+            set alert_message "#hosting-farm.Health_Percentile#: ${health_percentile} #hosting-farm.passed_alert_threshold#."
+            ns_log Notice "hf_monitor_statistics.4090: asset_id '${asset_id} monitor_id '${monitor_id}' health_percentile '${health_percentile}' health_percentile_trigger '${health_percentile_trigger}' Sending notice."
+            hf_monitor_alert_trigger $monitor_id $asset_id $alert_title $alert_message 0 $instance_id
+
+        }
+    }    
+
+    if { $error_p } {
+        set success_p 0
+    }
+    return $success_p
+}
+
+ad_proc -private hf_monitor_stats_read {
+    monitor_id 
+    {analysis_id ""}
+    {instance_id ""}
+} {
+    Returns statistics resulting from analysis of status info.
+    analysis_id assumes most recent analysis. Can return a range of monitor history.
+} {
+    # validate input
+    if { ![qf_is_natural_number $instance_id] } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
+    set monitor_id_p [qf_is_natural_number $monitor_id]
+    set analysis_id_p [qf_is_natural_number $analysis_id]
+
+    # initializations
+    set statistics_list [list ]
+
+    if { $monitor_id_p } {
+        if { $analysis_id_p } {
+            set statistics_lists [db_list_of_lists hf_monitor_stats_get "select sample_count, range_min, range_max, health_min, health_max, health_average, health_median, analysis_id, monitor_id from hf_monitor_statistics where instance_id=:instance_id and monitor_id=:monitor_id and analysis_id=:analysis_id"]
+        } else {
+            # set analysis_id to the latest
+            set statistics_lists [db_list_of_lists hf_monitor_stats_get "select sample_count, range_min, range_max, health_min, health_max, health_average, health_median, analysis_id, monitor_id from hf_monitor_statistics where instance_id=:instance_id and monitor_id=:monitor_id order by analysis_id desc limit 1"]
+        }
+        set statistics_list [lindex $statistics_lists 0]
+    }
+    return $statistics_list
+}
+
+ad_proc -private hf_monitor_alert_trigger {
+    monitor_id
+    asset_id
+    alert_title
+    alert_message
+    {immediate_p "0"}
+    {instance_id ""}
+} {
+    Send notification for alerts from monitors (and quota overage notices).
+} {
+    # sender email is systemowner
+    # to get user_id of systemowner:
+    # party::get_by_email -email $email
+    set sysowner_email [ad_system_owner]
+    set sysowner_user_id [party::get_by_email -email $sysowner_email]
+
+    # What users to send alert to?
+    set config_list [hf_monitor_configs_read $asset_id $instance_id]
+    if { [llength $config_list] > 0 } {
+        set alert_by_privilege [lindex $config_list 7]
+        set alert_by_role [lindex $config_list 8]
+        set
+    } else {
+        set label "#hosting-farm.Asset# id ${asset_id}"
+    }
+    set users_list [hf_nc_users_from_asset_id $asset_id $instance_id $alert_by_privilege $alert_by_role]
+    if { [llength $users_list ] == 0 } {
+        set user_id [hf_user_id $asset_id]
+        set users_list [list $user_id]
+    }
+    set 
+    if { [llength $users_list] > 0 } {
+        # get TO emails from user_id
+        set email_addrs_list [list ]
+        foreach uid $users_list {
+            lappend email_addrs_list [party::email -party_id $uid]
+        }
+        
+        # What else is needed to send alert message?
+        set subject "#hosting-farm.Alert# #hosting-farm.Asset_Monitor# id ${monitor_id} for ${label}: ${alert_title}"
+        set body $alert_message
+        # post to logged in user pages 
+        hf_log_create $asset_id "#hosting-farm.Asset_Monitor#" "alert" "id ${monitor_id} ${subject} \n Message: ${body}" $user_id $instance_id 
+
+        # send email message
+        append body "#hosting-farm.Alerts_can_be_customized#. #hosting-farm.See_asset_configuration_for_details#."
+        acs_mail_lite::send -send_immediately $immediate_p -to_addr $email_addrs_list -from_addr $sysowner_email -subject $subject -body $body
+
+        # log/update alert status
+        if { $immediate_p } {
+            # show email has been sent
+            
+        } else {
+            # show email has been scheduled for sending.
+
+            ##code in hf_monitor_alerts_status: when a user in users_list logs reads hf_log_create message, the alert status s/b updated to show message sent.
+
+        }
+    }
+    return 1
+}
+
+ad_proc -public hf_monitor_alerts_status {
+    {user_id ""}
+    {instance_id ""}
+    {history_count ""}
+} {
+    Checks monitor alerts for user_id. 
+    When a user reads hf_log_create message, the alert status for user_id should be updated to show message sent --even if it is shared with other users.
+    If user_id is an admin, this returns a list of lists of up to history_count messages not followed up with a user login. This allows the system to monitor for flags that are not responded to, allowing an opportunity for a sysadmin to check logs etc for proactive monitoring. List is sorted by critical alerts first.
+    
+} {
+    set admin_p 0
+    if { $user_id ne "" } {
+        set user_id [ad_conn user_id]
+    }
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { [qf_is_natural_number $history_count] } {
+        set admin_p [hf_permission_p $user_id "" assets admin $instance_id]
+        ##code
+    }
+    # display messages for user
+    # This is redundant for admins, but then, admins get more messages, so this is an additional 
+    # chance to get the latest alerts
+    hf_beat_log_alert_q $user_id $instance_id
+
+    if { $admin_p } {
+        # "All users" refers to all users ie customers where the admin has an admin role.
+        # If user_id is a site admin, then that's all users.
+        set admin_p [hf_permission_p $user_id "" assets admin $instance_id]
+    }
+    return 1
+}
+
+
+ad_proc -public hf_monitors_inactivate {
+    monitor_ids
+    {instance_id ""}
+    {user_id ""}
+} {
+    Monitor_ids can be asset_id or monitor_id. If reference is an asset_id, all monitors associated with an asset_id are inactivated.
+} {
+    # validate
+    set nc_p [ns_conn isconnected]
+    if { $nc_p } {
+        set admin_p 1
+    } else {
+        set user_id [ad_conn user_id]
+        # try and make it work
+        if { $instance_id eq "" } {
+            # set instance_id package_id
+            set instance_id [ad_conn package_id]
+        }
+        set admin_p [hf_permission_p $user_id "" assets admin $instance_id]
+    }
+
+    # if an asset_id, also force off monitor_p in hf_assets to indicate monitoring is not happening. 
+    # Creating a ns_log warning if hf_assets.monitor_p was 0.
+
+
+    ##code
+}
 
