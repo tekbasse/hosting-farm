@@ -13,13 +13,17 @@ ad_library {
 
 # using standard namespace to avoid caching of data that can happen in separate namespaces
 ad_proc -private hf_nc_go_ahead {
+    {asset_id_varnam "asset_id"}
 } {
     Confirms process is not run via connection, or is run by an admin
 } {
+    upvar 1 $asset_id_varnam asset_id
     if { [ns_conn isconnected] } {
         set user_id [ad_conn user_id]
         set instance_id [ad_conn package_id]
-        set go_ahead [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
+        #set go_ahead \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin\]
+        set customer_id [hf_customer_id_of_asset_id $asset_id $instance_id]
+        set go_ahead [hf_permission_p $user_id $customer_id assets admin $instance_id]
         if { !$go_ahead } {
             ns_log Warning "hf_nc_go_head failed. Called by user_id ${user_id}, instance_id ${instance_id}"
         }
@@ -567,6 +571,79 @@ ad_proc -private hf_asset_properties {
             }
         } else {
             ns_log Warning "hf_asset_properties: no asset_id '${asset_id}' found. instance_id '${instance_id}' user_id '${user_id}' array_name '${array_name}'"
+        }
+    }
+    return $success_p
+}
+
+ad_proc -private hf_ua_read {
+    {ua_id ""}
+    {ua ""}
+    {connection_type ""}
+    {instance_id ""}
+    {r_pw_p "0"}
+    {arr_nam "hf_ua_arr"}
+} {
+    Reads ua by ua_id or ua
+    See hf_ua_ck for access credential checking. hf_ua_read is for admin only.
+    Returns 1 if successful, otherwise 0.
+    Values returned to calling environment in array hf_ua_arr.
+    if r_pw_p true, includes password.
+} {
+    upvar 1 $arr_nam hu_arr
+    set success_p [hf_nc_go_ahead ]
+    if { $success_p } {
+        # validation and limits
+        if { ![qf_is_natural_number $instance_id] } {
+            # set instance_id package_id
+            # fail if it is not provided.
+            set instance_id 0
+        }
+        if { ![qf_is_natural_number $ua_id] } {
+            set ua_id ""
+        }
+        set connection_type [string range $connection_type 0 23]
+        if { $ua ne "" } {
+            if { ![regexp -- {^[[:graph:]]+$} $details scratch ] } {
+                set ua ""
+            }
+        }
+        # ua_id or ua && conn type
+        if { $ua_id ne "" } {
+            # read
+            if { $r_pw_p } {
+                set success_p [db_0or1row hf_ua_id_read_w_pw "select ua.details as ua, ua.connection_type, up.details as hfpw from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.ua_id=ua_id and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and hm.up_id=up.up_id"  ]
+            } else {
+                set hfpw ""
+                set success_p [db_0or1row hf_ua_id_read "select details as ua, connection_type from hf_ua where instance_id =:instance_id and ua_id=:ua_id" ]
+            }
+        }
+        if { $success_p == 0 && $ua ne "" } {
+            # read
+            if { $r_pw_p } {
+                set vk_list [list ]
+                foreach {k v} [hf_key 0123456789abcdef] {
+                    lappend vk_list $v
+                    lappend vk_list $k
+                }
+                set ua_ik [string map $vk_list $details]
+                set success_p [db_0or1row hf_ua_read_w_pw "select ua.ua_id, ua.connection_type, up.details as hfpw from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.ua=:ua_ik and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and hm.up_id=up.up_id"  ]
+            } else {
+                set hfpw ""
+                set success_p [db_0or1row hf_ua_read "select ua_id, connection_type from hf_ua where instance_id =:instance_id and ua=:ua" ]
+            }    
+        }
+        if { $success_p } {
+            if { $details eq "" } {
+                set details [string map [hf_key 0123456789abcdef] $ua]
+            }
+            if { $r_pw_p } {
+                set pw [string map [hf_key] $hfpw]
+            }
+            set i_list [list ua_id ua connection_type instance_id pw details]
+            foreach i $i_list {
+                set hf_ua_arr($i) [set $i]
+            }
         }
     }
     return $success_p

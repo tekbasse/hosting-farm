@@ -544,11 +544,18 @@ ad_proc -private hf_permission_p {
     set allowed_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege $privilege]
     if { $allowed_p && $privilege eq "admin" } {
         # user is set to go. No need to check further.
+    } elseif { $allowed_p eq "read" && $property_label eq "published" } {
+        
+        # A generic case is privilege read, property_level published.
+        # customer_id is not relevant.
+        # User is set to go. No need to check further.
+
     } elseif { $allowed_p && $customer_id ne "" } {
         # this privilege passed first hurdle, but is still not allowed.
         set allowed_p 0
         # unless any of the roles assigned to the user allow this PRIVILEGE for this PROPERTY_LABEL
         # checking.. 
+
         # Verify user is a member of the customer_id users and
         # determine assigned customer_id roles for user_id
 
