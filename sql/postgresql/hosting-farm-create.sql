@@ -677,6 +677,7 @@ create index hf_calls_asset_id on hf_calls (asset_id);
 
 -- Assigns a role permission to make a call, and
 -- answers question: what roles are allowed to make call?
+-- If the combination of role_id and call_id doesn't exist, then no permission.
 CREATE TABLE hf_call_role_map (
        instance_id integer not null,
        -- hf_calls.proc_id
