@@ -265,53 +265,7 @@ ad_proc -private hf_asset_create_from_asset_template {
                 }
                 hs,ss {
                     #                    # see ss, hs hosting service is saas: ss
-                    set ss_list hf_ss_read $asset_id $instance_id
-                    qf_lists_to_vars $ss_list [hf_ss_keys]
-                    if { $ua_id ne "" } {
-                        hf_ua_read $ua_id "" "" $instance_id
-                        # ua_id ua connection_type instance_id pw details
-                        #hf_ua_write $ua $connection_type "" $instance_id
-                        template::util::array_to_vars hf_ua_arr
-                        set ua_id_new [hf_ua_write $ua $connection_type "" $instance_id]
-                        hf_up_write $ua_id_new $pw $instance_id]
-
-
-                        set ua_id_new [db_nextval hf_id_seq]
-                        db_dml hf_ua_copy {
-                            insert into hf_ua (ua_id,instance_id,details,connection_type)
-                            values (:new_ua_id,:instance_id,:ua,:connection_type)
-                        }
-                        set p [db_0or1_row hf_ua_up_map_r1 "select up_id from hf_ua_up_map where ua_id=:ua_id and instance_id=:instance_id"]
-                        if { $p } {
-                            db_1row hf_up_r1 "select details from hf_up where up_id=:up_id and instance_id=:instance_id"
-                            set up_id_new [db_nextval hf_id_seq]
-                            db_dml hf_up_copy {
-                                insert into hf_up (up_id,instance_id,details)
-                                values (:up_id_new,:instance_id,:details)
-                            }
-                            db_dml hf_up_reg_copy {
-                                insert into hf_ua_up_map (up_id,instance_id,ua_id)
-                                values (:up_id_new,:instance_id,:ua_id_new)
-                            }
-                        }
-                    }
-                    if { $ns_id ne "" } {
-                        set ns_list [lindex $ns_id_lists [hf_ns_read $ns_id]]
-                        qf_lists_to_vars $ns_list [list ns_id active_p name_record]
-                        set new_ns_id [hf_ns_write "" $name_record $active_p $instance_id]
-                    }
-                    if { $ss_ua_id ne "" } {
-
-
-                    }
-                    set ss_id_new [db_ss_write "" $name $title $asset_type_id $keywords $description $content $comments $trashed_p $trashed_by $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $instance_id $user_id $last_modified $created $ss_server_name $ss_service_name $ss_daemon_ref $ss_protocol $ss_port $ss_ua_id $ss_ss_type $ss_ss_subtype $ss_ss_undersubtype $ss_ss_ultrasubtype $ss_config_uri $ss_memory_bytes $ss_details]
-                    
-                    # Each asset can have multiple ss_id
-                    set ss_id_list [hf_asset_ss_ids $ss_id $instance_id]
-                    foreach child_ss_id $ss_id_list {
-                        
-                        
-                    }
+                    hf_ss_copy $asset_id $instance_id
                     #                    # hf_ss_map ss_id, hf_id, hf_services,
                     #                    # maybe ua_id hf_up
                     #                    hf_nc_asset_read $vm_id $instance_id named_arr
