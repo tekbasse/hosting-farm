@@ -9,8 +9,8 @@ ad_library {
     @address: po box 20, Marylhurst, OR 97036-0020 usa
     @email: tekbasse@yahoo.com
 }
-# begin all custom procs with hfl_ for hflocal.
-# To be sure that your code is not overwritten during
+# Name all custom procs with prefix 'hfl_' for hf_local.
+# to be sure that your code is not overwritten during
 # a package update, put your code in a separate tcl file 
 # in this directory. 
 # You might want to have one file for local monitor procs
@@ -46,6 +46,13 @@ ad_proc -private hfl_allow_q {
             ns_log Warning "hfl_go_head(24). failed. Called by user_id ${user_id}, instance_id ${instance_id}"
             ad_script_abort
         }
+    } else {
+        # make sure called by hf::monitor::do directly
+        if { $argv0 ne "hf::monitor::do" } {
+            ns_log Warning "hfl_go_head(52). failed. Called by argv0 '${argv0}'"
+            set go_head 0
+            ad_script_abort
+        }
     }
     return $go_ahead
 }
@@ -61,70 +68,63 @@ ad_proc -private hfl_asset_halt_example {
     # This proc can filter by asset_type_id
 
     # check permission
-    # basic pre-check:
+    # basic pre-check:  Using hf_nc_go_ahead instead of hfl_allow_q, because this can be called via UI directly.
     hf_nc_go_ahead
     # determine customer_id of asset
     # name,title,asset_type_id,keywords,description,template_p,templated_p,trashed_p,trashed_by,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,flags
-    set asset_stats_list [hf_asset_stats $asset_id $instance_id $user_id]
-    set customer_id [lindex $asset_stats_list 17]
-    set allowed_p [hf_permission_p $user_id $customer_id assets $privilege $instance_id]
+    
+    # determine asset_type
+    set asset_type_id [lindex $asset_stats_list 2]
+    
+    
+    # set asset attributes so that remaining code can use them for any nonlocal api calls.
+    set now [dt_systime -gmt 1]
+    
+    #    set a priority for use with hf process stack
+    set priority [lindex $asset_stats_list 9]
+    if { $priority eq "" } {
+        # triage_priority
+        set priority [lindex $asset_stats_list 12]
+    }
+    
+    # log intent
+    ns_log Notice "hfl_asset_halt_example id ${asset_id}' of type '${asset_type_id}' priority '${priority}'"
+    # update properties of asset_id to halt.
+    db_dml hf_asset_id_halt { update hf_assets
+        set time_stop = :now where time_stop is null and asset_id = :asset_id 
+    }
+    
+    if { $proc_name ne "" } {
+        # load object properties in array obj_arr
+        hf_asset_properties $asset_id obj_arr $instance_id
 
-    if { $allowed_p } {
-        # determine asset_type
-        set asset_type_id [lindex $asset_stats_list 2]
-        
-        
-        # set asset attributes so that remaining code can use them for any nonlocal api calls.
-        set now [dt_systime -gmt 1]
+        # one way to filter by asset_type_id:
+        switch -exact -- $asset_type_id { 
+            vm  {
+                # prep or call for halting virtual machine
+                # call proc, passing object info
 
-        #    set a priority for use with hf process stack
-        set priority [lindex $asset_stats_list 9]
-        if { $priority eq "" } {
-            # triage_priority
-            set priority [lindex $asset_stats_list 12]
-        }
+                # example system call
+                set daemon_uri "/usr/local/bin/vm-api halt"
+                exec [list $daemon_uri $obj_arr(domain_name)]
+            }
+            vh,ss {
+                # prep or call for halting vh or service
+                # call proc, passing object info
+                # example external call: 
+                set admin_url "https://$obj_arr(domain_name):$obj_arr(port)/$obj_arr(url)?action=halt"
+                ns_httpget $admin_url
+            }
+            other {
+                # ignore other cases, but maybe log that it is being ignored if nonstandard
 
-        # log intent
-        ns_log Notice "hfl_asset_halt_example id ${asset_id}' of type '${asset_type_id}' priority '${priority}'"
-        # update properties of asset_id to halt.
-        db_dml hf_asset_id_halt { update hf_assets
-            set time_stop = :now where time_stop is null and asset_id = :asset_id 
-        }
-
-        if { $proc_name ne "" } {
-            # load object properties in array obj_arr
-            hf_asset_properties $asset_id obj_arr $instance_id
-
-            # one way to filter by asset_type_id:
-            switch -exact -- $asset_type_id { 
-                vm  {
-                    # prep or call for halting virtual machine
-                    # call proc, passing object info
-
-                    # example system call
-                    set daemon_uri "/usr/local/bin/vm-api halt"
-                    exec [list $daemon_uri $obj_arr(domain_name)]
-                }
-                vh,ss {
-                    # prep or call for halting vh or service
-                    # call proc, passing object info
-                    # example external call: 
-                    set admin_url "https://$obj_arr(domain_name):$obj_arr(port)/$obj_arr(url)?action=halt"
-                    ns_httpget $admin_url
-                }
-                other {
-                    # ignore other cases, but maybe log that it is being ignored if nonstandard
-
-                    if { $asset_type_id ne "dc" } {
-                        ns_log Warning "hfl_asset_halt_example(100): ignoring unexpected asset_type_id '${asset_type_id}'"
-                    }
+                if { $asset_type_id ne "dc" } {
+                    ns_log Warning "hfl_asset_halt_example(100): ignoring unexpected asset_type_id '${asset_type_id}'"
                 }
             }
         }
     }
-    
-    # return 1 if successful (at least has permission)
-    return $allowed_p
+    return 1
 }
 
 
@@ -158,7 +158,7 @@ ad_proc -private hfl_system_cpu {
     regexp -- {.*[\:][\ ]+([0-9\.]+)[, ]+([0-9\.]+)[, ]+([0-9\.]+).*} $report scratch load_5m load_10m load_15m
 
     # how many cpu's max?
- 
+    
     # guess a default:
     set cpu_count 8
     set cmd "guess"
@@ -244,18 +244,18 @@ ad_proc -private hfl_system_memory {
 
         } elseif { $os_label eq "freebsd" } {
             set raw {last pid: 87140;  load averages:  1.93,  1.99,  1.98  up 13+06:56:39    02:31:20
-            29 processes:  1 running, 28 sleeping
+                29 processes:  1 running, 28 sleeping
                 
-            Mem: 886M Active, 11G Inact, 86G Wired, 131M Cache, 27G Free
-            ARC: 73G Total, 29G MFU, 37G MRU, 5817K Anon, 383M Header, 6737M Other
-            Swap: 16G Total, 16G Free
+                Mem: 886M Active, 11G Inact, 86G Wired, 131M Cache, 27G Free
+                ARC: 73G Total, 29G MFU, 37G MRU, 5817K Anon, 383M Header, 6737M Other
+                Swap: 16G Total, 16G Free
 
 
-            PID USERNAME    THR PRI NICE   SIZE    RES STATE   C   TIME    WCPU COMMAND
-            9196 openacs      18  20    0   518M   243M uwait   0   4:55   0.00% nsd
-            7650 pgsql         1  20    0 39792K  7340K select 12   0:34   0.00% postgres
-            7582 pgsql         1  20    0   180M 17220K select 15   0:20   0.00% postgres
-            7741 cyrus         1  20    0 58580K  5784K select  1   0:09   0.00% master ... }
+                PID USERNAME    THR PRI NICE   SIZE    RES STATE   C   TIME    WCPU COMMAND
+                9196 openacs      18  20    0   518M   243M uwait   0   4:55   0.00% nsd
+                7650 pgsql         1  20    0 39792K  7340K select 12   0:34   0.00% postgres
+                7582 pgsql         1  20    0   180M 17220K select 15   0:20   0.00% postgres
+                7741 cyrus         1  20    0 58580K  5784K select  1   0:09   0.00% master ... }
         }
     }
     if { $os_label eq "linux" } {
