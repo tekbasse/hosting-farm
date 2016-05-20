@@ -927,7 +927,7 @@ ad_proc -private hf_ips {
     }
     #   hf_ip_addresses.instance_id ip_id ipv4_addr ipv4_status ipv6_addr ipv6_status
     set ip_detail_list [db_list_of_lists hf_ip_addresses_get "select vm.vm_id, ip.ip_id, ip.ipv4_addr, ip.ipv4_status, ip.ipv6_addr, ip.ipv6_status from hf_assets vm, hf_ip_addresses ip where vm.instance_id =ip.instance_id and ip.ip_id = vm.ip_id and vm.instance_id =:instance_id and ip.ip_id in ([template::util::tcl_to_sql_list $ip_ids_list])"]
-                        
+    
     # If proc ip_id_list is not blank, filter the results.
     # results already scoped for customer_id_list via asset_detail_lists
     set filter_ip_id_p [expr { $ip_id_list ne "" } ]
@@ -1142,7 +1142,7 @@ ad_proc -private hf_vh_write {
     writes or creates an vh asset_type_id. If asset_id (vh_id) is blank, a new one is created. The new asset_id is returned if successful, otherwise empty string is returned.
 } {
     # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
-
+    
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
@@ -1177,7 +1177,7 @@ ad_proc -private hf_vh_write {
         }
         db_dml vh_asset_assign_vm {insert into hf_vm_vh_map 
             (vm_id,vh_id,instance_id)
-            values (:vm_id,:vh_id,:instance_id}
+            values (:vm_id,:vh_id,:instance_id)
         }
     } 
     if { $error_p } {
