@@ -130,167 +130,78 @@ ad_proc -private hf_asset_create_from_asset_template {
     set read_p [hf_permission_p $user_id "" published read $instance_id]
     set create_p [hf_permission_p $user_id $customer_id assets create $instance_id]
     set status_p $create_p
+
     if { $create_p } {
-        set asset_list [hf_asset_read $instance_id $asset_id]
-        qf_lists_to_vars $asset_list [hf_asset_read_keys]
-        
-        # template_p, publish_p, popularity should start false(0) for all copy cases,  op_status s/b ""
-        set new_asset_id [hf_asset_create $asset_label_new $asset_type_id $title $content $keywords $description $comments 0 $templated_p 0 $monitor_p 0 $triage_priority "" $ua_id $ns_id $qal_product_id $customer_id $template_id $flags $instance_id $user_id]
-        #hf_asset_create params: name, asset_type_id, title, content, keywords, description, comments, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, template_id, flags, instance_id, user_id
-        if { $new_asset_id > 0 } {
-            #if { publish_p } {
-            # Copy relevant data.
-            # This should already be done by copying asset's main object elements.
-            #}
+        # Copy other tables linked to asset.
+        # The usual hf_{asset_type_id}_read doesn't work here, because
+        # hf_dc, hf_hw and friends are designed for UI exposure of limited variables,
+        # whereas the hf_nc_* and copying an asset must include all subsystems and parts.
+        # See hf_asset_properties for possibilities by type.
 
-            # Copy other tables linked to asset.
-            # The usual hf_{asset_type_id}_read doesn't work here, because
-            # hf_dc, hf_hw and friends are designed for UI exposure of limited variables,
-            # whereas the hf_nc_* and copying an asset must include all subsystems and parts.
-            # See hf_asset_properties for possibilities by type.
-            switch -exact -- $asset_type_id {
-                dc {
-                    #                    # Subtle difference between dc and hw.
-                    #                    # A dc can have 1 property exposed without
-                    #                    # necessitating a specific hw asset.
-
-                    # Copy direct references first.
-                    #                    hf_nc_ip_read $asset_id $instance_id named_arr
-
-                    #                    hf_nc_os_read $named_arr(os_id) $instance_id named_arr
-
-                    #                    hf_nc_ni_read $asset_id $instance_id named_arr
-                    set ni_list [hf_dc_ni_ids $asset_id $instance_id]
-                    foreach ni_id $ni_list {
-
+        # dc,hw in switch:
+        # Subtle difference between dc and hw.
+        # A dc can have 1 property exposed without
+        # necessitating a specific hw asset.
+        # Assume a simple asset for now, which is default
+        switch -exact -- $asset_type_id {
+            vm {
+                hf_vm_copy $asset_id $instance_id $asset_label_new
+            }
+            vh {
+                hf_vh_copy $asset_id $instance_id $asset_label_new
+            }
+            ss {
+                hf_ss_copy $asset_id $instance_id $asset_label_new
+            }
+            default {
+                set asset_list [hf_asset_read $instance_id $asset_id]
+                qf_lists_to_vars $asset_list [hf_asset_read_keys]
+                
+                if { $monitor_p } {
+                    #  Identify monitors
+                    set monitor_ids_list [hf_monitor_logs $asset_id $instance_id]
+                    foreach id $monitor_ids_list {
+                        set config_n_control_list [hf_monitor_configs_read $monitor_id $instance_id]
+                        # db procs don't use arrays, so have to put into vars.
+                        qf_lists_to_vars $config_n_control_list [hf_monitor_configs_keys]
+                        # cnc keys: instance_id monitor_id asset_id label active_p portions_count calculation_switches health_percentile_trigger health_threshold interval_s alert_by_privilege alert_by_role
+                        hf_monitor_configs_write $label $active_p $portions_count $calculation_switches $health_percentile_trigger $health_threashold $interval_s $new_asset_id "" $instance_id $alert_by_privilege $alert_by_role
                     }
-
-                    #                    hf_nc_hw_read $asset_id $instance_id named_arr
-                    set hw_list [hf_dc_hw_ids $asset_id $instance_id]
-                    foreach hw_id $hw_list {
-                        # Each hw is an asset
-
-                        # Each asset can have multiple ip_id
-                        set hw_ip_list [hf_asset_ip_ids $hw_id $instance_id]
-                        foreach hw_ip_id $hw_ip_list {
-
-
-                        }
-
-
-                        # Each asset can have multiple ss_id
-                        set hw_ss_list [hf_asset_ss_ids $hw_id $instance_id]
-                        foreach hw_ss_id $hw_ss_list {
-                            hf_ss_copy $hw_ss_id $instance_id
-                        }
-
-
-                        # Each hw_id can have multiple ni_id
-                        set hw_ni_list [hf_hw_ni_ids $hw_id $instance_id]
-                        foreach hw_ni_id $hw_ni_list {
-
-                        }
-                        # Each hw_id can have multiple vm_id
-                        set hw_vm_list [hf_hw_vm_ids $hw_id $instance_id]
-                        foreach hw_vm_id $hw_vm_list {
-                            # Each vm is an asset
-
-                            # Each asset can have multiple ip_id
-                            set vm_ip_list [hf_asset_ip_ids $vm_id $instance_id]
-                            foreach hw_ip_id $hw_ip_list {
-
-
-                            }
-
-                            # Each asset can have multiple ss_id
-                            set hw_ss_list [hf_asset_ss_ids $hw_id $instance_id]
-                            foreach hw_ss_id $hw_ss_list {
-                                hf_ss_copy $hw_ss_id $instance_id
-                            }
-
-
-
-                            # Each vm_id can have multiple vh_id
-                            set vm_vh_list [hf_vm_vh_ids $hw_vm_id $instance_id]
-                            foreach vm_vh_id $vm_vh_list {
-                                
-                                # Each asset can have multiple ss_id
-
-                                set vh_ss_list [hf_asset_ss_ids $hw_id $instance_id]
-                                foreach vh_ss_id $hw_ss_list {
-                                    hf_ss_copy $vh_ss_id $instance_id
-                                }
-
-                            }
-
-                        }
-
-                                        
+                }
+                # Copy hf_ua table entry. 
+                set ua_id_new ""
+                if { $ua_id ne "" } {
+                    set ua_list [hf_ua_read $ua_id ""]
+                    #vars: ua_id ua connection_type instance_id pw details
+                    qf_lists_to_vars $ua_list [hf_ua_keys]
+                    set ua_id_new [hf_ua_write $ua $connection_type "" $instance_id]
+                    if { $ua_id_new > 0 } { 
+                        hf_up_write $ua_id_new $pw $instance_id
+                    } else {
+                        ns_log Warning "hf_asset_create_from_asset_template.257: Problem creating account for asset_id '${new_asset_id}'"
                     }
+                }
+                # Copy hf_ns table entry. 
+                set ns_id_new ""
+                if { $ns_id ne "" } {
+                    set ns_list [hf_ns_read $ns_id $instance_id]
+                    qf_lists_to_vars $ns_list [list id active_p name_record]
+                    set ns_id_new [hf_ns_write "" $name_record $active_p $instance_id]
+                }
+                #
+                # template_p, publish_p, popularity should start false(0) for all copy cases,  op_status s/b ""
+                set new_asset_id [hf_asset_create $asset_label_new $asset_type_id $title $content $keywords $description $comments 0 $templated_p 0 $monitor_p 0 $triage_priority "" $ua_id_new $ns_id_new $qal_product_id $customer_id $template_id $flags $instance_id $user_id]
+                #hf_asset_create params: name, asset_type_id, title, content, keywords, description, comments, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, template_id, flags, instance_id, user_id
 
-
-                }
-                hw {
-                    #                        hf_nc_ni_read $asset_id $instance_id named_arr
-                    #                        hf_nc_ip_read $asset_id $instance_id named_arr
-                    #                        hf_nc_os_read $named_arr(os_id) $instance_id named_arr
-                }
-                vm {
-                    hf_vm_copy $asset_id $instance_id
-                }
-                vh {
-                    hf_vh_copy $asset_id $instance_id
-                }
-                ss {
-                    hf_ss_copy $asset_id $instance_id
-                }
-                # Assume a simple asset
-                set as_list [hf_asset_read $asset_id $instance_id]
             }
-
-            ##code:
-            if { $monitor_p } {
-                #  Identify monitors
-                set monitor_ids_list [hf_monitor_logs $asset_id $instance_id]
-                foreach id $monitor_ids_list {
-                    set config_n_control_list [hf_monitor_configs_read $monitor_id $instance_id]
-                    # db procs don't use arrays, so have to put into vars.
-                    qf_lists_to_vars $config_n_control_list [hf_monitor_configs_keys]
-                    # cnc keys: instance_id monitor_id asset_id label active_p portions_count calculation_switches health_percentile_trigger health_threshold interval_s alert_by_privilege alert_by_role
-                    hf_monitor_configs_write $label $active_p $portions_count $calculation_switches $health_percentile_trigger $health_threashold $interval_s $new_asset_id "" $instance_id $alert_by_privilege $alert_by_role
-                }
-            }
-            # Copy hf_ua table entry. 
-            if { $ua_id ne "" } {
-                set ua_list [hf_ua_read $ua_id ""]
-                #vars: ua_id ua connection_type instance_id pw details
-                qf_lists_to_vars $ua_list [hf_ua_keys]
-                set new_ua_id [hf_ua_write $ua $connection_type "" $instance_id]
-                if { $new_ua_id > 0 } { 
-                    hf_up_write $new_ua_id $pw $instance_id
-                } else {
-                    ns_log Warning "hf_asset_create_from_asset_template.257: Problem creating account for asset_id '${new_asset_id}'"
-                }
-            }
-            
-            # Copy hf_ns table entry. 
-            if { $ns_id ne "" } {
-                set ns_list [hf_ns_read $ns_id $instance_id]
-                qf_lists_to_vars $ns_list [list id active_p name_record]
-                set new_ns_id [hf_ns_write "" $name_record $active_p $instance_id]
-            }
-            #
-            if { $ua_id ne "" || $ns_id ne "" } {
-                # Update new_asset_id with new_ua_id and new_ns_id
-                hf_asset_write $label $name $title $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $new_asset_id $flags $instance_id $user_id
-            }
-
-            # Schedule process that performs system maintenance part.
-            # password and ns changes should take place here, to keep process sequential
-            # and not be broken by a process prioritization re-sort.
-
         }
     }
+
+    
+    # Schedule process that performs system maintenance part.
+    # password and ns changes should take place here, to keep process sequential
+    # and not be broken by a process prioritization re-sort.
+
     return $status_p
 }
 
@@ -302,7 +213,7 @@ ad_proc -private hf_asset_create_from_asset_label {
     Creates a new asset with asset_label based on an existing asset. Also scheduels a scheduled proc for system maintenance part of process. Returns 1 if successful, otherwise 0.
 } {
     set asset_id_orig [hf_asset_id_from_label $asset_label_orig $instance_id]
-    set status_p [hf_asset_create_from-asset_template $customer_id $asset_label_orig $asset_label_new $instance_id]
+    set status_p [hf_asset_create_from_asset_template $customer_id $asset_label_orig $asset_label_new $instance_id]
     return $status_p
 }
 

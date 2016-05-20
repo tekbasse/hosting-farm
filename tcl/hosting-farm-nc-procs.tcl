@@ -660,6 +660,7 @@ ad_proc -private hf_ua_read {
 
 ad_proc -private hf_ss_copy {
     asset_id
+    asset_label_new
     {instance_id ""}
     {new_asset_id ""}
 } {
@@ -683,7 +684,10 @@ ad_proc -private hf_ss_copy {
         qf_lists_to_vars $ns_list [list ns_id active_p name_record]
         set new_ns_id [hf_ns_write "" $name_record $active_p $instance_id]
     }
-    set ss_id_new [db_ss_write "" $name $title $asset_type_id $keywords $description $content $comments $trashed_p $trashed_by $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id_new $ns_id_new $qal_product_id $qal_customer_id $instance_id $user_id $last_modified $created $ss_server_name $ss_service_name $ss_daemon_ref $ss_protocol $ss_port $ss_ua_id $ss_ss_type $ss_ss_subtype $ss_ss_undersubtype $ss_ss_ultrasubtype $ss_config_uri $ss_memory_bytes $ss_details]
+    if { $asset_label_new eq "" } {
+        set asset_label_new $name
+    }
+    set ss_id_new [db_ss_write "" $asset_label_new $title $asset_type_id $keywords $description $content $comments $trashed_p $trashed_by $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id_new $ns_id_new $qal_product_id $qal_customer_id $instance_id $user_id $last_modified $created $ss_server_name $ss_service_name $ss_daemon_ref $ss_protocol $ss_port $ss_ua_id $ss_ss_type $ss_ss_subtype $ss_ss_undersubtype $ss_ss_ultrasubtype $ss_config_uri $ss_memory_bytes $ss_details]
     if { [hf_asset_id_exists $new_asset_id "" $instance_id] } {
         db_dml { hf_ss_map_insert_1 insert into hf_ss_map
             (instance_id,ss_id,hf_id)
@@ -723,6 +727,7 @@ ad_proc -private hf_ss_copy {
 
 ad_proc -private hf_vh_copy {
     asset_id
+    asset_label_new
     {instance_id ""}
     {new_vm_id ""}
 } {
@@ -771,6 +776,7 @@ ad_proc -private hf_vh_copy {
 
 ad_proc -private hf_vm_copy {
     asset_id
+    asset_label_new
     {instance_id ""}
 } {
     Copy a VM and all its properties.
@@ -805,16 +811,19 @@ ad_proc -private hf_vm_copy {
     if { $vm_ni_id ne "" } {
         set vm_ni_id ""
     }
-    set vm_id_new [db_vm_write "" $name $title $asset_type_id $keywords $description $content $comments $trashed_p $trashed_by $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $instance_id $user_id $last_modified $created $vm_domain_name $vm_ip_id $vm_ni_id $vm_ns_id $vm_type_id $vm_resource_path $vm_mount_union $vm_details]
+    if { $asset_label_new eq "" } {
+        set asset_label_new $name
+    }
+    set vm_id_new [db_vm_write "" $asset_label_new $title $asset_type_id $keywords $description $content $comments $trashed_p $trashed_by $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $instance_id $user_id $last_modified $created $vm_domain_name $vm_ip_id $vm_ni_id $vm_ns_id $vm_type_id $vm_resource_path $vm_mount_union $vm_details]
     # Copy all vhosts associated with vm
     set vh_ids_list [db_list hf_vm_vh_ids_read "select vh_id from hf_vm_vh_map where instance_id=:instance_id and asset_id=:vm_id"]
     foreach vm_vh_id $vh_ids_list {
-        hf_vh_copy $vm_vh_id $instance_id $vm_id_new
+        hf_vh_copy $vm_vh_id "" $instance_id $vm_id_new
     }
     # copy ss associated with vm
     set ss_ids_list [db_list hv_vm_ss_ids_read "select ss_id from hf_ss_map where instance_id=:instance_id and hf_id=:vm_id"]
     foreach vm_ss_id $ss_ids_list {
-        hf_ss_copy $vm_ss_id $instance_id $vm_id_new
+        hf_ss_copy $vm_ss_id "" $instance_id $vm_id_new
     }
     return $success_p
 }
