@@ -45,7 +45,8 @@ CREATE TABLE hf_sched_params (
        debug_p varchar(1) default '0',
        -- How frequent should the schedule re-prioritize and check for new operations?
        -- in seconds.
-       frequency_base integer default '180'
+       frequency_base integer default '180',
+       fk varchar(65) varchar() default md5(random()::text)
 );
 
 CREATE TABLE hf_sched_proc_stack (

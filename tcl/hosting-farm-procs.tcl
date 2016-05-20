@@ -2802,7 +2802,7 @@ ad_proc -private hf_ua_write {
         # validation and limits
         set connection_type [string range $connection_type 0 23]
         set vk_list [list ]
-        foreach {k v} [hf_key 0123456789abcdef] {
+        foreach {k v} [hf_key] {
             lappend vk_list $v
             lappend vk_list $k
         }
@@ -2879,13 +2879,13 @@ ad_proc -private hf_up_ck {
         # validation and limits
         set connection_type [string range $connection_type 0 23]
         set vka_list [list ]
-        foreach {k v} [hf_key 0123456789abcdef] {
+        foreach {k v} [hf_key] {
             lappend vka_list $v
             lappend vka_list $k
         }
         set sdetail [string map $vka_list $ua]
         set vkp_list [list ]
-        foreach {k v} [hf_key ] {
+        foreach {k v} [hf_key] {
             lappend vkp_list $v
             lappend vkp_list $k
         }
@@ -3013,14 +3013,17 @@ ad_proc -private hf_key {
     Returns key value list. Creates first if it doesn't exist.
 } {
     if { $key eq "" } {
-        set fk hf-cert.txt
+        if { ![db_0or1row "select fk from hf_sched_params"]} {
+            set fk [ad_generate_random_string 32]
+            db_dml hf_fk_cr { insert into hf_sched_params fk values (:fk) }
+        }
     } else {
         set fk $key
     }
     set fp [file join [acs_root_dir] hosting-farm [ad_urlencode_path $fk]]
     if { ![file exists $fp] } {
         file mkdir [file path $fp]
-        set k_list hf_key_create $key
+        set k_list [hf_key_create]
         # reverse key value for read bias
         set k2_list [list ]
         foreach { key value } $k_list {
@@ -3062,6 +3065,7 @@ ad_proc -private hf_key_create {
         }
     }
     set commons_list [list a e i o u y 0 1 2 9 A E I O U Y ]
+
     set keys_list [lsort -unique [split $characters ""]]
     # how many commons in keys_list?
     set commons_count 0
