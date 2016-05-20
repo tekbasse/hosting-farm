@@ -145,13 +145,13 @@ ad_proc -private hf_asset_create_from_asset_template {
         # Assume a simple asset for now, which is default
         switch -exact -- $asset_type_id {
             vm {
-                hf_vm_copy $asset_id $instance_id $asset_label_new
+                hf_vm_copy $asset_id $asset_label_new $instance_id
             }
             vh {
-                hf_vh_copy $asset_id $instance_id $asset_label_new
+                hf_vh_copy $asset_id $asset_label_new $instance_id
             }
             ss {
-                hf_ss_copy $asset_id $instance_id $asset_label_new
+                hf_ss_copy $asset_id $asset_label_new $instance_id
             }
             default {
                 set asset_list [hf_asset_read $instance_id $asset_id]
