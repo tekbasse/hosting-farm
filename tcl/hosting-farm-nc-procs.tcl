@@ -714,8 +714,9 @@ ad_proc -private hf_ss_copy {
 ad_proc -private hf_vh_copy {
     asset_id
     {instance_id ""}
+    {new_vm_id ""}
 } {
-    Copy a templated virtual host record. Associates with same virtual machine as original.
+    Copy a templated virtual host record. Associates with same virtual machine as original, unless specified in new_vm_id.
 } {
     set success_p [hf_nc_go_ahead "" "vh"]
     set ua_id_new ""
@@ -749,10 +750,61 @@ ad_proc -private hf_vh_copy {
         qf_lists_to_vars $ns_list [list v_ns_id active_p name_record]
         set v_ns_id_new [hf_ns_write "" $name_record $active_p $instance_id]
     }
-
+    if { [hf_asset_id_exists $new_vm_id "vm" $instance_id] } {
+        set vm_id $new_vm_id
+    }
     set vh_id_new [db_vh_write "" $name $title $asset_type_id $keywords $description $content $comments $trashed_p $trashed_by $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id_new $ns_id_new $qal_product_id $qal_customer_id $instance_id $user_id $last_modified $created $template_id $v_ua_id_new $v_ns_id_new $domain_name $details $vm_id]
 
     return $success_p
 }
 
 
+ad_proc -private hf_vm_copy {
+    asset_id
+    {instance_id ""}
+} {
+    Copy a VM and all its properties.
+} {
+    set success_p [hf_nc_go_ahead "" "vm"]
+    set ua_id_new ""
+    set ns_id_new ""
+    set vm_list hf_vm_read $asset_id $instance_id
+    qf_lists_to_vars $vm_list [hf_vm_keys]
+    if { $ua_id ne "" } {
+        hf_ua_read $ua_id "" "" $instance_id
+        # ua_id ua connection_type instance_id pw details
+        #hf_ua_write $ua $connection_type "" $instance_id
+        template::util::array_to_vars hf_ua_arr
+        set ua_id_new [hf_ua_write $ua $connection_type "" $instance_id]
+        hf_up_write $ua_id_new $pw $instance_id
+    }
+    if { $ns_id ne "" } {
+        set ns_id ""
+        #        set ns_list \[lindex $ns_id_lists \[hf_ns_read $ns_id\]\]
+        #        qf_lists_to_vars $ns_list \[list ns_id active_p name_record\]
+        #        set ns_id_new \[hf_ns_write "" $name_record $active_p $instance_id\]
+    }
+    if { $vm_ns_id ne "" && $vm_ns_id ne $ns_id } {
+        #        set vm_ns_list \[lindex $ns_id_lists \[hf_ns_read $ns_id\]\]
+        #        qf_lists_to_vars $ns_list \[list vm_ns_id vm_active_p vm_name_record\]
+        #        set vm_ns_id_new \[hf_ns_write "" $vm_name_record $vm_active_p $instance_id\]
+    }
+    if { $vm_ip_id ne "" } {
+        set vm_ip_id "" 
+    }
+    if { $vm_ni_id ne "" } {
+        set vm_ni_id ""
+    }
+    set vm_id_new [db_vm_write "" $name $title $asset_type_id $keywords $description $content $comments $trashed_p $trashed_by $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $instance_id $user_id $last_modified $created $vm_domain_name $vm_ip_id $vm_ni_id $vm_ns_id $vm_type_id $vm_resource_path $vm_mount_union $vm_details]
+    # Copy all vhosts associated with vm
+    set vh_ids_list [db_list hf_vm_vh_ids_read "select vh_id from hf_vm_vh_map where instance_id=:instance_id and asset_id=:vm_id"]
+    foreach vm_vh_id $vh_ids_list {
+        hf_vh_copy $vm_vh_id $instance_id
+    }
+    # copy ss associated with vm
+    set ss_ids_list [db_list hv_vm_ss_ids_read "select ss_id from hf_ss_map where instance_id=:instance_id and hf_id=:vm_id"]
+    foreach vm_ss_id $ss_ids_list {
+        hf_ss_copy $vm_ss_id $instance_id
+    }
+    return $success_p
+}

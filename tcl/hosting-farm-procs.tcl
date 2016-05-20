@@ -236,32 +236,16 @@ ad_proc -private hf_asset_create_from_asset_template {
                     #                        hf_nc_os_read $named_arr(os_id) $instance_id named_arr
                 }
                 vm {
-                    #                    #set asset_prop_list [hf_vms $instance_id "" $asset_id]
-                    #                    # split query into separate tables to handle more dynamics
-                    #                    # h_assets  hf_asset_ip_map hf_ip_addresses hf_virutal_machines hf_ua hf_up 
-                    #                    hf_nc_asset_read $asset_id $instance_id named_arr
-                    #                    if { [hf_nc_vm_read $asset_id $instance_id named_arr] } {
-                    #                        hf_nc_ip_read $vm_id $instance_id named_arr
-                    #                        hf_nc_os_read $named_arr(os_id) $instance_id named_arr
-                    #                        hf_nc_ns_read $asset_id $instance_id named_arr
-                    #                        hf_ua_read $named_arr(ua_id) "" "" $instance_id 1 named_arr
-                    #                    }
+                    hf_vm_copy $asset_id $instance_id
                 }
                 vh {
-                    # vh virtual host
                     hf_vh_copy $asset_id $instance_id
                 }
-                hs,ss {
-                    # For hs see ss, hs hosting service is saas: ss
+                ss {
                     hf_ss_copy $asset_id $instance_id
- 
                 }
-                ns {
-                    # ignore. This can be handled with copy paste in a browser window when creating a new record.
-                    #                        # ns , custom domain name service records
-                    #                        hf_nc_ns_read $asset_id $instance_id named_arr
-                }
-                    
+                # Assume a simple asset
+                set as_list [hf_asset_read $asset_id $instance_id]
             }
 
             ##code:
@@ -2046,6 +2030,14 @@ ad_proc -private hf_hw_write {
     return $hw_id_new
 }
 
+ad_proc -private hf_vm_keys {
+} {
+    Returns an ordered list of keys that is parallel to the ordered list returned by hf_vm_read: name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id vm_domain_name vm_ip_id vm_ni_id vm_ns_id vm_os_id vm_type_id vm_resource_path vm_mount_union vm_details
+} {
+    set vm_list [list name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id vm_domain_name vm_ip_id vm_ni_id vm_ns_id vm_os_id vm_type_id vm_resource_path vm_mount_union vm_details
+    return $vm_list
+}
+
 ad_proc -private hf_vm_read {
     vm_id
     {instance_id ""}
@@ -2273,6 +2265,7 @@ ad_proc -private hf_ss_write {
 }
 
 # The following are not assets by default. Log changes to a log of the asset the property is assigned to
+
 ad_proc -private hf_ip_read {
     ip_id
     {instance_id ""}

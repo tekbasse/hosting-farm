@@ -62,24 +62,27 @@ ad_proc -public hf_asset_id_exists {
 } {
     Returns 1 if asset_id exists for instance_id, else returns 0
 } {
-    if { $instance_id eq "" } {
-        # set instance_id subsite_id
-        set instance_id [ad_conn subsite_id]
-    }
-    if { $asset_type_id eq "" } {
-        set asset_filter_p 0
-    } else {
-        regsub -nocase -all -- {[^a-z0-9]} $asset_type_id {} filtered_as_type_id
-        if { $filtered_as_type_id eq "" || [string length $filtered_as_type_id] > 24 } {
+    set asset_exists_p
+    if { $asset_id ne "" } {
+        if { $instance_id eq "" } {
+            # set instance_id package_id
+            set instance_id [ad_conn package_id]
+        }
+        if { $asset_type_id eq "" } {
             set asset_filter_p 0
         } else {
-            set asset_filter_p 1
+            regsub -nocase -all -- {[^a-z0-9]} $asset_type_id {} filtered_as_type_id
+            if { $filtered_as_type_id eq "" || [string length $filtered_as_type_id] > 24 } {
+                set asset_filter_p 0
+            } else {
+                set asset_filter_p 1
+            }
         }
-    }
-    if { $asset_filter_p } {
-        set asset_exists_p [db_0or1row hf_asset_get_id {select name from hf_assets where id = :asset_id and instance_id = :instance_id and asset_type_id =:filtered_as_type_id } ]
-    } else {
-        set asset_exists_p [db_0or1row hf_asset_get_id {select name from hf_assets where id = :asset_id and instance_id = :instance_id } ]
+        if { $asset_filter_p } {
+            set asset_exists_p [db_0or1row hf_asset_get_id {select name from hf_assets where id = :asset_id and instance_id = :instance_id and asset_type_id =:filtered_as_type_id } ]
+        } else {
+            set asset_exists_p [db_0or1row hf_asset_get_id {select name from hf_assets where id = :asset_id and instance_id = :instance_id } ]
+        }
     }
     return $asset_exists_p
 }
@@ -92,8 +95,8 @@ ad_proc -public hf_change_asset_id_for_label {
     Changes the active revision (asset_id) for asset_label. Returns 1 if successful, otherwise 0.
 } {
     if { $instance_id eq "" } {
-        # set instance_id subsite_id
-        set instance_id [ad_conn subsite_id]
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
 #    set write_p \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege write\] 
@@ -126,8 +129,8 @@ ad_proc -public hf_asset_rename {
     Changes the asset_label where the asset is referenced from asset_label to asset_name. Returns 1 if successful, otherwise 0.
 } {
     if { $instance_id eq "" } {
-        # set instance_id subsite_id
-        set instance_id [ad_conn subsite_id]
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
 #    set write_p \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege write\] 
@@ -173,8 +176,8 @@ ad_proc -public hf_asset_id_from_label {
     Returns asset_id if asset_label exists for instance_id, else returns empty string.
 } {
     if { $instance_id eq "" } {
-        # set instance_id subsite_id
-        set instance_id [ad_conn subsite_id]
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
    # set write_p \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege write\]    
@@ -202,8 +205,8 @@ ad_proc -public hf_asset_label_from_id {
 } {
     set asset_label ""
     if { $instance_id eq "" } {
-        # set instance_id subsite_id
-        set instance_id [ad_conn subsite_id]
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
    # set write_p \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege write\]    
@@ -244,8 +247,8 @@ ad_proc -public hf_asset_label_id_from_template_id {
     Returns asset_id that is mapped to the label that is mapped to template_id, else returns empty string.
 } {
     if { $instance_id eq "" } {
-        # set instance_id subsite_id
-        set instance_id [ad_conn subsite_id]
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
     }
     set asset_id ""
     db_0or1row hf_asset_get_label_from_template_id { select asset_id from hf_asset_label_map 
@@ -262,8 +265,8 @@ ad_proc -public hf_asset_from_label {
     Returns asset_id if asset is published (untrashed) for instance_id, else returns empty string.
 } {
     if { $instance_id eq "" } {
-        # set instance_id subsite_id
-        set instance_id [ad_conn subsite_id]
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
     }
     set asset_exists_p [db_0or1row hf_asset_get_id_from_label2 {select asset_id from hf_asset_label_map 
         where label = :asset_label and instance_id = :instance_id and not ( trashed_p = '1' ) } ]
@@ -299,12 +302,12 @@ ad_proc -public hf_asset_create {
     {user_id ""}
     {from_template_id ""}
 } {
-    Creates hf asset. returns asset_id, or 0 if error. instance_id is usually subsite_id
+    Creates hf asset. returns asset_id, or 0 if error. instance_id is usually package_id
 } {
 
     if { $instance_id eq "" } {
-        # set instance_id subsite_id
-        set instance_id [ad_conn subsite_id]
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
     }
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
@@ -400,8 +403,8 @@ ad_proc -public hf_asset_stats {
     Returns asset stats as a list: name, title, asset_type_id, keywords, description, template_p, templated_p, trashed_p, trashed_by, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, instance_id, user_id, last_modified, created, flags, template_id
 } {
     if { $instance_id eq "" } {
-        # set instance_id subsite_id
-        set instance_id [ad_conn subsite_id]
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
     }
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
@@ -435,8 +438,8 @@ ad_proc -public hf_assets {
     If user_id is included, the results are scoped to the user. If nothing found, returns an empty list.
 } {
     if { $instance_id eq "" } {
-        # set instance_id subsite_id
-        set instance_id [ad_conn subsite_id]
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
     }
     if { $user_id eq "" } {
         set party_id [ad_conn user_id]
@@ -521,8 +524,8 @@ ad_proc -public hf_asset_read {
 } {
     
     if { $instance_id eq "" } {
-        # set instance_id subsite_id
-        set instance_id [ad_conn subsite_id]
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
     }
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
@@ -579,8 +582,8 @@ ad_proc -public hf_asset_write {
     Writes a new revision of an existing asset. asset_id is an existing revision of template_id. returns the new asset_id or a blank asset_id if unsuccessful.
 } {
     if { $instance_id eq "" } {
-        # set instance_id subsite_id
-        set instance_id [ad_conn subsite_id]
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
     }
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
@@ -636,8 +639,8 @@ ad_proc -public hf_asset_delete {
     Returns 1 if deleted. Returns 0 if there were any issues.
 } {
     if { $instance_id eq "" } {
-        # set instance_id subsite_id
-        set instance_id [ad_conn subsite_id]
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
     }
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
@@ -737,8 +740,8 @@ ad_proc -public hf_asset_trash {
     set label ""
 
     if { $instance_id eq "" } {
-        # set instance_id subsite_id
-        set instance_id [ad_conn subsite_id]
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
     }
     if { $user_id eq "" } {
         set user_id [ad_conn user_id]
