@@ -27,13 +27,14 @@ ad_proc -private hf_nc_go_ahead {
         set instance_id [ad_conn package_id]
         #set go_ahead \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin\]
         set customer_id [hf_customer_id_of_asset_id $asset_id $instance_id]
+        # Make sure asset_id is consistent to asset_type_id
         set asset_type_id [hf_nc_asset_type_id $asset_id]
         if { $asset_type_id eq "" } {
             set asset_type_id "assets"
         }
         set go_ahead [hf_permission_p $user_id $customer_id $asset_type_id admin $instance_id]
         if { !$go_ahead } {
-            ns_log Warning "hf_nc_go_head failed. Called by user_id ${user_id}, instance_id ${instance_id}"
+            ns_log Warning "hf_nc_go_head failed. Called by user_id '${user_id}' args: asset_id_varnam '${asset_id_varnam}' instance_id '${instance_id}' asset_id '${asset_id}' asset_type_id '${asst_type_id}'"
         }
     } else {
         set go_ahead 1
@@ -701,11 +702,57 @@ ad_proc -private hf_ss_copy {
         if { $ns_id ne "" } {
             set ns_list [lindex $ns_id_lists [hf_ns_read $ns_id]]
             qf_lists_to_vars $ns_list [list ns_id active_p name_record]
-            set new_ns_id [hf_ns_write "" $name_record $active_p $instance_id]
+            set ns_id_new [hf_ns_write "" $name_record $active_p $instance_id]
         }
         set ss_id_new [db_ss_write "" $name $title $asset_type_id $keywords $description $content $comments $trashed_p $trashed_by $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id_new $ns_id_new $qal_product_id $qal_customer_id $instance_id $user_id $last_modified $created $ss_server_name $ss_service_name $ss_daemon_ref $ss_protocol $ss_port $ss_ua_id $ss_ss_type $ss_ss_subtype $ss_ss_undersubtype $ss_ss_ultrasubtype $ss_config_uri $ss_memory_bytes $ss_details]
     }
 
     return $success_p
 }
+
+
+ad_proc -private hf_vh_copy {
+    asset_id
+    {instance_id ""}
+} {
+    Copy a templated virtual host record. Associates with same virtual machine as original.
+} {
+    set success_p [hf_nc_go_ahead "" "vh"]
+    set ua_id_new ""
+    set ns_id_new ""
+    set vh_list hf_vh_read $asset_id $instance_id
+    qf_lists_to_vars $vh_list [hf_vh_keys]
+    if { $ua_id ne "" } {
+        hf_ua_read $ua_id "" "" $instance_id
+        # ua_id ua connection_type instance_id pw details
+        #hf_ua_write $ua $connection_type "" $instance_id
+        template::util::array_to_vars hf_ua_arr
+        set ua_id_new [hf_ua_write $ua $connection_type "" $instance_id]
+        hf_up_write $ua_id_new $pw $instance_id
+    }
+    if { $ns_id ne "" } {
+        set ns_list [lindex $ns_id_lists [hf_ns_read $ns_id]]
+        qf_lists_to_vars $ns_list [list ns_id active_p name_record]
+        set ns_id_new [hf_ns_write "" $name_record $active_p $instance_id]
+    }
+    set as_ua_id $ua_id
+    if { $v_ua_id ne "" } {
+        hf_ua_read $v_ua_id "" "" $instance_id
+        # ua_id ua connection_type instance_id pw details
+        #hf_ua_write $ua $connection_type "" $instance_id
+        template::util::array_to_vars hf_ua_arr
+        set v_ua_id_new [hf_ua_write $ua $connection_type "" $instance_id]
+        hf_up_write $v_ua_id_new $pw $instance_id
+    }
+    if { $v_ns_id ne "" } {
+        set v_ns_list [lindex $ns_id_lists [hf_ns_read $v_ns_id]]
+        qf_lists_to_vars $ns_list [list v_ns_id active_p name_record]
+        set v_ns_id_new [hf_ns_write "" $name_record $active_p $instance_id]
+    }
+
+    set vh_id_new [db_vh_write "" $name $title $asset_type_id $keywords $description $content $comments $trashed_p $trashed_by $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id_new $ns_id_new $qal_product_id $qal_customer_id $instance_id $user_id $last_modified $created $template_id $v_ua_id_new $v_ns_id_new $domain_name $details $vm_id]
+
+    return $success_p
+}
+
 
