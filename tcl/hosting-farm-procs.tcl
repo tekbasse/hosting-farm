@@ -1064,7 +1064,6 @@ ad_proc -private hf_vhs {
     return $vh_detail_list
 }
 
-##code api hf_vh_* _write/create (missing)
 ad_proc -private hf_vh_keys {
 } {
     Returns an ordered list of keys that is parallel to the ordered list returned by hf_vh_read: name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id v_ua_id v_ns_id domain_name details vm_id
@@ -1202,9 +1201,33 @@ ad_proc -private hf_m_uas {
         set instance_id [ad_conn package_id]
     }
     set user_id [ad_conn user_id]
-    
-##code add permissions here
-   ## hf_permissions_p expects a customer_id, so a loop through $customer_id_list, checking permission with each one.
+    # check each customer_id, filter out any ones not allowed.
+    set admin_p 1
+    set i 0
+    set filter_list [list ]
+    foreach customer_id $customer_id_list {
+        if { $admin_p } {
+            set admin_p [hf_permission_p $user_id $customer_id assets admin $instance_id]
+        } else {
+            # filter out this customer_id
+            lappend filter_idx_list $i
+            set admin_p 0
+        }
+        incr i
+    }
+    set filter_idx_list_len [llength $filter_idx_list]
+    if { $filter_idx_list_len > 0 } {
+        ns_log Notice "hf_m_uas.1220: Filtering out some customer_ids for user_id '${user_id}' customer_ids_list '{$customer_ids_list}' filter_idx_list '${filter_idx_list}'"
+        if { $filter_idx_list_len < [llength $customer_id_list] } {
+            set filter_idx_list [lsort -integer -decreasing $filter_idx_list]
+            foreach bad_cid $filter_idx_list {
+                set filter_idx_list [lreplace $customer_id_list $bad_cid $bad_cid]
+            }
+        } else {
+            set customer_id_list ""
+            set admin_p 0
+        }
+    }
 
     # ua's are referenced by: 
     # hf_assets.ua_id
