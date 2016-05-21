@@ -671,12 +671,94 @@ ad_proc -private hf::monitor::list {
 # hf_monitor_alert_trigger (notifications and hf_log_create )
 # hf_monitor_alerts_status
 
+ad_proc -private hf_ui_go_ahead_q {
+    privilege
+    {asset_id_varnam "asset_id"}
+    {asset_type_id "assets"}
+    {break_p "1"}
+} {
+    Confirms process is not run via connection, or is run by user with privilege
+} {
+    if { $asset_id_varnam eq "" } {
+        set asset_id_varnam "asset_id"
+    }
+    upvar 1 $asset_id_varnam asset_id
+    upvar 1 instance_id proc_instance_id
+    upvar 1 user_id proc_user_id
+    if { [ns_conn isconnected] } {
+        set user_id [ad_conn user_id]
+        set instance_id [ad_conn package_id]
+        #set go_ahead \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin\]
+        set customer_id [hf_customer_id_of_asset_id $asset_id $instance_id]
+        # Make sure asset_id is consistent to asset_type_id
+        set asset_type_id [hf_nc_asset_type_id $asset_id]
+        if { $asset_type_id eq "" } {
+            set asset_type_id "assets"
+        }
+        set go_ahead [hf_permission_p $user_id $customer_id $asset_type_id admin $instance_id]
+        if { !$go_ahead } {
+            ns_log Warning "hf_ui_go_head.700: failed. Called by user_id '${user_id}' args: asset_id_varnam '${asset_id_varnam}' instance_id '${instance_id}' asset_id '${asset_id}' asset_type_id '${asst_type_id}'"
+        } else {
+            if { ![exists_and_not_null proc_user_id] } {
+                set proc_user_id $user_id
+            }
+            if { ![exists_and_not_null proc_instance_id] } {
+                set proc_instance_id $instance_id
+            }
+        }
+    } else {
+        set msg_extra ""
+        set q1 1
+        if { [exists_and_not_null proc_instance_id] } {
+            set q1 [qf_is_natural_number $proc_instance_id]
+            if { !$q1 } {
+                append msg_extra " instance_id '${proc_instance_id}'"
+            }
+        } 
+        set q2 1
+        if { [exists_and_not_null proc_user_id] } {
+            set q2 [qf_is_natural_number $proc_user_id]
+            if { !$q2 } {
+                append msg_extra " user_id '${proc_user_id}"
+            }
+        } 
+        set q3 1
+        if { ![string match {hf_*} $argv0 ] } {
+            set q3 0
+        } 
+        if { $q1 == 0 || $q2 == 0 || $q3 == 0 } {
+            set go_ahead 0
+            if { ![info exists $asset_id_varnam] } {
+                set asset_id "does *not* exist"
+            }
+            ns_log Warning "hf_ui_go_head failed.734: failed. Called by proc '${argv0}' args: privilege '${privilege}' asset_id_varnam '${asset_id_varnam}' asset_id '${asset_id}' asset_type_id '${asst_type_id}' ${msg_extra}"
+        }
+    }
+    if { !$go_ahead && $break_p } {
+        ad_script_abort
+    }
+
+    return $go_ahead
+}
+
+
 ad_proc -private hf_monitor_configs_keys {
 } {
     Returns an ordered list of keys that is parallel to the ordered list returned by hf_monitor_configs_read: instance_id monitor_id asset_id label active_p portions_count calculation_switches health_percentile_trigger health_threshold interval_s alert_by_privilege alert_by_role
 } {
     set keys_list [list instance_id monitor_id asset_id label active_p portions_count calculation_switches health_percentile_trigger health_threshold interval_s alert_by_privilege alert_by_role]
     return $keys_list
+}
+
+ad_proc -private hf_asset_id_from_monitor_id {
+    monitor_id
+    {instance_id ""}
+} {
+    Returns asset_id or empty string if monitor_id doesn't exist.
+} {
+    set asset_id ""
+    set success_p [db_0or1row hf_asset_id_from_mon_id "select asset_id from hf_monitor_config_n_control where instance_id=:instance_id and monitor_id=:monitor_id"]
+    return $asset_id
 }
 
 ad_proc -private hf_monitor_configs_read {
@@ -691,19 +773,10 @@ ad_proc -private hf_monitor_configs_read {
     # validate system
     if { [qf_is_natural_number $id] } {
 
+        
         # check permissions
-        set admin_p 1
-
-        #either admin or scheduled_proc (no user_id)
-        if { [ns_conn isconnected] } {
-            set user_id [ad_conn user_id]
-            # try and make it work
-            if { $instance_id eq "" } {
-                # set instance_id package_id
-                set instance_id [ad_conn package_id]
-            }
-            set admin_p [hf_permission_p $user_id "" assets admin $instance_id]
-        } 
+        set asset_id [hf_asset_id_from_monitor_id $monitor_id $instance_id]
+        set admin_p [hf_ui_go_ahead_q admin]
         
         #CREATE TABLE hf_monitor_config_n_control (
         #    instance_id               integer,
@@ -758,20 +831,12 @@ ad_proc -private hf_monitor_configs_write {
     If monitor_id is blank, will assign a new monitor_id.
 } {
     set return_id 0
-    #either admin or scheduled_proc (no user_id)
-    set nc_p [ns_conn isconnected]
-    if { !$nc_p } {
-        set user_id [ad_conn user_id]
-        # try and make it work
-        if { $instance_id eq "" } {
-            # set instance_id package_id
-            set instance_id [ad_conn package_id]
-        }
-    } 
 
     # validate system
     set asset_id_p [qf_is_natural_number $asset_id] 
     set monitor_id_p [qf_is_natural_number $monitor_id]
+    set asset_id [hf_asset_id_from_monitor_id $monitor_id $instance_id]
+    set admin_p [hf_ui_go_ahead_q admin]
 
     if { $asset_id_p || $monitor_id_p } {
         if { [string length $label ] < 201 && [string length $calculation_switches] < 21 } {
@@ -843,24 +908,14 @@ ad_proc -private hf_monitor_logs {
 } {
     Returns a list of hf_monitor_config_n_control.monitor_ids associated with asset_id(s). List is empty if there are none.
 } {
-    set nc_p [ns_conn isconnected]
-    if { !$nc_p } {
-        set user_id [ad_conn user_id]
-        # try and make it work
-        if { $instance_id eq "" } {
-            # set instance_id package_id
-            set instance_id [ad_conn package_id]
-        }
-    } 
-    # validation
+    # validate
     set asset_id_list [list ]
     foreach asset_id_q $asset_ids {
-        if { [qf_is_natural_number $asset_id_q] } {
+        if { [hf_ui_go_ahead_q read asset_id_q "" 0] } {
             lappend asset_id_list $asset_id_q
         }
     }
     set monitor_id_list [db_list hf_monitor_ids_get "select monitor_id from hf_monitor_config_n_control where instance_id =:instance_id and asset_id in ([template::util::tcl_to_sql_list $asset_id_list])"]
-    # Should be able to look up dependent asset ids via a proc, and then cross-reference in bulk
     return $monitor_id_list
 }
 
@@ -885,21 +940,11 @@ ad_proc -private hf_monitor_update {
     Returns report_id
 } {
     # validate
-    set nc_p [ns_conn isconnected]
-    if { $nc_p } {
-        set user_id 0
-    } else {
-        set user_id [ad_conn user_id]
-        # try and make it work
-        if { $instance_id eq "" } {
-            # set instance_id package_id
-            set instance_id [ad_conn package_id]
-        }
-        if { $reported_by eq "" } {
-            # feed some connection info
-            set addrs [ad_conn peeraddrs]
-            set reported_by "user_id '${user_id}' instance_id '${instance_id}' peeraddrs '${addrs}'"
-        }
+    hf_ui_go_ahead_q write
+    if { [ns_conn isconnected] && $reported_by eq "" } {
+        # feed some connection info
+        set addrs [ad_conn peeraddrs]
+        set reported_by "user_id '${user_id}' instance_id '${instance_id}' peeraddrs '${addrs}'"
     }
     if { ![qf_is_natural_number $report_id ] } {
         set report_id [clock seconds]
@@ -970,11 +1015,8 @@ ad_proc -private hf_monitor_status {
     # issuing an hf_monitor_update.
 
     # hf_monitor_statistics is called for final analysis and to determine health (percentile) 
-    
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
+    hf_ui_go_ahead_q admin
+
     # validation
     set monitor_id_list [hf_monitor_logs $monitor_ids]
     if { [qf_is_natural_number $most_recent_ct] } {
@@ -1061,45 +1103,34 @@ ad_proc -public hf_monitor_distribution {
 
 
     # permissions
-    set nc_p [ns_conn isconnected]
-    if { $nc_p } {
-        set read_p 1
-    } else {
-        set user_id [ad_conn user_id]
-        # try and make it work
-        if { $instance_id eq "" } {
-            # set instance_id package_id
-            set instance_id [ad_conn package_id]
-        }
-        set read_p [hf_permission_p $user_id "" assets read $instance_id]
-    }
-
-    # initializations
-    set error_p 0
-    set sample_sql ""
-    set duration_sql ""
-    set points_sql ""
-    set sql_list [list ]
-    set dist_lists [list ]
-
-    # validate
-    set monitor_id_p [qf_is_natural_number $monitor_id]
-    set asset_id_p [qf_is_natural_number $asset_id]
-    set sample_ct_p [qf_is_decimal_number $sample_ct]
-    set duration_s_p [qf_is_decimal_number $duration_s]
-    set points_ct_p [qf_is_decimal_number $points_ct]
-    set sample_pt_rate_p [qf_is_decimal_number $sample_pt_rate]
-    set sample_s_rate_p [qf_is_decimal_number $sample_s_rate]
-    if { $monitor_id_p } {
-        if { !$asset_id_p } {
-            # get asset_id
-            set asset_id_p [db_0or1row hf_asset_from_monitor_id "select asset_id from hf_monitor_config_n_control where instance_id =:instance_id and monitor_id =:monitor_id"]
+    set error_p [hf_ui_go_ahead_q read "" "" 0]
+    if { !$error_p } {
+        # initializations
+        set sample_sql ""
+        set duration_sql ""
+        set points_sql ""
+        set sql_list [list ]
+        set dist_lists [list ]
+        
+        # validate
+        set monitor_id_p [qf_is_natural_number $monitor_id]
+        set asset_id_p [qf_is_natural_number $asset_id]
+        set sample_ct_p [qf_is_decimal_number $sample_ct]
+        set duration_s_p [qf_is_decimal_number $duration_s]
+        set points_ct_p [qf_is_decimal_number $points_ct]
+        set sample_pt_rate_p [qf_is_decimal_number $sample_pt_rate]
+        set sample_s_rate_p [qf_is_decimal_number $sample_s_rate]
+        if { $monitor_id_p } {
             if { !$asset_id_p } {
-                set error_p 1
+                # get asset_id
+                set asset_id [hf_asset_id_from_monitor_id $monitor_id $instance_id]
+                if { $asset_id eq "" } {
+                    set error_p 1
+                }
             }
+        } else {
+            set error_p 1
         }
-    } else {
-        set error_p 1
     }
     if { !$error_p } {
         if { $sample_ct_p } {
@@ -1258,34 +1289,30 @@ ad_proc -private hf_monitor_statistics {
     # hf_monitor_statistics for indepth status queries
 
 
-    # permissions
-    set nc_p [ns_conn isconnected]
-    if { $nc_p } {
-        set admin_p 1
-    } else {
-        set user_id [ad_conn user_id]
-        # try and make it work
-        if { $instance_id eq "" } {
-            # set instance_id package_id
-            set instance_id [ad_conn package_id]
-        }
-        set admin_p [hf_permission_p $user_id "" assets admin $instance_id]
-    }
 
     # initializations
     set statistics_list [list ]
-    set error_p 0
     set success_p 1
 
     # validate
-    set monitor_id_p [qf_is_natural_number $monitor_id]
-    set asset_id_p [qf_is_natural_number $asset_id]
-    set report_id_p [qf_is_natural_number $report_id]
-    set portions_count_p [qf_is_natural_number $portions_count]
-    set interval_s_p [qf_is_decimal_number $interval_s]
-    set health_p [qf_is_decimal_number $health]
-    set analysis_id_p [qf_is_natural_number $analysis_id]
-    if { [string length $calculation_switches] < 21 } {
+    if { ![qf_is_natural_number $asset_id] } {
+        set asset_id ""
+    }
+    set error_p [hf_ui_go_ahead_q admin "" "" 0]
+    if { !$error_p } {
+        set monitor_id_p [qf_is_natural_number $monitor_id]
+        set report_id_p [qf_is_natural_number $report_id]
+        set portions_count_p [qf_is_natural_number $portions_count]
+        set interval_s_p [qf_is_decimal_number $interval_s]
+        set health_p [qf_is_decimal_number $health]
+        set analysis_id_p [qf_is_natural_number $analysis_id]
+        if { $monitor_id_p && $report_id_p && $portions_count_p && $interval_s_p && $health_p && $analysis_id_p } {
+            # do nothing
+        } else {
+            set error_p 1
+        }
+    }
+    if { !$error_p && [string length $calculation_switches] < 21 } {
         set calculation_switches_p 1
     } else {
         set calculation_switches_p 0
@@ -1551,15 +1578,14 @@ ad_proc -private hf_monitor_stats_read {
     Returns statistics resulting from analysis of status info.
     analysis_id assumes most recent analysis. Can return a range of monitor history.
 } {
-    # validate input
-    if { ![qf_is_natural_number $instance_id] } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
+
+    # validate 
     set monitor_id_p [qf_is_natural_number $monitor_id]
+    if { $monitor_id_p } {
+        set asset_id [hf_asset_id_from_monitor_id $monitor_id]
+    }
+    hf_ui_go_ahead_q read
+
     set analysis_id_p [qf_is_natural_number $analysis_id]
 
     # initializations
@@ -1587,6 +1613,7 @@ ad_proc -private hf_monitor_alert_trigger {
 } {
     Send notification for alerts from monitors (and quota overage notices).
 } {
+    hf_ui_go_ahead_q admin
     # sender email is systemowner
     # to get user_id of systemowner:
     # party::get_by_email -email $email
