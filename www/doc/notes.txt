@@ -3,7 +3,6 @@ Rationalization on using scheduler instead of callbacks: If callbacks are interr
 Make a table showing representation between db ref and tcl object_arr(element) returned in
 hf_nc_* procs ie possibly available to hfl_local_* procs when called.
 
-
 Note about parameter priorityThreshold in monitoring. The default is 3. This allows all priority level 0,1, and 2 monitoring priorities to not be interrupted in schedule by a lower priority call that has been delayed for some time. Dynamic priority is priority - delay in seconds / interval_seconds. If Dynamic priority is below priorityThreshold, dynamic priority is set to priorityThreshold+1. 
 
 create a refresh button (circle w/arrow) and a cancel button (red circle w light grey x)
@@ -44,4 +43,16 @@ satisfaction , amusement, joy , laugh
 concern, anxious, fear, terror
 dejection, melancholy, sad, grief
 alert, wonder, surprise, shock
+
+General UI.
+
+If a customer_id is not already chosen, Get customer_ids for user_id
+
+If customer_ids > list_min, show pagination_bar of customers as links
+if multiple customer_ids, show list of customers
+
+Show first N items (monitors etc) needing most attention.
+
+If customer_id is clicked, scope to customer_id and show all for customer_id (paginated)
+
 
