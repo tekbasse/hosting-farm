@@ -1648,7 +1648,7 @@ ad_proc -public hf_monitor_alerts_status {
     If user_id is an admin, this returns a list of lists of up to history_count messages not followed up with a user login. This allows the system to monitor for flags that are not responded to, allowing an opportunity for a sysadmin to check logs etc for proactive monitoring. List is sorted by critical alerts first.
     
 } {
-    set admin_p 0
+    
     if { $user_id ne "" } {
         set user_id [ad_conn user_id]
     }
@@ -1656,20 +1656,23 @@ ad_proc -public hf_monitor_alerts_status {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
+
+    set customer_ids_list [hf_customer_ids_for_user $user_id $instance_id]
+    set admin_p 0
     if { [qf_is_natural_number $history_count] } {
-        set admin_p [hf_permission_p $user_id "" assets admin $instance_id]
-        ##code
+        set admin_p 1
+        foreach customer_id $customer_ids_list {
+            if { $admin_p } {
+                set admin_p [hf_permission_p $user_id $customer_id assets admin $instance_id]
+            }
+        }
     }
+
     # display messages for user
     # This is redundant for admins, but then, admins get more messages, so this is an additional 
     # chance to get the latest alerts
     hf_beat_log_alert_q $user_id $instance_id
-
-    if { $admin_p } {
-        # "All users" refers to all users ie customers where the admin has an admin role.
-        # If user_id is a site admin, then that's all users.
-        set admin_p [hf_permission_p $user_id "" assets admin $instance_id]
-    }
+##code history_count
     return 1
 }
 
