@@ -1527,7 +1527,7 @@ ad_proc -private hf_sss {
     set user_id [ad_conn user_id]
     if { $customer_id_list ne "" } {
         set valid_customer_ids [hf_customer_ids_for_user $user_id $instance_id]
-        set customer_id_list [set_union $valid_customer_ids $customer_id_list]
+        set customer_id_list [set_intersection $valid_customer_ids $customer_id_list]
         # get all available asset_ids to user (ie. customers of user) 
     }
     set asset_detail_lists [hf_assets_w_detail $instance_id $customer_id_list "" $inactives_included_p "" "" ""]
