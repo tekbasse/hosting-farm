@@ -37,7 +37,12 @@ ad_proc -private hf_nc_go_ahead {
             ns_log Warning "hf_nc_go_head failed. Called by user_id '${user_id}' args: asset_id_varnam '${asset_id_varnam}' instance_id '${instance_id}' asset_id '${asset_id}' asset_type_id '${asst_type_id}'"
         }
     } else {
-        set go_ahead 1
+        if { ![string match {hf_*} $argv0 ] && ![string match {hfl_*} $argv0 ] } {
+            set go_ahead 0
+            ns_log Warning "hf_nc_go_head.42: failed. Called by proc '${argv0}' args: asset_id_varnam '${asset_id_varnam}' asset_id '${asset_id}' asset_type_id '${asst_type_id}'"
+        } else {
+            set go_ahead 1
+        }
     }
     if { !$go_ahead } {
         ad_script_abort
