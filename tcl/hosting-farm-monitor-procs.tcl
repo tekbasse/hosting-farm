@@ -677,7 +677,7 @@ ad_proc -private hf_ui_go_ahead_q {
     {asset_type_id "assets"}
     {break_p "1"}
 } {
-    Confirms process is not run via connection, or is run by user with privilege
+    Confirms process is not run via connection, or is run by user with privilege and in scope of customer_id_list if defined.
 } {
     if { $asset_id_varnam eq "" } {
         set asset_id_varnam "asset_id"
@@ -685,17 +685,26 @@ ad_proc -private hf_ui_go_ahead_q {
     upvar 1 $asset_id_varnam asset_id
     upvar 1 instance_id proc_instance_id
     upvar 1 user_id proc_user_id
+    upvar 1 customer_id_list proc_customer_id_list
     if { [ns_conn isconnected] } {
         set user_id [ad_conn user_id]
         set instance_id [ad_conn package_id]
         #set go_ahead \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin\]
         set customer_id [hf_customer_id_of_asset_id $asset_id $instance_id]
-        # Make sure asset_id is consistent to asset_type_id
-        set asset_type_id [hf_nc_asset_type_id $asset_id]
-        if { $asset_type_id eq "" } {
-            set asset_type_id "assets"
+        if { $customer_id ne "" && [exists_and_not_null proc_customer_id_list]} {
+            set c_idx [lsearch -exact $proc_customer_id_list $customer_id]
+            if { $c_idx < 0 } {
+                set go_ahead 0
+                ns_log Warning "hf_ui_go_adhead_q.698: customer_id '${customer_id}' not in customer_id_list '${customer_id_list}'"
+            }
+        } else {
+            # Make sure asset_id is consistent to asset_type_id
+            set asset_type_id [hf_nc_asset_type_id $asset_id]
+            if { $asset_type_id eq "" } {
+                set asset_type_id "assets"
+            }
+            set go_ahead [hf_permission_p $user_id $customer_id $asset_type_id admin $instance_id]
         }
-        set go_ahead [hf_permission_p $user_id $customer_id $asset_type_id admin $instance_id]
         if { !$go_ahead } {
             ns_log Warning "hf_ui_go_head.700: failed. Called by user_id '${user_id}' args: asset_id_varnam '${asset_id_varnam}' instance_id '${instance_id}' asset_id '${asset_id}' asset_type_id '${asst_type_id}'"
         } else {

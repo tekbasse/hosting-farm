@@ -99,10 +99,8 @@ ad_proc -private hf_customer_id_of_asset_id {
     returns customer_id of asset_id
 } {
     # this is handy for helping fulfill hf_permission_p requirements
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
+    hf_ui_go_ahead_q read
+
     set cid_exists [db_0or1row hf_customer_id_of_asset_id "select qal_customer_id from hf_assets where instance_id = :instance_id and id = :asset_id and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc"]
     if { !$cid_exists } {
         set customer_id ""
@@ -118,16 +116,9 @@ ad_proc -private hf_asset_create_from_asset_template {
 } {
     Creates a new asset record based on an existing template. Also schedules a scheduled proc for system maintenance part of process.
 } {
-    # How is this diff
 
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set user_id [ad_conn user_id]
 
-    # customer_id of asset_id doesn't matter, because this may a copy of another's asset or template.
-    set read_p [hf_permission_p $user_id "" published read $instance_id]
+    set read_p [hf_ui_go_ahead_q read "" published 0]
     set create_p [hf_permission_p $user_id $customer_id assets create $instance_id]
     set status_p $create_p
 
@@ -347,12 +338,8 @@ ad_proc -private hf_asset_do {
 } {
     Process an hfl_ procedure on asset_id.
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set user_id [ad_conn user_id]
-    set admin_p [hf_permission_p $user_id $customer_id assets admin $instance_id]
+    set admin_p [hf_ui_go_ahead_q admin "" "" 0]
+
     set success_p 0
     if { $admin_p } {
         set asset_stats_list [hf_asset_stats $asset_id $instance_id]
@@ -1196,20 +1183,16 @@ ad_proc -private hf_m_uas {
     returns an ordered lists of lists of management user accounts and their direct properties for each asset_id.
     Ordered list: asset_id asset_type vh_id ss_id ua_id details connection_type  (ss_id, asset_type and/or vh_id may be blank for some references)
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set user_id [ad_conn user_id]
+
     # check each customer_id, filter out any ones not allowed.
     set admin_p 1
     set i 0
     set filter_list [list ]
-    foreach customer_id $customer_id_list {
+    foreach asset_id $asset_id_list {
         if { $admin_p } {
-            set admin_p [hf_permission_p $user_id $customer_id assets admin $instance_id]
+            set admin_p [hf_ui_go_ahead_q admin "" "" 0]
         } else {
-            # filter out this customer_id
+            # filter out this asset_id
             lappend filter_idx_list $i
             set admin_p 0
         }
@@ -1217,14 +1200,14 @@ ad_proc -private hf_m_uas {
     }
     set filter_idx_list_len [llength $filter_idx_list]
     if { $filter_idx_list_len > 0 } {
-        ns_log Notice "hf_m_uas.1220: Filtering out some customer_ids for user_id '${user_id}' customer_ids_list '{$customer_ids_list}' filter_idx_list '${filter_idx_list}'"
-        if { $filter_idx_list_len < [llength $customer_id_list] } {
+        ns_log Notice "hf_m_uas.1220: Filtering out some asset_ids for user_id '${user_id}' asset_id_list '{$asset_id_list}' filter_idx_list '${filter_idx_list}'"
+        if { $filter_idx_list_len < [llength $asset_id_list] } {
             set filter_idx_list [lsort -integer -decreasing $filter_idx_list]
-            foreach bad_cid $filter_idx_list {
-                set filter_idx_list [lreplace $customer_id_list $bad_cid $bad_cid]
+            foreach bad_as_id $filter_idx_list {
+                set filter_idx_list [lreplace $asset_id_list $bad_as_id $bad_as_id]
             }
         } else {
-            set customer_id_list ""
+            set asset_id_list ""
             set admin_p 0
         }
     }
@@ -1396,11 +1379,8 @@ ad_proc -private hf_asset_uas {
     returns an ordered lists of lists of user accounts and their direct properties for a virtual machine vm_id or other asset_id
     Ordered list: asset_id asset_type vh_id ss_id ua_id details connection_type  (ss_id, asset_type and/or vh_id may be blank for some references)
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set user_id [ad_conn user_id]
+    hf_ui_go_ahead_q read
+
     # ua's referenced by: 
     # hf_assets.ua_id
     # hf_vhosts.ua_id
@@ -1544,13 +1524,12 @@ ad_proc -private hf_sss {
 } {
     returns an ordered list of lists of software as services (hosted services) and their direct properties. ss_id is a subset of asset_id.
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
     set user_id [ad_conn user_id]
-
-    # get all available asset_ids to user (ie. customers of user) 
+    if { $customer_id_list ne "" } {
+        set valid_customer_ids [hf_customer_ids_for_user $user_id $instance_id]
+        set customer_id_list [set_union $valid_customer_ids $customer_id_list]
+        # get all available asset_ids to user (ie. customers of user) 
+    }
     set asset_detail_lists [hf_assets_w_detail $instance_id $customer_id_list "" $inactives_included_p "" "" ""]
     set as_ids_list [list ]
     foreach asset_list $asset_detail_lists {
@@ -1647,11 +1626,8 @@ ad_proc -private hf_asset_features {
 } {
     returns a tcl_list_of_lists of features with attributes in order of: asset_type_id, feature_id, label, feature_type, publish_p, title, description
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set user_id [ad_conn user_id]
+    hf_ui_go_ahead_q read "" published
+
     # asset type doesn't involve specific client data, so no permissions check required
     # validate/filter the asset_type_id_list for nonqualifying reference types
     set new_as_type_id_list [list ]
@@ -1682,12 +1658,7 @@ ad_proc -private hf_asset_type_write {
 } {
     creates or writes asset type, if id is blank, returns id of new asset type; otherwise returns 1 if id exists and db updated. 
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set user_id [ad_conn user_id]
-    set admin_p [hf_permission_p $user_id "" assets write $instance_id]
+    set admin_p [hf_ui_go_ahead_q admin "" "" 0]
     set asset_type_id ""
     set return_val $admin_p
     if { $admin_p } {
@@ -1768,12 +1739,7 @@ ad_proc -private hf_dc_read {
 } {
     reads full detail of dcs. This is not redundant to hf_dcs. This is for 1 dc_id. It includes all attributes and no summary counts of dependents. Returns general asset contents followed by specific dc details. dc description is contextual to dc, whereas asset description is in context of all assets. Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id dc_affix, dc_description, dc_details 
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set user_id [ad_conn user_id]
-    # Since the dependency tree is large, no dependencies are checked
+    hf_ui_go_ahead_q read dc_id
 
     set attribute_list [hf_asset_read $dc_id $instance_id $user_id]
     # Returns asset contents of asset_id. Returns asset as list of attribute values: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id
@@ -1828,11 +1794,8 @@ ad_proc -private hf_dc_write {
 } {
     # hf_data_centers.instance_id, dc_id, affix, description, details
     # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set user_id [ad_conn user_id]
+    hf_ui_go_ahead_q write dc_id
+
     set new_dc_id ""
     if { $asset_type_id eq "dc" } {
         if { $dc_id ne "" } {
@@ -1869,11 +1832,8 @@ ad_proc -private hf_hw_read {
     reads full detail of one hw. This is not redundant to hf_hws. This accepts only 1 id and includes all attributes and no summary counts of dependents.
     Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id, hw_system_name, hw_backup_sys, hw_ni_id, hw_os_id, hw_description, hw_details
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set user_id [ad_conn user_id]
+    hf_ui_go_ahead_q read hw_id
+
     # Since the dependency tree is large, no dependencies are checked
     set attribute_list [hf_asset_read $hw_id $instance_id $user_id]
     # Returns asset contents of asset_id. Returns asset as list of attribute values: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id
@@ -1931,11 +1891,11 @@ ad_proc -private hf_hw_write {
 } {
     # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
     #  hf_hardware.instance_id, hw_id, system_name, backup_sys, ni_id, os_id, description, details
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
+    if { $hw_id ne "" } {
+        hf_ui_go_ahead_q write hw_id
+    } else {
+        hf_ui_go_ahead_q create hw_id
     }
-    set user_id [ad_conn user_id]
     set new_hw_id ""
     if { $asset_type_id eq "hw" } {
         if { $hw_id ne "" } {
@@ -1980,12 +1940,8 @@ ad_proc -private hf_vm_read {
     Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id vm_domain_name, vm_ip_id, vm_ni_id, vm_ns_id, vm_os_id, vm_type_id, vm_resource_path, vm_mount_union, vm_details
 
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set user_id [ad_conn user_id]
-    # Since the dependency tree is large, no dependencies are checked
+    hf_ui_go_ahead_q read vm_id
+
     set attribute_list [hf_asset_read $vm_id $instance_id $user_id]
     # Returns asset contents of asset_id. Returns asset as list of attribute values: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id
     set asset_type_id [lindex $attribute_list 2]
@@ -2042,11 +1998,11 @@ ad_proc -private hf_vm_write {
 } {
     writes or creates an vm asset_type_id. If asset_id (vm_id) is blank, a new one is created. The new asset_id is returned if successful, otherwise empty string is returned.
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
+    if { $vm_id ne "" } {
+        hf_ui_go_ahead_q write vm_id
+    } else {
+        hf_ui_go_ahead_q create vm_id
     }
-    set user_id [ad_conn user_id]
     # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
 
     set new_vm_id ""
@@ -2093,12 +2049,8 @@ ad_proc -private hf_ss_read {
     reads full detail of one ss. This is not redundant to hf_sss. This accepts only 1 id and includes all attributes and no summary counts of dependents.
     Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id ss_server_name ss_service_name ss_daemon_ref ss_protocol ss_port ss_ua_id ss_ss_type ss_ss_subtype ss_ss_undersubtype ss_ss_ultrasubtype ss_config_uri ss_memory_bytes ss_details
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set user_id [ad_conn user_id]
-    # Since the dependency tree is large, no dependencies are checked
+    hf_ui_go_ahead_q read ss_id
+
     set attribute_list [hf_asset_read $ss_id $instance_id $user_id]
     # Returns asset contents of asset_id. Returns asset as list of attribute values: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id
     set asset_type_id [lindex $attribute_list 2]
@@ -2161,11 +2113,12 @@ ad_proc -private hf_ss_write {
 } {
     # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
     # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
+    if { $ss_id ne "" } {
+        hf_ui_go_ahead_q write ss_id
+    } else {
+        hf_ui_go_ahead_q create ss_id
     }
-    set user_id [ad_conn user_id]
+
     set new_ss_id ""
     set error_p 0
     if { $asset_type_id eq "ss" } {
@@ -2206,11 +2159,8 @@ ad_proc -private hf_ip_read {
 } {
     reads full detail of one ip address: ipv4_addr ipv4_status ipv6_addr ipv6_status. This is not redundant to hf_ips. This accepts only 1 id and includes all attributes (no summary counts)
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set user_id [ad_conn user_id]
+    hf_ui_go_ahead_q read ip_id
+
     # to check permissions here, would require:
     # get asset_id via a new proc hf_id_of_ip_id, but that would return multiple asset_ids (VMs + machine etc).
     # checking permissions  would require hf_ids_of_ip_id.. and that would be slow for large sets
@@ -2278,19 +2228,11 @@ ad_proc -private hf_ip_write {
 } {
     writes or creates an ip record. If ip_id is blank, a new one is created, and the new ip_id returned. The ip_id is returned if successful, otherwise 0 is returned. Does not check for address collisions.
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
     set return_id 0
 
     # check permissions, get customer_id of asset
     if { [qf_is_natural_number $asset_id] && [qf_is_natural_number $instance_id ] } {
-        set customer_id [hf_customer_id_of_asset_id $asset_id]
-        set admin_p [hf_permission_p $user_id $customer_id assets admin $instance_id]
+        set admin_p [hf_ui_go_ahead_q admin "" "" 0]
         if { $admin_p } {
 
             # validate for db
@@ -2346,12 +2288,8 @@ ad_proc -private hf_ni_read {
 } {
     reads full detail of one ni. This is not redundant to hf_nis. This accepts only 1 ns_id and includes all attributes (no summary counts):  os_dev_ref, ipv4_addr_range, ipv6_addr_range, bia_mac_address, ul_mac_address
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
     set return_list [list ]
-    if { [qf_is_natural_number $ni_id] } {
+    if { [qf_is_natural_number $ni_id] && [qf_is_natural_number $instance_id] } {
         set return_list [db_list_of_lists hf_network_interfaces_read1 "select os_dev_ref, bia_mac_address, ul_mac_address, ipv4_addr_range, ipv6_addr_range from hf_network_interfaces where instance_id=:instance_id and ni_id =:ni_id"]
         set return_list [lindex $return_list 0]
     }
@@ -2372,19 +2310,11 @@ ad_proc -private hf_ni_write {
     If ni_id is empty, a new one is created, and the new ni_id returned.
     The ni_id is returned if successful, otherwise 0 is returned.
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
     set return_ni_id 0
 
     # check permissions, get customer_id of asset
-    if { [qf_is_natural_number $asset_id] && [qf_is_natural_number $instance_id ] } {
-        set customer_id [hf_customer_id_of_asset_id $asset_id]
-        set admin_p [hf_permission_p $user_id $customer_id assets admin $instance_id]
+    if { [qf_is_natural_number $asset_id] } {
+        set admin_p [hf_ui_go_ahead_q admin "" "" 0]
         if { $admin_p } {
             
             # validate
@@ -2500,36 +2430,34 @@ ad_proc -private hf_os_read {
     reads full detail of OSes; if os_id_list is blank, returns all records. os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description
 } {
     set new_os_lists [list ]
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $os_id_list eq "" } {
-        set os_lists [db_list_of_lists hf_os_read_inst { select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id } ]
-    } else {
-        set filtered_ids_list [list ]
-        foreach os_id $os_id_list {
-            if { [qf_is_natural_number $os_id] } {
-                lappend filtered_ids_list $os_id
+    if { [qf_is_natural_number $instance_id] } {
+        if { $os_id_list eq "" } {
+            set os_lists [db_list_of_lists hf_os_read_inst { select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id } ]
+        } else {
+            set filtered_ids_list [list ]
+            foreach os_id $os_id_list {
+                if { [qf_is_natural_number $os_id] } {
+                    lappend filtered_ids_list $os_id
+                }
             }
+            set os_lists [db_list_of_lists hf_os_read_some "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id and os_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
         }
-        set os_lists [db_list_of_lists hf_os_read_some "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id and os_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
-    }
-    # set all *_p values as either 1 or 0
-    # this should already be handled via hf_os_write,
-    #  but in case data is imported.. code expects consistency.
-    set new_os_lists [list ]
-    foreach os_list $os_lists {
-        set new_list $os_list
-        set orphaned_p [lindex $os_list 5]
-        set requires_upgrade_p [lindex $os_list 6]
-        if { $orphaned_p ne "1" } {
-            set new_list [linsert $new_list 5 "0"]
+        # set all *_p values as either 1 or 0
+        # this should already be handled via hf_os_write,
+        #  but in case data is imported.. code expects consistency.
+        set new_os_lists [list ]
+        foreach os_list $os_lists {
+            set new_list $os_list
+            set orphaned_p [lindex $os_list 5]
+            set requires_upgrade_p [lindex $os_list 6]
+            if { $orphaned_p ne "1" } {
+                set new_list [linsert $new_list 5 "0"]
+            }
+            if { $requires_upgrade_p ne "1" } {
+                set new_list [linsert $new_list 6 "0"]
+            }
+            lappend new_os_lists $new_list
         }
-        if { $requires_upgrade_p ne "1" } {
-            set new_list [linsert $new_list 6 "0"]
-        }
-        lappend new_os_lists $new_list
     }
     return $new_os_lists
 }
@@ -2547,12 +2475,11 @@ ad_proc -private hf_os_write {
 } {
     writes or creates an os asset_type_id. If os_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise 0 is returned.
 } {
+    hf_ui_go_ahead_q admin
+
     set success_p 0
     set os_exists_p 0
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
+
     if { ![qf_is_natural_number $os_id] } {
         set os_id ""
     }
@@ -2597,31 +2524,29 @@ ad_proc -private hf_ns_read {
 } {
     reads full detail of domain records.
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set ns_lists [list ]
-    if { $ns_id_list eq "" } {
-        set ns_lists [db_list_of_lists hf_dns_read_inst { select id, active_p, name_record from hf_ns_records where instance_id=:instance_id } ]
-    } else {
-        set filtered_ids_list [list ]
-        foreach ns_id $ns_id_list {
-            if { [qf_is_natural_number $ns_id] } {
-                lappend filtered_ids_list $ns_id
+    if { [qf_is_natural_number $instance_id] } {
+        set ns_lists [list ]
+        if { $ns_id_list eq "" } {
+            set ns_lists [db_list_of_lists hf_dns_read_inst { select id, active_p, name_record from hf_ns_records where instance_id=:instance_id } ]
+        } else {
+            set filtered_ids_list [list ]
+            foreach ns_id $ns_id_list {
+                if { [qf_is_natural_number $ns_id] } {
+                    lappend filtered_ids_list $ns_id
+                }
             }
+            set ns_lists [db_list_of_lists hf_dns_read_some "select id, active_p, name_record from hf_ns_records where instance_id=:instance_id and ns_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
         }
-        set ns_lists [db_list_of_lists hf_dns_read_some "select id, active_p, name_record from hf_ns_records where instance_id=:instance_id and ns_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
-    }
-    # set all *_p values as either 1 or 0
-    set new_ns_lists [list ]
-    foreach ns_list $ns_lists {
-        set active_p [lindex $ns_list 1]
-        if { $active_p ne "1" } {
-            set active_p "0"
+        # set all *_p values as either 1 or 0
+        set new_ns_lists [list ]
+        foreach ns_list $ns_lists {
+            set active_p [lindex $ns_list 1]
+            if { $active_p ne "1" } {
+                set active_p "0"
+            }
+            set new_list [lreplace $ns_list 1 1 $active_p]
+            lappend new_ns_lists $new_list
         }
-        set new_list [lreplace $ns_list 1 1 $active_p]
-        lappend new_ns_lists $new_list
     }
     return $new_ns_lists
 }
@@ -2642,12 +2567,9 @@ ad_proc -private hf_ns_write {
     #   active_p    integer,
     #   -- DNS records to be added to domain name service
     #   name_record text
+    hf_ui_go_ahead_q admin
     set success_p 0
     set ns_exists_p 0
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
     if { ![qf_is_natural_number $ns_id] } {
         set ns_id ""
     }
@@ -2684,21 +2606,20 @@ ad_proc -private hf_vm_quota_read {
     Given plan_id_list, returns list of list of: plan_id description base_storage base_traffic base_memory base_sku over_storage_sku over_traffic_sku over_memory_sku storage_unit traffic_unit memory_unit qemu_memory status_id vm_type max_domain private_vps.
     If plan_id_list is blank, returns all.
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set vmq_lists [list ]
-    if { $plan_id_list eq "" } {
-        set vmq_lists [db_list_of_lists hf_dvmq_read_inst { select plan_id, description, base_storage, base_traffic, base_memory, base_sku, over_storage_sku, over_traffic_sku, over_memory_sku, storage_unit, traffic_unit, memory_unit, qemu_memory, status_id, vm_type, max_domain, private_vps from hf_vm_quotas where instance_id=:instance_id } ]
-    } else {
-        set filtered_ids_list [list ]
-        foreach plan_id $plan_id_list {
-            if { [qf_is_natural_number $plan_id] } {
-                lappend filtered_ids_list $plan_id
+    if { [qf_is_natural_number $instance_id] } {
+        
+        set vmq_lists [list ]
+        if { $plan_id_list eq "" } {
+            set vmq_lists [db_list_of_lists hf_dvmq_read_inst { select plan_id, description, base_storage, base_traffic, base_memory, base_sku, over_storage_sku, over_traffic_sku, over_memory_sku, storage_unit, traffic_unit, memory_unit, qemu_memory, status_id, vm_type, max_domain, private_vps from hf_vm_quotas where instance_id=:instance_id } ]
+        } else {
+            set filtered_ids_list [list ]
+            foreach plan_id $plan_id_list {
+                if { [qf_is_natural_number $plan_id] } {
+                    lappend filtered_ids_list $plan_id
+                }
             }
+            set vmq_lists [db_list_of_lists hf_dvmq_read_some "select plan_id, description, base_storage, base_traffic, base_memory, base_sku, over_storage_sku, over_traffic_sku, over_memory_sku, storage_unit, traffic_unit, memory_unit, qemu_memory, status_id, vm_type, max_domain, private_vps from hf_vm_quotas where instance_id=:instance_id and plan_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
         }
-        set vmq_lists [db_list_of_lists hf_dvmq_read_some "select plan_id, description, base_storage, base_traffic, base_memory, base_sku, over_storage_sku, over_traffic_sku, over_memory_sku, storage_unit, traffic_unit, memory_unit, qemu_memory, status_id, vm_type, max_domain, private_vps from hf_vm_quotas where instance_id=:instance_id and plan_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
     }
     return $vmq_lists
 }
@@ -2725,10 +2646,8 @@ ad_proc -private hf_vm_quota_write {
 } {
     writes or creates a vm_quota. If id is blank, a new one is created, and the new id returned. id is returned if successful, otherwise 0 is returned.
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
+    hf_ui_go_ahead admin
+
     set success_p 1
     set vmq_exists_p 0
     if { $instance_id eq "" } {
@@ -2811,7 +2730,7 @@ ad_proc -private hf_ua_write {
 } {
     # permissions must be careful here. Should have already been vetted. Log anything suspect
     # only admin_p or create_p create new
-
+    
     set new_ua_id 0
     if { [regexp -- {^[[:graph:]]+$} $details scratch ] } {    
         set log_p 0
@@ -3000,24 +2919,14 @@ ad_proc -private hf_up_get_from_ua_id {
 } {
     gets up of ua
 } {
+    set allowed_p [hf_ui_go_ahead_q admin "" "" 0]
     set success_p 1
     set up ""
-    # validation and limits
-    if { ![qf_is_natural_number $instance_id] } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
     if { ![qf_is_natural_number $ua_id] } {
         set ua_id ""
         set success_p 0
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    # must have admin_p to create
-    # otherwise hf_up_ck must be 1 to update
-    # At least make sure standard permissions from a write able user exist
-    set allowed_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege write_p]
+
     if { $success_p && $allowed_p } {
         set success_p [db_0or1row hf_up_get_from_ua_id "select details from hf_up where instance_id=:instance_id and up_id in (select up_id from hf_ua_up_map where ua_id=:ua_id and instance_id=:instance_id"]
         if { $success_p } {
@@ -3047,7 +2956,6 @@ ad_proc -private hf_key {
     if { ![file exists $fp] } {
         file mkdir [file path $fp]
         set k_list [hf_key_create]
-        # reverse key value for read bias
         set k2_list [list ]
         foreach { key value } $k_list {
             lappend k2_list $value
@@ -3055,7 +2963,6 @@ ad_proc -private hf_key {
         }
         puts $fileId [join $k2_list \t]
         close $fileId
-        # to be consistent, read it first time also
     } 
     set fileId [open $fp r]
     set k ""
@@ -3097,8 +3004,7 @@ ad_proc -private hf_key_create {
             incr commons_count
         }
     }
-    #ns_log Notice "keys_list $keys_list"
-    #ns_log Notice "commons_count $commons_count commons_list $commons_list"
+
     set availables_list $keys_list
     set i 0
     set doubles_list [list ]   
@@ -3108,17 +3014,10 @@ ad_proc -private hf_key_create {
         set availables_list [lreplace $availables_list $pos $pos]
         incr i
     }
-    # availables_list + $doubles_list = $keys_list
-    # to each doubles_list, add another character for the heck of it
-    #ns_log Notice "availables_list + doubles_list = keys_list"
-    #ns_log Notice "availables_list $availables_list"
-    #ns_log Notice "doubles_list $doubles_list"
-    # create doubles list, and remove key1 from val_list
     set val_list $availables_list 
     set new_doubles_list [list ]
     set temp_avail_list $keys_list
     foreach double $doubles_list {
-        # key1 is a kind of delim
         set key1 $double
         set pos [expr { int( [random] * [llength $temp_avail_list] ) } ]
         set key2 [lrange $temp_avail_list $pos $pos]
@@ -3127,16 +3026,12 @@ ad_proc -private hf_key_create {
         append key $key2
         lappend new_doubles_list $key
         set pos1 [lsearch -exact $val_list $key1]
-        # remove key1 from val_list
         set val_list [lreplace $val_list $pos1 $pos1]
     }
 
     foreach val $new_doubles_list {
         lappend val_list $val
     }
-    #ns_log Notice "val_list $val_list"
-    #    set val2_list $val_list
-    # verify that no doubles start with a regular key
     foreach dob $doubles_list {
         if { [lsearch -exact $val_list $dob] > -1 } {
             ns_log Error "hf_key_create: Error double ${dob} exists in val_list '${val_list}'"
@@ -3151,7 +3046,6 @@ ad_proc -private hf_key_create {
         lappend kv_list $key
         lappend kv_list $val
     }
-    #ns_log Notice $kv_list
     return $kv_list
 }
 
@@ -3170,16 +3064,10 @@ ad_proc -private hf_call_write {
     Writes a new/update call and associates it to one or more specific asset_type. To remove an existing record, set proc_name blank for hf_call_id.
     At least one asset_id, asset_type_id or asset_template_id must be nonempty.
 } {
+    set admin_p [hf_ua_go_ahead_q admin "" "" 0]
     set success_p 0
     set no_errors_p 1
     set remove_p 0
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    # This can only be done by an admin user
-    set user_id [ad_conn user_id]
-    set admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
     if { $admin_p } {
         # param validation
         set hf_call_id_exists_p [qf_is_natural_number $hf_call_id]
@@ -3281,6 +3169,7 @@ ad_proc -private hf_call_delete {
 } {
     Deletes hf_call_id 
 } {
+    hf_ua_go_ahead_q admin
     # set proc_name ""
     set success_p [hf_call_write $hf_call_id "" $asset_type_id $asset_template_id $asset_id $instance_id]
 }
@@ -3296,13 +3185,8 @@ ad_proc -private hf_call_read {
     of calling another proc_name for a more specific asset etc.
 
 } {
+    hf_ui_go_ahead_q read
     set proc_name ""
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set user_id [ad_conn user_id]
-    set read_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege read]
     if { $read_p } {
         # param validation
         set hf_call_id_exists_p [qf_is_natural_number $hf_call_id]
@@ -3388,13 +3272,7 @@ ad_proc -private hf_call_role_write {
     Writes an association  between an hf_call and a role
 } {
     set success_p 0
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    # Requires admin rights
-    set user_id [ad_conn user_id]
-    set admin_p [hf_permission_p $user_id "" permissions_roles admin $instance_id]
+    set admin_p [hf_ua_go_ahead_q admin "" permissions_roles 0]
     if { $admin_p && [qf_is_natural_number $call_id] && [qf_is_natural_number $role_id] } {
         if { [hf_call_read $call_id] ne "" && [llength [hf_role_read $role_id]] > 0 } {
             # if record already exists, do nothing, else add
@@ -3422,12 +3300,10 @@ ad_proc -private hf_call_roles_read {
     reads assigned roles for an hf_call.  answers question: what roles are allowed to make call?
 } {
     set role_ids_list [list ]
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    } 
-    if { [qf_is_natural_number $call_id ] } {
-        set role_ids_list [db_list hf_call_roles_read "select role_id from hf_call_role_map where instance_id=:instance_id and call_id=:call_id"]
+    if { [qf_is_natural_number $instance_id] } {
+        if { [qf_is_natural_number $call_id ] } {
+            set role_ids_list [db_list hf_call_roles_read "select role_id from hf_call_role_map where instance_id=:instance_id and call_id=:call_id"]
+        }
     }
     return $role_ids_list
 }
