@@ -13,16 +13,11 @@
 # Initializations
 
 set title "#hosting-farm.Assets#"
-set package_id [ad_conn package_id]
-set user_id [ad_conn user_id]
-set read_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege read]
+set read_p [hf_ui_go_ahead_q read "" "" 0]
 if { !$read_p } {
     ad_redirect_for_registration
     ad_script_abort
 }
-set create_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege create]
-set write_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege write]
-set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
 #set delete_p \[permission::permission_p -party_id $user_id -object_id $package_id -privilege delete\]
 # delete_p 
 
@@ -37,7 +32,7 @@ set redirect_before_v_p 0
 
 array set input_array [list \
                            page_title $title\
-                           costumer_id ""\
+                           customer_id ""\
                            asset_id ""\
                            submit "" \
                            reset "" \
@@ -52,11 +47,18 @@ set title $input_arr(page_title)
 # INPUTS / CONTROLLER
 
 # get form inputs if they exist
-if { $create_p || $write_p } {
+if { $form_posted_p } {
     set form_posted_p [qf_get_inputs_as_array input_arr hash_check 1]
     set mode $input_arr(mode)
     set next_mode $input_arr(next_mode)
+    set customer_id $input_arr(customer_id)
+    set asset_id $input_arr(asset_id)
+    set page_title $input_arr(page_title)
 }
+set create_p [hf_ui_go_ahead_q create "" "" 0]
+set write_p [hf_ui_go_ahead_q write "" "" 0]
+set admin_p [hf_ui_go_ahead_q admin "" "" 0]
+
 ns_log Notice "hosting-farm/assets.tcl(63): mode $mode next_mode $next_mode"
 # Modes are views, or one of these compound action/views
     # d delete (d x) then view as before (where x = l, r or v)
