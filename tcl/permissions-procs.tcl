@@ -285,9 +285,9 @@ ad_proc -private hf_roles_of_user {
         set user_id [ad_conn user_id]
     }
     if { $customer_id eq "" } {
-        set roles_list [db_list hf_roles_of_user "select label from hf_role where instance_id=:instance_id and id in (select hf_role_id from hf_user_roles_map where instance_id = :instance_id and user_id = :user_id)"] 
+        set roles_list [db_list hf_roles_of_user "select distinct on (label) label from hf_role where instance_id=:instance_id and id in (select hf_role_id from hf_user_roles_map where instance_id = :instance_id and user_id = :user_id)"] 
     } elseif { [qf_is_natural_number $customer_id] } {
-        set roles_list [db_list hf_roles_of_user "select label from hf_role where instance_id=:instance_id and id in (select hf_role_id from hf_user_roles_map where instance_id = :instance_id and user_id = :user_id and customer_id=:customer_id)"]
+        set roles_list [db_list hf_roles_of_user "select distinct on (label) label from hf_role where instance_id=:instance_id and id in (select hf_role_id from hf_user_roles_map where instance_id = :instance_id and user_id = :user_id and customer_id=:customer_id)"]
     } 
     return $roles_list
 }
@@ -508,7 +508,6 @@ ad_proc -private hf_role_read {
 }
 
 ad_proc -private hf_roles {
-    {customer_id ""}
     {instance_id ""} 
 } {
     Returns roles as a list, with each list item consisting of label, title, and description as a list, or an empty list if no roles exist.
@@ -519,7 +518,8 @@ ad_proc -private hf_roles {
     }
     # check permissions
     set this_user_id [ad_conn user_id]
-    set read_p [hf_permission_p $this_user_id $customer_id permissions_roles read $instance_id]
+    set read_p [permission::permission_p -part_id $user_id -object_id $instance_id -privilege read]
+
     set role_list [list ]
     if { $read_p } {
         set role_list [db_list_of_lists hf_roles_read "select label,title,description from hf_role where instance_id = :instance_id"]
