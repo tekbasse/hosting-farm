@@ -269,6 +269,30 @@ ad_proc -private hf_privilege_exists {
     return $exists_p
 }
 
+
+ad_proc -private hf_roles_of_user {
+    user_id
+    {instance_id ""}
+    {customer_id ""}
+} {
+    Returns list of roles of user. Empty list if none found.
+} {
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    if { ![qf_is_natural_number $user_id] } {
+        set user_id [ad_conn user_id]
+    }
+    if { $customer_id eq "" } {
+        set roles_list [db_list hf_roles_of_user "select label from hf_role where instance_id=:instance_id and id in (select hf_role_id from hf_user_roles_map where instance_id = :instance_id and user_id = :user_id)"] 
+    } elseif { [qf_is_natural_number $customer_id] } {
+        set roles_list [db_list hf_roles_of_user "select label from hf_role where instance_id=:instance_id and id in (select hf_role_id from hf_user_roles_map where instance_id = :instance_id and user_id = :user_id and customer_id=:customer_id)"]
+    } 
+    return $roles_list
+}
+
+
 ad_proc -private hf_privilege_create {
     instance_id
     customer_id
