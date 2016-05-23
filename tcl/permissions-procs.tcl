@@ -517,8 +517,8 @@ ad_proc -private hf_roles {
         set instance_id [ad_conn package_id]
     }
     # check permissions
-    set this_user_id [ad_conn user_id]
-    set read_p [permission::permission_p -part_id $user_id -object_id $instance_id -privilege read]
+    set user_id [ad_conn user_id]
+    set read_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege read]
 
     set role_list [list ]
     if { $read_p } {
@@ -586,7 +586,7 @@ ad_proc -private hf_permission_p {
         # insert a call to a customer_id-to-customer_id map that can return multiple customer_ids, to handle a hierarcy of customer_ids
         # for cases where a large organization has multiple departments.  Right now, treating them as separate customers is adequate.
 
-        set role_ids_list db_list hf_user_roles_for_customer_get "select hf_role_id from hf_user_roles_map where instance_id = :instance_id and qal_customer_id = :customer_id and user_id = :user_id"
+        set role_ids_list [db_list hf_user_roles_for_customer_get "select hf_role_id from hf_user_roles_map where instance_id = :instance_id and qal_customer_id = :customer_id and user_id = :user_id"]
         if { [llength $roles_id_list] > 0 } {
             set property_id_exists_p [db_0or1row hf_property_id_exist_p "select id as property_id from hf_property where instance_id = :instance_id and asset_type_id = :property_label"]
             if { $property_id_exists_p } {

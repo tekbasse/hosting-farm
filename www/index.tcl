@@ -7,13 +7,13 @@ set context [list $title]
 set instance_id [ad_conn package_id]
 set user_id [ad_conn user_id]
 # min perms is app_read_p
-set app_read_p [permission::permission_p -part_id $user_id -object_id $instance_id -privilege read]
+set app_read_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege read]
 if { !$app_read_p } {
     ad_redirect_for_registration
     ad_script_abort
 }
 
-set app_admin_p [permission::permission_p -part_id $user_id -object_id $instance_id -privilege admin]
+set app_admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
 set customer_id ""
 set customer_id_list [hf_customer_ids_for_user $user_id $instance_id]
 if { [llength $customer_id_list] > 1 } {
