@@ -47,14 +47,11 @@ set title $input_arr(page_title)
 # INPUTS / CONTROLLER
 
 # get form inputs if they exist
-if { $form_posted_p } {
-    set form_posted_p [qf_get_inputs_as_array input_arr hash_check 1]
-    set mode $input_arr(mode)
-    set next_mode $input_arr(next_mode)
-    set customer_id $input_arr(customer_id)
-    set asset_id $input_arr(asset_id)
-    set page_title $input_arr(page_title)
-}
+
+set form_posted_p [qf_get_inputs_as_array input_arr hash_check 1]
+# ignore x,y vars from image-based submit
+qf_array_to_vars input_arr [list mode next_mode customer_id asset_id page_title]
+
 set create_p [hf_ui_go_ahead_q create "" "" 0]
 set write_p [hf_ui_go_ahead_q write "" "" 0]
 set admin_p [hf_ui_go_ahead_q admin "" "" 0]
@@ -89,13 +86,6 @@ if { $form_posted_p } {
     set http_header_method [ad_conn method]
     ns_log Notice "hosting-farm/assets.tcl(88): form_posted_p mode '${mode}' next_mode '${next_mode}' http_header_method ${http_header_method} referrer '${referrer_url}'"
 
-    # scrub bad input
-    if { [info exists input_arr(x) ] } {
-        unset input_arr(x)
-    }
-    if { [info exists input_arr(y) ] } {
-        unset input_arr(y)
-    }
     if { ![qf_is_natural_number $asset_id] } {
         set asset_id ""
     } 
@@ -151,7 +141,7 @@ if { $form_posted_p } {
             } elseif { $read_p } {
                 # This is a 404 return, but we list pages for more convenient UI
                 lappend user_message_list "#q-wiki.Page_not_found# #q-wiki.Showing_a_list_of_pages#"
-		util_user_message -message [lindex $user_message_list end]
+                util_user_message -message [lindex $user_message_list end]
                 set mode "l"
             }
         } else {
