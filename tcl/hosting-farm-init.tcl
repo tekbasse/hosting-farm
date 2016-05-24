@@ -10,7 +10,7 @@
 #    @address: po box 20, Marylhurst, OR 97036-0020 usa
 #    @email: tekbasse@yahoo.com
 set instance_id 0
-if [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt } {
+if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt] } {
     # more than one instance exists
     set instance_id 0
 } elseif { $instance_id != 0 } {
@@ -57,16 +57,17 @@ if [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt }
                     insert into hf_role
                     (label,title,description)
                     values (:label,:title,:description)
+                }
                 db_dml default_roles_cr_i {
                     insert into hf_role
                     (label,title,description,instance_id)
                     values (:label,:title,:description,:instance_id)
-
+                    
                 }
             }
         }
     }
-
+    
     set props_lists_len 0
     set db_read_count 0
     # This is in a loop so that one db query handles both cases.
@@ -166,12 +167,12 @@ if [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt }
                             foreach priv $privs_larr($role_level) {
                                 set exists_p [db_0or1row default_privileges_check { select property_id as test from hf_property_role_privilege_map where property_id=:property_id and role_id=:role_id and privilege=:priv } ]
                                 if { !$exists_p } {
-                                     db_dml default_privileges_cr {
+                                    db_dml default_privileges_cr {
                                         insert into hf_property_role_privilege_map
                                         (property_id,role_id,privilege)
                                         values (:property_id,:role_id,:priv)
                                     }
-                                     db_dml default_privileges_cr_i {
+                                    db_dml default_privileges_cr_i {
                                         insert into hf_property_role_privilege_map
                                         (property_id,role_id,privilege,instance_id)
                                         values (:property_id,:role_id,:priv,:instance_id)
@@ -243,14 +244,14 @@ if [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt }
                 set label [string tolower $name]
                 # instance name:
                 set title [apm_instance_name_from_id $instance_id]
-#                db_dml default_assets_cr {
-#                    insert into hf_assets
-#                    (asset_type_id,label,user_id,instance_id)
-#                    values (:asset_type_id,:label,:sysowner_user_id,:instance_id)
-#                }
+                #                db_dml default_assets_cr {
+                #                    insert into hf_assets
+                #                    (asset_type_id,label,user_id,instance_id)
+                #                    values (:asset_type_id,:label,:sysowner_user_id,:instance_id)
+                #                }
                 # use the api
                 # Make an example local system profile
-                set uname $uname
+                set uname "uname"
                 set system_type [exec $uname]
                 set spc_idx [string first " " $system_type]
                 if { $spc_id > -1 } {
@@ -264,25 +265,25 @@ if [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt }
                 set ss_nsd_name [ns_info name]
                 set os_id [hf_os_write "" $label $system_type2 $system_type 0 0 "Default example SAAS system" $instance_id]
                 set ss_id [hf_ss_write "" $ss_nsd_name $name $ss_nsd_file $asset_type_id "key words" "description" "content" "comments" 0 "" 0 0 0 0 0 0 "" "" "" "" "" $instance_id $user_id "" "" $ss_nsd_name $name $ss_nsd_file "http" $http_port "" "" "" "" "" $ss_config_file "" "" ]
-# ss_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created ss_server_name ss_service_name ss_daemon_ref ss_protocol ss_port ss_ua_id ss_ss_type ss_ss_subtype ss_ss_undersubtype ss_ss_ultrasubtype ss_config_uri ss_memory_bytes ss_details 
+                # ss_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created ss_server_name ss_service_name ss_daemon_ref ss_protocol ss_port ss_ua_id ss_ss_type ss_ss_subtype ss_ss_undersubtype ss_ss_ultrasubtype ss_config_uri ss_memory_bytes ss_details 
 
                 hf_asset_create problemvm ProblemVM vm "Problem VM" "" "" "Demo/vm system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
                 hf_vm_write vm_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created vm_domain_name vm_ip_id vm_ni_id vm_ns_id vm_type_id vm_resource_path vm_mount_union vm_details
-# vm_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created vm_domain_name vm_ip_id vm_ni_id vm_ns_id vm_type_id vm_resource_path vm_mount_union vm_details
+                # vm_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created vm_domain_name vm_ip_id vm_ni_id vm_ns_id vm_type_id vm_resource_path vm_mount_union vm_details
 
                 hf_asset_create problemhw ProblemHW hw "Problem HW" "" "" "Demo/hw system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
                 hf_hw_write hw_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created hw_system_name hw_backup_sys hw_ni_id hw_os_id hw_description hw_details 
-# hw_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created hw_system_name hw_backup_sys hw_ni_id hw_os_id hw_description hw_details 
+                # hw_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created hw_system_name hw_backup_sys hw_ni_id hw_os_id hw_description hw_details 
 
                 hf_asset_create problemvh ProblemVH vh "Problem VH" "" "" "Demo/vh system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
 
                 hf_asset_create problemns ProblemNS ns "Problem NS" "" "" "Demo/ns system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
                 hf_ns_write ns_id name_record active_p {instance_id ""} 
-# ns_id name_record active_p {instance_id ""} 
+                # ns_id name_record active_p {instance_id ""} 
 
                 hf_asset_create problemdc ProblemDC dc "Problem DC" "" "" "Demo/dc system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
                 hf_dc_write dc_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created dc_affix dc_description dc_details 
-# dc_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created dc_affix dc_description dc_details 
+                # dc_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created dc_affix dc_description dc_details 
             }
         }
     }

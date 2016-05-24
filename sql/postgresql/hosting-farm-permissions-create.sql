@@ -91,7 +91,7 @@ CREATE TABLE hf_role (
     -- convert to: technical_contact,billing_contact,primary_contact,staff, supervisor ,admin
     --  where staff is perhaps read-only, supervisor is read/write, admin handles most all
     --     permissions_admin
-    label 	varchar(300) unique not null,
+    label 	varchar(300) not null,
     title	varchar(40),
     description text
 );
