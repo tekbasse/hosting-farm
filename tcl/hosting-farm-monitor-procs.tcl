@@ -732,15 +732,18 @@ ad_proc -private hf_ui_go_ahead_q {
             }
         } 
         set q3 1
-        if { ![string match {hf_*} $argv0 ] && ![string match {hfl_*} $argv0 ] } {
-            set q3 0
-        } 
+        ns_log Notice "hf_nc_go_ahead: ns_thread name [ns_thread name] ns_thread id [ns_thread id] ns_info threads [ns_info threads] ns_info scheduled [ns_info scheduled]"
+        #if { ![string match {hf_*} $argv0 ] && ![string match {hfl_*} $argv0 ] } {
+        #    set q3 0
+        #} 
         if { $q1 == 0 || $q2 == 0 || $q3 == 0 } {
             set go_ahead 0
             if { ![info exists $asset_id_varnam] } {
                 set asset_id "does *not* exist"
             }
-            ns_log Warning "hf_ui_go_head.734: failed. Called by proc '${argv0}' args: privilege '${privilege}' asset_id_varnam '${asset_id_varnam}' asset_id '${asset_id}' asset_type_id '${asst_type_id}' ${msg_extra}"
+            ns_log Warning "hf_ui_go_head.734: failed. args: privilege '${privilege}' asset_id_varnam '${asset_id_varnam}' asset_id '${asset_id}' asset_type_id '${asst_type_id}' ${msg_extra}"
+        } else {
+            set go_ahead 1
         }
     }
     if { !$go_ahead && $break_p } {

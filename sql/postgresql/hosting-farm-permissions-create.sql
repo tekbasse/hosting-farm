@@ -13,7 +13,7 @@
 --       WHO can do WHAT on which OBJECT (context).
 --       WHAT: read/write/create/delete/admin
 --       WHO: user_id
---	 OBJECT: object_id
+--   OBJECT: object_id
 -- from:  http://openacs.org/doc/permissions-tediously-explained.html
 
 -- In Openacs, a  permissions check is like this:  write_p       = permissions_call(object_id,user_id,write)
@@ -35,7 +35,7 @@
 
 --In order of operation (and dependencies):
 -- WHO/SUBJECT: user_id is checked against customer_id (if not admin_p per OpenACS).
--- 		role_id(s) is/are determined from customer_id and user_id
+--      role_id(s) is/are determined from customer_id and user_id
 -- OBJECT:      property_id mapped from hard coded label or asset_type
 -- WHAT/ACTION: read/write/create/delete/admin is determined from referencing a table of property_id and role_id (a type of role: admin,tech,owner etc ie property_id -> role_id)
 
@@ -81,7 +81,7 @@ CREATE TABLE hf_role (
     -- qal_customer_id and user_id distill to a role_id(s) list
     instance_id  integer,
     -- hf_role.id
-    id 		integer unique not null DEFAULT nextval ( 'hf_permissions_id_seq' ),
+    id      integer unique not null DEFAULT nextval ( 'hf_permissions_id_seq' ),
     --     access_rights.technical_contact
     --     access_rights.technical_staff
     --     access_rights.billing_contact
@@ -91,8 +91,8 @@ CREATE TABLE hf_role (
     -- convert to: technical_contact,billing_contact,primary_contact,staff, supervisor ,admin
     --  where staff is perhaps read-only, supervisor is read/write, admin handles most all
     --     permissions_admin
-    label 	varchar(300) not null,
-    title	varchar(40),
+    label   varchar(300) not null,
+    title   varchar(40),
     description text
 );
 
@@ -123,11 +123,11 @@ CREATE TABLE hf_user_roles_map (
     -- Permission for user_id to perform af hs_roles.allow on qal_customer_id hf_assets
     -- This is where roles for qal_customer_id are assigned to user_id
     instance_id     integer,
-    user_id 	    integer,
+    user_id         integer,
     -- from qal_customer.id defined in accounts-ledger package
     qal_customer_id integer,
     -- hf_role.id
-    hf_role_id 	    integer
+    hf_role_id      integer
 );
 
 create index hf_user_roles_map_instance_id_idx on hf_user_roles_map (instance_id);
@@ -141,7 +141,7 @@ CREATE TABLE hf_property_role_privilege_map (
     property_id integer,
     role_id integer,
     -- privilege can be read, create, write (includes trash), delete, or admin
-    privilege 	varchar(12)
+    privilege   varchar(12)
     -- If privilege exists, then assumes permission, otherwise not allowed.
     -- To use, db_0or1row select privilege from hf_property_role_privilege where property_id = :property_id, role_id = :role_id
     -- If db_0or1row returns 1, permission granted, else 0 not granted.

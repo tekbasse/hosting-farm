@@ -2134,10 +2134,10 @@ ad_proc -private hf_ss_write {
     }
     if { $ss_id eq "" } {
         # hf_asset_create checks permission to create
-        set ss_id_new [hf_asset_create $label $name $asset_type_id $title $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
+        set ss_id_new [hf_asset_create $name $title $asset_type_id $title $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
     } else {
         # hf_asset_write checks permission to write
-        set ss_id_new [hf_asset_write $label $name $title $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $ss_id $flags $instance_id $user_id]
+        set ss_id_new [hf_asset_write $name $title $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $ss_id $flags $instance_id $user_id]
     }
     if { $ss_id_new ne "" } {
         # insert ss asset hf_services

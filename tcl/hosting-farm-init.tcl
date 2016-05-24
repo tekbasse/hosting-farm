@@ -254,7 +254,7 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                 set uname "uname"
                 set system_type [exec $uname]
                 set spc_idx [string first " " $system_type]
-                if { $spc_id > -1 } {
+                if { $spc_idx > -1 } {
                     set system_type2 [string trim [string tolower [string range $system_type 0 $spc_idx]]]
                 } else {
                     set system_type2 [string trim [string tolower $system_type]]
@@ -264,7 +264,7 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                 set ss_nsd_file [ns_info nsd]
                 set ss_nsd_name [ns_info name]
                 set os_id [hf_os_write "" $label $system_type2 $system_type 0 0 "Default example SAAS system" $instance_id]
-                set ss_id [hf_ss_write "" $ss_nsd_name $name $ss_nsd_file $asset_type_id "key words" "description" "content" "comments" 0 "" 0 0 0 0 0 0 "" "" "" "" "" $instance_id $user_id "" "" $ss_nsd_name $name $ss_nsd_file "http" $http_port "" "" "" "" "" $ss_config_file "" "" ]
+                set ss_id [hf_ss_write "" $ss_nsd_name $ss_nsd_file $asset_type_id "key words" "description" "content" "comments" 0 "" 0 0 0 0 0 0 "" "" "" "" "" $instance_id $sysowner_user_id "" "" $ss_nsd_name $name $ss_nsd_file "http" $http_port "" "" "" "" "" $ss_config_file "" "" ]
                 # ss_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created ss_server_name ss_service_name ss_daemon_ref ss_protocol ss_port ss_ua_id ss_ss_type ss_ss_subtype ss_ss_undersubtype ss_ss_ultrasubtype ss_config_uri ss_memory_bytes ss_details 
 
                 hf_asset_create problemvm ProblemVM vm "Problem VM" "" "" "Demo/vm system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""

@@ -37,6 +37,7 @@ ad_proc -private hfl_allow_q {
     Confirms process is allowed.
 } {
     set go_ahead 1
+
     #  not run via connection, or is run by an admin
     if { [ns_conn isconnected] } {
         set user_id [ad_conn user_id]
@@ -48,11 +49,13 @@ ad_proc -private hfl_allow_q {
         }
     } else {
         # make sure called by hf::monitor::do directly
-        if { $argv0 ne "hf::monitor::do" } {
-            ns_log Warning "hfl_go_head(52). failed. Called by argv0 '${argv0}'"
-            set go_head 0
-            ad_script_abort
-        }
+       # if { $argv0 ne "hf::monitor::do" } {
+       #     ns_log Warning "hfl_go_head(52). failed. Called by argv0 '${argv0}'"
+       #     set go_head 0
+       #     ad_script_abort
+       # } 
+        ns_log Notice "hf_nc_go_ahead: ns_thread name [ns_thread name] ns_thread id [ns_thread id] ns_info threads [ns_info threads] ns_info scheduled [ns_info scheduled]"
+
     }
     return $go_ahead
 }
