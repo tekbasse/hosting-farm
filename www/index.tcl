@@ -39,7 +39,7 @@ if { $app_admin_p } {
 } else {
     set user_roles_list [hf_roles_of_user $user_id $instance_id $customer_id]
 }
-
+ns_log Notice "index.tcl user_roles_list '${user_roles_list}' app_roles_list '${app_roles_list}'"
  
 # create more flags for conditional adp content
 foreach app_role $app_roles_list {
