@@ -46,14 +46,19 @@ create index hf_asset_type_id_idx on hf_asset_type (id);
 create index hf_asset_type_label_idx on hf_asset_type (label);
 
 -- part of database_list
--- a contract is an asset that is not a template.
+-- a contract applies to an asset that is not a template.
+
+-- Clarification about nomentclature:
+-- Naming convention is: label, name, description
+-- in line with OpenACS way.
+-- Old way was: name, title, description
 CREATE TABLE hf_assets (
     instance_id     integer,
     -- asset_id
     id              integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- following 3 fields are similar in use to q-wiki template mapping
     template_id     integer,
-    user_id     integer,
+    user_id         integer,
     last_modified   timestamptz,
     created         timestamptz,
     -- one of dc data center
@@ -70,14 +75,21 @@ CREATE TABLE hf_assets (
     -- null is same as company_summary.is_exempt=true
     qal_product_id  varchar(19) not null DEFAULT '',
     qal_customer_id varchar(19) not null DEFAULT '',
-    -- One word reference aka name, sku or readable id.
-    -- Must be unique within one instance_id
-    label           varchar(30),
+    -- One word reference aka a name, sku or readable id.
+    -- Must be unique within one instance_id.
+    -- (was q-wiki.name ie works as url)
+    -- Not to be confused with hf_assets.name.
+    -- Label might be domain, machine name etc.
+    label           varchar(65),
+    -- A pretty version of label, spaces allowed etc
+    -- (was q-wiki.title ie page title)
+    name           varchar(65),
     keywords        varchar(100),
     -- one line description
+    -- (was q-wiki.description)
     description     varchar(80),
     -- publishable content. ported from q-wiki for publishing
-    content     text,
+    content         text,
     -- internal comments. ported from q-wiki for publishing
     comments        text,
     -- see server.templated

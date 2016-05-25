@@ -9,51 +9,14 @@ ad_library {
     @address: po box 20, Marylhurst, OR 97036-0020 usa
     @email: tekbasse@yahoo.com
 
-    # this is ported from q-wiki.
-    # in this context, template_id refers to a page with shared revisions of multiple page_id(s).
-    # hf_assets uses template in the context of an original from which copies are made.
-
-    # to do: 
-    # make q-wiki.tcl work for hf_asset procs
-    #  convert the tcl in the hf-asset.tcl to modular procs for multiple uses with
-    # subsets of assets ie dedicated custom 1 page apps.
-
     # Assets can be created, revised, trashed and deleted.
-    # Deleted option should only be available if an asset is not referenced.. 
-    # TODO: add reference checking for hf_asset_delete
-    #   asset_type_id
+    # Deleted option should only be available if an asset is trashed. 
 
-    # temporary map showing qw_ vs. hf_ fields.
-    template_id
-    id
-    label (was q-wiki.url)
-    name  (pretty label)
-    title          title (was one_line_description)
-    content        # publishable content
-    keywords       # publishable search
-    description
-    comments       # internal comments
-    trashed_p
-    trashed_by
-    # wherever keywords are referenced, add these fields:
-    time_start     # becomes/became active
-    time_stop      # expires/expired
-    #flags   (see lower in list)
-    template_p
-    templated_p  # this value should only be 1 when template_p eq 0
-    publish_p
-    monitor_p
-    popularity
-    triage_priority
-    flags
-    op_status
-    ua_id # burger kontonavn, see hf_ua
-    ns_id # name service, custom record
-    qal_product_id 
-    qal_customer_id
-    instance_id
-    user_id
 }
+
+# This is ported from q-wiki.
+# In q-wiki context, template_id refers to a page with shared revisions of multiple page_id(s).
+# hf_asset* uses template in the context of an original from which copies are made.
 
 ad_proc -public hf_asset_id_exists { 
     asset_id
@@ -484,6 +447,8 @@ ad_proc -public hf_asset_read_keys {
 } {
     Returns an ordered list of keys that is parallel to the ordered list returned by hf_asset_read.
 } {
+    # naming convention is: label, name, description
+    # old way: name, title, description
     set keys_list [list \
                        name \
                        title \
