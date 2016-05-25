@@ -239,11 +239,44 @@ ad_proc -public hf_asset_from_label {
     return $asset_id
 }
 
+# asset_create/write param number vs. all hf_assets fields.
+# 0 is ignored for hf_asset_create
+#
+#  21 instance_id
+#  0  asset_id
+#  19 template_id
+#  22 user_id
+#     last_modified
+#     created
+#  3  asset_type_id
+#  17 qal_product_id
+#  18 qal_customer_id
+#  1  label
+#  2  name
+#  5  keywords
+#  6  description
+#  4  content
+#  7  comments
+#  9  templated_p
+#  8  template_p
+#     time_start
+#     time_stop
+#  16 ns_id
+#  15 ua_id
+#  14 op_status
+#     trashed_p
+#     trashed_by
+#  12 popularity
+#  20 flags
+#  10 publish_p
+#  11 monitor_p
+#  13 triage_priority
+#  
+
 ad_proc -public hf_asset_create { 
     label
     name
     asset_type_id
-    title
     content
     keywords
     description
@@ -263,7 +296,6 @@ ad_proc -public hf_asset_create {
     {flags ""}
     {instance_id ""}
     {user_id ""}
-    {from_template_id ""}
 } {
     Creates hf asset. returns asset_id, or 0 if error. instance_id is usually package_id
 } {
@@ -301,8 +333,8 @@ ad_proc -public hf_asset_create {
         db_transaction {
             ns_log Notice "hf_asset_create: hf_asset_create id '$asset_id' template_id '$template_id' name '$name' instance_id '$instance_id' user_id '$user_id'"
             db_dml hf_asset_create { insert into hf_assets
-                (id,template_id,name,asset_type_id,title,keywords,description,content,comments,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,from_template_id)
-                values (:asset_id,:template_id,:name,:asset_type_id,:title,:keywords,:description,:content,:comments,:template_p,:templated_p,:publish_p,:monitor_p,:popularity,:triage_priority,:op_status,:ua_id,:ns_id,:qal_product_id,:qal_customer_id,:instance_id,:user_id,current_timestamp,current_timestamp,:from_template_id) }
+                (id,template_id,label,asset_type_id,name,keywords,description,content,comments,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,from_template_id)
+                values (:asset_id,:template_id,:label,:asset_type_id,:name,:keywords,:description,:content,:comments,:template_p,:templated_p,:publish_p,:monitor_p,:popularity,:triage_priority,:op_status,:ua_id,:ns_id,:qal_product_id,:qal_customer_id,:instance_id,:user_id,current_timestamp,current_timestamp,:from_template_id) }
             
             # Add entry to hf_asset_label_map if new asset, otherwise update existing record.
             # A new record is only when template_id = asset_id
@@ -331,8 +363,8 @@ ad_proc -public hf_asset_stats_keys {
     Returns an ordered list of keys that is parallel to the ordered list returned by hf_asset_stats.
 } {
     set keys_list [list \
+                       label \
                        name \
-                       title \
                        asset_type_id \
                        keywords \
                        description \
@@ -363,7 +395,7 @@ ad_proc -public hf_asset_stats {
     {instance_id ""}
     {user_id ""}
 } {
-    Returns asset stats as a list: name, title, asset_type_id, keywords, description, template_p, templated_p, trashed_p, trashed_by, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, instance_id, user_id, last_modified, created, flags, template_id
+    Returns asset stats as a list: label, name, asset_type_id, keywords, description, template_p, templated_p, trashed_p, trashed_by, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, instance_id, user_id, last_modified, created, flags, template_id
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -378,7 +410,7 @@ ad_proc -public hf_asset_stats {
     set customer_id [hf_customer_id_of_asset_id $asset_id $instance_id]
     set read_p [hf_permission_p $user_id $customer_id assets read $instance_id]
     if { $read_p } {
-        set return_list_of_lists [db_list_of_lists hf_asset_stats { select name,title,asset_type_id,keywords,description,template_p,templated_p,trashed_p,trashed_by,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,flags,template_id from hf_assets where id = :asset_id and instance_id = :instance_id } ] 
+        set return_list_of_lists [db_list_of_lists hf_asset_stats { select label,name,asset_type_id,keywords,description,template_p,templated_p,trashed_p,trashed_by,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,flags,template_id from hf_assets where id = :asset_id and instance_id = :instance_id } ] 
         # convert return_lists_of_lists to return_list
         set return_list [lindex $return_list_of_lists 0]
         # convert trash null/empty value to logical 0
@@ -450,8 +482,8 @@ ad_proc -public hf_asset_read_keys {
     # naming convention is: label, name, description
     # old way: name, title, description
     set keys_list [list \
+                       label \
                        name \
-                       title \
                        asset_type_id \
                        keywords \
                        description \
@@ -484,7 +516,7 @@ ad_proc -public hf_asset_read {
     {instance_id ""}
     {user_id ""}
 } {
-    Returns asset contents of asset_id. Returns asset as list of attribute values: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id
+    Returns asset contents of asset_id. Returns asset as list of attribute values: label,name,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id
 
 } {
     
@@ -501,7 +533,7 @@ ad_proc -public hf_asset_read {
     set read_p [hf_permission_p $user_id $customer_id assets read $instance_id]
     set return_list [list ]
     if { $read_p } {
-        set return_list_of_lists [db_list_of_lists hf_asset_get { select name, title, asset_type_id, keywords, description, content, comments, trashed_p, trashed_by, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id,ns_id, qal_product_id, qal_customer_id, instance_id, user_id, last_modified, created, template_id from hf_assets where id = :asset_id and instance_id = :instance_id } ] 
+        set return_list_of_lists [db_list_of_lists hf_asset_get { select label, name, asset_type_id, keywords, description, content, comments, trashed_p, trashed_by, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id,ns_id, qal_product_id, qal_customer_id, instance_id, user_id, last_modified, created, template_id from hf_assets where id = :asset_id and instance_id = :instance_id } ] 
         # convert return_lists_of_lists to return_list
         set return_list [lindex $return_list_of_lists 0]
         # convert null/empty values to logical 0 for these index numbers:
@@ -520,7 +552,6 @@ ad_proc -public hf_asset_read {
 ad_proc -public hf_asset_write {
     label
     name
-    title
     asset_type_id
     content
     keywords
@@ -573,8 +604,8 @@ ad_proc -public hf_asset_write {
             ns_log Notice "hf_asset_write: hf_asset_create id '$asset_id' template_id '$template_id' name '$name' instance_id '$instance_id' user_id '$user_id'"
             db_transaction {
                 db_dml hf_asset_create { insert into hf_assets
-                (id,template_id,name,title,asset_type_id,keywords,description,content,comments,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created)
-                values (:asset_id,:template_id,:name,:title,:asset_type_id,:keywords,:description,:content,:comments,:template_p,:templated_p,:publish_p,:monitor_p,:popularity,:triage_priority,:op_status,:ua_id,:ns_id,:qal_product_id,:qal_customer_id,:instance_id,:user_id,current_timestamp,current_timestamp) }
+                (id,template_id,label,name,asset_type_id,keywords,description,content,comments,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created)
+                values (:asset_id,:template_id,:label,:name,:asset_type_id,:keywords,:description,:content,:comments,:template_p,:templated_p,:publish_p,:monitor_p,:popularity,:triage_priority,:op_status,:ua_id,:ns_id,:qal_product_id,:qal_customer_id,:instance_id,:user_id,current_timestamp,current_timestamp) }
                 ns_log Notice "hf_asset_write: hf_asset_id_update asset_id '$new_asset_id' instance_id '$instance_id' old_asset_id '$old_asset_id'"
                 db_dml hf_asset_id_update { update hf_asset_label_map
                     set asset_id = :new_asset_id where instance_id = :instance_id and label = :label }

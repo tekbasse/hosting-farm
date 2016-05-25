@@ -181,8 +181,8 @@ ad_proc -private hf_asset_create_from_asset_template {
                 }
                 #
                 # template_p, publish_p, popularity should start false(0) for all copy cases,  op_status s/b ""
-                set new_asset_id [hf_asset_create $asset_label_new $asset_type_id $title $content $keywords $description $comments 0 $templated_p 0 $monitor_p 0 $triage_priority "" $ua_id_new $ns_id_new $qal_product_id $customer_id $template_id $flags $instance_id $user_id]
-                #hf_asset_create params: name, asset_type_id, title, content, keywords, description, comments, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, template_id, flags, instance_id, user_id
+                set new_asset_id [hf_asset_create $asset_label_new $name $asset_type_id $content $keywords $description $comments 0 $templated_p 0 $monitor_p 0 $triage_priority "" $ua_id_new $ns_id_new $qal_product_id $customer_id $template_id $flags $instance_id $user_id]
+                #hf_asset_create params: label, name, asset_type_id, content, keywords, description, comments, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, template_id, flags, instance_id, user_id
 
             }
         }
@@ -343,7 +343,7 @@ ad_proc -private hf_asset_do {
     set success_p 0
     if { $admin_p } {
         set asset_stats_list [hf_asset_stats $asset_id $instance_id]
-        # name, title, asset_type_id, keywords, description, template_p, templated_p, trashed_p, trashed_by, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, instance_id, user_id, last_modified, created, flags
+        # label, name, asset_type_id, keywords, description, template_p, templated_p, trashed_p, trashed_by, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, instance_id, user_id, last_modified, created, flags
         set asset_type_id [lindex $asset_stats_list 2]
         set asset_template_p [lindex $asset_stats_list 5]
         set asset_templated_p [lindex $asset_stats_list 6]
@@ -1053,9 +1053,9 @@ ad_proc -private hf_vhs {
 
 ad_proc -private hf_vh_keys {
 } {
-    Returns an ordered list of keys that is parallel to the ordered list returned by hf_vh_read: name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id v_ua_id v_ns_id domain_name details vm_id
+    Returns an ordered list of keys that is parallel to the ordered list returned by hf_vh_read: label name asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id v_ua_id v_ns_id domain_name details vm_id
 } {
-    set vh_list [list name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id v_ua_id v_ns_id domain_name details vm_id]
+    set vh_list [list label name asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id v_ua_id v_ns_id domain_name details vm_id]
     return $vh_list
 }
 
@@ -1064,7 +1064,7 @@ ad_proc -private hf_vh_read {
     {instance_id ""}
 } {
     reads full detail of one virtual host asset. This is not redundant to hf_vhs. This accepts only 1 id and includes all attributes and no summary counts of dependents.
-    Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id,v_ua_id, v_ns_id, domain_name details, vm_id
+    Returns ordered list: label,name,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id,v_ua_id, v_ns_id, domain_name details, vm_id
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -1073,7 +1073,7 @@ ad_proc -private hf_vh_read {
     set user_id [ad_conn user_id]
 
     set attribute_list [hf_asset_read $vh_id $instance_id $user_id]
-    # Returns asset contents of asset_id. Returns asset as list of attribute values: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id
+    # Returns asset contents of asset_id. Returns asset as list of attribute values: label,name,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id
     set asset_type_id [lindex $attribute_list 2]
     # is asset_id of type vh?
     set return_list [list ]
@@ -1094,8 +1094,8 @@ ad_proc -private hf_vh_read {
 
 ad_proc -private hf_vh_write {
     vh_id
+    label
     name
-    title
     asset_type_id
     keywords
     description
@@ -1150,10 +1150,10 @@ ad_proc -private hf_vh_write {
     }        
     if { $vh_id eq "" } {
         # hf_asset_create checks permission to create
-        set vh_id_new [hf_asset_create $label $name $asset_type_id $title $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
+        set vh_id_new [hf_asset_create $label $name $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
     } else {
         # hf_asset_write checks permission to write
-        set vh_id_new [hf_asset_write $label $name $title $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $vh_id $flags $instance_id $user_id]
+        set vh_id_new [hf_asset_write $label $name $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $vh_id $flags $instance_id $user_id]
     }
     if { $vh_id_new ne "" } {
         # insert vh asset in hf_vhosts and hf_vm_vh_map
@@ -1737,12 +1737,12 @@ ad_proc -private hf_dc_read {
     {dc_id ""}
     {instance_id ""}
 } {
-    reads full detail of dcs. This is not redundant to hf_dcs. This is for 1 dc_id. It includes all attributes and no summary counts of dependents. Returns general asset contents followed by specific dc details. dc description is contextual to dc, whereas asset description is in context of all assets. Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id dc_affix, dc_description, dc_details 
+    reads full detail of dcs. This is not redundant to hf_dcs. This is for 1 dc_id. It includes all attributes and no summary counts of dependents. Returns general asset contents followed by specific dc details. dc description is contextual to dc, whereas asset description is in context of all assets. Returns ordered list: label,name,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id dc_affix, dc_description, dc_details 
 } {
     hf_ui_go_ahead_q read dc_id
 
     set attribute_list [hf_asset_read $dc_id $instance_id $user_id]
-    # Returns asset contents of asset_id. Returns asset as list of attribute values: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id
+    # Returns asset contents of asset_id. Returns asset as list of attribute values: label,name,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id
     set asset_type_id [lindex $attribute_list 2]
     # is asset_id of type dc?
     set return_list [list ]
@@ -1762,8 +1762,8 @@ ad_proc -private hf_dc_read {
 
 ad_proc -private hf_dc_write {
     dc_id
+    label
     name
-    title
     asset_type_id
     keywords
     description
@@ -1807,10 +1807,10 @@ ad_proc -private hf_dc_write {
         
         if { $dc_id eq "" } {
             # hf_asset_create checks permission to create
-            set dc_id_new [hf_asset_create $label $name $asset_type_id $title $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
+            set dc_id_new [hf_asset_create $label $name $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
         } else {
             # hf_asset_write checks permission to write
-            set dc_id_new [hf_asset_write $label $name $title $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $dc_id $flags $instance_id $user_id]
+            set dc_id_new [hf_asset_write $label $name $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $dc_id $flags $instance_id $user_id]
         }
         if { $dc_id_new ne "" } {
             # insert dc asset hf_datacenters
@@ -1819,7 +1819,7 @@ ad_proc -private hf_dc_write {
                 values (:instance_id,:dc_id_new,:dc_affix,:dc_description,:dc_details) }
         } 
     } else {
-        ns_log Notice "hf_dc_write.1606: Wrong asset_type_id '${asset_type_id}'. Write denied. label '${label}' name '${name}' title '${title}' content '${content}' keywords '${keywords}' description '${description}' comments '${comments}' template_p '${template_p}' templated_p '${templated_p}' publish_p '${publish_p}' monitor_p '${monitor_p}' popularity '${popularity}' triage_priority '${triage_priority}' op_status '${op_status}' ua_id '${ua_id}' ns_id '${ns_id}' qal_product_id '${qal_product_id}' qal_customer_id '${qal_customer_id}' template_id '${template_id}' dc_id '${dc_id}' flags '${flags}' instance_id '${instance_id}' user_id '${user_id}'"
+        ns_log Notice "hf_dc_write.1606: Wrong asset_type_id '${asset_type_id}'. Write denied. label '${label}' name '${name}' content '${content}' keywords '${keywords}' description '${description}' comments '${comments}' template_p '${template_p}' templated_p '${templated_p}' publish_p '${publish_p}' monitor_p '${monitor_p}' popularity '${popularity}' triage_priority '${triage_priority}' op_status '${op_status}' ua_id '${ua_id}' ns_id '${ns_id}' qal_product_id '${qal_product_id}' qal_customer_id '${qal_customer_id}' template_id '${template_id}' dc_id '${dc_id}' flags '${flags}' instance_id '${instance_id}' user_id '${user_id}'"
     }
     return $dc_id_new
 }
@@ -1830,13 +1830,13 @@ ad_proc -private hf_hw_read {
     {instance_id ""}
 } {
     reads full detail of one hw. This is not redundant to hf_hws. This accepts only 1 id and includes all attributes and no summary counts of dependents.
-    Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id, hw_system_name, hw_backup_sys, hw_ni_id, hw_os_id, hw_description, hw_details
+    Returns ordered list: label,name,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id, hw_system_name, hw_backup_sys, hw_ni_id, hw_os_id, hw_description, hw_details
 } {
     hf_ui_go_ahead_q read hw_id
 
     # Since the dependency tree is large, no dependencies are checked
     set attribute_list [hf_asset_read $hw_id $instance_id $user_id]
-    # Returns asset contents of asset_id. Returns asset as list of attribute values: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id
+    # Returns asset contents of asset_id. Returns asset as list of attribute values: label,name,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id
     set asset_type_id [lindex $attribute_list 2]
     # is asset_id of type hw?
     set return_list [list ]
@@ -1856,8 +1856,8 @@ ad_proc -private hf_hw_read {
 
 ad_proc -private hf_hw_write {
     hw_id
+    label
     name
-    title
     asset_type_id
     keywords
     description
@@ -1907,10 +1907,10 @@ ad_proc -private hf_hw_write {
         
         if { $hw_id eq "" } {
             # hf_asset_create checks permission to create
-            set hw_id_new [hf_asset_create $label $name $asset_type_id $title $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
+            set hw_id_new [hf_asset_create $label $name $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
         } else {
             # hf_asset_write checks permission to write
-            set hw_id_new [hf_asset_write $label $name $title $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $hw_id $flags $instance_id $user_id]
+            set hw_id_new [hf_asset_write $label $name $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $hw_id $flags $instance_id $user_id]
         }
         if { $hw_id_new ne "" } {
             # insert hw asset hf_hardware
@@ -1919,16 +1919,16 @@ ad_proc -private hf_hw_write {
                 values (:instance_id,:hw_id_new,:hw_system_name,:hw_backup_sys,:hw_ni_id,:hw_os_id,:hw_description,:hw_details) }
         } 
     } else {
-        ns_log Notice "hf_dc_write.1709: Wrong asset_type_id '${asset_type_id}'. Write denied. label '${label}' name '${name}' title '${title}' content '${content}' keywords '${keywords}' description '${description}' comments '${comments}' template_p '${template_p}' templated_p '${templated_p}' publish_p '${publish_p}' monitor_p '${monitor_p}' popularity '${popularity}' triage_priority '${triage_priority}' op_status '${op_status}' ua_id '${ua_id}' ns_id '${ns_id}' qal_product_id '${qal_product_id}' qal_customer_id '${qal_customer_id}' template_id '${template_id}' hw_id '${hw_id}' flags '${flags}' instance_id '${instance_id}' user_id '${user_id}'"
+        ns_log Notice "hf_dc_write.1709: Wrong asset_type_id '${asset_type_id}'. Write denied. label '${label}' name '${name}' content '${content}' keywords '${keywords}' description '${description}' comments '${comments}' template_p '${template_p}' templated_p '${templated_p}' publish_p '${publish_p}' monitor_p '${monitor_p}' popularity '${popularity}' triage_priority '${triage_priority}' op_status '${op_status}' ua_id '${ua_id}' ns_id '${ns_id}' qal_product_id '${qal_product_id}' qal_customer_id '${qal_customer_id}' template_id '${template_id}' hw_id '${hw_id}' flags '${flags}' instance_id '${instance_id}' user_id '${user_id}'"
     }
     return $hw_id_new
 }
 
 ad_proc -private hf_vm_keys {
 } {
-    Returns an ordered list of keys that is parallel to the ordered list returned by hf_vm_read: name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id vm_domain_name vm_ip_id vm_ni_id vm_ns_id vm_os_id vm_type_id vm_resource_path vm_mount_union vm_details
+    Returns an ordered list of keys that is parallel to the ordered list returned by hf_vm_read: label name asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id vm_domain_name vm_ip_id vm_ni_id vm_ns_id vm_os_id vm_type_id vm_resource_path vm_mount_union vm_details
 } {
-    set vm_list [list name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id vm_domain_name vm_ip_id vm_ni_id vm_ns_id vm_os_id vm_type_id vm_resource_path vm_mount_union vm_details
+    set vm_list [list label name asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id vm_domain_name vm_ip_id vm_ni_id vm_ns_id vm_os_id vm_type_id vm_resource_path vm_mount_union vm_details
     return $vm_list
 }
 
@@ -1937,13 +1937,13 @@ ad_proc -private hf_vm_read {
     {instance_id ""}
 } {
     reads full detail of one vm. This is not redundant to hf_vms. This accepts only 1 id and includes all attributes and no summary counts of dependents.
-    Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id vm_domain_name, vm_ip_id, vm_ni_id, vm_ns_id, vm_os_id, vm_type_id, vm_resource_path, vm_mount_union, vm_details
+    Returns ordered list: label,name,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id vm_domain_name, vm_ip_id, vm_ni_id, vm_ns_id, vm_os_id, vm_type_id, vm_resource_path, vm_mount_union, vm_details
 
 } {
     hf_ui_go_ahead_q read vm_id
 
     set attribute_list [hf_asset_read $vm_id $instance_id $user_id]
-    # Returns asset contents of asset_id. Returns asset as list of attribute values: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id
+    # Returns asset contents of asset_id. Returns asset as list of attribute values: label,name,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id
     set asset_type_id [lindex $attribute_list 2]
     # is asset_id of type vm?
     set return_list [list ]
@@ -1963,8 +1963,8 @@ ad_proc -private hf_vm_read {
 
 ad_proc -private hf_vm_write {
     vm_id
+    label
     name
-    title
     asset_type_id
     keywords
     description
@@ -2016,10 +2016,10 @@ ad_proc -private hf_vm_write {
         
         if { $vm_id eq "" } {
             # hf_asset_create checks permission to create
-            set vm_id_new [hf_asset_create $label $name $asset_type_id $title $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
+            set vm_id_new [hf_asset_create $label $name $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
         } else {
             # hf_asset_write checks permission to write
-            set vm_id_new [hf_asset_write $label $name $title $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $vm_id $flags $instance_id $user_id]
+            set vm_id_new [hf_asset_write $label $name $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $vm_id $flags $instance_id $user_id]
         }
         if { $vm_id_new ne "" } {
             # insert vm asset hf_virtual_machines
@@ -2029,16 +2029,16 @@ ad_proc -private hf_vm_write {
                 values (:instance_id, :new_vm_id, :vm_domain_name, :vm_ip_id, :vm_ni_id, :vm_ns_id, :vm_type_id, :vm_resource_path, :vm_mount_union, :vm_details) }
         } 
     } else {
-        ns_log Notice "hf_vm_write.1815: Wrong asset_type_id '${asset_type_id}'. Write denied. label '${label}' name '${name}' title '${title}' content '${content}' keywords '${keywords}' description '${description}' comments '${comments}' template_p '${template_p}' templated_p '${templated_p}' publish_p '${publish_p}' monitor_p '${monitor_p}' popularity '${popularity}' triage_priority '${triage_priority}' op_status '${op_status}' ua_id '${ua_id}' ns_id '${ns_id}' qal_product_id '${qal_product_id}' qal_customer_id '${qal_customer_id}' template_id '${template_id}' vm_id '${vm_id}' flags '${flags}' instance_id '${instance_id}' usr_id '${user_id}'"
+        ns_log Notice "hf_vm_write.1815: Wrong asset_type_id '${asset_type_id}'. Write denied. label '${label}' name '${name}' content '${content}' keywords '${keywords}' description '${description}' comments '${comments}' template_p '${template_p}' templated_p '${templated_p}' publish_p '${publish_p}' monitor_p '${monitor_p}' popularity '${popularity}' triage_priority '${triage_priority}' op_status '${op_status}' ua_id '${ua_id}' ns_id '${ns_id}' qal_product_id '${qal_product_id}' qal_customer_id '${qal_customer_id}' template_id '${template_id}' vm_id '${vm_id}' flags '${flags}' instance_id '${instance_id}' usr_id '${user_id}'"
     }
     return $vm_id_new
 }
 
 ad_proc -private hf_ss_keys {
 } {
-    Returns an ordered list of keys that is parallel to the ordered list returned by hf_ss_read: name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id ss_server_name ss_service_name ss_daemon_ref ss_protocol ss_port ss_ua_id ss_ss_type ss_ss_subtype ss_ss_undersubtype ss_ss_ultrasubtype ss_config_uri ss_memory_bytes ss_details
+    Returns an ordered list of keys that is parallel to the ordered list returned by hf_ss_read: label name asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id ss_server_name ss_service_name ss_daemon_ref ss_protocol ss_port ss_ua_id ss_ss_type ss_ss_subtype ss_ss_undersubtype ss_ss_ultrasubtype ss_config_uri ss_memory_bytes ss_details
 } {
-    set ss_list [list name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id ss_server_name ss_service_name ss_daemon_ref ss_protocol ss_port ss_ua_id ss_ss_type ss_ss_subtype ss_ss_undersubtype ss_ss_ultrasubtype ss_config_uri ss_memory_bytes ss_details]
+    set ss_list [list label name asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id ss_server_name ss_service_name ss_daemon_ref ss_protocol ss_port ss_ua_id ss_ss_type ss_ss_subtype ss_ss_undersubtype ss_ss_ultrasubtype ss_config_uri ss_memory_bytes ss_details]
     return $ss_list
 }
 
@@ -2047,12 +2047,12 @@ ad_proc -private hf_ss_read {
     {instance_id ""}
 } {
     reads full detail of one ss. This is not redundant to hf_sss. This accepts only 1 id and includes all attributes and no summary counts of dependents.
-    Returns ordered list: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id ss_server_name ss_service_name ss_daemon_ref ss_protocol ss_port ss_ua_id ss_ss_type ss_ss_subtype ss_ss_undersubtype ss_ss_ultrasubtype ss_config_uri ss_memory_bytes ss_details
+    Returns ordered list: label,name,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id ss_server_name ss_service_name ss_daemon_ref ss_protocol ss_port ss_ua_id ss_ss_type ss_ss_subtype ss_ss_undersubtype ss_ss_ultrasubtype ss_config_uri ss_memory_bytes ss_details
 } {
     hf_ui_go_ahead_q read ss_id
 
     set attribute_list [hf_asset_read $ss_id $instance_id $user_id]
-    # Returns asset contents of asset_id. Returns asset as list of attribute values: name,title,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id
+    # Returns asset contents of asset_id. Returns asset as list of attribute values: label,name,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id
     set asset_type_id [lindex $attribute_list 2]
     # is asset_id of type ss?
     set return_list [list ]
@@ -2071,8 +2071,8 @@ ad_proc -private hf_ss_read {
 
 ad_proc -private hf_ss_write {
     ss_id
+    label
     name
-    title
     asset_type_id
     keywords
     description
@@ -2134,10 +2134,10 @@ ad_proc -private hf_ss_write {
     }
     if { $ss_id eq "" } {
         # hf_asset_create checks permission to create
-        set ss_id_new [hf_asset_create $name $title $asset_type_id $title $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
+        set ss_id_new [hf_asset_create $label $name $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
     } else {
         # hf_asset_write checks permission to write
-        set ss_id_new [hf_asset_write $name $title $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $ss_id $flags $instance_id $user_id]
+        set ss_id_new [hf_asset_write $label $name $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $ss_id $flags $instance_id $user_id]
     }
     if { $ss_id_new ne "" } {
         # insert ss asset hf_services

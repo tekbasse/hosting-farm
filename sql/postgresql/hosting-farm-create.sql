@@ -49,9 +49,9 @@ create index hf_asset_type_label_idx on hf_asset_type (label);
 -- a contract applies to an asset that is not a template.
 
 -- Clarification about nomentclature:
--- Naming convention is: label, name, description
--- in line with OpenACS way.
--- Old way was: name, title, description
+-- Naming convention is:    label, name , description
+-- This is conistent with OpenACS way.
+-- Old way was:             name,  title, description
 CREATE TABLE hf_assets (
     instance_id     integer,
     -- asset_id
