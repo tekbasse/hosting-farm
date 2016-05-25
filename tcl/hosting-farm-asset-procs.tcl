@@ -24,6 +24,12 @@ ad_proc -public hf_asset_id_exists {
     {instance_id ""}
 } {
     Returns 1 if asset_id exists for instance_id, else returns 0
+
+    @param asset_id      The asset_id to check.
+    @param asset_type_id If not blank, also verifies that asset is of this type.
+    @param instance_id   The context of the implementation.
+
+    @return  1 if asset_id exists in instance_id, otherwise 0.
 } {
     set asset_exists_p
     if { $asset_id ne "" } {
@@ -50,7 +56,7 @@ ad_proc -public hf_asset_id_exists {
     return $asset_exists_p
 }
 
-ad_proc -public hf_change_asset_id_for_label {
+ad_proc -private hf_change_asset_id_for_label {
     asset_id_new
     asset_label
     {instance_id ""}
@@ -90,6 +96,9 @@ ad_proc -public hf_asset_rename {
     {instance_id ""}
 } {
     Changes the asset_label where the asset is referenced from asset_label to asset_name. Returns 1 if successful, otherwise 0.
+
+    @param asset_lable  The label of the asset.
+    @param asset_name  the 
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id

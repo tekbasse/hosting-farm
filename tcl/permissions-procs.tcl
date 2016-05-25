@@ -23,6 +23,12 @@ ad_proc -public hf_customer_ids_for_user {
     {instance_id ""}
 } {
     Returns a list of qal_customer_ids for user_id
+
+    @param user_id     Checks for user_id if not blank, otherwise checks for user_id from connection.
+    @param instance_id Checks for user_id in context of instance_id if not blank, otherwise from connection.
+
+    @return Returns qal_customer_id numbers in a list.
+
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -42,6 +48,12 @@ ad_proc -public hf_active_asset_ids_for_customer {
     {instance_id ""}
 } {
     Returns a list of active asset_ids (contracts) for customer_id
+
+    @param customer_id Checks for this customer.
+    @param instance_id Checks for custome in context of instance_id if not blank, otherwise from connection.
+
+    @return Returns asset_id numbers in a list.
+
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id

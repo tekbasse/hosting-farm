@@ -26,6 +26,12 @@ ad_proc -public hf_convert_to_iec_bytes {
     {pretty_p "0"}
 } { 
     Converts bytes with large numbers to whole bytes. Returns a pretty string if pretty_p is 1.
+
+    @param number   A decimal number.
+    @param unit     One of  B KiB MiB GiB TiB PiB EiB ZiB YiB
+    @param pretty_p If 1, appends ' B' to returned number.
+
+    @return Returns number in bytes.
 } {
     set abbrev_list [list B KiB MiB GiB TiB PiB EiB ZiB YiB]
     # convert to units of one
@@ -47,6 +53,12 @@ ad_proc -public hf_convert_to_dec_bytes {
     {pretty_p "0"}
 } { 
     Converts bytes with large numbers to whole bytes. Returns a pretty string if pretty_p is 1.
+
+    @param number   A decimal number.
+    @param unit     One of  B kB MB GB TB PB EB ZB YB
+    @param pretty_p If 1, appends ' B' to returned number.
+
+    @return Returns number in bytes.
 } {
     set abbrev_list [list B kB MB GB TB PB EB ZB YB]
     # convert to units of one
@@ -68,6 +80,12 @@ ad_proc -public hf_convert_to_unit_metric {
     {pretty_p "0"}
 } { 
     Converts bytes with large numbers to whole bytes. Returns a pretty string if pretty_p is 1.
+
+    @param number   A decimal number.
+    @param unit     One of B K M G T P E Z Y
+    @param pretty_p If 1, appends ' B' to returned number.
+
+    @return Returns number in bytes.
 } {
     set abbrev_list [list B K M G T P E Z Y]
     # convert to units of one

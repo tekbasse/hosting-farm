@@ -52,12 +52,21 @@ create index hf_asset_type_label_idx on hf_asset_type (label);
 -- Naming convention is:    label, name , description
 -- This is conistent with OpenACS way.
 -- Old way was:             name,  title, description
+
+-- hf_assets came from q-wiki page nomenclature
+-- which has resulted in a name collision with template_id
+-- q-wiki ref template_id is now f_id.
+
 CREATE TABLE hf_assets (
     instance_id     integer,
-    -- asset_id
+    -- An asset_id. See hf_asset_label_map.asset_id
+    -- A revision of hf_asset_label_map.f_id
     id              integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- following 3 fields are similar in use to q-wiki template mapping
-    template_id     integer,
+    -- fid is similar usage as template_id in q-wiki
+    -- fid is fixed for all revisions of an asset
+    -- See also hf_asset_label_map.f_id
+    fid             integer,
     user_id         integer,
     last_modified   timestamptz,
     created         timestamptz,
@@ -92,6 +101,8 @@ CREATE TABLE hf_assets (
     content         text,
     -- internal comments. ported from q-wiki for publishing
     comments        text,
+    -- If this is a copy of a template, is original template hf_assets.id
+    template_id     integer,
     -- see server.templated
     -- set to one if this asset is derived from a template
     -- should only be 1 when template_p eq 0
@@ -140,10 +151,14 @@ create index hf_assets_label_idx on hf_assets (label);
 -- following table ported from q-wiki for versioning
 CREATE TABLE hf_asset_label_map (
        -- max size must consider label encoding all hf_asset.name characters
-       label varchar(903) not null,
-       -- should be a value from hf_assets.id
-       asset_id integer not null,
-       trashed_p varchar(1),
+       label       varchar(903) not null,
+       -- Main internal reference id for an asset. 
+       -- Fixed asset_id ie does not change for an asset --ever.
+       f_id       integer not null,
+       -- aka revision_id
+       -- should point to a value from hf_assets.id
+       asset_id    integer not null,
+       trashed_p   varchar(1),
        instance_id integer
 );
 
