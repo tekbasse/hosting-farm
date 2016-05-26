@@ -16,7 +16,7 @@ ad_library {
 
 # This was ported from q-wiki, and then completely re-written.
 # In q-wiki context, template_id refers to a page with shared revisions of multiple page_id(s).
-# hf_asset* uses template in the context of an original from which copies are made.
+# hf_asset* uses template_* in the context of an original from which copies are made.
 
 ad_proc -private hf_asset_type_id_list {
  } {
@@ -79,7 +79,6 @@ ad_proc -public hf_asset_active_q {
     if { $label ne "" } {
         set active_q 1
     }
-
     return $asset_exists_p
 }
 
@@ -91,157 +90,88 @@ ad_proc -private hf_label_from_asset_id {
     @return label of asset with asset_id, or empty string if not exists or active.
 } {
     upvar 1 instance_id instance_id
-    set asset_id_active_p [db_0or1row hf_label_from_asset_id { select label from hf_asset_map 
-        where asset_id=:asset_id and instance_id=:instance_id } ]
+    set label ""
+    db_0or1row hf_label_from_asset_id { select label from hf_asset_map 
+        where asset_id=:asset_id and instance_id=:instance_id } 
+    return $label
+}
+
+ad_proc -private hf_asset_id_from_label {
+    label
+} {
+    @param label  Label of asset
+
+    @return asset_id of asset with label, or empty string if not exists or active.
+} {
+    upvar 1 instance_id instance_id
+    set asset_id ""
+    db_0or1row hf_asset_id_from_label { select asset_id from hf_asset_map 
+        where label=:label and instance_id=:instance_id }
+    return $asset_id
+}
+
+
+ad_proc -private hf_change_asset_id {
+    asset_id_new
+    {label ""}
+    {asset_id ""}
+} {
+    Changes the active revision of asset with asset_label to asset_id. 
+
+    @param asset_id_new   The new asset_id
+    @param label         The label of the asset.
+    @param asset_id      An asset_id of the asset.
+
+    @return   Returns 1 if success, otherwise returns 0.
+} {
+    upvar 1 instance_id instance_id
+    upvar 1 user_id user_id
+    # convert label to asset_id
+    if { $asset_id eq "" && $label ne "" } {
+        set asset_id [hf_asset_id_from_label $label]
+    }
+    set write_p [hf_ui_go_ahead_q write]
+    set success_p 0
+    if { $write_p } {
+        # new and current asset
+        db_dml hf_change_revision { update hf_asset_map
+            set asset_id=:asset_id_new where label=:asset_label and instance_id=:instance_id }
+        db_dml hf_change_revision_active { update hf_assets
+            set last_modified = current_timestamp where id=:asset_id and instance_id=:instance_id }
+        set success_p 1
+    }
+    return $success_p
 }
 ##code below here
 
-ad_proc -private hf_change_asset_id_for_label {
+ad_proc -public hf_asset_rename {
     asset_id
-    asset_label
-    {instance_id ""}
+    new_name
 } {
-    Changes the active revision of asset with asset_label to asset_id. Returns 1 if successful, otherwise 0.
+    Changes the asset_name where the asset is referenced from asset_id. Returns 1 if successful, otherwise 0.
+
+    @param asset_id  The label of the asset.
+    @param new_name   The new name.
 } {
+    upvar 1 instance_id instance_id
+    upvar 1 user_id user_id
     set write_p [hf_ui_go_ahead_q write]
-    set success_p $write_p
+    set success_p 0
     if { $write_p } {
-        # new asset
-        hf_asset_stats $asset_id $instance_id $user_id "f_id trashed_p asset_label"
-        set asset_label_new [hf_asset_label_from_id $asset_id $instance_id]
-        # new and current asset
-        if { $asset_label_new ne "" && $asset_label eq $asset_label_new && !$trashed_p } {
-            db_dml hf_change_revision { update hf_asset_map
-            set asset_id=:asset_id_new where label=:asset_label and instance_id=:instance_id }
-            db_dml hf_change_revision_active { update hf_assets
-                set last_modified = current_timestamp where id=:asset_id and instance_id=:instance_id }
+        db_transaction {
+            db_dml hf_name_change_hf_assets { update hf_assets
+                set last_modified = current_timestamp, name=:new_name where asset_id=:asset_id and instance_id=:instance_id 
+            }
+            db_dml hf_name_change_asset_map { update hf_asset_label_map
+                set name=:new_name where asset_id=:asset_id and instance_id=:instance_id 
+            }
             set success_p 1
         }
     }
     return $success_p
 }
 
-ad_proc -public hf_asset_rename {
-    asset_label
-    asset_name
-    {instance_id ""}
-} {
-    Changes the asset_name where the asset is referenced from asset_label. Returns 1 if successful, otherwise 0.
-
-    @param asset_label  The label of the asset.
-    @param asset_name   The new name.
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set user_id [ad_conn user_id]
-#    set write_p \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege write\] 
-    set customer_id [hf_customer_id_of_asset_id $asset_id $instance_id]
-    set write_p [hf_permission_p $user_id $customer_id assets write $instance_id]
-    set success_p 0
-    if { $write_p && $asset_label ne "" && $asset_name ne "" } {
-        set asset_labels_id [hf_asset_id_from_label $asset_label $instance_id]
-        set asset_stats_list [hf_asset_stats $asset_labels_id $instance_id]
-        set f_id [lindex $asset_stats_list 5]
-        # does asset_name already exist? 
-        set pn_asset_id  [hf_asset_id_from_label $asset_name $instance_id]
-
-        if { $pn_asset_id ne "" } {
-            set pn_stats_list [hf_asset_stats $pn_asset_id $instance_id]
-            set pn_f_id [lindex $pn_stats_list 5]
-            # just:
-            # mv the f_id of asset_label revisions to asset_name revisions f_id
-            db_dml hf_name_change_f_id { update hf_assets
-                set last_modified = current_timestamp, f_id=:pn_template_id, name=:asset_name where template_id=:template_id and instance_id=:instance_id }
-            # get rid of the existing asset_name entry
-            db_dml hf_name_change_label_del { delete from hf_asset_label_map
-                where label=:asset_label and instance_id=:instance_id }
-            
-        } else {
-            # update hf_asset_label_map.label hf_assets.asset_name to asset_name for template_id, instance_id
-            db_dml hf_name_change_assets { update hf_assets
-                set last_modified = current_timestamp, name=:asset_name where template_id=:template_id and instance_id=:instance_id }
-            db_dml hf_name_change_label { update hf_asset_label_map
-                set label=:asset_name where label=:asset_label and instance_id=:instance_id }
-        }
-        set success_p 1
-    }
-    return $success_p
-}
-
-
-#
-ad_proc -public hf_asset_id_from_label { 
-    asset_label
-    {instance_id ""}
-} {
-    Returns asset_id if asset_label exists for instance_id, else returns empty string.
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set user_id [ad_conn user_id]
-   # set write_p \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege write\]    
-    set customer_id [hf_customer_id_of_asset_id $asset_id $instance_id]
-    set write_p [hf_permission_p $user_id $customer_id assets write $instance_id]
-    if { $write_p } {
-        # okay to return trashed assets
-        set asset_exists_p [db_0or1row hf_asset_get_id_from_label {select asset_id from hf_asset_label_map 
-            where label=:asset_label and instance_id=:instance_id } ]
-    } else {
-        set asset_exists_p [db_0or1row hf_asset_get_id_from_label {select asset_id from hf_asset_label_map 
-            where label=:asset_label and instance_id=:instance_id and not ( trashed_p = '1' ) } ]
-    }
-    if { !$asset_exists_p } {
-        set asset_id ""
-    }
-    return $asset_id
-}
-
-ad_proc -public hf_asset_label_from_id { 
-    asset_id
-    {instance_id ""}
-} {
-    Returns asset_label if asset_id exists for instance_id, even if asset_id is not the active revision, else returns empty string.
-} {
-    set asset_label ""
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set user_id [ad_conn user_id]
-   # set write_p \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege write\]    
-    set customer_id [hf_customer_id_of_asset_id $asset_id $instance_id]
-    set write_p [hf_permission_p $user_id $customer_id assets write $instance_id]
-    if { $write_p } {
-        # okay to return trashed assets
-        set asset_exists_p [db_0or1row hf_asset_get_all_label_from_id { select label as asset_label from hf_asset_label_map 
-            where asset_id=:asset_id and instance_id=:instance_id } ]
-    } else {
-        set asset_exists_p [db_0or1row hf_asset_get_untrashed_label_from_id { select label as asset_label from hf_asset_label_map 
-            where asset_id=:asset_id and instance_id=:instance_id and not ( trashed_p = '1' ) } ]
-    }
-    if { !$asset_exists_p } {
-        set asset_stat_list [hf_asset_stats $asset_id]
-        set template_id [lindex $asset_stat_list 5]
-#        ns_log Notice "hf_asset_label_from_id: asset_id '$asset_id' template_id '$template_id'"
-        if { $template_id ne "" } {
-            # get asset_label from template_id
-            db_0or1row hf_asset_get_label_from_ids_template { select label as asset_label from hf_asset_label_map 
-                where asset_id in ( select id as asset_id from hf_assets 
-                                   where instance_id=:instance_id and template_id=:template_id ) } 
-        } 
-        if { $asset_label eq "" } {
-            # maybe asset_id doesn't exist, but asset_id is a template_id 
-            db_0or1row hf_asset_get_label_from_template_id { select label as asset_label from hf_asset_label_map 
-                where asset_id in ( select id as asset_id from hf_assets 
-                                   where instance_id=:instance_id and template_id=:asset_id ) } 
-        }
-    }
-    return $asset_label
-}
+##code
 
 ad_proc -public hf_asset_label_id_from_template_id { 
     template_id
