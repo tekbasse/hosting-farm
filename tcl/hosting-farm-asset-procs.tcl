@@ -44,52 +44,17 @@ ad_proc -public hf_asset_id_exists_q {
     @return  1 if asset_id exists, otherwise 0.
 } {
     upvar 1 instance_id instance_id
-    set asset_type_id_req $asset_type_id
+    set asset_type_id_q $asset_type_id
     set read_p [hf_ui_go_ahead_q read]
-    # We can use results from above to deduce answer
-    if { $asset_type_id ne "" } {
-        if { $asset_type_id ne $asset_type_id_req } {
-            set asset_exists_p 0
-        } else {
-            set asset_exists_p 1
-        }
-    } else {
-        set asset_exists_p [db_0or1row hf_asset_get_id {select name from hf_assets where id=:asset_id and instance_id=:instance_id } ]
-    }
-    return $asset_exists_p
-}
-
-ad_proc -public hf_asset_active_q { 
-    asset_id
-    {asset_type_id ""}
-    {instance_id ""}
-} {
-    Returns 1 if asset_id exists for instance_id, else returns 0
-
-    @param asset_id      The asset_id to check.
-    @param asset_type_id If not blank, also verifies that asset is of this type.
-    @param instance_id   The context of the implementation.
-
-    @return  1 if asset_id exists in instance_id, otherwise 0.
-} {
-    set asset_exists_p
-    if { $asset_id ne "" } {
-        if { $instance_id eq "" } {
-            # set instance_id package_id
-            set instance_id [ad_conn package_id]
-        }
-        if { $asset_type_id eq "" } {
-            set asset_filter_p 0
-        } else {
-            regsub -nocase -all -- {[^a-z0-9]} $asset_type_id {} filtered_as_type_id
-            if { $filtered_as_type_id eq "" || [string length $filtered_as_type_id] > 24 } {
-                set asset_filter_p 0
+    set asset_exists_p 0
+    # We can use results hf_ui_go_ahead_q to partially deduce answer
+    if { $read_p } {
+        if { $asset_type_id ne "" } {
+            if { $asset_type_id ne $asset_type_id_q } {
+                set asset_exists_p 0
             } else {
-                set asset_filter_p 1
+                set asset_exists_p 1
             }
-        }
-        if { $asset_filter_p } {
-            set asset_exists_p [db_0or1row hf_asset_get_id {select name from hf_assets where id=:asset_id and instance_id=:instance_id and asset_type_id=:filtered_as_type_id } ]
         } else {
             set asset_exists_p [db_0or1row hf_asset_get_id {select name from hf_assets where id=:asset_id and instance_id=:instance_id } ]
         }
@@ -97,6 +62,39 @@ ad_proc -public hf_asset_active_q {
     return $asset_exists_p
 }
 
+ad_proc -public hf_asset_active_q { 
+    asset_id
+} {
+    Returns 1 if asset_id exists, else returns 0
+
+    @param asset_id      The asset_id to check.
+    @param asset_type_id If not blank, also verifies that asset is of this type.
+    @param instance_id   The context of the implementation.
+
+    @return  1 if asset_id exists, otherwise 0.
+} {
+    upvar 1 instance_id instance_id
+    set active_q 0
+    set label [hf_label_from_asset_id $asset_id]
+    if { $label ne "" } {
+        set active_q 1
+    }
+
+    return $asset_exists_p
+}
+
+ad_proc -private hf_label_from_asset_id {
+    asset_id
+} {
+    @param asset_id  
+
+    @return label of asset with asset_id, or empty string if not exists or active.
+} {
+    upvar 1 instance_id instance_id
+    set asset_id_active_p [db_0or1row hf_label_from_asset_id { select label from hf_asset_map 
+        where asset_id=:asset_id and instance_id=:instance_id } ]
+}
+##code below here
 
 ad_proc -private hf_change_asset_id_for_label {
     asset_id
