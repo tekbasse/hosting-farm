@@ -142,7 +142,7 @@ ad_proc -private hf_change_asset_id {
     }
     return $success_p
 }
-##code below here
+
 
 ad_proc -public hf_asset_rename {
     asset_id
@@ -159,53 +159,47 @@ ad_proc -public hf_asset_rename {
     set success_p 0
     if { $write_p } {
         db_transaction {
-            db_dml hf_name_change_hf_assets { update hf_assets
-                set last_modified = current_timestamp, name=:new_name where asset_id=:asset_id and instance_id=:instance_id 
-            }
             db_dml hf_name_change_asset_map { update hf_asset_label_map
                 set name=:new_name where asset_id=:asset_id and instance_id=:instance_id 
             }
+            db_dml hf_name_change_hf_assets { update hf_assets
+                set last_modified = current_timestamp, name=:new_name where asset_id=:asset_id and instance_id=:instance_id 
+            }
             set success_p 1
+        } on_error {
+            set success_p 0
         }
     }
     return $success_p
 }
 
-##code
+ad_proc -public hf_current_asset_id { 
+    asset_id
+} {
+    Returns current asset_id given any revision of asset_id, otherwise returns empty string.
 
-ad_proc -public hf_asset_label_id_from_template_id { 
-    template_id
-    {instance_id ""}
+    @param asset_id  An asset_id for an asset.
+
+    @return Current, asset_id that is mapped to the label and f_id, else returns empty string.
 } {
-    Returns asset_id that is mapped to the label that is mapped to template_id, else returns empty string.
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
+    upvar 1 instance_id instance_id
     set asset_id ""
-    db_0or1row hf_asset_get_label_from_template_id { select asset_id from hf_asset_label_map 
-        where instance_id=:instance_id and asset_id in ( select id as asset_id from hf_assets 
-                                                          where instance_id=:instance_id and template_id=:template_id ) }
+    db_0or1row hf_asset_get_asset_id_from_f_id { select asset_id from hf_asset_map 
+        where instance_id=:instance_id and f_id in ( select f_id from hf_assets 
+                                                     where instance_id=:instance_id and id=:asset_id ) }
     return $asset_id
 }
 
 
-ad_proc -public hf_asset_from_label { 
-    asset_label
-    {instance_id ""}
+ad_proc -public hf_current_asset_id_from_label { 
+    label
 } {
     Returns asset_id if asset is published (untrashed) for instance_id, else returns empty string.
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set asset_exists_p [db_0or1row hf_asset_get_id_from_label2 {select asset_id from hf_asset_label_map 
-        where label=:asset_label and instance_id=:instance_id and not ( trashed_p = '1' ) } ]
-    if { !$asset_exists_p } {
-        set asset_id ""
-    }
+    upvar 1 instance_id instance_id
+    set asset_id ""
+    db_0or1row hf_asset_get_id_from_label {select asset_id from hf_label_map 
+        where label=:label and instance_id=:instance_id and not ( trashed_p = '1' ) } 
     return $asset_id
 }
 
@@ -241,7 +235,9 @@ ad_proc -public hf_asset_from_label {
 #  10 publish_p
 #  11 monitor_p
 #  13 triage_priority
-#  
+#     f_id  
+
+##code
 
 ad_proc -public hf_asset_create { 
     label
