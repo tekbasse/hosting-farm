@@ -149,22 +149,24 @@ create index hf_assets_qal_customer_id_idx on hf_assets (qal_customer_id);
 create index hf_assets_label_idx on hf_assets (label);
 
 -- following table ported from q-wiki for versioning
-CREATE TABLE hf_asset_label_map (
+-- was hf_asset_label_map
+CREATE TABLE hf_asset_map (
        -- max size must consider label encoding all hf_asset.name characters
        label       varchar(903) not null,
        -- Main internal reference id for an asset. 
        -- Fixed asset_id ie does not change for an asset --ever.
        f_id       integer not null,
        -- aka revision_id
-       -- should point to a value from hf_assets.id
+       -- points to an hf_assets.id
        asset_id    integer not null,
        trashed_p   varchar(1),
        instance_id integer
 );
 
-create index hf_asset_name_map_label_idx on hf_asset_label_map (label);
-create index hf_asset_name_map_instance_id_idx on hf_asset_label_map (instance_id);
-create index hf_asset_name_map_asset_id_idx on hf_asset_label_map (asset_id);
+create index hf_asset_map_label_idx on hf_asset_label_map (label);
+create index hf_asset_map_instance_id_idx on hf_asset_label_map (instance_id);
+create index hf_asset_map_asset_id_idx on hf_asset_label_map (asset_id);
+create index hf_asset_map_f_id_idx on hf_asset_label_map (f_id);
 
 CREATE TABLE hf_asset_type_features (
     instance_id          integer,
