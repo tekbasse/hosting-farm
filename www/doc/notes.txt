@@ -1,3 +1,14 @@
+programming guidelines:
+
+Separate code spaces for business logic, views, and low level utilities.
+Don't write until something is needed.
+Avoid conditionals. If they're needed, consider creating other procs.
+If in doubt, throw it out.
+constructor=view/object
+# this page split into MVC components:
+#  inputs/observations (model), actions (controller), and outputs/reports (view) sections
+
+
 Rationalization on using scheduler instead of callbacks: If callbacks are interrupted, a progression will not be polled to pickup where left off if interrupted --and delays are not as easily detected in a callback system vs. a system forced to use a scheduling process.
 
 Make a table showing representation between db ref and tcl object_arr(element) returned in
