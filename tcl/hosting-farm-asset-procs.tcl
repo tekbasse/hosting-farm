@@ -117,6 +117,7 @@ ad_proc -private hf_asset_id_from_label {
         where label=:label and instance_id=:instance_id }]
     if { !$exists_p } {
         ns_log Notice "hf_asset_id_from_label: asset_id does not exist for label '${label}' instance_id '${instance_id}'"
+    }
     return $asset_id
 }
 
@@ -395,7 +396,7 @@ ad_proc -public hf_asset_stats {
     {keys_list ""}
 } {
     Returns asset stats as a list.
-
+    
     @see hf_asset_stats_keys
 } {
     # Asset stats doesn't include large asset values such as content
@@ -415,8 +416,9 @@ ad_proc -public hf_asset_stats {
     foreach key [split $keys_list " ,"] {
         set key_idx [lsearch -exact key $all_keys_list $key]
         if { $key_idx > -1 } {
-            upvar 1 $key [lindex $return_list 
-          }
+            upvar 1 $key [lindex $return_list $key_idx]
+        }
+    }
     return $return_list
 }
 
