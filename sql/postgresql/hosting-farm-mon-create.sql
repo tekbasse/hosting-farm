@@ -15,7 +15,7 @@ CREATE TABLE hf_beat_log (
     asset_id integer,
     -- If there is a monitor_id associated, include it.
     monitor_id integer,
-    trashed_p varchar(1) default '0',
+    trashed_p varchar(1) not null DEFAULT '0',
     alert_p varchar(1) default '0',
     -- Is this a system alert or critical message requiring
     -- a flag for extra presentation handling?

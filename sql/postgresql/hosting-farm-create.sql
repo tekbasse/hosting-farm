@@ -124,7 +124,7 @@ CREATE TABLE hf_assets (
   -- and qal_customer_id for vm_to_configure.company_id
     op_status       varchar(20),
     -- for use with monitoring.
-    trashed_p       varchar(1),
+    trashed_p       varchar(1) not null DEFAULT '0',
     -- last trashed by
     trashed_by      varchar(19) not null DEFAULT '',
     -- possible future asset analyzing
@@ -160,7 +160,7 @@ CREATE TABLE hf_asset_map (
        -- aka revision_id
        -- points to an hf_assets.id
        asset_id    integer not null,
-       trashed_p   varchar(1),
+       trashed_p   varchar(1) not null DEFAULT '0',
        instance_id varchar(11) not null DEFAULT ''
 );
 
