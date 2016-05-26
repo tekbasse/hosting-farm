@@ -10,7 +10,7 @@ SELECT nextval ('hf_beat_id_seq');
 -- For monitor process logs
 CREATE TABLE hf_beat_log (
     id integer not null primary key,
-    instance_id integer,
+    instance_id varchar(11) not null DEFAULT '',
     user_id integer,
     asset_id integer,
     -- If there is a monitor_id associated, include it.
@@ -47,7 +47,7 @@ create index hf_beat_log_alert_p_idx on hf_beat_log (alert_p);
 
 CREATE TABLE hf_beat_log_viewed (
      id integer not null,
-     instance_id integer,
+     instance_id varchar(11) not null DEFAULT '',
      user_id integer,
      last_viewed timestamptz
 );
@@ -89,7 +89,7 @@ CREATE TABLE hf_beat_stack (
        proc_args text,
        proc_out text,
        user_id integer,
-       instance_id integer,
+       instance_id varchar(11) not null DEFAULT '',
        priority integer,
        -- when first requested in machine clock seconds
        order_clock_s integer,
