@@ -25,9 +25,9 @@ ad_proc -private hf_asset_type_id_list {
     upvar 1 instance_id instance_id
     #set as_type_list \[list dc hw vm vh ss ot\]
     if { [exists_and_not_null $instance_id] } {
-        set as_type_list [db_list hf_asset_type_id_by_i "select distinct id from hf_asset_type where instance_id=:instance_id"]
+        set as_type_list [db_list hf_asset_type_id_by_i {select distinct id from hf_asset_type where instance_id=:instance_id}]
     } else {
-        set as_type_list [db_list hf_asset_type_id_all "select distinct id from hf_asset_type"]
+        set as_type_list [db_list hf_asset_type_id_all {select distinct id from hf_asset_type}]
     }
     return $as_type_list
 }
@@ -59,6 +59,9 @@ ad_proc -public hf_asset_id_exists_q {
             set asset_exists_p [db_0or1row hf_asset_get_id {select name from hf_assets where id=:asset_id and instance_id=:instance_id } ]
         }
     }
+    if { !$asset_exists_p } {
+        ns_log Notice "hf_asset_id_exists_q: asset_id does not exist. asset_id '${asset_id}' asset_type_id '${asset_type_id}' instance_id '${instance_id}'"
+    }
     return $asset_exists_p
 }
 
@@ -78,8 +81,10 @@ ad_proc -public hf_asset_active_q {
     set label [hf_label_from_asset_id $asset_id]
     if { $label ne "" } {
         set active_q 1
+    } else {
+        ns_log Notice "hf_asset_active_q: asset_id does not exist. asset_id '{$asset_id}' instance_id '${instance_id}'"
     }
-    return $asset_exists_p
+    return $active_p
 }
 
 ad_proc -private hf_label_from_asset_id {
@@ -91,8 +96,11 @@ ad_proc -private hf_label_from_asset_id {
 } {
     upvar 1 instance_id instance_id
     set label ""
-    db_0or1row hf_label_from_asset_id { select label from hf_asset_map 
-        where asset_id=:asset_id and instance_id=:instance_id } 
+    set exists_p [db_0or1row hf_label_from_asset_id { select label from hf_asset_map 
+        where asset_id=:asset_id and instance_id=:instance_id } ]
+    if { !$exists_p } {
+        ns_log Notice "hf_label_from_asset_id: label does not exist for asset_id '${asset_id}' instance_id '${instance_id}'"
+    }
     return $label
 }
 
@@ -105,8 +113,10 @@ ad_proc -private hf_asset_id_from_label {
 } {
     upvar 1 instance_id instance_id
     set asset_id ""
-    db_0or1row hf_asset_id_from_label { select asset_id from hf_asset_map 
-        where label=:label and instance_id=:instance_id }
+    set exists_p [db_0or1row hf_asset_id_from_label { select asset_id from hf_asset_map 
+        where label=:label and instance_id=:instance_id }]
+    if { !$exists_p } {
+        ns_log Notice "hf_asset_id_from_label: asset_id does not exist for label '${label}' instance_id '${instance_id}'"
     return $asset_id
 }
 
@@ -139,6 +149,8 @@ ad_proc -private hf_change_asset_id {
         db_dml hf_change_revision_active { update hf_assets
             set last_modified = current_timestamp where id=:asset_id and instance_id=:instance_id }
         set success_p 1
+    } else {
+        ns_log Notice "hf_change_asset_id: no write allowed for asset_id_new '{$asset_id_new}' label '${label}' asset_id '${asset_id}'"
     }
     return $success_p
 }
@@ -173,20 +185,33 @@ ad_proc -public hf_asset_rename {
     return $success_p
 }
 
-ad_proc -public hf_current_asset_id { 
+ad_proc -private hf_f_id_from_asset_id {
     asset_id
 } {
-    Returns current asset_id given any revision of asset_id, otherwise returns empty string.
+    Returns hf_asset.f_id given any revision asset_id of f_id, otherwise returns empty string.
 
-    @param asset_id  An asset_id for an asset.
+    @param asset_id
 
-    @return Current, asset_id that is mapped to the label and f_id, else returns empty string.
+    @return f_id
+} {
+    upvar 1 instance_id instance_id
+    db_0or1row hf_asset_get_f_id_from_asset_id { select f_id from hf_assets where instance_id=:instance_id and id=:asset_id }
+    return $f_id
+}
+
+ad_proc -private hf_current_asset_id { 
+    f_id
+} {
+    Returns current asset_id given f_id, otherwise returns empty string.
+
+    @param f_id  hf_asset.f_id for an asset.
+
+    @return asset_id The current asset_id mapped to the label and f_id, else returns empty string.
 } {
     upvar 1 instance_id instance_id
     set asset_id ""
     db_0or1row hf_asset_get_asset_id_from_f_id { select asset_id from hf_asset_map 
-        where instance_id=:instance_id and f_id in ( select f_id from hf_assets 
-                                                     where instance_id=:instance_id and id=:asset_id ) }
+        where instance_id=:instance_id and f_id=:f_id }
     return $asset_id
 }
 
