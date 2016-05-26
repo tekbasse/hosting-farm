@@ -18,7 +18,48 @@ ad_library {
 # In q-wiki context, template_id refers to a page with shared revisions of multiple page_id(s).
 # hf_asset* uses template in the context of an original from which copies are made.
 
-ad_proc -public hf_asset_id_exists { 
+ad_proc -private hf_asset_type_id_list {
+ } {
+    Returns list of all asset_type_id
+} {
+    upvar 1 instance_id instance_id
+    #set as_type_list \[list dc hw vm vh ss ot\]
+    if { [exists_and_not_null $instance_id] } {
+        set as_type_list [db_list hf_asset_type_id_by_i "select distinct id from hf_asset_type where instance_id=:instance_id"]
+    } else {
+        set as_type_list [db_list hf_asset_type_id_all "select distinct id from hf_asset_type"]
+    }
+    return $as_type_list
+}
+
+ad_proc -public hf_asset_id_exists_q { 
+    asset_id
+    {asset_type_id ""}
+} {
+    Returns 1 if asset_id exists, else returns 0
+
+    @param asset_id      The asset_id to check.
+    @param asset_type_id If not blank, also verifies that asset is of this type.
+
+    @return  1 if asset_id exists, otherwise 0.
+} {
+    upvar 1 instance_id instance_id
+    set asset_type_id_req $asset_type_id
+    set read_p [hf_ui_go_ahead_q read]
+    # We can use results from above to deduce answer
+    if { $asset_type_id ne "" } {
+        if { $asset_type_id ne $asset_type_id_req } {
+            set asset_exists_p 0
+        } else {
+            set asset_exists_p 1
+        }
+    } else {
+        set asset_exists_p [db_0or1row hf_asset_get_id {select name from hf_assets where id=:asset_id and instance_id=:instance_id } ]
+    }
+    return $asset_exists_p
+}
+
+ad_proc -public hf_asset_active_q { 
     asset_id
     {asset_type_id ""}
     {instance_id ""}
@@ -56,19 +97,20 @@ ad_proc -public hf_asset_id_exists {
     return $asset_exists_p
 }
 
+
 ad_proc -private hf_change_asset_id_for_label {
     asset_id
     asset_label
     {instance_id ""}
 } {
-    Changes the active revision of asset_label to asset_id. Returns 1 if successful, otherwise 0.
+    Changes the active revision of asset with asset_label to asset_id. Returns 1 if successful, otherwise 0.
 } {
     set write_p [hf_ui_go_ahead_q write]
     set success_p $write_p
     if { $write_p } {
         # new asset
-        set asset_new_stats_list [hf_asset_stats $asset_id $instance_id $user_id "f_id trashed_p asset_label"]
-        set asset_label_new [hf_asset_label_from_id $asset_id_new $instance_id]
+        hf_asset_stats $asset_id $instance_id $user_id "f_id trashed_p asset_label"
+        set asset_label_new [hf_asset_label_from_id $asset_id $instance_id]
         # new and current asset
         if { $asset_label_new ne "" && $asset_label eq $asset_label_new && !$trashed_p } {
             db_dml hf_change_revision { update hf_asset_map
