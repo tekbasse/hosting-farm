@@ -123,7 +123,7 @@ CREATE TABLE hf_user_roles_map (
     -- Permission for user_id to perform af hs_roles.allow on qal_customer_id hf_assets
     -- This is where roles for qal_customer_id are assigned to user_id
     instance_id     varchar(11) not null DEFAULT '',
-    user_id         integer,
+    user_id         varchar(11) not null DEFAULT '',
     -- from qal_customer.id defined in accounts-ledger package
     qal_customer_id integer,
     -- hf_role.id

@@ -68,7 +68,7 @@ CREATE TABLE hf_assets (
     -- fid is fixed for all revisions of an asset
     -- See also hf_asset_label_map.f_id
     fid             integer,
-    user_id         integer,
+    user_id         varchar(11) not null DEFAULT '',
     last_modified   timestamptz,
     created         timestamptz,
     -- one of dc data center
@@ -564,7 +564,7 @@ CREATE TABLE hf_monitor_log (
     instance_id          varchar(11) not null DEFAULT '',
     monitor_id           integer not null,
     -- if monitor_id is 0 such as when adding activity note, user_id should not be 0
-    user_id              integer not null,
+    user_id              varchar(11) not null DEFAULT '',
     asset_id             integer not null,
     -- increases by 1 for each monitor_id's report of asset_id
     report_id            bigint not null,
