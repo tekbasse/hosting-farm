@@ -19,7 +19,7 @@ set debug_p 0
 hf::schedule::check
 ad_schedule_proc -thread t $frequency_base hf::schedule::do
 
-
+hf_nc_proc_context_set
 # set cycle_time:
 hf::monitor::check
 ad_schedule_proc -thread t $cycle_time hf::monitor::do

@@ -41,6 +41,7 @@ ad_proc -private hf_beat_log_create {
 } {
     Log an entry for a hf_beat_log process. Returns unique entry_id if successful, otherwise returns empty string.
 } {
+    
     set id ""
     set asset_id_p [qf_is_natural_number $asset_id]
     if { $asset_id_p } {
@@ -287,6 +288,7 @@ ad_proc -private hf::monitor::check {
     upvar 1 debug_p debug_p 
     upvar 1 priority_threshold priority_threshold
     upvar 1 cycle_time cycle_time
+   
     set active_id ""
     if { ![db_0or1row hf_beat_stack_bus_ck "select active_id, debug_p,priority_threshold,cycle_time from hf_beat_stack_bus limit 1"] } {
 
@@ -323,7 +325,7 @@ ad_proc -private hf::monitor::do {
 } { 
     Process any scheduled monitoring procedures. Future monitors are suspended until this process reports batch complete.
 } {
-
+    hf_nc_go_ahead
     
     # If no proc called by hf::monitor::do is active (check hf_beat_stack_active.id ),
     # call the next monitor proc in the stack (from hosting-farm-local-procs.tcl)
