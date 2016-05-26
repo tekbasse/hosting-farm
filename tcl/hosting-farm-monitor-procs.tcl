@@ -716,6 +716,12 @@ ad_proc -private hf_ui_go_ahead_q {
             }
         }
     } else {
+        if { ![info exists user_id] } {
+            set user_id ""
+        }
+        if { ![info exists instance_id] } {
+            set instance_id ""
+        }
         set msg_extra ""
         set q1 1
         if { [exists_and_not_null proc_instance_id] } {
