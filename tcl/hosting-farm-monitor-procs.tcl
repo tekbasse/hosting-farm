@@ -13,7 +13,8 @@ ad_library {
 
 }
 
-namespace eval hf::monitor {}
+namespace eval ::hf::monitor {}
+namespace eval ::hf::monitor::do {}
 
 # once every few seconds, hf::monitor::do is called. ( see tcl/hosting-farm-scheduled-init.tcl )
 
@@ -307,7 +308,8 @@ ad_proc -private hf::monitor::check {
         set debug_p 0
         set priority_threshold 13
 
-        set cycle_time [expr { int( 5 * 60 ) } ]
+        #set cycle_time [expr { int( 5 * 60 ) } ]
+        set cycle_time [expr { int( 60 ) } ]
         # cycle_time varies with active monitors at time of start
         db_1row hf_active_assets_count { select count(monitor_id) as monitor_count from hf_monitor_config_n_control where active_p = '1' }
         if { $monitor_count > 0 } {
@@ -320,12 +322,12 @@ ad_proc -private hf::monitor::check {
     return 1
 }
 
-ad_proc -private hf::monitor::do {
+ad_proc -private ::hf::monitor::do {
 
 } { 
     Process any scheduled monitoring procedures. Future monitors are suspended until this process reports batch complete.
 } {
-    hf_nc_go_ahead
+    hf_nc_proc_context_set
     
     # If no proc called by hf::monitor::do is active (check hf_beat_stack_active.id ),
     # call the next monitor proc in the stack (from hosting-farm-local-procs.tcl)
@@ -338,6 +340,9 @@ ad_proc -private hf::monitor::do {
     # First, check if a monitor process is running and get status of debug_p
     set debug_p 0
     hf::monitor::check
+
+    # hf_nc_proc_that_tests_context_checking
+
     if { $active_id eq "" } {
         set success_p 0
 

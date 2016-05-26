@@ -41,11 +41,12 @@ ad_proc -private hf_nc_go_ahead {
         #    set go_ahead 0
         #    ns_log Warning "hf_nc_go_head.42: failed. Called by proc '${argv0}' args: asset_id_varnam '${asset_id_varnam}' asset_id '${asset_id}' asset_type_id '${asst_type_id}'"
         #} else {
-        set go_ahead [hf_nc_proc_in_context_q]
+        set go_ahead [hf_nc_proc_in_context_q ]
         #ns_log Notice "hf_nc_go_ahead: ns_thread name [ns_thread name] ns_thread id [ns_thread id] ns_info threads [ns_info threads] ns_info scheduled [ns_info scheduled]"
         #}
     }
     if { !$go_ahead } {
+        ns_log Warning "hf_nc_go_ahead: permission denied."
         ad_script_abort
     }
 
