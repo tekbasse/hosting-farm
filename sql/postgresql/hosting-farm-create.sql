@@ -107,11 +107,11 @@ CREATE TABLE hf_assets (
     -- see server.templated
     -- set to one if this asset is derived from a template
     -- should only be 1 when template_p eq 0
-    templated_p     varchar(1),
+    templated_p     varchar(1) not null DEFAULT '0',
 
     -- replacing vm_template with more general asset templating
     -- template means this is an archetype asset. copy it to create new asset of same type
-    template_p      varchar(1),
+    template_p      varchar(1) not null DEFAULT '0',
     -- becomes/became active
     time_start      timestamptz,
     -- expires/expired on
@@ -133,8 +133,8 @@ CREATE TABLE hf_assets (
     flags       varchar(12),
     -- mainly for promoting clients by linking to their website
     -- was table.advert_link
-    publish_p       varchar(1),
-    monitor_p       varchar(1),
+    publish_p       varchar(1) not null DEFAULT '0',
+    monitor_p       varchar(1) not null DEFAULT '0',
     -- when monitoring, higher value is higher priority for alerts, alert reponses
     triage_priority varchar(19) not null DEFAULT ''
 );
@@ -180,7 +180,7 @@ CREATE TABLE hf_asset_type_features (
     label                varchar(40),
     -- aka feature.short_name
     feature_type         varchar(12),
-    publish_p            varchar(1),
+    publish_p            varchar(1) not null DEFAULT '0',
     -- aka feature.name or one_line_description
     title                varchar(85),
     description          text
@@ -197,7 +197,7 @@ CREATE TABLE hf_ns_records (
        -- ns_id
        id          integer not null DEFAULT nextval ( 'hf_id_seq' ),
        -- should be validated before allowed to go live.
-       active_p    integer,
+       active_p    integer not null DEFAULT '0',
        -- DNS records to be added to domain name service
        name_record text
 );
@@ -311,8 +311,8 @@ CREATE TABLE hf_operating_systems (
     brand               varchar(80),
     version             varchar(300),
     kernel              varchar(300),
-    orphaned_p          varchar(1),
-    requires_upgrade_p  varchar(1),
+    orphaned_p          varchar(1) not null DEFAULT '0',
+    requires_upgrade_p  varchar(1) not null DEFAULT '0',
     description         text
 );
 
@@ -534,9 +534,9 @@ CREATE TABLE hf_monitor_config_n_control (
     monitor_id                integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     asset_id                  integer not null,
     label                     varchar(200) not null,
-    active_p                  varchar(1) default '0' not null,
+    active_p                  varchar(1) not null DEFAULT '0',
     -- log args into hf_beat_stack.proc_args?
-    log_args_p                varchar(1) default '0' not null,
+    log_args_p                varchar(1) not null DEFAULT '0',
     -- number of portions to use in frequency distribution curve
     portions_count            integer not null,
     -- allow some control over how the distribution curves are represented:
