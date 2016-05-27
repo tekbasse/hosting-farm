@@ -91,7 +91,7 @@ ad_proc -private hf_asset_type_id_list {
     return $as_type_list
 }
 
-ad_proc -public hf_asset_id_exists_q { 
+ad_proc -private hf_asset_id_exists_q { 
     asset_id
     {asset_type_id ""}
 } {
@@ -124,7 +124,7 @@ ad_proc -public hf_asset_id_exists_q {
     return $asset_exists_p
 }
 
-ad_proc -public hf_asset_active_q { 
+ad_proc -private hf_asset_active_q { 
     asset_id
 } {
     Returns 1 if asset_id exists, else returns 0
@@ -216,7 +216,7 @@ ad_proc -private hf_change_asset_id {
 }
 
 
-ad_proc -public hf_asset_rename {
+ad_proc -private hf_asset_rename {
     asset_id
     new_name
 } {
@@ -259,7 +259,7 @@ ad_proc -private hf_f_id_from_asset_id {
     return $f_id
 }
 
-ad_proc -private hf_current_asset_id { 
+ad_proc -private hf_current_asset_id_from_f_id { 
     f_id
 } {
     Returns current asset_id given f_id, otherwise returns empty string.
@@ -276,7 +276,7 @@ ad_proc -private hf_current_asset_id {
 }
 
 
-ad_proc -public hf_current_asset_id_from_label { 
+ad_proc -private hf_current_asset_id_from_label { 
     label
 } {
     Returns asset_id if asset is published (untrashed) for instance_id, else returns empty string.
@@ -288,23 +288,42 @@ ad_proc -public hf_current_asset_id_from_label {
     return $asset_id
 }
 
+ad_proc -private hf_current_asset_id {
+    asset_id
+} {
+    Returns current asset_id given any revision asset_id of asset.
 
-ad_proc -public hf_asset_stats_keys {
+    @param asset_id  One of any revision of asset_id
+
+    @return asset_id The current, active asset_id, otherwise empty string.
+} {
+    upvar 1 instance_id instance_id
+    set asset_id_current ""
+    set f_id [hf_f_id_from_asset_id $asset_id]
+    if { $f_id ne "" } {
+        set asset_id_current [hf_current_asset_id_from_f_id $f_id]
+    }
+    return $asset_id_current
+}
+
+ad_proc -private hf_asset_stats_keys {
     {separator ""}
 } {
     Returns an ordered list of keys that is parallel to the ordered list returned by hf_asset_stats.
     If separator is not "", returns a string joined with separator.
 } {
+    # naming convention is: label, name, description
+    # old way from (q-wiki): name, title, description
     set keys_list [list \
                        label \
                        name \
                        asset_type_id \
                        keywords \
                        description \
+                        trashed_p \
+                       trashed_by \
                        template_p \
                        templated_p \
-                       trashed_p \
-                       trashed_by \
                        publish_p \
                        monitor_p \
                        popularity \
@@ -319,8 +338,8 @@ ad_proc -public hf_asset_stats_keys {
                        last_modified \
                        created \
                        flags \
-                       template_id\
-                       f_id]
+                       template_id \
+                      f_id]
     if { $separator ne ""} {
         return [join $keys_list $separator]
     } else {
@@ -329,38 +348,13 @@ ad_proc -public hf_asset_stats_keys {
 }
 
 
-ad_proc -public hf_asset_read_keys {
+ad_proc -private hf_asset_read_keys {
 } {
     Returns an ordered list of keys that is parallel to the ordered list returned by hf_asset_read.
 } {
-    # naming convention is: label, name, description
-    # old way: name, title, description
-    set keys_list [list \
-                       label \
-                       name \
-                       asset_type_id \
-                       keywords \
-                       description \
-                       content \
-                       comments \
-                       trashed_p \
-                       trashed_by \
-                       template_p \
-                       templated_p \
-                       publish_p \
-                       monitor_p \
-                       popularity \
-                       triage_priority \
-                       op_status \
-                       ua_id \
-                       ns_id \
-                       qal_product_id \
-                       qal_customer_id \
-                       instance_id \
-                       user_id \
-                       last_modified \
-                       created \
-                       template_id]
+    set keys_list [hf_asset_stats_keys]
+    lappend keys_list "content"
+    lappend keys_list "comments"
     return $keys_list
 }
 
