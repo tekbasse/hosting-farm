@@ -21,14 +21,13 @@ ad_library {
 # hf uses f_id instead.
 # hf_asset* uses template_* in the context of an original from which copies are made.
 
-##code
 
 ad_proc -public hf_asset_read { 
     asset_id
-    {instance_id ""}
-    {user_id ""}
 } {
-    Returns asset contents of asset_id. Returns asset as list of attribute values.
+    Returns contents of asset record for asset_id as list of attribute values.
+    
+    @param asset_id
 
     @see hf_asset_read_keys
 
@@ -38,7 +37,7 @@ ad_proc -public hf_asset_read {
     set read_p [hf_ui_go_ahead_q read "" "" 0]
     set return_list [list ]
     if { $read_p } {
-        set return_list_of_lists [db_list_of_lists hf_asset_get "select [hf_asset_read_keys ","] from hf_assets where id=:asset_id and instance_id=:instance_id " ] 
+        set return_list_of_lists [db_list_of_lists hf_asset_get "select [hf_asset_keys ","] from hf_assets where id=:asset_id and instance_id=:instance_id " ] 
         # convert return_lists_of_lists to return_list
         set return_list [lindex $return_list_of_lists 0]
     }
@@ -49,8 +48,6 @@ ad_proc -public hf_asset_read {
     
 ad_proc -public hf_asset_stats { 
     asset_id
-    {instance_id ""}
-    {user_id ""}
     {keys_list ""}
 } {
     Returns asset stats as a list. If keys_list not empty, also sets values to variables that are named in keys_list.

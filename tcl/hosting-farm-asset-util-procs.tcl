@@ -245,6 +245,18 @@ ad_proc -private hf_asset_rename {
     return $success_p
 }
 
+ad_proc -private hf_f_id_exists {
+    f_id
+} {
+    @param f_id
+
+    @return 1 if exists, otherwise returns 0.
+} {
+    set exists_p [db_0or1row hf_f_id_exists_p "select f_id from hf_asset_map where f_id=:f_id" ]
+    return $exists_p
+}
+
+
 ad_proc -private hf_f_id_from_asset_id {
     asset_id
 } {
@@ -255,6 +267,7 @@ ad_proc -private hf_f_id_from_asset_id {
     @return f_id
 } {
     upvar 1 instance_id instance_id
+    set f_id ""
     db_0or1row hf_asset_get_f_id_from_asset_id { select f_id from hf_assets where instance_id=:instance_id and id=:asset_id }
     return $f_id
 }
@@ -315,12 +328,13 @@ ad_proc -private hf_asset_stats_keys {
     # naming convention is: label, name, description
     # old way from (q-wiki): name, title, description
     set keys_list [list \
+                       asset_id \
                        label \
                        name \
                        asset_type_id \
                        keywords \
                        description \
-                        trashed_p \
+                       trashed_p \
                        trashed_by \
                        template_p \
                        templated_p \
@@ -340,15 +354,12 @@ ad_proc -private hf_asset_stats_keys {
                        flags \
                        template_id \
                       f_id]
-    if { $separator ne ""} {
-        return [join $keys_list $separator]
-    } else {
-        return $keys_list
-    }
+    set keys [hf_keys_by $keys_list $separator]
+    return $keys
 }
 
-
-ad_proc -private hf_asset_read_keys {
+ad_proc -private hf_asset_keys {
+    {separator ""}
 } {
     Returns an ordered list of keys that is parallel to the ordered list returned by hf_asset_read.
     
@@ -359,8 +370,46 @@ ad_proc -private hf_asset_read_keys {
     set keys_list [hf_asset_stats_keys]
     lappend keys_list "content"
     lappend keys_list "comments"
-    return $keys_list
+    set keys [hf_keys_by $keys_list $separator]
+    return $keys
 }
 
 
+ad_proc -private hf_keys_by {
+    keys_list
+    separator
+} {
+    if { $separator ne ""} {
+        set keys ""
+        if { $separator eq ",:" } {
+            # for db
+            set keys ":"
+        }
+        append keys [join $keys_list $separator]
+    } else {
+        set keys $keys_list
+    }
+    return $keys
+}
 
+ad_proc -private hf_asset_map_update {
+    label
+    f_id
+    asset_id
+    trashed_p
+} {
+    Creates or updates an asset map.
+} {
+    upvar 1 instance_id instance_id
+    ns_log Notice "hf_asset_map_create: label '${label}' asset_id '${asset_id}' trashed_p '${trashed_p}' instance_id '${instance_id}'"
+    # Does f_id exist?
+    if { [hf_f_id_exists $f_id] } {
+        db_dml hf_asset_label_update { update hf_asset_label_map
+            set asset_id=:asset_id and label=:label where f_id=:f_id and instanece_id=:instance_id }
+    } else {
+        db_dml hf_asset_label_create { insert into hf_asset_label_map
+            ( label, asset_id, trashed_p, instance_id )
+            values ( :label, :asset_id, :trashed_p, :instance_id ) }
+    }
+    return 1
+}
