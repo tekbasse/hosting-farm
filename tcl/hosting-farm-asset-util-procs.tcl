@@ -22,7 +22,7 @@ ad_proc -private hf_nc_proc_context_set {
     set b $a
     set n "::hf::monitor::do::"
     set ${n}${a} $a
-    ns_log Notice "hf_nc_proc_context_set: context set: '${a}' info level '[info level]' namespace current '[namespace current]'"
+    #ns_log Notice "hf_nc_proc_context_set: context set: '${a}' info level '[info level]' namespace current '[namespace current]'"
     return 1
 }
 
@@ -76,3 +76,291 @@ ad_proc -private hf_nc_proc_in_context_q {
 #    ns_log Notice "hf_check_randoms: rand '[expr { rand() } ]' '[expr { rand() } ]' '[expr { rand() } ]'"
 #    ns_log Notice "hf_check_randoms: random '[random]' '[random]' '[random]'"
 #}
+
+ad_proc -private hf_asset_type_id_list {
+ } {
+    Returns list of all asset_type_id
+} {
+    upvar 1 instance_id instance_id
+    #set as_type_list \[list dc hw vm vh ss ot\]
+    if { [exists_and_not_null $instance_id] } {
+        set as_type_list [db_list hf_asset_type_id_by_i {select distinct id from hf_asset_type where instance_id=:instance_id}]
+    } else {
+        set as_type_list [db_list hf_asset_type_id_all {select distinct id from hf_asset_type}]
+    }
+    return $as_type_list
+}
+
+ad_proc -public hf_asset_id_exists_q { 
+    asset_id
+    {asset_type_id ""}
+} {
+    Returns 1 if asset_id exists, else returns 0
+
+    @param asset_id      The asset_id to check.
+    @param asset_type_id If not blank, also verifies that asset is of this type.
+
+    @return  1 if asset_id exists, otherwise 0.
+} {
+    upvar 1 instance_id instance_id
+    set asset_type_id_q $asset_type_id
+    set read_p [hf_ui_go_ahead_q read]
+    set asset_exists_p 0
+    # We can use results hf_ui_go_ahead_q to partially deduce answer
+    if { $read_p } {
+        if { $asset_type_id ne "" } {
+            if { $asset_type_id ne $asset_type_id_q } {
+                set asset_exists_p 0
+            } else {
+                set asset_exists_p 1
+            }
+        } else {
+            set asset_exists_p [db_0or1row hf_asset_get_id {select name from hf_assets where id=:asset_id and instance_id=:instance_id } ]
+        }
+    }
+    if { !$asset_exists_p } {
+        ns_log Notice "hf_asset_id_exists_q: asset_id does not exist. asset_id '${asset_id}' asset_type_id '${asset_type_id}' instance_id '${instance_id}'"
+    }
+    return $asset_exists_p
+}
+
+ad_proc -public hf_asset_active_q { 
+    asset_id
+} {
+    Returns 1 if asset_id exists, else returns 0
+
+    @param asset_id      The asset_id to check.
+    @param asset_type_id If not blank, also verifies that asset is of this type.
+    @param instance_id   The context of the implementation.
+
+    @return  1 if asset_id exists, otherwise 0.
+} {
+    upvar 1 instance_id instance_id
+    set active_q 0
+    set label [hf_label_from_asset_id $asset_id]
+    if { $label ne "" } {
+        set active_q 1
+    } else {
+        ns_log Notice "hf_asset_active_q: asset_id does not exist. asset_id '{$asset_id}' instance_id '${instance_id}'"
+    }
+    return $active_p
+}
+
+ad_proc -private hf_label_from_asset_id {
+    asset_id
+} {
+    @param asset_id  
+
+    @return label of asset with asset_id, or empty string if not exists or active.
+} {
+    upvar 1 instance_id instance_id
+    set label ""
+    set exists_p [db_0or1row hf_label_from_asset_id { select label from hf_asset_map 
+        where asset_id=:asset_id and instance_id=:instance_id } ]
+    if { !$exists_p } {
+        ns_log Notice "hf_label_from_asset_id: label does not exist for asset_id '${asset_id}' instance_id '${instance_id}'"
+    }
+    return $label
+}
+
+ad_proc -private hf_asset_id_from_label {
+    label
+} {
+    @param label  Label of asset
+
+    @return asset_id of asset with label, or empty string if not exists or active.
+} {
+    upvar 1 instance_id instance_id
+    set asset_id ""
+    set exists_p [db_0or1row hf_asset_id_from_label { select asset_id from hf_asset_map 
+        where label=:label and instance_id=:instance_id }]
+    if { !$exists_p } {
+        ns_log Notice "hf_asset_id_from_label: asset_id does not exist for label '${label}' instance_id '${instance_id}'"
+    }
+    return $asset_id
+}
+
+
+ad_proc -private hf_change_asset_id {
+    asset_id_new
+    {label ""}
+    {asset_id ""}
+} {
+    Changes the active revision of asset with asset_label to asset_id. 
+
+    @param asset_id_new   The new asset_id
+    @param label         The label of the asset.
+    @param asset_id      An asset_id of the asset.
+
+    @return   Returns 1 if success, otherwise returns 0.
+} {
+    upvar 1 instance_id instance_id
+    upvar 1 user_id user_id
+    # convert label to asset_id
+    if { $asset_id eq "" && $label ne "" } {
+        set asset_id [hf_asset_id_from_label $label]
+    }
+    set write_p [hf_ui_go_ahead_q write]
+    set success_p 0
+    if { $write_p } {
+        # new and current asset
+        db_dml hf_change_revision { update hf_asset_map
+            set asset_id=:asset_id_new where label=:asset_label and instance_id=:instance_id }
+        db_dml hf_change_revision_active { update hf_assets
+            set last_modified = current_timestamp where id=:asset_id and instance_id=:instance_id }
+        set success_p 1
+    } else {
+        ns_log Notice "hf_change_asset_id: no write allowed for asset_id_new '{$asset_id_new}' label '${label}' asset_id '${asset_id}'"
+    }
+    return $success_p
+}
+
+
+ad_proc -public hf_asset_rename {
+    asset_id
+    new_name
+} {
+    Changes the asset_name where the asset is referenced from asset_id. Returns 1 if successful, otherwise 0.
+
+    @param asset_id  The label of the asset.
+    @param new_name   The new name.
+} {
+    upvar 1 instance_id instance_id
+    upvar 1 user_id user_id
+    set write_p [hf_ui_go_ahead_q write]
+    set success_p 0
+    if { $write_p } {
+        db_transaction {
+            db_dml hf_name_change_asset_map { update hf_asset_label_map
+                set name=:new_name where asset_id=:asset_id and instance_id=:instance_id 
+            }
+            db_dml hf_name_change_hf_assets { update hf_assets
+                set last_modified = current_timestamp, name=:new_name where asset_id=:asset_id and instance_id=:instance_id 
+            }
+            set success_p 1
+        } on_error {
+            set success_p 0
+        }
+    }
+    return $success_p
+}
+
+ad_proc -private hf_f_id_from_asset_id {
+    asset_id
+} {
+    Returns hf_asset.f_id given any revision asset_id of f_id, otherwise returns empty string.
+
+    @param asset_id
+
+    @return f_id
+} {
+    upvar 1 instance_id instance_id
+    db_0or1row hf_asset_get_f_id_from_asset_id { select f_id from hf_assets where instance_id=:instance_id and id=:asset_id }
+    return $f_id
+}
+
+ad_proc -private hf_current_asset_id { 
+    f_id
+} {
+    Returns current asset_id given f_id, otherwise returns empty string.
+
+    @param f_id  hf_asset.f_id for an asset.
+
+    @return asset_id The current asset_id mapped to the label and f_id, else returns empty string.
+} {
+    upvar 1 instance_id instance_id
+    set asset_id ""
+    db_0or1row hf_asset_get_asset_id_from_f_id { select asset_id from hf_asset_map 
+        where instance_id=:instance_id and f_id=:f_id }
+    return $asset_id
+}
+
+
+ad_proc -public hf_current_asset_id_from_label { 
+    label
+} {
+    Returns asset_id if asset is published (untrashed) for instance_id, else returns empty string.
+} {
+    upvar 1 instance_id instance_id
+    set asset_id ""
+    db_0or1row hf_asset_get_id_from_label {select asset_id from hf_label_map 
+        where label=:label and instance_id=:instance_id and not ( trashed_p = '1' ) } 
+    return $asset_id
+}
+
+
+ad_proc -public hf_asset_stats_keys {
+    {separator ""}
+} {
+    Returns an ordered list of keys that is parallel to the ordered list returned by hf_asset_stats.
+    If separator is not "", returns a string joined with separator.
+} {
+    set keys_list [list \
+                       label \
+                       name \
+                       asset_type_id \
+                       keywords \
+                       description \
+                       template_p \
+                       templated_p \
+                       trashed_p \
+                       trashed_by \
+                       publish_p \
+                       monitor_p \
+                       popularity \
+                       triage_priority \
+                       op_status \
+                       ua_id \
+                       ns_id \
+                       qal_product_id \
+                       qal_customer_id \
+                       instance_id \
+                       user_id \
+                       last_modified \
+                       created \
+                       flags \
+                       template_id\
+                       f_id]
+    if { $separator ne ""} {
+        return [join $keys_list $separator]
+    } else {
+        return $keys_list
+    }
+}
+
+
+ad_proc -public hf_asset_read_keys {
+} {
+    Returns an ordered list of keys that is parallel to the ordered list returned by hf_asset_read.
+} {
+    # naming convention is: label, name, description
+    # old way: name, title, description
+    set keys_list [list \
+                       label \
+                       name \
+                       asset_type_id \
+                       keywords \
+                       description \
+                       content \
+                       comments \
+                       trashed_p \
+                       trashed_by \
+                       template_p \
+                       templated_p \
+                       publish_p \
+                       monitor_p \
+                       popularity \
+                       triage_priority \
+                       op_status \
+                       ua_id \
+                       ns_id \
+                       qal_product_id \
+                       qal_customer_id \
+                       instance_id \
+                       user_id \
+                       last_modified \
+                       created \
+                       template_id]
+    return $keys_list
+}
+
