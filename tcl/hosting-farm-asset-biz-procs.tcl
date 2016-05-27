@@ -19,10 +19,10 @@ ad_proc -public hf_asset_create {
     label
     name
     asset_type_id
-    content
     keywords
     description
-    comments
+    trashed_p
+    trashed_by
     template_p
     templated_p
     publish_p
@@ -34,13 +34,19 @@ ad_proc -public hf_asset_create {
     ns_id
     qal_product_id
     qal_customer_id
-    {template_id ""}
-    {flags ""}
-    {instance_id ""}
-    {user_id ""}
+    instance_id
+    user_id
+    last_modified
+    created
+    flags
+    template_id
+    f_id
+    content
+    comments
 } {
-    Creates hf asset. returns asset_id, or 0 if error. instance_id is usually package_id
+    Creates hf asset. returns asset_id, or 0 if error.
 } {
+o    set create_p [hf_ui_go_ahead_q create f_id a 0]
 
     if { $instance_id eq "" } {
         # set instance_id package_id

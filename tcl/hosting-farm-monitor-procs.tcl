@@ -692,25 +692,54 @@ ad_proc -private hf_ui_go_ahead_q {
     upvar 1 $asset_id_varnam asset_id
     upvar 1 instance_id proc_instance_id
     upvar 1 user_id proc_user_id
+    upvar 1 customer_id proc_customer_id
     upvar 1 customer_id_list proc_customer_id_list
     if { [ns_conn isconnected] } {
         set user_id [ad_conn user_id]
         set instance_id [ad_conn package_id]
         #set go_ahead \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin\]
-        set customer_id [hf_customer_id_of_asset_id $asset_id $instance_id]
-        if { $customer_id ne "" && [exists_and_not_null proc_customer_id_list]} {
-            set c_idx [lsearch -exact $proc_customer_id_list $customer_id]
-            if { $c_idx < 0 } {
+        if { ![info exists asset_id] } {
+            set asset_id ""
+        }
+        if { $privilege eq "create" && $asset_id eq "" } {
+            # No existing asset_id to check.
+            # Vet an existing customer_id, or set it if there is only 1.
+            set customer_id_list [hf_customer_ids_for_user $user_id $instance_id]
+            set cid_list_len [llength $customer_id_list]
+            if { ![info exists proc_customer_id] } {
+                set proc_customer_id ""
+            }
+            if { $proc_customer_id eq "" && $cid_list_len == 1 } {
+                set proc_customer_id [lindex $customer_id_list 0]
+            }
+            set cid_idx [lsearch -exact $customer_id_list $proc_customer_id]
+            if { $cid_idx > -1 } {
+                set customer_id [lindex $customer_id_list $cid_idx]
+                ns_log Warning "hf_ui_go_ahead_q.618: customer_id was empty but required. Since there is only 1 for user_id '${user_id}'. Set it."
+                set proc_customer_id $customer_id
+            } else {
+                set customer_id ""
                 set go_ahead 0
-                ns_log Warning "hf_ui_go_adhead_q.698: customer_id '${customer_id}' not in customer_id_list '${customer_id_list}'"
+                ns_log Warning "hf_ui_go_ahead_q.650: Could not identify a unique customer_id for user_id '${user_id}'"
             }
         } else {
-            # Make sure asset_id is consistent to asset_type_id
-            set asset_type_id [hf_nc_asset_type_id $asset_id]
-            if { $asset_type_id eq "" } {
-                set asset_type_id "assets"
+            set customer_id [hf_customer_id_of_asset_id $asset_id $instance_id]
+            if { $customer_id ne "" && [exists_and_not_null proc_customer_id_list]} {
+                set c_idx [lsearch -exact $proc_customer_id_list $customer_id]
+                if { $c_idx < 0 } {
+                    set go_ahead 0
+                    ns_log Warning "hf_ui_go_ahead_q.698: customer_id '${customer_id}' not in customer_id_list '${customer_id_list}'"
+                }
+            } else {
+                # Make sure asset_id is consistent to asset_type_id
+                set asset_type_id [hf_nc_asset_type_id $asset_id]
+                if { $asset_type_id eq "" } {
+                    set asset_type_id "assets"
+                }
             }
-            set go_ahead [hf_permission_p $user_id $customer_id $asset_type_id admin $instance_id]
+        }
+        if { ![info_exists_and_not_null go_ahead] } {
+            set go_ahead [hf_permission_p $user_id $customer_id $asset_type_id $privilege $instance_id]
         }
         if { !$go_ahead } {
             ns_log Warning "hf_ui_go_head.700: failed. Called by user_id '${user_id}' args: asset_id_varnam '${asset_id_varnam}' instance_id '${instance_id}' asset_id '${asset_id}' asset_type_id '${asst_type_id}'"
