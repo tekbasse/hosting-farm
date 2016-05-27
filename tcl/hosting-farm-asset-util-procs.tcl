@@ -351,10 +351,16 @@ ad_proc -private hf_asset_stats_keys {
 ad_proc -private hf_asset_read_keys {
 } {
     Returns an ordered list of keys that is parallel to the ordered list returned by hf_asset_read.
+    
+    Adds content and comments fields to hf_asset_stats_keys list
+
+    @see hf_asset_stats_keys
 } {
     set keys_list [hf_asset_stats_keys]
     lappend keys_list "content"
     lappend keys_list "comments"
     return $keys_list
 }
+
+
 
