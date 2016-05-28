@@ -264,14 +264,14 @@ ad_proc -private hf_asset_id_change {
 }
 
 
-ad_proc -private hf_asset_rename {
+ad_proc -private hf_asset_label_change {
     asset_id
-    new_name
+    new_label
 } {
     Changes the asset_name where the asset is referenced from asset_id. Returns 1 if successful, otherwise 0.
 
     @param asset_id  The label of the asset.
-    @param new_name   The new name.
+    @param new_label   The new label.
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -279,11 +279,11 @@ ad_proc -private hf_asset_rename {
     set success_p 0
     if { $write_p } {
         db_transaction {
-            db_dml hf_name_change_asset_map { update hf_asset_rev_map
-                set name=:new_name where asset_id=:asset_id and instance_id=:instance_id 
+            db_dml hf_label_change_asset_map { update hf_asset_rev_map
+                set label=:new_label where asset_id=:asset_id and instance_id=:instance_id 
             }
-            db_dml hf_name_change_hf_assets { update hf_assets
-                set last_modified = current_timestamp, name=:new_name where asset_id=:asset_id and instance_id=:instance_id 
+            db_dml hf_label_change_hf_assets { update hf_assets
+                set last_modified = current_timestamp, label=:new_label where asset_id=:asset_id and instance_id=:instance_id 
             }
             set success_p 1
         } on_error {
