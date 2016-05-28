@@ -30,7 +30,7 @@ CREATE TABLE hf_asset_type (
     -- virtual_machine
     -- virtual_host
     -- xref with hf_assets.asset_type
-    -- expects dc, hw, vm, vh, hs, ss, ns, ot etc.
+    -- expects dc, hw, vm, vh, hs, ss, ns, ip, vh, ni ot etc.
    id                      varchar(24),
    -- aka feature.short_name
    -- a user readable reference id
@@ -118,8 +118,6 @@ CREATE TABLE hf_assets (
     time_start      timestamptz,
     -- expires/expired on
     time_stop       timestamptz,
-    -- DNS record reference
-    ns_id           varchar(19) not null DEFAULT '',
     ua_id           varchar(19) not null DEFAULT '',
   -- status aka vm_to_configure, on,off etc.
   -- use with qal_product_id for vm_to_configure.plan_id
@@ -153,7 +151,7 @@ create index hf_assets_label_idx on hf_assets (label);
 
 -- following table ported from q-wiki for versioning
 -- was hf_asset_label_map
-CREATE TABLE hf_asset_map (
+CREATE TABLE hf_asset_rev_map (
        -- max size must consider label encoding all hf_asset.name characters
        label       varchar(903) not null,
        -- Main internal reference id for an asset. 
@@ -166,10 +164,10 @@ CREATE TABLE hf_asset_map (
        instance_id varchar(11) not null DEFAULT ''
 );
 
-create index hf_asset_map_label_idx on hf_asset_label_map (label);
-create index hf_asset_map_instance_id_idx on hf_asset_label_map (instance_id);
-create index hf_asset_map_asset_id_idx on hf_asset_label_map (asset_id);
-create index hf_asset_map_f_id_idx on hf_asset_label_map (f_id);
+create index hf_asset_rev_map_label_idx on hf_asset_rev_map (label);
+create index hf_asset_rev_map_instance_id_idx on hf_asset_rev_map (instance_id);
+create index hf_asset_rev_map_asset_id_idx on hf_asset_rev_map (asset_id);
+create index hf_asset_rev_map_f_id_idx on hf_asset_rev_map (f_id);
 
 CREATE TABLE hf_asset_type_features (
     instance_id          varchar(11) not null DEFAULT '',
@@ -439,70 +437,22 @@ CREATE TABLE hf_up (
 create index hf_up_instance_id_idx on hf_up (instance_id);
 create index hf_up_up_id_idx on hf_up (up_id);
 
-CREATE TABLE hf_dc_hw_map (
+CREATE TABLE hf_sub_asset_map (
     instance_id     varchar(11) not null DEFAULT '',
-    dc_id           integer not null,
-    hw_id           integer not null
+    f_id            integer not null,
+    type_id         varchar(24),
+    sub_f_id        integer not null,
+    sub_type_id     varchar(24),
+    -- subtype trashed_p
+    trashed_p   varchar(1) not null DEFAULT '0'
 );
+create index hf_sub_asset_map_instance_id_idx on hf_sub_asset_map (instance_id);
+create index hf_sub_asset_map_f_id_idx on hf_sub_asset_map (f_id);
+create index hf_sub_asset_map_sub_f_id_idx on hf_sub_asset_map (sub_f_id);
+create index hf_sub_asset_map_type_id_idx on hf_sub_asset_map (type_id);
+create index hf_sub_asset_map_sub_type_id_idx on hf_sub_asset_map (sub_type_id);
+create index hf_sub_asset_trashed_p_idx on hf_sub_asset_map (trashed_p);
 
-create index hf_dc_hw_map_instance_id_idx on hf_dc_hw_map (instance_id);
-create index hf_dc_hw_map_dc_id_idx on hf_dc_hw_map (dc_id);
-create index hf_dc_hw_map_hw_id_idx on hf_dc_hw_map (hw_id);
-
-
-CREATE TABLE hf_dc_ni_map (
-    instance_id     varchar(11) not null DEFAULT '',
-    dc_id           integer not null,
-    ni_id           integer not null
-);
-
-create index hf_dc_ni_map_instance_id_idx on hf_dc_ni_map (instance_id);
-create index hf_dc_ni_map_dc_id_idx on hf_dc_ni_map (dc_id);
-create index hf_dc_ni_map_ni_id_idx on hf_dc_ni_map (ni_id);
-
--- hw_ni map is separate fro dc_ni map, because these are inherently 2 different systems
-CREATE TABLE hf_hw_ni_map (
-    instance_id     varchar(11) not null DEFAULT '',
-    hw_id           integer not null,
-    ni_id           integer not null
-);
-
-create index hf_hw_ni_map_instance_id_idx on hf_hw_ni_map (instance_id);
-create index hf_hw_ni_map_hw_id_idx on hf_hw_ni_map (hw_id);
-create index hf_hw_ni_map_ni_id_idx on hf_hw_ni_map (ni_id);
-
-
-CREATE TABLE hf_hw_vm_map (
-    instance_id     varchar(11) not null DEFAULT '',
-    hw_id           integer not null,
-    vm_id           integer not null
-);
-
-create index hf_hw_vm_map_instance_id_idx on hf_hw_vm_map (instance_id);
-create index hf_hw_vm_map_hw_id_idx on hf_hw_vm_map (hw_id);
-create index hf_hw_vm_map_vnm_id on hf_hw_vm_map (vm_id);
-
-CREATE TABLE hf_vm_vh_map (
-    instance_id     varchar(11) not null DEFAULT '',
-    vm_id           integer not null,
-    vh_id           integer not null
-);
-
-create index hf_vm_vh_map_instance_id_idx on hf_vm_vh_map (instance_id);
-create index hf_vm_vh_map_vm_id_idx on hf_vm_vh_map (vm_id);
-create index hf_vm_vh_map_vh_id_idx on hf_vm_vh_map (vh_id);
-
--- id_ip map is a catch all for ip addresses not assigned to 
--- virtual machines
-CREATE TABLE hf_asset_ip_map (
-    instance_id     varchar(11) not null DEFAULT '',
-    asset_id        integer not null,
-    ip_id           integer not null
-);
-
-create index hf_asset_ip_map_instance_id_idx on hf_asset_ip_map (instance_id);
-create index hf_asset_ip_map_asset_id_idx on hf_asset_ip_map (asset_id);
-create index hf_asset_ip_map_ip_id_idx on hf_asset_ip_map (ip_id);
 
 
 -- This map connects a service with all assets and subassets it is composed of.

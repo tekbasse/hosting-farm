@@ -64,7 +64,7 @@ ad_proc -public hf_asset_create {
             db_dml hf_asset_create " insert into hf_assets
                 ([hf_asset_keys ","])
             values ([hf_asset_keys ",:"])" 
-            hf_asset_map_update $label $f_id $asset_id $trashed_p
+            hf_asset_rev_map_update $label $f_id $asset_id $trashed_p
             ns_log Notice "hf_asset_create: hf_asset_create id '$asset_id' f_id '$f_id' label '$label' instance_id '$instance_id' user_id '$user_id'"
         } on_error {
             set asset_id 0
@@ -124,7 +124,7 @@ ad_proc -public hf_asset_write {
                 db_dml hf_asset_write "insert into hf_assets
                 ([hf_asset_keys ","])
                 values ([hf_asset_keys ",:"])"
-                hf_asset_map_update $label $f_id $asset_id $trashed_p
+                hf_asset_rev_map_update $label $f_id $asset_id $trashed_p
                 ns_log Notice "hf_asset_write:  asset_id '${asset_id}' old_asset_id '${old_asset_id}'"
             } on_error {
                 ns_log Notice "hf_asset_write: id '${asset_id}' f_id '${f_id}' name '${name}' instance_id '${instance_id}' user_id '${user_id}'"
@@ -201,7 +201,7 @@ ad_proc -public hf_asset_delete {
             # delete all revisions of f_id 
             db_dml hf_asset_delete { delete from hf_assets 
                 where f_id=:f_id and instance_id=:instance_id and trashed_p = '1' }
-            db_dml hf_asset_map_delete { delete from hf_asset_map
+            db_dml hf_asset_rev_map_delete { delete from hf_asset_rev_map
                 where f_id=:f_id and instance_id=:instance_id }
 ###code
             set success_p 1
