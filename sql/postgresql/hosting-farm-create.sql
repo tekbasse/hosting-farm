@@ -71,7 +71,7 @@ CREATE TABLE hf_assets (
     f_id             integer,
     user_id         varchar(11) not null DEFAULT '',
     last_modified   timestamptz,
-    created         timestamptz,
+    created         timestamptz not null DEFAULT now(),
     -- one of dc data center
     --        hw hardware
     --        vm virtual machine
@@ -225,7 +225,10 @@ CREATE TABLE hf_ns_records (
        -- should be validated before allowed to go live.
        active_p    integer not null DEFAULT '0',
        -- DNS records to be added to domain name service
-       name_record text
+       name_record text,
+       time_trashed   timestamptz,
+       time_created   timestamptz not null DEFAULT now()
+
 );
 
 create index hf_ns_records_instance_id_idx on hf_ns_records (instance_id);
@@ -238,7 +241,9 @@ CREATE TABLE hf_data_centers (
     -- was datacenter.short_code
     affix       varchar(20),
     description varchar(80),
-    details     text
+    details     text,
+    time_trashed   timestamptz,
+    time_created   timestamptz not null DEFAULT now()
 );
 
 create index hf_data_centers_instance_id_idx on hf_data_centers (instance_id);
@@ -256,7 +261,9 @@ CREATE TABLE hf_hardware (
     ni_id       varchar(19) not null DEFAULT '',
     os_id       varchar(19) not null DEFAULT '',
     description varchar(200),
-    details     text
+    details     text,
+    time_trashed   timestamptz,
+    time_created   timestamptz not null DEFAULT now()
 );
 
 create index hf_hardware_instance_id_idx on hf_hardware (instance_id);
@@ -285,7 +292,9 @@ CREATE TABLE hf_virtual_machines (
     -- was vm_template.mount_union
     mount_union   varchar(1),
     -- vm_feature table goes here if casual, or see hf_asset_feature_map
-    details       text
+    details       text,
+    time_trashed   timestamptz,
+    time_created   timestamptz not null DEFAULT now()
 );
 
 create index hf_virtual_machines_vm_instance_id_idx on hf_virtual_machines (instance_id);
@@ -307,7 +316,9 @@ CREATE TABLE hf_network_interfaces (
     -- universal/local programmed (non-OUI) MAC address
     ul_mac_address     varchar(20),
     ipv4_addr_range    varchar(20),
-    ipv6_addr_range    varchar(50)
+    ipv6_addr_range    varchar(50),
+    time_trashed   timestamptz,
+    time_created   timestamptz not null DEFAULT now()
 );
 
 create index hf_network_interfaces_instance_id_idx on hf_network_interfaces (instance_id);
@@ -321,7 +332,9 @@ CREATE TABLE hf_ip_addresses (
     ipv4_status  integer,
     ipv6_addr    varchar(39), 
     -- 0 down, 1 up
-    ipv6_status  integer
+    ipv6_status  integer,
+    time_trashed   timestamptz,
+    time_created   timestamptz not null DEFAULT now()
 );
 
 create index hf_ip_addresses_instance_id_idx on hf_ip_addresses (instance_id);
@@ -339,7 +352,9 @@ CREATE TABLE hf_operating_systems (
     kernel              varchar(300),
     orphaned_p          varchar(1) not null DEFAULT '0',
     requires_upgrade_p  varchar(1) not null DEFAULT '0',
-    description         text
+    description         text,
+    time_trashed   timestamptz,
+    time_created   timestamptz not null DEFAULT now()
 );
 
 create index hf_operating_systems_instance_id_idx on hf_operating_systems (instance_id);
@@ -378,9 +393,11 @@ CREATE TABLE hf_vm_quotas (
   vm_type            varchar(19) not null DEFAULT '',
   -- was vm_group (0 to 3) means?
   max_domain         varchar(19) not null DEFAULT '',
-  private_vps        varchar(1)
+  private_vps        varchar(1),
   -- plan.high_end is ambiguous and isn't differentiated from private_vps, so ignoring.
- );
+  time_trashed   timestamptz,
+  time_created   timestamptz not null DEFAULT now()
+);
 
 create index hf_vm_quotas_instance_id_idx on hf_vm_quotas (instance_id);
 create index hf_vm_quotas_plan_id_idx on hf_vm_quotas (plan_id);
@@ -394,7 +411,9 @@ CREATE TABLE hf_vhosts (
     ua_id       integer not null,
     ns_id       integer not null,
     domain_name varchar(200),
-    details     text
+    details     text,
+    time_trashed   timestamptz,
+    time_created   timestamptz not null DEFAULT now()
 );
 
 create index hf_vhosts_instance_id_idx on hf_vhosts (instance_id); 
@@ -430,7 +449,9 @@ CREATE TABLE hf_services (
     -- following from database_memory_detail
     memory_bytes    varchar(19) not null DEFAULT '',
     --runtime is part of hf_assets start or monitor_log
-    details         text
+    details         text,
+    time_trashed   timestamptz,
+    time_created   timestamptz not null DEFAULT now()
 );
 
 create index hf_services_instance_id_idx on hf_services (instance_id);
@@ -497,7 +518,9 @@ CREATE TABLE hf_monitor_config_n_control (
     -- If privilege specified, all users with permission of type privilege get notified.
     alert_by_privilege     varchar(12),
     -- If not null, alerts are sent to specified user(s) of specified role
-    alert_by_role varchar(300)
+    alert_by_role varchar(300),
+    time_trashed   timestamptz,
+    time_created   timestamptz not null DEFAULT now()
 );
 
 create index hf_monitor_config_n_control_instance_id_idx on hf_monitor_config_n_control (instance_id);
