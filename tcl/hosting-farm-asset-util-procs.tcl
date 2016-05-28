@@ -124,6 +124,18 @@ ad_proc -private hf_asset_id_exists_q {
     return $asset_exists_p
 }
 
+ad_proc -private hf_user_id_of_asset_id {
+    asset_id
+} {
+    Returns primary user_id for asset_id, or empty string if not found.
+} {
+    # log_read needs to be adjusted so monitor notifications work for anyone with admin role for asset_id
+    set user_id ""
+    set asset_id [qf_is_natural_number $asset_id]
+    db_0or1row hf_assets_read_uid "select user_id from hf_assets where asset_id=:asset_id"
+    return $user_id
+}
+
 ad_proc -private hf_asset_revision_current_q { 
     asset_id
 } {

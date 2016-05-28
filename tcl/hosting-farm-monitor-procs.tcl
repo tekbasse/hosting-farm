@@ -1685,7 +1685,7 @@ ad_proc -private hf_monitor_alert_trigger {
     }
     set users_list [hf_nc_users_from_asset_id $asset_id $instance_id $alert_by_privilege $alert_by_role]
     if { [llength $users_list ] == 0 } {
-        set user_id [hf_user_id $asset_id]
+        set user_id [hf_user_id_of_asset_id $asset_id]
         set users_list [list $user_id]
     }
     set 
