@@ -107,12 +107,6 @@ drop index hf_vm_quotas_instance_id_idx;
 DROP TABLE hf_vm_quotas;
 
 
-drop index hf_dc_ni_map_ni_id_idx;
-drop index hf_dc_ni_map_dc_id_idx;
-drop index hf_dc_ni_map_instance_id_idx;
-
-DROP TABLE hf_dc_ni_map;
-
 drop index hf_asset_feature_map_feature_id_idx;
 drop index hf_asset_feature_map_asset_id_idx;
 drop index hf_asset_feature_map_instance_id_idx;
@@ -172,11 +166,11 @@ drop index hf_asset_type_features_instance_id_idx;
 DROP TABLE hf_asset_type_features;
 
 
-drop index hf_asset_map_asset_id_idx;
-drop index hf_asset_map_instance_id_idx;
-drop index hf_asset_map_label_idx;
+drop index hf_asset_rev_map_asset_id_idx;
+drop index hf_asset_rev_map_instance_id_idx;
+drop index hf_asset_rev_map_label_idx;
 
-DROP TABLE hf_asset_map;
+DROP TABLE hf_asset_rev_map;
 
 drop index hf_assets_label_idx;
 drop index hf_assets_qal_customer_id_idx;

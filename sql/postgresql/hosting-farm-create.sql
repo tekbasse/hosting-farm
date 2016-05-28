@@ -65,10 +65,10 @@ CREATE TABLE hf_assets (
     -- A revision of hf_asset_label_map.f_id
     id              integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- following 3 fields are similar in use to q-wiki template mapping
-    -- fid is similar usage as template_id in q-wiki
-    -- fid is fixed for all revisions of an asset
+    -- f_id is similar usage as template_id in q-wiki
+    -- f_id is fixed for all revisions of an asset
     -- See also hf_asset_label_map.f_id
-    fid             integer,
+    f_id             integer,
     user_id         varchar(11) not null DEFAULT '',
     last_modified   timestamptz,
     created         timestamptz,
@@ -140,6 +140,7 @@ CREATE TABLE hf_assets (
 );
 
 create index hf_assets_id_idx on hf_assets (id);
+create index hf_assets_f_id_idx on hf_assets (f_id);
 create index hf_assets_instance_id_idx on hf_assets (instance_id);
 create index hf_assets_template_id_idx on hf_assets (template_id);
 create index hf_assets_user_id_idx on hf_assets (user_id);
@@ -152,22 +153,47 @@ create index hf_assets_label_idx on hf_assets (label);
 -- following table ported from q-wiki for versioning
 -- was hf_asset_label_map
 CREATE TABLE hf_asset_rev_map (
+       instance_id varchar(11) not null DEFAULT '',
        -- max size must consider label encoding all hf_asset.name characters
        label       varchar(903) not null,
        -- Main internal reference id for an asset. 
        -- Fixed asset_id ie does not change for an asset --ever.
+       -- Unique for an instance_id
        f_id       integer not null,
        -- aka revision_id
        -- points to an hf_assets.id
        asset_id    integer not null,
-       trashed_p   varchar(1) not null DEFAULT '0',
-       instance_id varchar(11) not null DEFAULT ''
+       trashed_p   varchar(1) not null DEFAULT '0'
+
 );
 
 create index hf_asset_rev_map_label_idx on hf_asset_rev_map (label);
 create index hf_asset_rev_map_instance_id_idx on hf_asset_rev_map (instance_id);
 create index hf_asset_rev_map_asset_id_idx on hf_asset_rev_map (asset_id);
 create index hf_asset_rev_map_f_id_idx on hf_asset_rev_map (f_id);
+
+CREATE TABLE hf_sub_asset_map (
+    instance_id     varchar(11) not null DEFAULT '',
+
+    -- asset
+    f_id            integer not null,
+    type_id         varchar(24) not null,
+
+    -- sub asset
+    sub_f_id        integer not null,
+    sub_type_id     varchar(24) not null,
+    -- subtype trashed? ie map trashed_p
+    trashed_p   varchar(1) not null DEFAULT '0'
+);
+
+create index hf_sub_asset_map_instance_id_idx on hf_sub_asset_map (instance_id);
+create index hf_sub_asset_map_f_id_idx on hf_sub_asset_map (f_id);
+create index hf_sub_asset_map_sub_f_id_idx on hf_sub_asset_map (sub_f_id);
+create index hf_sub_asset_map_type_id_idx on hf_sub_asset_map (type_id);
+create index hf_sub_asset_map_sub_type_id_idx on hf_sub_asset_map (sub_type_id);
+create index hf_sub_asset_map_trashed_p_idx on hf_sub_asset_map (trashed_p);
+
+
 
 CREATE TABLE hf_asset_type_features (
     instance_id          varchar(11) not null DEFAULT '',
@@ -436,22 +462,6 @@ CREATE TABLE hf_up (
 
 create index hf_up_instance_id_idx on hf_up (instance_id);
 create index hf_up_up_id_idx on hf_up (up_id);
-
-CREATE TABLE hf_sub_asset_map (
-    instance_id     varchar(11) not null DEFAULT '',
-    f_id            integer not null,
-    type_id         varchar(24),
-    sub_f_id        integer not null,
-    sub_type_id     varchar(24),
-    -- subtype trashed_p
-    trashed_p   varchar(1) not null DEFAULT '0'
-);
-create index hf_sub_asset_map_instance_id_idx on hf_sub_asset_map (instance_id);
-create index hf_sub_asset_map_f_id_idx on hf_sub_asset_map (f_id);
-create index hf_sub_asset_map_sub_f_id_idx on hf_sub_asset_map (sub_f_id);
-create index hf_sub_asset_map_type_id_idx on hf_sub_asset_map (type_id);
-create index hf_sub_asset_map_sub_type_id_idx on hf_sub_asset_map (sub_type_id);
-create index hf_sub_asset_trashed_p_idx on hf_sub_asset_map (trashed_p);
 
 -- was database_auth
 CREATE TABLE hf_ua_up_map (
