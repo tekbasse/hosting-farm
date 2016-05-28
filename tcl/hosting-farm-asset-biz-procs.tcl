@@ -198,13 +198,33 @@ ad_proc -public hf_asset_delete {
     }
 
     if { $delete_p } {
-            # delete all revisions of f_id 
-            db_dml hf_asset_delete { delete from hf_assets 
-                where f_id=:f_id and instance_id=:instance_id and trashed_p = '1' }
-            db_dml hf_asset_rev_map_delete { delete from hf_asset_rev_map
-                where f_id=:f_id and instance_id=:instance_id }
-###code
-            set success_p 1
+        # 
+
+        # trash all subassets --in case this is a mistake, each subasset can be deleted or recoverd individually
+
+        # delete all asset attributes
+        # hf_hardware
+        # hf_virtual_machines
+        # hf_network_interfaces
+        # hf_ip_addresses
+        # hf_vh_hosts
+        # hf_services
+        # hf_ua
+        # hf_ua_up_map hf_up
+        # hf_monitor_config_n_control
+        # hf_monitor_log
+        # hf_monitor_status
+        # hf_monitor_statistics
+        # hf_monitor_freq_dist_curves
+        
+
+        # delete all revisions of f_id 
+        db_dml hf_asset_delete { delete from hf_assets 
+            where f_id=:f_id and instance_id=:instance_id and trashed_p = '1' }
+        db_dml hf_asset_rev_map_delete { delete from hf_asset_rev_map
+            where f_id=:f_id and instance_id=:instance_id }
+##code
+        set success_p 1
 
     }
     return $success_p
@@ -216,13 +236,14 @@ ad_proc -public hf_asset_trash {
     {asset_id ""}
     {trash_p "1"}
     {template_id ""}
-    {instance_id ""}
-    {user_id ""}
 } {
     Trashes/untrashes asset_id or template_id (subject to permission check).
     set trash_p to 1 (default) to trash asset. Set trash_p to '0' to untrash. 
     Returns 1 if successful, otherwise returns 0
 } {
+    upvar 1 instance_id instance_id
+    upvar 1 user_id user_id
+
     # asset_id can be unpublished revision or the published revision, trashed or untrashed
     set label ""
 
