@@ -229,7 +229,7 @@ ad_proc -private hf_asset_id_of_label {
 }
 
 
-ad_proc -private hf_change_asset_id {
+ad_proc -private hf_asset_id_change {
     asset_id_new
     {label ""}
     {asset_id ""}
@@ -252,13 +252,13 @@ ad_proc -private hf_change_asset_id {
     set success_p 0
     if { $write_p } {
         # new and current asset
-        db_dml hf_change_revision { update hf_asset_rev_map
+        db_dml hf_asset_id_change { update hf_asset_rev_map
             set asset_id=:asset_id_new where label=:asset_label and instance_id=:instance_id }
-        db_dml hf_change_revision_active { update hf_assets
+        db_dml hf_asset_id_change_active { update hf_assets
             set last_modified = current_timestamp where id=:asset_id and instance_id=:instance_id }
         set success_p 1
     } else {
-        ns_log Notice "hf_change_asset_id: no write allowed for asset_id_new '{$asset_id_new}' label '${label}' asset_id '${asset_id}'"
+        ns_log Notice "hf_asset_id_change: no write allowed for asset_id_new '{$asset_id_new}' label '${label}' asset_id '${asset_id}'"
     }
     return $success_p
 }
