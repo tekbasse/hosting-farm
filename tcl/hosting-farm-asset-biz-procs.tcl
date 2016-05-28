@@ -156,87 +156,58 @@ ad_proc -public hf_asset_revision_delete {
         set delete_p 1
     }
     # revision must have been trashed first
+    if { $delete_p } {
+        # delete a revision, but not the current one
+        if { [hf_asset_revison_current_q $asset_id] } {
+            # In q-wiki, the process is to
+            # 1. Point to another untrashed revision if available
+            # 2. Otherwise point an available trashed revision and mark as trashed
+            # 3. Delete the entire asset if no other trashed or untrashed revsions exist.
+            # This is not expected behavior here.
+            
+            # Deleting an asset this way is not permitted. Reject. Must leave at least one trashed for archives.
+            set delete_p 0
+            ns_log Notice "hf_asset_revision_delete.164: Cannot delete an asset by deleting current revision trashed_p '${trashed_p}'."
+        }
+    }
     if { $delete_p && $trashed_p } {
-        # delete a revision
-        db_dml hf_asset_delete { delete from hf_assets 
+        db_dml hf_asset_rev_delete { delete from hf_assets 
             where id=:asset_id and instance_id=:instance_id and trashed_p = '1' }
-        # is asset_id the active revision for f_id?
-    set asset_id_active_p [db_0or1row hf_label_from_asset_id { select label from hf_asset_label_map 
-        where asset_id=:asset_id and instance_id=:instance_id } ]
-
-
+    } else {
+        set delete_p 0
+    }
+    return $delete_p
 }    
 
 ad_proc -public hf_asset_delete {
     f_id
 } {
-    Deletes all revisions of asset.
+    Deletes all revisions of asset. Package admins only.
     Returns 1 if deleted. Returns 0 if there were any issues.
 } {
     upvar 1 instance_id instance_id
-    upvar 1 user_id user_id
-    set delete_p [hf_ui_go_ahead_q delete f_id "" 0]
+    set user_id [ad_conn user_id]
+    set instance_id [ad_conn package_id]
+    set delete_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
     set success_p 0
-    set is_active_p 0
+
+    set asset_id [hf_asset_id_of_f_id_if_untrashed $f_id]
+    if { $asset_id > 0 } {
+        # cannot delete an untrashed asset
+        set delete_p 0
+    }
+
     if { $delete_p } {
-            # delete all revisions of f_id and the label_mapped to it
-            # get active asset_id for reference later
-            set asset_id [hf_asset_label_id_from_f_id $f_id $instance_id]
-            # delete all revisions
-            db_dml hf_template_delete { delete from hf_assets 
+            # delete all revisions of f_id 
+            db_dml hf_asset_delete { delete from hf_assets 
                 where f_id=:f_id and instance_id=:instance_id and trashed_p = '1' }
-            set asset_id_active_p 1
-
-    } else {
-
-        # a user can only delete their own creations
-        if { $asset_id ne "" } {
-            set f_id [lindex [hf_asset_stats $asset_id $instance_id] 5]
-            # delete a revision
-            db_dml hf_asset_delete_u { delete from hf_assets 
-                where id=:asset_id and instance_id=:instance_id and user_id=:user_id and trashed_p = '1' }
-            # is asset_id the active revision for f_id?
-            set asset_id_active_p [db_0or1row hf_label_from_asset_id { select label from hf_asset_label_map 
-                where asset_id=:asset_id and instance_id=:instance_id } ]
+            db_dml hf_asset_map_delete { delete from hf_asset_map
+                where f_id=:f_id and instance_id=:instance_id }
+###code
             set success_p 1
-        } elseif { $f_id ne "" } {
-            # delete all revisions of f_id and the label_mapped to it
-            # get active asset_id for reference later
-            set asset_id [hf_asset_label_id_from_f_id $f_id $instance_id]
-            # delete all revisions
-            db_dml hf_template_delete_u { delete from hf_assets 
-                where f_id=:f_id and instance_id=:instance_id and user_id=:user_id and trashed_p = '1' }
-            set asset_id_active_p 1
-        }
-        
-    }
 
-    if { $asset_id_active_p } {
-        # change the asset_id mapped to the label, or delete it if no alternates exist
-        # find the most recent untrashed revision
-        set new_untrashed_id_exists_p [db_0or1row hf_previous_asset_id { select id as new_asset_id from hf_assets 
-            where f_id=:f_id and instance_id=:instance_id and not ( trashed_p = '1') and not ( id=:asset_id ) order by created desc limit 1 } ]
-        if { $new_untrashed_id_exists_p } {
-            #  point to the most recent untrashed revision
-            db_dml hf_asset_id_update { update hf_asset_label_map set asset_id=:new_asset_id 
-                where instance_id=:instance_id and asset_id=:asset_id }
-        } else {
-            # point to the most recent trashed revision, and trash the mapped label status for consistency
-            set new_trashed_id_exists_p [db_0or1row hf_previous_asset_id2 { select id as new_asset_id from hf_assets 
-                where f_id=:f_id and instance_id=:instance_id and not ( id=:asset_id ) order by created desc limit 1 } ]
-            if { $new_trashed_id_exists_p } {
-                db_dml hf_asset_id_update_trashed { update hf_asset_label_map
-                    set asset_id=:new_asset_id, trashed_p = '1'
-                    where instance_id=:instance_id and asset_id=:asset_id }
-            } else {
-                # the revision being deleted is the last revision, delete the mapped label entry
-                set label [hf_asset_label_from_id $f_id]
-                db_dml hf_asset_label_delete { delete from hf_asset_label_map
-                    where label=:label and instance_id=:instance_id }
-            }
-        }
     }
-    return 1
+    return $success_p
 }
 
 
