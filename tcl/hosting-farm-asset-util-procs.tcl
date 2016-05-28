@@ -136,7 +136,7 @@ ad_proc -private hf_user_id_of_asset_id {
     return $user_id
 }
 
-ad_proc -private hf_asset_revision_current_q { 
+ad_proc -private hf_asset_id_current_q { 
     asset_id
 } {
     Returns 1 if asset_id is the current revision for asset_id.
@@ -165,7 +165,7 @@ ad_proc -private hf_asset_id_of_f_id_if_untrashed {
 } {
     upvar 1 instance_id instance_id
     set asset_id 0
-    set exists_p [db_0or1row hf_f_id_from_asset_id_tr { select asset_id from hf_asset_rev_map 
+    set exists_p [db_0or1row hf_f_id_of_asset_id_tr { select asset_id from hf_asset_rev_map 
         where f_id=:f_id and instance_id=:instance_id and trashed_p='0' } ]
     ns_log Notice "hf_asset_active_q: asset_id requested is trashed or does not exist. asset_id '{$asset_id}' instance_id '${instance_id}'"
     
@@ -194,7 +194,7 @@ ad_proc -private hf_f_id_active_q {
 }
 
 
-ad_proc -private hf_label_from_asset_id {
+ad_proc -private hf_label_of_asset_id {
     asset_id
 } {
     @param asset_id  
@@ -203,15 +203,15 @@ ad_proc -private hf_label_from_asset_id {
 } {
     upvar 1 instance_id instance_id
     set label ""
-    set exists_p [db_0or1row hf_label_from_asset_id { select label from hf_asset_rev_map 
+    set exists_p [db_0or1row hf_label_of_asset_id { select label from hf_asset_rev_map 
         where asset_id=:asset_id and instance_id=:instance_id } ]
     if { !$exists_p } {
-        ns_log Notice "hf_label_from_asset_id: label does not exist for asset_id '${asset_id}' instance_id '${instance_id}'"
+        ns_log Notice "hf_label_of_asset_id: label does not exist for asset_id '${asset_id}' instance_id '${instance_id}'"
     }
     return $label
 }
 
-ad_proc -private hf_asset_id_from_label {
+ad_proc -private hf_asset_id_of_label {
     label
 } {
     @param label  Label of asset
@@ -220,10 +220,10 @@ ad_proc -private hf_asset_id_from_label {
 } {
     upvar 1 instance_id instance_id
     set asset_id ""
-    set exists_p [db_0or1row hf_asset_id_from_label { select asset_id from hf_asset_rev_map 
+    set exists_p [db_0or1row hf_asset_id_of_label { select asset_id from hf_asset_rev_map 
         where label=:label and instance_id=:instance_id }]
     if { !$exists_p } {
-        ns_log Notice "hf_asset_id_from_label: asset_id does not exist for label '${label}' instance_id '${instance_id}'"
+        ns_log Notice "hf_asset_id_of_label: asset_id does not exist for label '${label}' instance_id '${instance_id}'"
     }
     return $asset_id
 }
@@ -246,7 +246,7 @@ ad_proc -private hf_change_asset_id {
     upvar 1 user_id user_id
     # convert label to asset_id
     if { $asset_id eq "" && $label ne "" } {
-        set asset_id [hf_asset_id_from_label $label]
+        set asset_id [hf_asset_id_of_label $label]
     }
     set write_p [hf_ui_go_ahead_q write]
     set success_p 0
@@ -305,7 +305,7 @@ ad_proc -private hf_f_id_exists {
 }
 
 
-ad_proc -private hf_f_id_from_asset_id {
+ad_proc -private hf_f_id_of_asset_id {
     asset_id
 } {
     Returns hf_asset.f_id given any revision asset_id of f_id, otherwise returns empty string.
@@ -316,11 +316,11 @@ ad_proc -private hf_f_id_from_asset_id {
 } {
     upvar 1 instance_id instance_id
     set f_id ""
-    db_0or1row hf_asset_get_f_id_from_asset_id { select f_id from hf_assets where instance_id=:instance_id and id=:asset_id }
+    db_0or1row hf_asset_get_f_id_of_asset_id { select f_id from hf_assets where instance_id=:instance_id and id=:asset_id }
     return $f_id
 }
 
-ad_proc -private hf_current_asset_id_from_f_id { 
+ad_proc -private hf_asset_id_current_of_f_id { 
     f_id
 } {
     Returns current asset_id given f_id, otherwise returns empty string.
@@ -331,25 +331,25 @@ ad_proc -private hf_current_asset_id_from_f_id {
 } {
     upvar 1 instance_id instance_id
     set asset_id ""
-    db_0or1row hf_asset_get_asset_id_from_f_id { select asset_id from hf_asset_rev_map 
+    db_0or1row hf_asset_get_asset_id_of_f_id { select asset_id from hf_asset_rev_map 
         where instance_id=:instance_id and f_id=:f_id }
     return $asset_id
 }
 
 
-ad_proc -private hf_current_asset_id_from_label { 
+ad_proc -private hf_asset_id_current_of_label { 
     label
 } {
     Returns asset_id if asset is published (untrashed) for instance_id, else returns empty string.
 } {
     upvar 1 instance_id instance_id
     set asset_id ""
-    db_0or1row hf_asset_get_id_from_label {select asset_id from hf_label_map 
+    db_0or1row hf_asset_get_id_of_label {select asset_id from hf_label_map 
         where label=:label and instance_id=:instance_id and not ( trashed_p = '1' ) } 
     return $asset_id
 }
 
-ad_proc -private hf_current_asset_id {
+ad_proc -private hf_asset_id_current {
     asset_id
 } {
     Returns current asset_id given any revision asset_id of asset.
@@ -360,9 +360,9 @@ ad_proc -private hf_current_asset_id {
 } {
     upvar 1 instance_id instance_id
     set asset_id_current ""
-    set f_id [hf_f_id_from_asset_id $asset_id]
+    set f_id [hf_f_id_of_asset_id $asset_id]
     if { $f_id ne "" } {
-        set asset_id_current [hf_current_asset_id_from_f_id $f_id]
+        set asset_id_current [hf_asset_id_current_of_f_id $f_id]
     }
     return $asset_id_current
 }

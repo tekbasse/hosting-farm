@@ -203,7 +203,7 @@ ad_proc -private hf_asset_create_from_asset_label {
 } {
     Creates a new asset with asset_label based on an existing asset. Also scheduels a scheduled proc for system maintenance part of process. Returns 1 if successful, otherwise 0.
 } {
-    set asset_id_orig [hf_asset_id_from_label $asset_label_orig $instance_id]
+    set asset_id_orig [hf_asset_id_of_label $asset_label_orig $instance_id]
     set status_p [hf_asset_create_from_asset_template $customer_id $asset_label_orig $asset_label_new $instance_id]
     return $status_p
 }
@@ -2913,7 +2913,7 @@ ad_proc -private hf_up_write {
     return $success_p
 }
 
-ad_proc -private hf_up_get_from_ua_id {
+ad_proc -private hf_up_of_ua_id {
     ua_id
     {instance_id ""}
 } {
@@ -2928,13 +2928,13 @@ ad_proc -private hf_up_get_from_ua_id {
     }
 
     if { $success_p && $allowed_p } {
-        set success_p [db_0or1row hf_up_get_from_ua_id "select details from hf_up where instance_id=:instance_id and up_id in (select up_id from hf_ua_up_map where ua_id=:ua_id and instance_id=:instance_id"]
+        set success_p [db_0or1row hf_up_of_ua_id "select details from hf_up where instance_id=:instance_id and up_id in (select up_id from hf_ua_up_map where ua_id=:ua_id and instance_id=:instance_id"]
         if { $success_p } {
             set hfk_list [hf_key]
             set up [string map $hfk_list $details]
         }
     } else {
-        ns_log Warning "hf_up_det_from_ua_id: request denied for user_id '${user_id}' instance_id '${instance_id}' ua_id '${ua_id}' allowed_p ${allowed_p}"
+        ns_log Warning "hf_up_of_ua_id: request denied for user_id '${user_id}' instance_id '${instance_id}' ua_id '${ua_id}' allowed_p ${allowed_p}"
     }
     return $up
 }
@@ -3276,7 +3276,7 @@ ad_proc -private hf_call_role_write {
     if { $admin_p && [qf_is_natural_number $call_id] && [qf_is_natural_number $role_id] } {
         if { [hf_call_read $call_id] ne "" && [llength [hf_role_read $role_id]] > 0 } {
             # if record already exists, do nothing, else add
-            set exists_p [db0or1row call_role_map_ck {select role_id as role_id_from_db from hf_call_role_map where instance_id=:instance_id and call_id=:call_id and role_id=:role_id} ]
+            set exists_p [db0or1row call_role_map_ck {select role_id as role_id_of_db from hf_call_role_map where instance_id=:instance_id and call_id=:call_id and role_id=:role_id} ]
             if { $exists_p } {
                 ns_log Notice "hf_call_role_write(3155): duplicate write attempted by user_id '${user_id}' params role_id '${role_id}' call_id '${call_id}' instance_id '${instance_id}'"
             } else {

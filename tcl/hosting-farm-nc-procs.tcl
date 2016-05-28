@@ -53,7 +53,7 @@ ad_proc -private hf_nc_go_ahead {
     return $go_ahead
 }
 
-ad_proc -private hf_nc_users_from_asset_id {
+ad_proc -private hf_nc_users_of_asset_id {
     asset_id
     instance_id
     {privilege ""}
@@ -80,7 +80,7 @@ ad_proc -private hf_nc_users_from_asset_id {
             if { $property_id_exists_p } {
                 # property_id_exists_p should be true. It is looked up in a table.
                 
-                set role_ids_list [db_list hf_roles_ids_from_prop_priv_r "select role_id from hf_property_role_privilege_map where property_id=:property_id and privilege=:privilege"]
+                set role_ids_list [db_list hf_roles_ids_of_prop_priv_r "select role_id from hf_property_role_privilege_map where property_id=:property_id and privilege=:privilege"]
 
             } 
 
@@ -93,7 +93,7 @@ ad_proc -private hf_nc_users_from_asset_id {
 
         } elseif { $role ne "" } {
 
-            set role_exists_p [db_0or1row hf_role_id_from_label_r "select id from hf_role where label=:role"]
+            set role_exists_p [db_0or1row hf_role_id_of_label_r "select id from hf_role where label=:role"]
             if { $role_exists_p } {
                 set role_ids_list [list $id]
             } else {
@@ -104,13 +104,13 @@ ad_proc -private hf_nc_users_from_asset_id {
         } else {
             # privilege and role not specified
 
-            set role_ids_list [db_list hf_roles_ids_from_property_r "select role_id from hf_property_role_privilege_map where property_id=:property_id"]
+            set role_ids_list [db_list hf_roles_ids_of_property_r "select role_id from hf_property_role_privilege_map where property_id=:property_id"]
         }
 
         if { $success_p && [llength $role_ids_list] > 0 } {
             set customer_id [hf_customer_id_of_asset_id $asset_id $instance_id]
             # get user_ids limited by hf_role_id in one query
-            set user_ids_list [db_list hf_user_role_from_customer_id_r "select user_id from hf_user_roles_map where instance_id = :instance_id and qal_customer_id=:customer_id and role_id in ([template::util::tcl_to_sql_list $role_ids_list)"]
+            set user_ids_list [db_list hf_user_role_of_customer_id_r "select user_id from hf_user_roles_map where instance_id = :instance_id and qal_customer_id=:customer_id and role_id in ([template::util::tcl_to_sql_list $role_ids_list)"]
             
         }
     }

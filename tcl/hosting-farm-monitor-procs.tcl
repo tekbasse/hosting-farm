@@ -56,7 +56,7 @@ ad_proc -private hf_beat_log_create {
                 if { [ns_conn isconnected] } {
                     set user_id [ad_conn user_id]
                 } else {
-                    set user_id [hf_user_id_from_asset_id $asset_id]
+                    set user_id [hf_user_id_of_asset_id $asset_id]
                 }
             }
             if { $user_id ne "" } {
@@ -157,7 +157,7 @@ ad_proc -public hf_beat_log_read {
         if { [ns_conn isconnected] } {
             set user_id [ad_conn user_id]
         } else {
-            set user_id [hf_user_id_from_asset_id $asset_id]
+            set user_id [hf_user_id_of_asset_id $asset_id]
         }
     }
     set return_lol [list ]
@@ -221,7 +221,7 @@ ad_proc -public hf_beat_log_alert_q {
         if { [ns_conn isconnected] } {
             set user_id [ad_conn user_id]
         } else {
-            set user_id [hf_user_id_from_asset_id $asset_id]
+            set user_id [hf_user_id_of_asset_id $asset_id]
         }
     }
     set return_lol [list ]
@@ -669,7 +669,7 @@ ad_proc -private hf::monitor::list {
 #   hf_monitor_report         Returns a range of monitor history
 #   hf_monitor_status_history  Returns a range of status history
 
-#   hf_monitor_asset_from_id  Returns asset_id of monitor_id
+#   hf_monitor_asset_of_id  Returns asset_id of monitor_id
 
 
 
@@ -804,14 +804,14 @@ ad_proc -private hf_monitor_configs_keys {
     return $keys_list
 }
 
-ad_proc -private hf_asset_id_from_monitor_id {
+ad_proc -private hf_asset_id_of_monitor_id {
     monitor_id
     {instance_id ""}
 } {
     Returns asset_id or empty string if monitor_id doesn't exist.
 } {
     set asset_id ""
-    set success_p [db_0or1row hf_asset_id_from_mon_id "select asset_id from hf_monitor_config_n_control where instance_id=:instance_id and monitor_id=:monitor_id"]
+    set success_p [db_0or1row hf_asset_id_of_mon_id "select asset_id from hf_monitor_config_n_control where instance_id=:instance_id and monitor_id=:monitor_id"]
     return $asset_id
 }
 
@@ -829,7 +829,7 @@ ad_proc -private hf_monitor_configs_read {
 
         
         # check permissions
-        set asset_id [hf_asset_id_from_monitor_id $monitor_id $instance_id]
+        set asset_id [hf_asset_id_of_monitor_id $monitor_id $instance_id]
         set admin_p [hf_ui_go_ahead_q admin]
         
         #CREATE TABLE hf_monitor_config_n_control (
@@ -889,7 +889,7 @@ ad_proc -private hf_monitor_configs_write {
     # validate system
     set asset_id_p [qf_is_natural_number $asset_id] 
     set monitor_id_p [qf_is_natural_number $monitor_id]
-    set asset_id [hf_asset_id_from_monitor_id $monitor_id $instance_id]
+    set asset_id [hf_asset_id_of_monitor_id $monitor_id $instance_id]
     set admin_p [hf_ui_go_ahead_q admin]
 
     if { $asset_id_p || $monitor_id_p } {
@@ -1177,7 +1177,7 @@ ad_proc -public hf_monitor_distribution {
         if { $monitor_id_p } {
             if { !$asset_id_p } {
                 # get asset_id
-                set asset_id [hf_asset_id_from_monitor_id $monitor_id $instance_id]
+                set asset_id [hf_asset_id_of_monitor_id $monitor_id $instance_id]
                 if { $asset_id eq "" } {
                     set error_p 1
                 }
@@ -1636,7 +1636,7 @@ ad_proc -private hf_monitor_stats_read {
     # validate 
     set monitor_id_p [qf_is_natural_number $monitor_id]
     if { $monitor_id_p } {
-        set asset_id [hf_asset_id_from_monitor_id $monitor_id]
+        set asset_id [hf_asset_id_of_monitor_id $monitor_id]
     }
     hf_ui_go_ahead_q read
 
@@ -1683,7 +1683,7 @@ ad_proc -private hf_monitor_alert_trigger {
     } else {
         set label "#hosting-farm.Asset# id ${asset_id}"
     }
-    set users_list [hf_nc_users_from_asset_id $asset_id $instance_id $alert_by_privilege $alert_by_role]
+    set users_list [hf_nc_users_of_asset_id $asset_id $instance_id $alert_by_privilege $alert_by_role]
     if { [llength $users_list ] == 0 } {
         set user_id [hf_user_id_of_asset_id $asset_id]
         set users_list [list $user_id]

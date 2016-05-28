@@ -75,7 +75,6 @@ ad_proc -public hf_asset_create {
 }
 
 
-
 ad_proc -public hf_asset_write {
     asset_id
     label
@@ -135,7 +134,7 @@ ad_proc -public hf_asset_write {
     return $new_asset_id
 }
 
-ad_proc -public hf_asset_revision_delete {
+ad_proc -public hf_asset_delete {
     asset_id
 } {
     Deletes a revision of an asset. Revision must already have been trashed.
@@ -179,7 +178,7 @@ ad_proc -public hf_asset_revision_delete {
     return $delete_p
 }    
 
-ad_proc -public hf_asset_delete {
+ad_proc -public hf_f_id_delete {
     f_id
 } {
     Deletes all revisions of asset. Package admins only.
@@ -198,8 +197,6 @@ ad_proc -public hf_asset_delete {
     }
 
     if { $delete_p } {
-        # 
-
         # trash all subassets --in case this is a mistake, each subasset can be deleted or recoverd individually
 
         # delete all asset attributes
@@ -230,12 +227,17 @@ ad_proc -public hf_asset_delete {
     return $success_p
 }
 
-
-
 ad_proc -public hf_asset_trash {
-    {asset_id ""}
-    {trash_p "1"}
-    {template_id ""}
+    asset_id
+} {
+    Trashes/untrashes asset_id. If trash_p is "1", asset_id is untrashed. Returns 1 if succeeds, else returns 0.
+} {
+    
+    
+}
+
+ad_proc -public hf_f_id_trash {
+    f_id
 } {
     Trashes/untrashes asset_id or template_id (subject to permission check).
     set trash_p to 1 (default) to trash asset. Set trash_p to '0' to untrash. 
@@ -266,19 +268,19 @@ ad_proc -public hf_asset_trash {
         if { $asset_id ne "" } {
             # trash revision
             set template_id [lindex [hf_asset_stats $asset_id $instance_id] 5]
-            set label [hf_asset_label_from_id $template_id]
+            set label [hf_asset_label_of_id $template_id]
             # wtr = write privilege trash revision
             db_dml hf_asset_trash_wtr { update hf_assets set trashed_p=:trash_p, last_modified = current_timestamp
                 where id=:asset_id and instance_id=:instance_id }
             # is asset_id associated with a label ie published?
-            set asset_id_active_p [db_0or1row hf_label_from_asset_id { select label from hf_asset_label_map 
+            set asset_id_active_p [db_0or1row hf_label_of_asset_id { select label from hf_asset_label_map 
                 where asset_id=:asset_id and instance_id=:instance_id } ]
 
         } elseif { $template_id ne "" } {
-            set label [hf_asset_label_from_id $template_id]
+            set label [hf_asset_label_of_id $template_id]
             # template_id affects all revisions. 
             # asset_id is blank. set asset_id to asset label's asset_id
-            set asset_id [hf_asset_id_from_label $label]
+            set asset_id [hf_asset_id_of_label $label]
             # wtp = write privilege trash asset ie bulk trashing revisions
             db_dml hf_asset_trash_wtp { update hf_assets set trashed_p=:trash_p, last_modified = current_timestamp
                 where template_id=:template_id and instance_id=:instance_id }
@@ -292,18 +294,18 @@ ad_proc -public hf_asset_trash {
         if { $asset_id ne "" } {
             # trash one revision
             set template_id [lindex [hf_asset_stats $asset_id $instance_id] 5]            
-            set label [hf_asset_label_from_id $template_id]
+            set label [hf_asset_label_of_id $template_id]
             # utr = user privilege trash revision
             db_dml hf_asset_trash_utr { update hf_assets set trashed_p=:trash_p, last_modified = current_timestamp
                 where id=:asset_id and instance_id=:instance_id and user_id=:user_id }
             # is asset_id associated with a label ie published?
-            set asset_id_active_p [db_0or1row hf_label_from_asset_id { select label from hf_asset_label_map 
+            set asset_id_active_p [db_0or1row hf_label_of_asset_id { select label from hf_asset_label_map 
                 where asset_id=:asset_id and instance_id=:instance_id } ]
             
         } elseif { $template_id ne "" 0 } {
             # trash for all revisions possible for same template_id
-            set label [hf_asset_label_from_id $template_id]
-            set asset_id [hf_asset_id_from_label $label]
+            set label [hf_asset_label_of_id $template_id]
+            set asset_id [hf_asset_id_of_label $label]
             
             # utp = user privilege trash asset (as many revisions as they created)
             db_dml hf_asset_trash_utp { update hf_assets set trashed_p=:trash_p, last_modified = current_timestamp
@@ -345,7 +347,7 @@ ad_proc -public hf_asset_trash {
             set label_trashed_p 0
         }
         if { $label_trashed_p } {
-            set label_asset_id [hf_asset_id_from_label $label $instance_id]
+            set label_asset_id [hf_asset_id_of_label $label $instance_id]
  #           ns_log Notice "hf_asset_trash(603): updating trash and asset_id '$label_asset_id' for label '$label' to asset_id '$asset_id' untrashed"
             db_dml hf_asset_label_map_update2 { update hf_asset_label_map set asset_id=:asset_id, trashed_p=:trash_p
                     where instance_id=:instance_id and asset_id=:label_asset_id }
