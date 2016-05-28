@@ -9,17 +9,17 @@
     <implements-subsite-p>f</implements-subsite-p>
     <inherit-templates-p>f</inherit-templates-p>
     
-    <version name="0.465" url="http://openacs.org/repository/download/apm/hosting-farm-0.465.apm">
+    <version name="0.536" url="http://openacs.org/repository/download/apm/hosting-farm-0.536.apm">
         <owner url="mailto:tekbasse@yahoo.com">Benjamin Brink</owner>
         <summary>Operations management system initially designed for a hosting farm using freebsd jails.</summary>
         <release-date>2013-01-08</release-date>
         <description format="text/plain">A web interface for a hosting farm system made by a hosting farm company for system admins and their customers.</description>
-        <license>GNU Gpl 3.0 or higher</license>
-        <license url="http://www.gnu.org/licenses/gpl.txt">GPL3</license>
+        <license>GNU Gpl 2.0 or higher</license>
+        <license url="http://www.gnu.org/licenses/gpl.txt">GPL2</license>
         <maturity>-1</maturity>
         <package_instance_name>hosting farm</package_instance_name>
 
-        <provides url="hosting-farm" version="0.465"/>
+        <provides url="hosting-farm" version="0.536"/>
         <requires url="accounts-receivables" version="0.001"/>
         <requires url="accounts-ledger" version="0.001"/>
         <requires url="accounts-finance" version="0.001"/>
@@ -31,14 +31,8 @@
         <callbacks>
         </callbacks>
         <parameters>
-         <!-- moved this parameter to hf_beat_stack_bus.priority_threshold so that value can be changed without server restart
- <parameter datatype="number"  min_n_values="1"  max_n_values="1"  name="priorityThreshold"  default="13" description="What is the lowest priority that takes precedence in scheduling over all other delayed priorities? Highest priority is 1, Lowest is a high integer." section_name="monitoring"/>
- -->
-<!-- cannot add cycleTime here, because cycleTime would have to be associated with an instance_id..
-         <parameter datatype="number"  min_n_values="1"  max_n_values="1"  name="cycleTime"  default="13" description="Monitor re-prioritizing clock cyle in seconds" section_name="monitoring"/>
-   -->
-        <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="MonitorProcsAllowed"  default="" description="A space delimited list of procs allowed for use with monitors in package instance and usually defined in tcl/hosting-farm-local-procs.tcl" section_name="monitoring"/>
-        <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="ScheduledProcsAllowed"  default="" description="A space delimited list of procs allowed for use with asset admin in package instance and usually defined in tcl/hosting-farm-local-procs.tcl" section_name="systemcalls"/>
+          <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="MonitorProcsAllowed"  default="" description="A space delimited list of procs allowed for use with monitors in package instance and usually defined in tcl/hosting-farm-local-procs.tcl" section_name="monitoring"/>
+          <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="ScheduledProcsAllowed"  default="" description="A space delimited list of procs allowed for use with asset admin in package instance and usually defined in tcl/hosting-farm-local-procs.tcl" section_name="systemcalls"/>
         </parameters>
     </version>
 </package>
