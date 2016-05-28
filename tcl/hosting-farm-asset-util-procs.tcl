@@ -124,27 +124,63 @@ ad_proc -private hf_asset_id_exists_q {
     return $asset_exists_p
 }
 
-ad_proc -private hf_asset_active_q { 
+ad_proc -private hf_asset_revision_current_q { 
     asset_id
 } {
-    Returns 1 if asset_id exists, else returns 0
+    Returns 1 if asset_id is the current revision for asset_id.
 
     @param asset_id      The asset_id to check.
-    @param asset_type_id If not blank, also verifies that asset is of this type.
-    @param instance_id   The context of the implementation.
 
-    @return  1 if asset_id exists, otherwise 0.
+    @return  1 if true, otherwise returns 0.
 } {
     upvar 1 instance_id instance_id
     set active_q 0
-    set label [hf_label_from_asset_id $asset_id]
-    if { $label ne "" } {
-        set active_q 1
-    } else {
-        ns_log Notice "hf_asset_active_q: asset_id does not exist. asset_id '{$asset_id}' instance_id '${instance_id}'"
-    }
+    set trashed_p 0
+    set exists_p [db_0or1row hf_asset_id_current_q { select f_id from hf_asset_map 
+        where asset_id=:asset_id and instance_id=:instance_id } ]
+    ns_log Notice "hf_asset_active_q: asset_id requested is trashed or does not exist. asset_id '{$asset_id}' instance_id '${instance_id}'"
+    return $exists_p
+}
+
+ad_proc -private hf_asset_id_of_f_id_if_untrashed { 
+    f_id
+} {
+    Returns asset_id if f_id exists and is untrashed, else returns 0
+
+    @param f_id      The f_id to check.
+
+    @return asset_id if f_id exists and untrashed, otherwise 0.
+} {
+    upvar 1 instance_id instance_id
+    set asset_id 0
+    set exists_p [db_0or1row hf_f_id_from_asset_id_tr { select asset_id from hf_asset_map 
+        where f_id=:f_id and instance_id=:instance_id and trashed_p='0' } ]
+    ns_log Notice "hf_asset_active_q: asset_id requested is trashed or does not exist. asset_id '{$asset_id}' instance_id '${instance_id}'"
+    
+    return $asset_id
+}
+
+ad_proc -private hf_f_id_active_q { 
+    f_id
+} {
+    Returns 1 if f_id exists, is untrashed, and not stopped else returns 0
+
+    @param f_id      The f_id of asset_id to check.
+
+    @return  asset_id , or 0
+} {
+    upvar 1 instance_id instance_id
+    set active_q 0
+    set exists_and_is_untrashed_p [hf_asset_id_of_f_id_if_untrashed $asset_id]
+    if { $exists_and_is_untrashed_p } {
+        hf_asset_stats $asset_id "time_stop"
+        if { $time_stop ne "" } {
+            set active_q 1
+        }
+    } 
     return $active_p
 }
+
 
 ad_proc -private hf_label_from_asset_id {
     asset_id

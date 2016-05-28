@@ -33,6 +33,7 @@ CREATE TABLE hf_asset_type (
     -- expects dc, hw, vm, vh, hs, ss, ns, ot etc.
    id                      varchar(24),
    -- aka feature.short_name
+   -- a user readable reference id
    label                   varchar(40),
    -- aka one_line_description
    title                   varchar(85),
@@ -85,6 +86,7 @@ CREATE TABLE hf_assets (
     -- null is same as company_summary.is_exempt=true
     qal_product_id  varchar(19) not null DEFAULT '',
     qal_customer_id varchar(19) not null DEFAULT '',
+    -- A user readable reference.
     -- One word reference aka a name, sku or readable id.
     -- Must be unique within one instance_id.
     -- (was q-wiki.name ie works as url)

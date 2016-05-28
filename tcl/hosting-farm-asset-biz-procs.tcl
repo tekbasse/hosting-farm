@@ -135,40 +135,50 @@ ad_proc -public hf_asset_write {
     return $new_asset_id
 }
 
+ad_proc -public hf_asset_revision_delete {
+    asset_id
+} {
+    Deletes a revision of an asset. Revision must already have been trashed.
+
+    @param asset_id
+
+    @return 1 if successful, otherwise returns 0.
+
+} {
+    upvar 1 instance_id instance_id
+    upvar 1 user_id user_id
+    # user must have delete permission or be the creation owner.
+    set delete_p [hf_ui_go_ahead_q delete "" "" 0]
+    set calling_user_id $user_id
+    # user_id is now the creator user_id
+    hf_asset_stats $asset_id user_id trashed_p
+    if { !$delete_p && $user_id eq $calling_user_id } {
+        set delete_p 1
+    }
+    # revision must have been trashed first
+    if { $delete_p && $trashed_p } {
+        # delete a revision
+        db_dml hf_asset_delete { delete from hf_assets 
+            where id=:asset_id and instance_id=:instance_id and trashed_p = '1' }
+        # is asset_id the active revision for f_id?
+    set asset_id_active_p [db_0or1row hf_label_from_asset_id { select label from hf_asset_label_map 
+        where asset_id=:asset_id and instance_id=:instance_id } ]
+
+
+}    
 
 ad_proc -public hf_asset_delete {
-    {asset_id ""}
-    {f_id ""}
-    {instance_id ""}
-    {user_id ""}
+    f_id
 } {
-    Deletes all revisions of f_id if not null, or if asset_id not null, deletes asset_id.
+    Deletes all revisions of asset.
     Returns 1 if deleted. Returns 0 if there were any issues.
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #set delete_p \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege delete\]
-    set customer_id [hf_customer_id_of_asset_id $asset_id $instance_id]
-    set delete_p [hf_permission_p $user_id $customer_id assets delete $instance_id]
+    upvar 1 instance_id instance_id
+    upvar 1 user_id user_id
+    set delete_p [hf_ui_go_ahead_q delete f_id "" 0]
     set success_p 0
-    set asset_id_active_p 0
-    ns_log Notice "hf_asset_delete: delete_p '$delete_p' asset_id '$asset_id' f_id '$f_id'"
+    set is_active_p 0
     if { $delete_p } {
-        
-        if { $asset_id ne "" } {
-            set f_id [lindex [hf_asset_stats $asset_id $instance_id] 5]
-            # delete a revision
-            db_dml hf_asset_delete { delete from hf_assets 
-                where id=:asset_id and instance_id=:instance_id and trashed_p = '1' }
-            # is asset_id the active revision for f_id?
-            set asset_id_active_p [db_0or1row hf_label_from_asset_id { select label from hf_asset_label_map 
-                where asset_id=:asset_id and instance_id=:instance_id } ]
-        } elseif { $f_id ne "" } {
             # delete all revisions of f_id and the label_mapped to it
             # get active asset_id for reference later
             set asset_id [hf_asset_label_id_from_f_id $f_id $instance_id]
@@ -176,7 +186,6 @@ ad_proc -public hf_asset_delete {
             db_dml hf_template_delete { delete from hf_assets 
                 where f_id=:f_id and instance_id=:instance_id and trashed_p = '1' }
             set asset_id_active_p 1
-        }
 
     } else {
 
