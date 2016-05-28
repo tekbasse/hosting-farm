@@ -453,23 +453,6 @@ create index hf_sub_asset_map_type_id_idx on hf_sub_asset_map (type_id);
 create index hf_sub_asset_map_sub_type_id_idx on hf_sub_asset_map (sub_type_id);
 create index hf_sub_asset_trashed_p_idx on hf_sub_asset_map (trashed_p);
 
-
-
--- This map connects a service with all assets and subassets it is composed of.
--- For example, 
--- ss may be a server on a vm accepting requests for all or a portion of the vm's vhosts and vm
-CREATE TABLE hf_ss_map (
-    instance_id     varchar(11) not null DEFAULT '',
-    ss_id           integer not null,
--- this is hf_id, because it can be an id of a vm, vh another ss ..any asset id
--- this is an hf_id where the ss operates.
-    hf_id           integer not null
- );
-
- create index hf_ss_map_instance_id_idx on hf_ss_map (instance_id);
- create index hf_ss_map_hf_id_idx on hf_ss_map (hf_id);
- create index hf_ss_map_ss_id_idx on hf_ss_map (ss_id);
-
 -- was database_auth
 CREATE TABLE hf_ua_up_map (
     instance_id     varchar(11) not null DEFAULT '',

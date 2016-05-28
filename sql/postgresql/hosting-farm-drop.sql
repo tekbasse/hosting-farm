@@ -62,41 +62,14 @@ drop index hf_ua_up_map_instance_map_idx;
 
 DROP TABLE hf_ua_up_map;
 
-drop index hf_ss_map_ss_id_idx;
-drop index hf_ss_map_hf_id_idx;
-drop index hf_ss_map_instance_id_idx;
+drop index hf_sub_asset_map_f_id_idx;
+drop index hf_sub_asset_map_sub_f_id_idx;
+drop index hf_sub_asset_map_instance_id_idx;
+drop index hf_sub_asset_map_type_id_idx;
+drop index hf_sub_asset_map_sub_type_id_idx;
+drop index hf_sub_asset_map_trashed_p_idx;
 
-DROP TABLE hf_ss_map;
-
-drop index hf_asset_ip_map_instance_id_idx;
-drop index hf_asset_ip_map_asset_id_idx;
-drop index hf_asset_ip_map_ip_id_idx;
-
-DROP TABLE hf_asset_ip_map;
-
-drop index hf_vm_vh_map_vh_id_idx;
-drop index hf_vm_vh_map_vm_id_idx;
-drop index hf_vm_vh_map_instance_id_idx;
-
-DROP TABLE hf_vm_vh_map;
-
-drop index hf_hw_vm_map_vnm_id;
-drop index hf_hw_vm_map_hw_id_idx;
-drop index hf_hw_vm_map_instance_id_idx;
-
-DROP TABLE hf_hw_vm_map;
-
-drop index hf_hw_ni_map_instance_id_idx;
-drop index hf_hw_ni_map_hw_id_idx;
-drop index hf_hw_ni_map_ni_id_idx;
-
-DROP TABLE hf_hw_ni_map;
-
-drop index hf_dc_hw_map_hw_id_idx;
-drop index hf_dc_hw_map_dc_id_idx;
-drop index hf_dc_hw_map_instance_id_idx;
-
-DROP TABLE hf_dc_hw_map;
+DROP TABLE hf_sub_asset_map;
 
 drop index hf_up_up_id_idx;
 drop index hf_up_instance_id_idx;
