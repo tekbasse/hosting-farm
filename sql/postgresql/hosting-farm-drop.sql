@@ -1,7 +1,7 @@
 -- hosting-farm-drop.sql
 --
 -- @author Benjamin Brink
--- @license GNU GENERAL PUBLIC LICENSE, Version 3
+-- @license GNU GENERAL PUBLIC LICENSE, Version 2 or greater
 --
 \i hosting-farm-cron-drop.sql
 \i hosting-farm-mon-drop.sql

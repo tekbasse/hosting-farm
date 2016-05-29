@@ -1,6 +1,6 @@
 -- hosting-farm-cron-create.sql
 --
--- @author Dekka Corp.
+-- @author Benjamin Brink
 -- @cvs-id
 --
 

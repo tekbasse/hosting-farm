@@ -2,7 +2,7 @@
 --
 -- @author Benjamin Brink
 -- @ported from Hub.org Hosting's Account Management System (AMS) v2
--- @license GNU GENERAL PUBLIC LICENSE, Version 3
+-- @license GNU GENERAL PUBLIC LICENSE, Version 2 or greater
 --
 
 -- PERMISSIONS
