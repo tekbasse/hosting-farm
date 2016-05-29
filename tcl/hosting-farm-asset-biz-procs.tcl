@@ -198,7 +198,7 @@ ad_proc -public hf_f_id_delete {
 
     if { $delete_p } {
         # trash all subassets --in case this is a mistake, each subasset can be deleted or recoverd individually
-
+        db_dml hf_asset_trash_subs { update hf
         # delete all asset attributes
         # hf_hardware
         # hf_virtual_machines

@@ -456,12 +456,12 @@ ad_proc -private hf_role_write {
 }
 
 
-ad_proc -private hf_role_id {
+ad_proc -private hf_role_id_of_label {
     label
     {customer_id ""}
     {instance_id ""} 
 } {
-    Returns role_id from label or -1 if role doesn't exist.
+    Returns role_id from label or empty string if role doesn't exist.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -470,7 +470,7 @@ ad_proc -private hf_role_id {
     # check permissions
     set this_user_id [ad_conn user_id]
     set read_p [hf_permission_p $this_user_id $customer_id permissions_roles read $instance_id]
-    set id -1
+    set id ""
     if { $read_p } {
         db_0or1row hf_role_id_get "select id from hf_role where instance_id = :instance_id and label = :label"
     }
@@ -478,10 +478,10 @@ ad_proc -private hf_role_id {
 }
 
 ad_proc -private hf_role_id_exists {
-    label
+    role_id
     {instance_id ""} 
 } {
-    Returns role_id from label or -1 if role doesn't exist.
+    Returns 1 if role_id exists, or 0 if role doesn't exist.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -491,9 +491,7 @@ ad_proc -private hf_role_id_exists {
 #    set this_user_id [ad_conn user_id]
 #    set read_p [hf_permission_p $this_user_id $role_id permissions_roles read $instance_id]
     set exists_p 0
-    if { $read_p } {
-        set exists_p [db_0or1row hf_role_id_exists "select id from hf_role where instance_id = :instance_id and label = :label"]
-    }
+    set exists_p [db_0or1row hf_role_id_exists "select label from hf_role where instance_id = :instance_id and id = :role_id"]
     return $exists_p
 }
 

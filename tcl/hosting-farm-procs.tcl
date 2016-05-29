@@ -445,13 +445,13 @@ ad_proc -private hf_asset_ip_ids {
     return $ip_id_list
 }
 
-ad_proc -private hf_asset_ss_ids {
+ad_proc -private hf_ss_ids {
     asset_id
     instance_id
 } {
     Returns list of ss_id directly associated with an asset, or empty list if there are none.
 } {
-    set ss_id_list [db_list hf_asset_ss_ids_get "select ss_id from hf_ss_map where asset_id=:asset_id and instance_id=:instance_id"]
+    set ss_id_list [db_list hf_ss_ids_get "select ss_id from hf_ss_map where asset_id=:asset_id and instance_id=:instance_id"]
     return $ss_id_list
 }
 

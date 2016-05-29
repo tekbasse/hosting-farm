@@ -702,7 +702,7 @@ ad_proc -private hf_ss_copy {
         }
     }
     # Each asset can have multiple ss_id
-    set ss_id_list [hf_asset_ss_ids $ss_id $instance_id]
+    set ss_id_list [hf_ss_ids $ss_id $instance_id]
     foreach child_ss_id $ss_id_list {
         set ua_id_new ""
         set ns_id_new ""
