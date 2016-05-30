@@ -75,3 +75,4 @@ ad_proc -public hf_asset_stats {
     }
     return $return_list
 }
+

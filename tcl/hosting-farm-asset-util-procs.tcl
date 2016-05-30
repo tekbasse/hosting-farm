@@ -461,3 +461,84 @@ ad_proc -private hf_asset_rev_map_update {
     }
     return 1
 }
+
+ad_proc -private hf_asset_attributes {
+    f_id
+} {
+    Returns list of untrashed ids for f_id. 
+} {
+    set id_list [db_list hf_asset_attrs "select sub_type_id from hf_sub_asset_map where f_id=:f_id and sub_type_id=:asset_type_id and attribute_p='1' and instance_id=:instance_id"]
+    return $id_list
+}
+
+ad_proc -private hf_asset_attributes_by_type {
+    f_id
+    asset_type_id
+} {
+    Returns a list of untrashed ids of asset_type_id for f_id.
+} {
+    set id_list [db_list hf_asset_attr_for_type "select sub_type_id from hf_sub_asset_map where f_id=:f_id and attribute_p='1' and instance_id=:instance_id"]
+    return $id_list
+}
+
+ad_proc -private hf_asset_attribute_types {
+    f_id
+} {
+    Returns a list of untrashed, distinct asset_type_ids for f_id.
+} {
+    set type_id_list [db_list hf_asset_type "select distinct sub_type_id from hf_sub_asset_map where f_id=:f_id and sub_type_id=:asset_type_id and attribute_p='1' and instance_id=:instance_id"]
+    return $type_id_list
+}
+
+ad_proc -private hf_asset_subassets_cascading {
+    f_id
+} {
+    Returns a list of f_id of untrashed, subassets.
+} {
+    set current_id_list [list $f_id]
+    # to search for more.
+    set next_id_list [list ]
+    # final list
+    set final_id_list [list ]
+    set current_id_list_len 1
+    set q_count 0
+    while { $current_id_list_len > 0 } {
+        foreach s_id $current_id_list {
+            set new_list [db_list hf_subassets_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and instance_id=:instance_id and trashed_p!='1'"]
+            foreach sb_id $new_list {
+                lappend next_id_list $sb_id
+                lappend final_id_list $s_id
+            }
+        }
+        set current_id_list $next_id_list
+        set current_id_list_len [llength $current_id_list]
+    }
+    return $final_id_list
+}
+
+ad_proc -private hf_asset_subassets_by_type_cascading {
+    f_id
+    asset_type_id
+} {
+    Returns a list of f_id of untrashed, subassets that are of type asset_type_id.
+} {
+    set current_id_list [list $f_id]
+    # to search for more.
+    set next_id_list [list ]
+    # final list
+    set final_id_list [list ]
+    set current_id_list_len 1
+    set q_count 0
+    while { $current_id_list_len > 0 } {
+        foreach s_id $current_id_list {
+            set new_list [db_list hf_subassets_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and sub_type_id=:asset_type_id and instance_id=:instance_id and trashed_p!='1'"]
+            foreach sb_id $new_list {
+                lappend next_id_list $sb_id
+                lappend final_id_list $s_id
+            }
+        }
+        set current_id_list $next_id_list
+        set current_id_list_len [llength $current_id_list]
+    }
+    return $final_id_list
+}
