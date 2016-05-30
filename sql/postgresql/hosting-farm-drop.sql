@@ -81,7 +81,7 @@ drop index hf_ua_instance_id_idx;
 
 DROP TABLE hf_ua;
 
-drop index hf_services_ua_id_idx;
+-- drop index hf_services_ua_id_idx;
 drop index hf_services_port_idx;
 drop index hf_services_protocol_idx;
 drop index hf_services_daemon_ref_idx;
@@ -92,8 +92,8 @@ drop index hf_services_instance_id_idx;
 DROP TABLE hf_services;
 
 drop index hf_vhosts_domain_name_idx;
-drop index hf_vhosts_ns_id_idx;
-drop index hf_vhosts_ua_id_idx;
+-- drop index hf_vhosts_ns_id_idx;
+-- drop index hf_vhosts_ua_id_idx;
 drop index hf_vhosts_vh_id_idx;
 drop index hf_vhosts_instance_id_idx;
 
@@ -132,9 +132,9 @@ drop index hf_network_interfaces_instance_id_idx;
 DROP TABLE hf_network_interfaces;
 
 drop index hf_virtual_machines_type_id_idx;
-drop index hf_virtual_machines_ns_id_idx;
-drop index hf_virtual_machines_ni_id_idx;
-drop index hf_virtual_machines_ip_id_idx;
+-- drop index hf_virtual_machines_ns_id_idx;
+-- drop index hf_virtual_machines_ni_id_idx;
+-- drop index hf_virtual_machines_ip_id_idx;
 drop index hf_virtual_machines_domain_name_idx;
 drop index hf_virtual_machines_vm_id_idx;
 drop index hf_virtual_machines_vm_instance_id_idx;

@@ -119,7 +119,7 @@ CREATE TABLE hf_assets (
     time_start      timestamptz,
     -- expires/expired on
     time_stop       timestamptz,
-    ua_id           varchar(19) not null DEFAULT '',
+    -- ua_id           varchar(19) not null DEFAULT '',
   -- status aka vm_to_configure, on,off etc.
   -- use with qal_product_id for vm_to_configure.plan_id
   -- and qal_customer_id for vm_to_configure.company_id
@@ -191,6 +191,7 @@ CREATE TABLE hf_sub_asset_map (
     sub_f_id        integer not null,
     sub_type_id     varchar(24) not null,
     -- Answers question: is sub asset an attribute?
+    -- An alternate question, is sub asset an asset? but that may be confusing.
     attribute_p     varchar(1) not null DEFAULT '1',
     -- subtype trashed? ie mapping trashed_p
     -- Trash a sub_type_id and create a new one
@@ -271,7 +272,7 @@ CREATE TABLE hf_hardware (
     system_name varchar(200),
     backup_sys  varchar(200),
     -- network interface id, this is the remote console (primary only, if more than one)
-    ni_id       varchar(19) not null DEFAULT '',
+    -- ni_id       varchar(19) not null DEFAULT '',
     os_id       varchar(19) not null DEFAULT '',
     description varchar(200),
     details     text,
@@ -287,15 +288,15 @@ CREATE TABLE hf_virtual_machines (
     instance_id   varchar(11) not null DEFAULT '',
     vm_id         integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     domain_name   varchar(300),
-    ip_id         varchar(19) not null DEFAULT '',
+    -- ip_id         varchar(19) not null DEFAULT '',
     -- network interface id. This is duplicate of hf_assets.ni_id. Ideally, see hf_assets only.
     -- If there is more than one ns_id, create an hf_vm_ni_map
     -- Leaving this here for now, because 60+ cases of ni_id in hosting-farm-procs ATM.
     -- It is more important to write to both places the same and get project to first release.
     -- Remove later.
-    ni_id         varchar(19) not null DEFAULT '',
+    -- ni_id         varchar(19) not null DEFAULT '',
     -- DNS record id
-    ns_id         varchar(19) not null DEFAULT '',
+    -- ns_id         varchar(19) not null DEFAULT '',
     os_id         varchar(19) not null DEFAULT '',
     -- from database_server.type_id
     --      server.server_type
@@ -313,9 +314,9 @@ CREATE TABLE hf_virtual_machines (
 create index hf_virtual_machines_vm_instance_id_idx on hf_virtual_machines (instance_id);
 create index hf_virtual_machines_vm_id_idx on hf_virtual_machines (vm_id);
 create index hf_virtual_machines_domain_name_idx on hf_virtual_machines (domain_name);
-create index hf_virtual_machines_ip_id_idx on hf_virtual_machines (ip_id);
-create index hf_virtual_machines_ni_id_idx on hf_virtual_machines (ni_id);
-create index hf_virtual_machines_ns_id_idx on hf_virtual_machines (ns_id);
+-- create index hf_virtual_machines_ip_id_idx on hf_virtual_machines (ip_id);
+-- create index hf_virtual_machines_ni_id_idx on hf_virtual_machines (ni_id);
+-- create index hf_virtual_machines_ns_id_idx on hf_virtual_machines (ns_id);
 create index hf_virtual_machines_type_id_idx on hf_virtual_machines (type_id);
 
 CREATE TABLE hf_network_interfaces (
@@ -421,8 +422,8 @@ create index hf_vm_quotas_private_vps_idx on hf_vm_quotas (private_vps);
 CREATE TABLE hf_vhosts (
     instance_id varchar(11) not null DEFAULT '',
     vh_id       integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
-    ua_id       integer not null,
-    ns_id       integer not null,
+    -- ua_id       integer not null,
+    -- ns_id       integer not null,
     domain_name varchar(200),
     details     text,
     time_trashed   timestamptz,
@@ -431,8 +432,8 @@ CREATE TABLE hf_vhosts (
 
 create index hf_vhosts_instance_id_idx on hf_vhosts (instance_id); 
 create index hf_vhosts_vh_id_idx on hf_vhosts (vh_id);
-create index hf_vhosts_ua_id_idx on hf_vhosts (ua_id);
-create index hf_vhosts_ns_id_idx on hf_vhosts (ns_id);
+-- create index hf_vhosts_ua_id_idx on hf_vhosts (ua_id);
+-- create index hf_vhosts_ns_id_idx on hf_vhosts (ns_id);
 create index hf_vhosts_domain_name_idx on hf_vhosts (domain_name);
 
 -- part of database_auth and database_list
@@ -448,7 +449,7 @@ CREATE TABLE hf_services (
     protocol        varchar(40),
     port            varchar(40),
   -- was database_user_id
-    ua_id           varchar(19) not null DEFAULT '',
+    -- ua_id           varchar(19) not null DEFAULT '',
     -- from database_server.type_id 
     -- type can be: db, protocol, generic daemon etc.    port integer,
     ss_type         varchar(24),
@@ -473,7 +474,7 @@ create index hf_services_server_name_idx on hf_services (server_name);
 create index hf_services_daemon_ref_idx on hf_services (daemon_ref);
 create index hf_services_protocol_idx on hf_services (protocol);
 create index hf_services_port_idx on hf_services (port);
-create index hf_services_ua_id_idx on hf_services (ua_id);
+-- create index hf_services_ua_id_idx on hf_services (ua_id);
 
 CREATE TABLE hf_ua (
     instance_id     varchar(11) not null DEFAULT '',
