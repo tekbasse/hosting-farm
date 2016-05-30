@@ -190,6 +190,12 @@ CREATE TABLE hf_sub_asset_map (
     -- sub asset or attribute 
     sub_f_id        integer not null,
     sub_type_id     varchar(24) not null,
+    -- In case an asset has more than one of the same type of 
+    -- sub asset or attribute.
+    sub_sort_order  integer not null,
+    -- In case an asset has an attribute is to be referenced by
+    -- a label
+    sub_label       varchar(65),
     -- Answers question: is sub asset an attribute?
     -- An alternate question, is sub asset an asset? but that may be confusing.
     attribute_p     varchar(1) not null DEFAULT '1',
