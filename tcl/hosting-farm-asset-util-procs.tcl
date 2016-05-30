@@ -1,4 +1,4 @@
-#hosting-farm/tcl/hosting-farm-asset-util-procs.tcl
+hosting-farm/tcl/hosting-farm-asset-util-procs.tcl
 ad_library {
 
     utilities for hosting-farm assets
@@ -619,7 +619,7 @@ ad_proc -private hf_natural_number_list_validate {
 ad_proc -private hf_attribute_ua_delete {
     ua_id_list
 } {
-    Deletes ua. ua may be a one or a list. Must be a package admin.
+    Deletes ua. ua may be a one or a list. User must be a package admin.
 } {
     set user_id [ad_conn user_id]
     set instance_id [ad_conn package_id]
@@ -634,11 +634,77 @@ ad_proc -private hf_attribute_ua_delete {
             set validated_p [hf_is_natural_number $ua_id]
             set ua_list [list $ua_id]
         }
-        db_transaction {
-            db_dml hf_ss_uas_up_delete { delete from hf_up where up_id in ( select up_id from hf_ua_up_map where instance_id=:instance_id and ua_id in ([template::util::tcl_to_sql_list $ua_list])) }
-            db_dml hf_ss_uas_map_delete { delete from hf_ua_up_map where instance_id=:instance_id and ua_id in ([template::util::tcl_to_sql_list $ua_list]) }
-            db_dml hf_ss_uas_delete { delete from hf_ua where instance_id=:instance_id and ua_id in ([template::util::tcl_to_sql_list $ua_list]) }
-        } on_error {
+        if { $validated_p } {
+            db_transaction {
+                db_dml hf_ss_uas_up_delete { delete from hf_up where up_id in ( select up_id from hf_ua_up_map where instance_id=:instance_id and ua_id in ([template::util::tcl_to_sql_list $ua_list])) }
+                db_dml hf_ss_uas_map_delete { delete from hf_ua_up_map where instance_id=:instance_id and ua_id in ([template::util::tcl_to_sql_list $ua_list]) }
+                db_dml hf_ss_uas_delete { delete from hf_ua where instance_id=:instance_id and ua_id in ([template::util::tcl_to_sql_list $ua_list]) }
+            } on_error {
+                set success_p 0
+            }
+        } else{
+            set success_p 0
+        }
+    }
+    return $success_p
+}
+
+ad_proc -private hf_attribute_ns_delete {
+    ns_id_list
+} {
+    Deletes hf_ns_records. ns_id_list may be a one or a list. User must be a package admin.
+} {
+    set user_id [ad_conn user_id]
+    set instance_id [ad_conn package_id]
+    set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
+    set success_p $admin_p
+    if { $admin_p } {
+        if { [llength $ns_id_list] > 0 } {
+            set validated_p [hf_list_filter_by_natural_number $ns_id_list]
+            set ns_list $ns_id_list
+        } else {
+            set ns_id [lindex $ns_id_list 0]
+            set validated_p [hf_is_natural_number $ns_id]
+            set ns_list [list $ns_id]
+        }
+        if { $validated_p } {
+            db_transaction {
+                db_dml hf_ns_ids_delete { delete from hf_ns_records where instance_id=:instance_id and ns_id in ([template::util::tcl_to_sql_list $ns_list]) }
+            } on_error {
+                set success_p 0
+            }
+        } else{
+            set success_p 0
+        }
+    }
+    return $success_p
+}
+
+ad_proc -private hf_attribute_ip_delete {
+    ip_id_list
+} {
+    Deletes hf_ip_records. ip_id_list may be a one or a list. User must be a package admin.
+} {
+    set user_id [ad_conn user_id]
+    set instance_id [ad_conn package_id]
+    set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
+    set success_p $admin_p
+    if { $admin_p } {
+        if { [llength $ip_id_list] > 0 } {
+            set validated_p [hf_list_filter_by_natural_number $ip_id_list]
+            set ip_list $ip_id_list
+        } else {
+            set ip_id [lindex $ip_id_list 0]
+            set validated_p [hf_is_natural_number $ip_id]
+            set ip_list [list $ip_id]
+        }
+        if { $validated_p } {
+            db_transaction {
+                db_dml hf_ip_ids_delete { delete from hf_ip_addresses where ip_id in ([template::util::tcl_to_sql_list $ip_list])) }
+            } on_error {
+                set success_p 0
+            }
+        } else{
             set success_p 0
         }
     }
@@ -647,4 +713,34 @@ ad_proc -private hf_attribute_ua_delete {
 
 
 
-    
+ad_proc -private hf_attribute_ni_delete {
+    ni_id_list
+} {
+    Deletes hf_ni_records. ni_id_list may be a one or a list. User must be a package admin.
+} {
+    set user_id [ad_conn user_id]
+    set instance_id [ad_conn package_id]
+    set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
+    set success_p $admin_p
+    if { $admin_p } {
+        if { [llength $ni_id_list] > 0 } {
+            set validated_p [hf_list_filter_by_natural_number $ni_id_list]
+            set ni_list $ni_id_list
+        } else {
+            set ni_id [lindex $ni_id_list 0]
+            set validated_p [hf_is_natural_number $ni_id]
+            set ni_list [list $ni_id]
+        }
+        if { $validated_p } {
+            db_transaction {
+                db_dml hf_ni_ids_delete { delete from hf_network_interfaces where ni_id in ([template::util::tcl_to_sql_list $ni_list])) }
+            } on_error {
+                set success_p 0
+            }
+        } else{
+            set success_p 0
+        }
+    }
+    return $success_p
+}
+

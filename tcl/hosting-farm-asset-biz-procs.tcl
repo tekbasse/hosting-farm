@@ -216,39 +216,61 @@ ad_proc -public hf_f_id_delete {
         db_dml hf_monitor_cnc_delete { delete from hf_monitor_config_n_control where monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list]) and instance_id=:instance_id and asset_id=:f_id }
         db_dml hf_monitor_log_delete { delete from hf_monitor_log where monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list]) and instance_id=:instance_id and asset_id=:f_id }
 
-        # hf_ua_up_map hf_up
-        # set attr_id_list [hf_asset_attributes $f_id]
-
-        # hf_ua
+        # Handled per attribute: hf_ua_up_map hf_up and hf_ua, ns_id 
 
         # hf_services
-        set attr_list [hf_asset_attributes $f_id "ss"]
-        if { [llength $attr_list > 0 ] } {
-            set ua_list [db_list hf_ss_ua_ids_get { select ua_id from hf_services where ss_id in ([template::util::tcl_to_sql_list $attr_list]) }]
+        set ss_attr_list [hf_asset_attributes $f_id "ss"]
+        if { [llength $ss_attr_list > 0 ] } {
+            set ua_list [db_list hf_ss_ua_ids_get { select ua_id from hf_services where ss_id in ([template::util::tcl_to_sql_list $ss_attr_list]) }]
             hf_attribute_ua_delete $ua_list
-            db_dml hf_asset_del_ss_attrs { delete from hf_services where ss_id in ([template::util::tcl_to_sql_list $attr_list]) and instance_id=:instance_id }
+            db_dml hf_asset_del_ss_attrs { delete from hf_services where ss_id in ([template::util::tcl_to_sql_list $ss_attr_list]) and instance_id=:instance_id }
         }
         
         # hf_vh_hosts
+        set vh_attr_list [hf_asset_attributes $f_id "vh"]
+        if { [llength $vh_attr_list > 0 ] } {
+            set ua_list [db_list hf_vh_ua_ids_get { select ua_id from hf_vhosts where vh_id in ([template::util::tcl_to_sql_list $vh_attr_list]) }]
+            hf_attribute_ua_delete $ua_list
+            set ns_list [db_list hf_vh_ns_ids_get { select ns_id from hf_vhosts where vh_id in ([template::util::tcl_to_sql_list $vh_attr_list]) }]
+            hf_attribute_ns_delete $ns_list
+
+            db_dml hf_asset_del_vh_attrs { delete from hf_vhosts where vh_id in ([template::util::tcl_to_sql_list $vh_attr_list]) and instance_id=:instance_id }
+        }
 
         # hf_ip_addresses
+        set ip_attr_list [hf_asset_attributes $f_id "ip"]
+        if { [llength $ip_attr_list ] > 0 } {
+            db_dml hf_asset_del_ip_attrs { delete from hf_ip_addresses where ip_id in ([template::util::tcl_to_sql_list $ip_attr_list]) and instance_id=:instance_id }
+        }
 
         # hf_network_interfaces
+        set ni_attr_list [hf_asset_attributes $f_id "ni"]
+        if { [llength $ni_attr_list ] > 0 } { 
+            db_dml hf_asset_del_ni_attrs { delete from hf_network_interfaces where ni_id in ([template::util::tcl_to_sql_list $ni_attr_list]) andinstance_id=:instance_id }
+        }
 
         # hf_virtual_machines
-        set attr_list [hf_asset_attributes $f_id "vm"]
+        set vm_attr_list [hf_asset_attributes $f_id "vm"]
         if { [llength $attr_list > 0 ] } {
+            set vm_attr_ni_list [db_list hf_vm_attr_ni_get "select ni_id from hf_virtual_machines where vm_id in ([template::util::tcl_to_sql_list $vm_attr_list])"]
+            hf_attribute_ni_delete $vm_attr_ni_list
+            set vm_attr_ns_list [db_list hf_vm_attr_ns_get "select ns_id from hf_virtual_machines where vm_id in ([template::util::tcl_to_sql_list $vm_attr_list])"]
+            hf_attribute_ns_delete $vm_attr_ns_list
+            set vm_attr_ip_list [db_list hf_vm_attr_ip_get "select ip_id from hf_virtual_machines where vm_id in ([template::util::tcl_to_sql_list $vm_attr_list])"]
+            hf_attribute_ip_delete $vm_attr_ip_list
             db_dml hf_asset_del_vm_attrs { delete from hf_virtual_machines where hw_id in ([template::util::tcl_to_sql_list $attr_list]) and instance_id=:instance_id }
         }
 
         # hf_hardware
-        set attr_list [hf_asset_attributes $f_id "hw"]
+        set hw_attr_list [hf_asset_attributes $f_id "hw"]
         if { [llength $attr_list > 0 ] } {
-            db_dml hf_asset_del_hw_attrs { delete from hf_hardware where hw_id in ([template::util::tcl_to_sql_list $attr_list]) and instance_id=:instance_id }
+            set hw_attr_ni_list [db_list hf_hw_attr_ni_get "select ni_id from hf_hardware where hw_id in ([template::util::tcl_to_sql_list $hw_attr_list])"]
+            hf_attribute_ni_delete $hw_attr_ni_list
+            db_dml hf_asset_del_hw_attrs { delete from hf_hardware where hw_id in ([template::util::tcl_to_sql_list $hw_attr_list]) and instance_id=:instance_id }
         }
+
         # hf_data_centers
         set attr_list [hf_asset_attributes $f_id "dc"]
-
         if { [llength $attr_list > 0 ] } {
             db_dml hf_asset_del_dc_attrs { delete from hf_data_centers where dc_id in ([template::util::tcl_to_sql_list $attr_list]) and instance_id=:instance_id }
         }
