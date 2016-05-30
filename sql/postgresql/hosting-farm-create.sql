@@ -69,6 +69,7 @@ CREATE TABLE hf_assets (
     -- f_id is fixed for all revisions of an asset
     -- See also hf_asset_label_map.f_id
     f_id             integer,
+    -- owner_id
     user_id         varchar(11) not null DEFAULT '',
     last_modified   timestamptz,
     created         timestamptz not null DEFAULT now(),
@@ -152,6 +153,7 @@ create index hf_assets_label_idx on hf_assets (label);
 
 -- following table ported from q-wiki for versioning
 -- was hf_asset_label_map
+
 CREATE TABLE hf_asset_rev_map (
        instance_id varchar(11) not null DEFAULT '',
        -- max size must consider label encoding all hf_asset.name characters
@@ -172,6 +174,12 @@ create index hf_asset_rev_map_instance_id_idx on hf_asset_rev_map (instance_id);
 create index hf_asset_rev_map_asset_id_idx on hf_asset_rev_map (asset_id);
 create index hf_asset_rev_map_f_id_idx on hf_asset_rev_map (f_id);
 
+
+-- An asset may contain 0+ attributes.
+-- Attributes cannot branch to other attributes.
+-- A subasset is a fully defined asset.
+-- An attribute can be converted to an asset/subasset
+-- by defining a new f_id in hf_assets that then includes the attribute.
 CREATE TABLE hf_sub_asset_map (
     instance_id     varchar(11) not null DEFAULT '',
 
@@ -179,10 +187,15 @@ CREATE TABLE hf_sub_asset_map (
     f_id            integer not null,
     type_id         varchar(24) not null,
 
-    -- sub asset
+    -- sub asset or attribute 
     sub_f_id        integer not null,
     sub_type_id     varchar(24) not null,
-    -- subtype trashed? ie map trashed_p
+    -- Answers question: is sub asset an attribute?
+    attribute_p     varchar(1) not null DEFAULT '1',
+    -- subtype trashed? ie mapping trashed_p
+    -- Trash a sub_type_id and create a new one
+    -- to provide attribute level revisioning.
+    -- Trash a sub_type_id to remove a sub asset from an asset.
     trashed_p   varchar(1) not null DEFAULT '0'
 );
 
