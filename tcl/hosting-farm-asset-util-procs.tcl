@@ -580,6 +580,7 @@ ad_proc -public hf_list_filter_by_alphanum {
 
 ad_proc -public hf_list_filter_by_decimal {
     user_input_list
+} {
     set filtered_list [list ]
     foreach input_unfiltered $user_input_list {
         if { [qf_is_decimal $input_unfiltered] } {
@@ -590,6 +591,8 @@ ad_proc -public hf_list_filter_by_decimal {
 }
 
 ad_proc -public hf_list_filter_by_natural_number {
+    user_input_list
+} {
     set filtered_list [list ]
     foreach input_unfiltered $user_input_list {
         if { [qf_is_natural_number $input_unfiltered] } {
