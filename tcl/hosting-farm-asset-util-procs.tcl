@@ -542,3 +542,106 @@ ad_proc -private hf_asset_subassets_by_type_cascading {
     }
     return $final_id_list
 }
+
+ad_proc -public hf_lists_filter_by_alphanum {
+    user_input_list
+} {
+    Returns a list of list of items that are alphanumeric from a list of lists.
+} {
+    set filtered_row_list [list ]
+    set filtered_list [list ]
+    foreach input_row_unfiltered $user_input_list {
+        set filtered_row_list [list ]
+        foreach input_unfiltered $input_row_unfiltered {
+            # added dash and underscore, because these are often used in alpha/text references
+            if { [regsub -all -nocase -- {[^a-z0-9,\.\-\_]+} $input_unfiltered {} input_filtered] } {
+                lappend filtered_row_list $input_filtered
+            }
+        }
+        lappend filtered_list $filtered_row_list
+    }
+    return $filtered_list
+}
+
+ad_proc -public hf_list_filter_by_alphanum {
+    user_input_list
+} {
+    Returns a list of alphanumeric items from user_input_list
+} {
+    set filtered_list [list ]
+    foreach input_unfiltered $user_input_list {
+        # added dash and underscore, because these are often used in alpha/text references
+        if { [regsub -all -nocase -- {[^a-z0-9,\.\-\_]+} $input_unfiltered {} input_filtered ] } {
+            lappend filtered_list $input_filtered
+        }
+    }
+    return $filtered_list
+}
+
+ad_proc -public hf_list_filter_by_decimal {
+    user_input_list
+    set filtered_list [list ]
+    foreach input_unfiltered $user_input_list {
+        if { [qf_is_decimal $input_unfiltered] } {
+            lappend filtered_list $input_unfiltered
+        }
+    }
+    return $filtered_list
+}
+
+ad_proc -public hf_list_filter_by_natural_number {
+    set filtered_list [list ]
+    foreach input_unfiltered $user_input_list {
+        if { [qf_is_natural_number $input_unfiltered] } {
+            lappend filtered_list $input_unfiltered
+        }
+    }
+    return $filtered_list
+}
+
+ad_proc -private hf_natural_number_list_validate {
+    natural_number_list
+} {
+    Retuns 1 if list only contains natural numbers, otherwise returns 0
+} {
+    set nn_list [hf_list_filter_by_natural_number $natural_number_list]
+    if { [llength $nn_list] != [llength $natural_number_list] } {
+        set natnums_p 0
+    } else {
+        set natnums_p 1
+    }
+    return $natnums_p
+}
+
+ad_proc -private hf_attribute_ua_delete {
+    ua_id_list
+} {
+    Deletes ua. ua may be a one or a list. Must be a package admin.
+} {
+    set user_id [ad_conn user_id]
+    set instance_id [ad_conn package_id]
+    set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
+    set success_p $admin_p
+    if { $admin_p } {
+        if { [llength $ua_id_list] > 0 } {
+            set validated_p [hf_list_filter_by_natural_number $ua_id_list]
+            set ua_list $ua_id_list
+        } else {
+            set ua_id [lindex $ua_id_list 0]
+            set validated_p [hf_is_natural_number $ua_id]
+            set ua_list [list $ua_id]
+        }
+        db_transaction {
+            db_dml hf_ss_uas_up_delete { delete from hf_up where up_id in ( select up_id from hf_ua_up_map where instance_id=:instance_id and ua_id in ([template::util::tcl_to_sql_list $ua_list])) }
+            db_dml hf_ss_uas_map_delete { delete from hf_ua_up_map where instance_id=:instance_id and ua_id in ([template::util::tcl_to_sql_list $ua_list]) }
+            db_dml hf_ss_uas_delete { delete from hf_ua where instance_id=:instance_id and ua_id in ([template::util::tcl_to_sql_list $ua_list]) }
+        } on_error {
+            set success_p 0
+        }
+    }
+    return $success_p
+}
+
+
+
+    

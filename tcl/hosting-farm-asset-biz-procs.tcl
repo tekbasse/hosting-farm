@@ -187,19 +187,19 @@ ad_proc -public hf_f_id_delete {
     upvar 1 instance_id instance_id
     set user_id [ad_conn user_id]
     set instance_id [ad_conn package_id]
-    set delete_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
+    set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
     set success_p 0
     
     set asset_id [hf_asset_id_of_f_id_if_untrashed $f_id]
     if { $asset_id > 0 } {
         # cannot delete an untrashed asset
         ns_log Notice "hf_f_id_delete.196: cannot delete an untrashed asset. user_id '${user_id}' instance_id '${instance_id}' f_id '${f_id}'"
-        set delete_p 0
+        set admin_p 0
     }
 
-    if { $delete_p } {
+    if { $admin_p } {
         ns_log Notice "hf_f_id_delete.201: called by user_id '${user_id}' instance_id '${instance_id}'"
-        # delete all sub assets
+        # delete all sub assets and their attributes
         set sub_list [hf_asset_subassets_cascading $f_id]
         ns_log Notice "hf_f_id_delete.203: trashing dependent f_id list '${sub_list}'"
         foreach sub_f_id $sub_list {
@@ -207,7 +207,7 @@ ad_proc -public hf_f_id_delete {
         }
         # delete all asset attributes
 
-        # hf_monitor_freq_dist_curves
+        # hf_monitor_id
         set monitor_id_list [hf_monitor_logs $f_id]
         ns_log Notice "hf_f_id_delete.211: deleteing monitor_ids '${hf_monitor_id_list}'"
         db_dml hf_monitor_dc_delete { delete from hf_monitor_freq_dist_curvs where monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list]) and instance_id=:instance_id }
@@ -216,15 +216,23 @@ ad_proc -public hf_f_id_delete {
         db_dml hf_monitor_cnc_delete { delete from hf_monitor_config_n_control where monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list]) and instance_id=:instance_id and asset_id=:f_id }
         db_dml hf_monitor_log_delete { delete from hf_monitor_log where monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list]) and instance_id=:instance_id and asset_id=:f_id }
 
-        # hf_monitor_statistics
-        # hf_monitor_status
-        # hf_monitor_log
-        # hf_monitor_config_n_control
         # hf_ua_up_map hf_up
+        # set attr_id_list [hf_asset_attributes $f_id]
+
         # hf_ua
+
         # hf_services
+        set attr_list [hf_asset_attributes $f_id "ss"]
+        if { [llength $attr_list > 0 ] } {
+            set ua_list [db_list hf_ss_ua_ids_get { select ua_id from hf_services where ss_id in ([template::util::tcl_to_sql_list $attr_list]) }]
+            hf_attribute_ua_delete $ua_list
+            db_dml hf_asset_del_ss_attrs { delete from hf_services where ss_id in ([template::util::tcl_to_sql_list $attr_list]) and instance_id=:instance_id }
+        }
+        
         # hf_vh_hosts
+
         # hf_ip_addresses
+
         # hf_network_interfaces
 
         # hf_virtual_machines
