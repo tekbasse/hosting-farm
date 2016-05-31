@@ -205,57 +205,39 @@ ad_proc -public hf_f_id_delete {
 
         # hf_monitor_id
         set monitor_id_list [hf_monitor_logs $f_id]
-        if { [llength $monitor_id_list > 0 ] } {
-            hf_attribute_monitor_delete $monitor_id_list
-        }
-
+        hf_attribute_monitor_delete $monitor_id_list
+        
         # hf_services
         set ua_attr_list [hf_attributes_by_type_cascade $f_id "ua"]
-        if { [llength $ua_attr_list > 0 ] } {
-            hf_attribute_ua_delete $ua_attr_list
-        }
-
+        hf_attribute_ua_delete $ua_attr_list
+        
         # hf_services
         set ss_attr_list [hf_attributes_by_type_cascade $f_id "ss"]
-        if { [llength $ss_attr_list > 0 ] } {
-            hf_attribute_ss_delete $ss_attr_list
-        }
-        
+        hf_attribute_ss_delete $ss_attr_list
+                
         # hf_vh_hosts
         set vh_attr_list [hf_attributes_by_type_cascade $f_id "vh"]
-        if { [llength $vh_attr_list > 0 ] } {
-            hf_attribute_vh_delete $vh_attr_list
-        }
-
+        hf_attribute_vh_delete $vh_attr_list
+        
         # hf_ip_addresses
         set ip_attr_list [hf_attributes_by_type_cascade $f_id "ip"]
-        if { [llength $ip_attr_list ] > 0 } {
-            hf_attribute_ip_delete $ip_attr_list
-        }
+        hf_attribute_ip_delete $ip_attr_list
 
         # hf_network_interfaces
         set ni_attr_list [hf_attributes_by_type_cascade $f_id "ni"]
-        if { [llength $ni_attr_list ] > 0 } { 
-            hf_attribute_ni_delete $ni_attr_list
-        }
+        hf_attribute_ni_delete $ni_attr_list
 
         # hf_virtual_machines
         set vm_attr_list [hf_attributes_by_type_cascade $f_id "vm"]
-        if { [llength $vm_attr_list > 0 ] } {
-            hf_attriubte_vm_delete $vm_attr_list
-        }
+        hf_attriubte_vm_delete $vm_attr_list
 
         # hf_hardware
         set hw_attr_list [hf_attributes_by_type_cascade $f_id "hw"]
-        if { [llength $hw_attr_list > 0 ] } {
-            hf_attribute_hw_delete $hw_attr_list
-        }
+        hf_attribute_hw_delete $hw_attr_list
 
         # hf_data_centers
         set dc_attr_list [hf_attributes_by_type_cascade $f_id "dc"]
-        if { [llength $dc_attr_list > 0 ] } {
-            hf_attribute_dc_delete $dc_attr_list
-        }
+        hf_attribute_dc_delete $dc_attr_list
         
         # delete all revisions of f_id 
         db_dml hf_asset_delete { delete from hf_assets 
@@ -269,10 +251,20 @@ ad_proc -public hf_f_id_delete {
     return $success_p
 }
 ##code
+
 ad_proc -public hf_asset_trash {
     asset_id
 } {
-    Trashes/untrashes asset_id. If trash_p is "1", asset_id is untrashed. Returns 1 if succeeds, else returns 0.
+    Trashes an asset revision ie asset_id. Returns 1 if succeeds, else returns 0.
+} {
+    
+    
+}
+
+ad_proc -public hf_asset_untrash {
+    asset_id
+} {
+    Untrashes an asset revision ie asset_id. Returns 1 if succeeds, else returns 0.
 } {
     
     
@@ -281,130 +273,24 @@ ad_proc -public hf_asset_trash {
 ad_proc -public hf_f_id_trash {
     f_id
 } {
-    Trashes/untrashes asset_id or template_id (subject to permission check).
-    set trash_p to 1 (default) to trash asset. Set trash_p to '0' to untrash. 
+    Trashes all revisions of f_id.
     Returns 1 if successful, otherwise returns 0
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
 
-    # asset_id can be unpublished revision or the published revision, trashed or untrashed
-    set label ""
-
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-        set untrusted_user_id [ad_conn untrusted_user_id]
-    }
-    #set write_p \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege write\]
-    set customer_id [hf_customer_id_of_asset_id $asset_id $instance_id]
-    set write_p [hf_permission_p $user_id $customer_id assets write $instance_id]
-    set asset_id_active_p 0
-
-    # if write_p, don't need to scope to user_id == asset_user_id
-    if { $write_p } {
-
-        if { $asset_id ne "" } {
-            # trash revision
-            set template_id [lindex [hf_asset_stats $asset_id $instance_id] 5]
-            set label [hf_asset_label_of_id $template_id]
-            # wtr = write privilege trash revision
-            db_dml hf_asset_trash_wtr { update hf_assets set trashed_p=:trash_p, last_modified = current_timestamp
-                where id=:asset_id and instance_id=:instance_id }
-            # is asset_id associated with a label ie published?
-            set asset_id_active_p [db_0or1row hf_label_of_asset_id { select label from hf_asset_label_map 
-                where asset_id=:asset_id and instance_id=:instance_id } ]
-
-        } elseif { $template_id ne "" } {
-            set label [hf_asset_label_of_id $template_id]
-            # template_id affects all revisions. 
-            # asset_id is blank. set asset_id to asset label's asset_id
-            set asset_id [hf_asset_id_of_label $label]
-            # wtp = write privilege trash asset ie bulk trashing revisions
-            db_dml hf_asset_trash_wtp { update hf_assets set trashed_p=:trash_p, last_modified = current_timestamp
-                where template_id=:template_id and instance_id=:instance_id }
-            set asset_id_trash_p 1
-        }
-
-    } else {
-
-        # a user can only un/trash their own entries
-        # the user_id scope is applied in the query
-        if { $asset_id ne "" } {
-            # trash one revision
-            set template_id [lindex [hf_asset_stats $asset_id $instance_id] 5]            
-            set label [hf_asset_label_of_id $template_id]
-            # utr = user privilege trash revision
-            db_dml hf_asset_trash_utr { update hf_assets set trashed_p=:trash_p, last_modified = current_timestamp
-                where id=:asset_id and instance_id=:instance_id and user_id=:user_id }
-            # is asset_id associated with a label ie published?
-            set asset_id_active_p [db_0or1row hf_label_of_asset_id { select label from hf_asset_label_map 
-                where asset_id=:asset_id and instance_id=:instance_id } ]
-            
-        } elseif { $template_id ne "" 0 } {
-            # trash for all revisions possible for same template_id
-            set label [hf_asset_label_of_id $template_id]
-            set asset_id [hf_asset_id_of_label $label]
-            
-            # utp = user privilege trash asset (as many revisions as they created)
-            db_dml hf_asset_trash_utp { update hf_assets set trashed_p=:trash_p, last_modified = current_timestamp
-                where template_id=:template_id and instance_id=:instance_id and user_id=:user_id }            
-            set asset_id_active_p 1
-        }
-        
-    }
-
-#    ns_log Notice "hf_asset_trash: asset_id_active_p '$asset_id_active_p' trash_p '$trash_p'"
-
-    if { $asset_id_active_p && $trash_p } {
-        #  need to choose an alternate asset_id if available, since this asset_id is trashed
-        ns_log Notice "hf_asset_trash(529). need to change asset_id"
-        # asset_id is old_asset_id  
-        # select most recent, available new_asset_id
-        set new_asset_id_exists [db_0or1row hf_available_asset_id { select id as new_asset_id from hf_assets 
-            where template_id=:template_id and instance_id=:instance_id and not (trashed_p = '1') and not ( id=:asset_id ) order by created desc limit 1 } ]
-        if { $new_asset_id_exists } {
-            ns_log Notice "hf_asset_trash(583): new_asset_id $new_asset_id"
-            #  point to the most recent untrashed revision
-            if { $asset_id ne $new_asset_id } {
-                ns_log Notice "hf_asset_trash: changing active asset_id from $asset_id to $new_asset_id"
-                db_dml hf_asset_label_id_update { update hf_asset_label_map set asset_id=:new_asset_id 
-                    where instance_id=:instance_id and asset_id=:asset_id }
-                # we avoided having to update trashed status for label_map
-                set $asset_id_active_p 0
-            }
-        } 
-    }
-
-    if { !$trash_p } {
-        # if asset_id of label_map is trashed, untrash it.
-
-        db_0or1row hf_asset_label_trashed_p { select trashed_p as label_trashed_p from hf_asset_label_map
-            where label=:label and instance_id=:instance_id }
-        set label_trashed_p_exists_p [info exists label_trashed_p]
-        if { !$label_trashed_p_exists_p || ( $label_trashed_p_exists_p && $label_trashed_p ne "1" ) } {
-            set label_trashed_p 0
-        }
-        if { $label_trashed_p } {
-            set label_asset_id [hf_asset_id_of_label $label $instance_id]
- #           ns_log Notice "hf_asset_trash(603): updating trash and asset_id '$label_asset_id' for label '$label' to asset_id '$asset_id' untrashed"
-            db_dml hf_asset_label_map_update2 { update hf_asset_label_map set asset_id=:asset_id, trashed_p=:trash_p
-                    where instance_id=:instance_id and asset_id=:label_asset_id }
-            set asset_id_active_p 0
-        }
-        # untrash the label
-    }
-
-    # if asset_id active or untrashing asset_id and asset_label trashed
-    if { $asset_id_active_p } {
-        # published asset_id is affected, set mapped asset trash also.
-        ns_log Notice "hf_asset_trash: updating hf_asset_label_map asset_id '$asset_id' instance_id '$instance_id'"
-        db_dml hf_asset_label_trash_update { update hf_asset_label_map set trashed_p=:trash_p 
-            where asset_id=:asset_id and instance_id=:instance_id }
-    }
-    return 1
 }
+
+ad_proc -public hf_f_id_untrash {
+    f_id
+} {
+    Untrashes most recently active asset_id of f_id
+    Returns 1 if successful, otherwise returns 0
+} {
+    upvar 1 instance_id instance_id
+    upvar 1 user_id user_id
+
+}
+
+
 
