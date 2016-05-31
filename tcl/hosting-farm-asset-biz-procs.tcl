@@ -250,13 +250,16 @@ ad_proc -public hf_f_id_delete {
     }
     return $success_p
 }
-##code
+
 
 ad_proc -public hf_asset_trash {
     asset_id
 } {
     Trashes an asset revision ie asset_id. Returns 1 if succeeds, else returns 0.
 } {
+    upvar 1 instance_id instance_id
+    upvar 1 user_id user_id
+    set write_p [hf_ui_go_ahead_q write f_id "" 0]
     
     
 }

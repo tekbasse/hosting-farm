@@ -14,25 +14,21 @@ ad_library {
 
 
 ad_proc -private hf_asset_ids_for_user { 
-    {user_id ""}
-    {instance_id ""}
+    user_id
 } {
     Returns asset_ids available to user_id as list 
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    set customer_ids_list [hf_customer_ids_for_user $user_id]
-    # get asset_ids assigned to customer_ids
+    upvar 1 instance_id instance_id
     set asset_ids_list [list ]
-    foreach customer_id $customer_ids_list {
-        set assets_list [hf_asset_ids_for_customer $instance_id $customer_id]
-        foreach asset_id $assets_list {
-            lappend asset_ids_list $asset_id
+    if { [qf_is_natural_number $user_id] } {
+        set customer_ids_list [hf_customer_ids_for_user $user_id]
+        # get asset_ids assigned to customer_ids
+        set asset_ids_list [list ]
+        foreach customer_id $customer_ids_list {
+            set assets_list [hf_asset_ids_for_customer $instance_id $customer_id]
+            foreach asset_id $assets_list {
+                lappend asset_ids_list $asset_id
+            }
         }
     }
     return $asset_ids_list
@@ -40,14 +36,14 @@ ad_proc -private hf_asset_ids_for_user {
 
 ad_proc -private hf_customer_id_of_asset_id {
     asset_id
-    {instance_id ""}
 } {
     returns customer_id of asset_id
 } {
+    upvar 1 instance_id instance_id
     # this is handy for helping fulfill hf_permission_p requirements
     hf_ui_go_ahead_q read
-
-    set cid_exists [db_0or1row hf_customer_id_of_asset_id "select qal_customer_id from hf_assets where instance_id = :instance_id and id = :asset_id and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc"]
+    set f_id [hf_f_id_of_asset_id $asset_id]
+    set cid_exists [db_0or1row hf_customer_id_of_asset_id "select qal_customer_id from hf_assets where instance_id = :instance_id and id=:f_id order by last_modified desc"]
     if { !$cid_exists } {
         set customer_id ""
     }
