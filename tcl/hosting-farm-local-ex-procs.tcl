@@ -9,6 +9,8 @@ ad_library {
     @address: po box 20, Marylhurst, OR 97036-0020 usa
     @email: tekbasse@yahoo.com
 }
+
+
 # Name all custom procs with prefix 'hfl_' for hf_local.
 # to be sure that your code is not overwritten during
 # a package update, put your code in a separate tcl file 
@@ -30,6 +32,10 @@ ad_library {
 # except scheduled procs. 
 # For testing purposes, an admin can call an updated proc
 # in a test page after reloading via url /acs-admin/apm
+
+
+# With each asset change, call hf_monitor_log_create with significant_change_p=1 ?
+# No. This should be done at the hfl_nc_* proc level, and/or admin specified via UI.
 
 
 ad_proc -private hfl_allow_q {

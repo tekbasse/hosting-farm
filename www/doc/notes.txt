@@ -1,5 +1,60 @@
 programming guidelines:
 
+
+    # UI for one click (web-based) installers
+    # installers install/update/monitor/activate/de-activate software, ie hosted service (hs) or software as a service (ss)
+    # asset_type_id = hs or ss
+    # code is going to use ss for all cases of hs or ss, because hs sounds like hf and looks like ns, which might increase 
+    # errors and make code more difficult to read and debug.
+
+    # A conspicuous alert when system needs user attention (contract expiring, service down etc)
+    # Use: util_user_message  For example, see q-wiki/www/q-wiki.tcl 
+
+    # use quotas with alerts
+    # quota proc should be a scheduled proc. see ecommerce scheduled procs for example, that updates:
+    # storage usage, memory usage and traffic tracking.
+    # and another scheduled proc that handles log monitoring/ alarms
+    # switchable, configurable automated log monitoring and alarms
+
+    # billing - general invoicing utility for handling initial orders, recurring billing, and quota overages.
+    # reseller service features
+
+    # ticket tracker with built-in streamlining for outages/disrutions that deal with multiple/bulk sets of clients
+    # social feedback mechanisms
+
+    # asset object description. 
+    # Every asset_id has a reference in the hf_assets table, including vhosts and services.
+    # Each type may have a separate table containing additional properties.
+
+    # asset_id, hf_id              - generic asset
+    #       ->  service, ss_id     - service asset attached to no asset, or a generic asset
+    # dc  dc_id                    - datacenter 
+    #       ->  ss_id              - service asset attached to (with dependency primarily on) datacenter
+    # hw  hw_id                    - hardware
+    #       ->  ss_id              - service asset attached to (with dependency primarily on) hardware
+    # vm  vm_id                    - virtual machine
+    #       ->  ss_id              - service asset attached to (with dependency primarily on) virtual machine
+    # vh  vh_id                    - virtual host
+    #       ->  ss_id              - service asset attached to (with dependency primarily on) virtual host
+
+    # ni, ip, os, ns are not assets, but attributes that can be assigned to assets.
+
+    # objects can easily be passed to procs via an array and upvar
+    #  array references don't work in sql, so these use ordered lists
+
+    # These procs may be handy when manipulating the long lists of procedure parameters:
+    # template::util::list_to_array $values_list array_name $keys_list
+    # template::util::array_to_vars array_name
+    # qf_lists_to_vars $vars_list $keys_list
+    # list of values direct to variables:
+    # lassign $values_list varName1 varName2.. varNameN
+    # key_value_list [array get array_name]
+    # keys_of_array_list [array names array_name]
+    # array set array_name {key1 value1 key2 value2.. }
+
+
+
+
 Separate code spaces for business logic, views, and low level utilities.
 Don't write until something is needed.
 Avoid conditionals. If they're needed, consider creating other procs.

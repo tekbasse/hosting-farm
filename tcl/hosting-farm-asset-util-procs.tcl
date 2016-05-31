@@ -13,69 +13,47 @@ ad_library {
 }
 
 
-ad_proc -private hf_nc_proc_context_set {
+ad_proc -private hf_asset_ids_for_user { 
+    {user_id ""}
+    {instance_id ""}
 } {
-    Set floating context
+    Returns asset_ids available to user_id as list 
 } {
-    set a [ns_thread id]
-    upvar 1 $a b
-    set b $a
-    set n "::hf::monitor::do::"
-    set ${n}${a} $a
-    #ns_log Notice "hf_nc_proc_context_set: context set: '${a}' info level '[info level]' namespace current '[namespace current]'"
-    return 1
-}
-
-ad_proc -private hf_nc_proc_in_context_q {
-    {namespace_name "::hf::monitor::do::"}
-} {
-    Checks if a scheduled proc is running in context of its namespace.
-} {
-    #    {namespace_name "::"}
-    # To work as expected, each proc in namespace must call this function
-    set a [ns_thread id]
-    upvar 3 $a $a
-    #ns_log Notice "acs_nc_proc_in_context_q: local vars [info vars]"
-    if { ![info exists $a] || ![info exists ${namespace_name}${a} ] || [set $a] ne [set ${namespace_name}${a} ]} {
-        ns_log Warning "hf_nc_proc_in_context_q: namespace '${namespace_name}' no! ns_thread id '${a}' info level '[info level]' namespace current '[namespace current]' "
-       # ns_log Notice "::${a} [info exists ::${a}] "
-       # ns_log Notice "::hf::${a} [info exists ::hf::${a}] "
-       # ns_log Notice "::hf::monitor::${a} [info exists ::hf::monitor::${a}] "
-       # ns_log Notice "::hf::monitor::do::${a} [info exists ::hf::monitor::do::${a}] "
-       # ns_log Warning " set ${namespace_name}$a '[set ${namespace_name}${a} ]'"
-        #ad_script_abort
-        set context_p 0
-    } else {
-        upvar 2 $a $a
-        set context_p 1
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
     }
-    #ns_log Notice "hf_nc_proc_in_context_q: ns_thread name [ns_thread name] ns_thread id [ns_thread id] ns_info threads [ns_info threads] ns_info scheduled [ns_info scheduled]"
-    return $context_p
+    if { $user_id eq "" } {
+        set user_id [ad_conn user_id]
+    }
+    set customer_ids_list [hf_customer_ids_for_user $user_id]
+    # get asset_ids assigned to customer_ids
+    set asset_ids_list [list ]
+    foreach customer_id $customer_ids_list {
+        set assets_list [hf_asset_ids_for_customer $instance_id $customer_id]
+        foreach asset_id $assets_list {
+            lappend asset_ids_list $asset_id
+        }
+    }
+    return $asset_ids_list
 }
 
-#ad_proc -private hf_nc_proc_that_tests_context_checking {
-#} {
-#    This is a dummy proc that checks if context checker is working.
-#} {
-#    ns_log Notice "hf_nc_proc_that_tests_context_checking: info level '[info level]' namespace current '[namespace current]'"
-#    set allowed_p [hf_nc_go_ahead ]
-#    ns_log Notice "hf_nc_proc_that_tests_context_checking: context check. PASSED."
-#}
+ad_proc -private hf_customer_id_of_asset_id {
+    asset_id
+    {instance_id ""}
+} {
+    returns customer_id of asset_id
+} {
+    # this is handy for helping fulfill hf_permission_p requirements
+    hf_ui_go_ahead_q read
 
-#ad_proc -private hf_check_randoms {
-#    {context ""}
-#} {
-#    Compares output of random functions, to see if there is a difference 
-#    when run in scheduled threads vs. connected threads.
-#} {
-#    set a [expr { srand(round(fmod([clock clicks],[clock seconds]))) } ]
-#    ns_log Notice "hf_check_randoms: context [ns_thread name]: ${context}"
-#    ns_log Notice "hf_check_randoms: clock clicks '[clock clicks]' '[clock clicks]' '[clock clicks]'"
-#     ns_log Notice "hf_check_randoms: clock seconds '[clock seconds]' '[clock seconds]' '[clock seconds]'"
-#    ns_log Notice "hf_check_randoms: srand '[expr { srand(round(fmod([clock clicks],[clock seconds]))) } ]' '[expr { srand(round(fmod([clock clicks],[clock seconds]))) } ]' '[expr { srand(round(fmod([clock clicks],[clock seconds]))) } ]'"
-#    ns_log Notice "hf_check_randoms: rand '[expr { rand() } ]' '[expr { rand() } ]' '[expr { rand() } ]'"
-#    ns_log Notice "hf_check_randoms: random '[random]' '[random]' '[random]'"
-#}
+    set cid_exists [db_0or1row hf_customer_id_of_asset_id "select qal_customer_id from hf_assets where instance_id = :instance_id and id = :asset_id and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc"]
+    if { !$cid_exists } {
+        set customer_id ""
+    }
+    return $customer_id
+}
+
 
 ad_proc -private hf_asset_type_id_list {
  } {
@@ -264,35 +242,6 @@ ad_proc -private hf_asset_id_change {
 }
 
 
-ad_proc -private hf_asset_label_change {
-    asset_id
-    new_label
-} {
-    Changes the asset_name where the asset is referenced from asset_id. Returns 1 if successful, otherwise 0.
-
-    @param asset_id  The label of the asset.
-    @param new_label   The new label.
-} {
-    upvar 1 instance_id instance_id
-    upvar 1 user_id user_id
-    set write_p [hf_ui_go_ahead_q write]
-    set success_p 0
-    if { $write_p } {
-        db_transaction {
-            db_dml hf_label_change_asset_map { update hf_asset_rev_map
-                set label=:new_label where asset_id=:asset_id and instance_id=:instance_id 
-            }
-            db_dml hf_label_change_hf_assets { update hf_assets
-                set last_modified = current_timestamp, label=:new_label where asset_id=:asset_id and instance_id=:instance_id 
-            }
-            set success_p 1
-        } on_error {
-            set success_p 0
-        }
-    }
-    return $success_p
-}
-
 ad_proc -private hf_f_id_exists {
     f_id
 } {
@@ -421,23 +370,6 @@ ad_proc -private hf_asset_keys {
 }
 
 
-ad_proc -private hf_keys_by {
-    keys_list
-    separator
-} {
-    if { $separator ne ""} {
-        set keys ""
-        if { $separator eq ",:" } {
-            # for db
-            set keys ":"
-        }
-        append keys [join $keys_list $separator]
-    } else {
-        set keys $keys_list
-    }
-    return $keys
-}
-
 ad_proc -private hf_asset_rev_map_update {
     label
     f_id
@@ -563,79 +495,6 @@ ad_proc -private hf_asset_subassets_by_type_cascade {
     return $final_id_list
 }
 
-ad_proc -public hf_lists_filter_by_alphanum {
-    user_input_list
-} {
-    Returns a list of list of items that are alphanumeric from a list of lists.
-} {
-    set filtered_row_list [list ]
-    set filtered_list [list ]
-    foreach input_row_unfiltered $user_input_list {
-        set filtered_row_list [list ]
-        foreach input_unfiltered $input_row_unfiltered {
-            # added dash and underscore, because these are often used in alpha/text references
-            if { [regsub -all -nocase -- {[^a-z0-9,\.\-\_]+} $input_unfiltered {} input_filtered] } {
-                lappend filtered_row_list $input_filtered
-            }
-        }
-        lappend filtered_list $filtered_row_list
-    }
-    return $filtered_list
-}
-
-ad_proc -public hf_list_filter_by_alphanum {
-    user_input_list
-} {
-    Returns a list of alphanumeric items from user_input_list
-} {
-    set filtered_list [list ]
-    foreach input_unfiltered $user_input_list {
-        # added dash and underscore, because these are often used in alpha/text references
-        if { [regsub -all -nocase -- {[^a-z0-9,\.\-\_]+} $input_unfiltered {} input_filtered ] } {
-            lappend filtered_list $input_filtered
-        }
-    }
-    return $filtered_list
-}
-
-ad_proc -public hf_list_filter_by_decimal {
-    user_input_list
-} {
-    set filtered_list [list ]
-    foreach input_unfiltered $user_input_list {
-        if { [qf_is_decimal $input_unfiltered] } {
-            lappend filtered_list $input_unfiltered
-        }
-    }
-    return $filtered_list
-}
-
-ad_proc -public hf_list_filter_by_natural_number {
-    user_input_list
-} {
-    set filtered_list [list ]
-    foreach input_unfiltered $user_input_list {
-        if { [qf_is_natural_number $input_unfiltered] } {
-            lappend filtered_list $input_unfiltered
-        }
-    }
-    return $filtered_list
-}
-
-ad_proc -private hf_natural_number_list_validate {
-    natural_number_list
-} {
-    Retuns 1 if list only contains natural numbers, otherwise returns 0
-} {
-    set nn_list [hf_list_filter_by_natural_number $natural_number_list]
-    if { [llength $nn_list] != [llength $natural_number_list] } {
-        set natnums_p 0
-    } else {
-        set natnums_p 1
-    }
-    return $natnums_p
-}
-
 ad_proc -private hf_asset_attributes_cascade {
     f_id
 } {
@@ -690,365 +549,262 @@ ad_proc -private hf_asset_attributes_by_type_cascade {
 }
 
 
-ad_proc -private hf_attribute_ua_delete {
-    ua_id_list
+# see hf_asset_do
+# The following tables are involved in managing asset direct api
+
+ad_proc -private hf_call_write {
+    hf_call_id
+    proc_name
+    {asset_type_id ""}
+    {asset_template_id ""}
+    {asset_id ""}
+    {instance_id ""}
 } {
-    Deletes ua. ua may be a one or a list. User must be a package admin.
+    Writes a new/update call and associates it to one or more specific asset_type. To remove an existing record, set proc_name blank for hf_call_id.
+    At least one asset_id, asset_type_id or asset_template_id must be nonempty.
 } {
-    set success_p 1
-    if { $ua_id_list ne "" } {
-        set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
-        set success_p $admin_p
-        if { $admin_p } {
-            if { [llength $ua_id_list] > 0 } {
-                set validated_p [hf_list_filter_by_natural_number $ua_id_list]
-                set ua_list $ua_id_list
-            } else {
-                set ua_id [lindex $ua_id_list 0]
-                set validated_p [hf_is_natural_number $ua_id]
-                set ua_list [list $ua_id]
-            }
-            if { $validated_p } {
-                db_transaction {
-                    db_dml hf_uas_up_delete { delete from hf_up where up_id in ( select up_id from hf_ua_up_map where instance_id=:instance_id and ua_id in ([template::util::tcl_to_sql_list $ua_list])) }
-                    db_dml hf_uas_map_delete { delete from hf_ua_up_map where instance_id=:instance_id and ua_id in ([template::util::tcl_to_sql_list $ua_list]) }
-                    db_dml hf_uas_delete { delete from hf_ua where instance_id=:instance_id and ua_id in ([template::util::tcl_to_sql_list $ua_list]) }
-                    db_dml hf_ua_attr_map_del { delete from hf_sub_asset_map where instance_id=:instance_id and sub_f_id in ([template::util::tcl_to_sql_list $ua_list]) }
-                } on_error {
-                    set success_p 0
-                }
-            } else{
-                set success_p 0
+    set admin_p [hf_ua_go_ahead_q admin "" "" 0]
+    set success_p 0
+    set no_errors_p 1
+    set remove_p 0
+    if { $admin_p } {
+        # param validation
+        set hf_call_id_exists_p [qf_is_natural_number $hf_call_id]
+        set asset_type_id [string range $asset_type_id 0 23]
+        if { $asset_type_id ne "" } {
+            if { ![regexp -- {^[[:graph:]]+$} $asset_type_id scratch ] } {
+                set asset_type_id ""
+                set no_errors_p 0
+                ns_log Warning "hf_call_write(2942): user_id ${user_id} attempted to write including unprintable characters asset_type_id '${asset_type_id}'"
             }
         }
+        if { ![qf_is_natural_number $asset_template_id] } {
+            ns_log Warning "hf_call_write(2948): user_id ${user_id} attempted to write with nonstandard asset_template_id '${asset_template_id}'"
+            set asset_template_id ""
+            set no_errors_p 0
+        }
+        if { ![qf_is_natural_number $asset_id] } {
+            ns_log Warning "hf_call_write(2954): user_id ${user_id} attempted to write with nonstandard asset_id '${asset_id}'"
+            set asset_id ""
+            set no_errors_p 0
+        }
+        if { $hf_call_id_exists_p } {
+            # verify hf_call_id, or set hf_call_id_exists_p 0 no_errors_p 0
+            if { $proc_name eq "" } {
+                # This write is to blank out ie remove an existing record
+                set remove_p 1
+            }
+        }
+        if { $hf_call_id_exists_p == 0 && $no_errors_p && $proc_name ne "" } {
+            # Check proc_name in context with asset_ids, see proc hf_asset_do at circa line 310
+            # Actually, don't check for asset_id resolution as determined at execution.
+            # Just make sure that hf_call_id matches with proc_name, or report an error.
+            set proc_name [string range $proc_name 0 39]
+
+            # get the appropriate hf_call_id
+            # Cannot use db_0or1row, because there maybe multiple assignments of proc_name
+            #db_0or1row hf_calls_ck_id {select id as hf_calls_db_id from hf_calls where instance_id=:instance_id and proc_name=:proc_name}
+            set query_suffix ""
+            if { $asset_type_id ne ""  } {
+                append query_suffix "and asset_type_id=:asset_type_id"
+            }
+            if { $asset_template_id ne "" } {
+                append query_suffix "and asset_template_id=:asset_template_id"
+            }
+            if { $asset_id ne "" } {
+                append query_suffix "and asset_id=:asset_id"
+            }
+            set hc_id_list [db_list hf_calls_db_ids "select id from hf_calls where instance_id=:instance_id and proc_name=:proc_name ${query_suffix}"]
+            if { [llength $hc_id_list] == 1 } {
+                set hf_call_id_exists_p 1
+                set hf_call_id [lindex $hc_id_list 0]
+            } else {
+                ns_log Notice "hf_call_write(2968): user_id ${user_id} attempted to write to multiple records for instance_id '${instance_id}' proc_name '${proc_name}' query_suffix '${query_suffix}'. Check for UI issue."
+                set no_errors_p 0
+            }
+        }
+        if { $hf_call_id_exists_p && $no_errors_p } {
+            if { $remove_p } {
+                # remove record
+                db_1row hf_calls_read1 "select proc_name from hf_calls where id=:hf_call_id and instance_id=:instance_id"
+                ns_log Notice "hf_call_write(2998): user_id ${user_id} deleted hf_calls.id '${hf_call_id}'  instance_id '${instance_id}' proc_name '${proc_name}'"
+                db_dml hf_calls_delete1 {
+                    delete from hf_calls where id=:hf_call_id and instance_id=:instance_id
+                }
+            } else {
+                # Update
+                db_dml hf_calls_update1 {
+                    update hf_calls set asset_type_id=:asset_type_id,asset_template_id=:asset_template_id,asset_id=:asset_id where id=:hf_call_id
+                }
+            }
+        } elseif { $no_errors_p } {
+            # write new
+            set id [db_nextval hf_id_seq]
+            set query_suffix ""
+            db_dml hf_calls_write1 {
+                insert into hf_calls 
+                (instance_id,id,proc_name,asset_type_id,asset_template_id,asset_id)
+                values (:instance_id,:id,:proc_name,:asset_type_id,:asset_template_id,:asset_id)
+            }
+        }
+        
+    } else {
+        set no_errors_p 0
+        ns_log Warning "hf_call_write: user_id '${user_id}' denied. hf_call_id '${hf_call_id}' proc_name '${proc_name}' instance_id '${instance_id}' asset_type_id '${asset_type_id}' asset_template_id '${asset_template_id}' asset_id '${asset_id}' "
     }
-    return $success_p
-}
-
-ad_proc -private hf_attribute_ns_delete {
-    ns_id_list
-} {
-    Deletes hf_ns_records. ns_id_list may be a one or a list. User must be a package admin.
-} {
-    set sucess_p 1
-    if { $ns_id_list ne "" } {
-        set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
-        set success_p $admin_p
-        if { $admin_p } {
-            if { [llength $ns_id_list] > 0 } {
-                set validated_p [hf_list_filter_by_natural_number $ns_id_list]
-                set ns_list $ns_id_list
-            } else {
-                set ns_id [lindex $ns_id_list 0]
-                set validated_p [hf_is_natural_number $ns_id]
-                set ns_list [list $ns_id]
-            }
-            if { $validated_p } {
-                db_transaction {
-                    db_dml hf_ns_ids_delete { delete from hf_ns_records where instance_id=:instance_id and ns_id in ([template::util::tcl_to_sql_list $ns_list]) }
-                    db_dml hf_ns_attr_map_del { delete from hf_sub_asset_map where instance_id=:instance_id and sub_f_id in ([template::util::tcl_to_sql_list $ns_list]) }
-                } on_error {
-                    set success_p 0
-                }
-            } else{
-                set success_p 0
-            }
-        }
-    }
-    return $success_p
-}
-
-ad_proc -private hf_attribute_ip_delete {
-    ip_id_list
-} {
-    Deletes hf_ip_addresses records. ip_id_list may be a one or a list. User must be a package admin.
-} {
-    set success_p 1
-    if { $ip_id_list ne "" } {
-        set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
-        set success_p $admin_p
-        if { $admin_p } {
-            if { [llength $ip_id_list] > 0 } {
-                set validated_p [hf_list_filter_by_natural_number $ip_id_list]
-                set ip_list $ip_id_list
-            } else {
-                set ip_id [lindex $ip_id_list 0]
-                set validated_p [hf_is_natural_number $ip_id]
-                set ip_list [list $ip_id]
-            }
-            if { $validated_p } {
-                db_transaction {
-                    db_dml hf_ip_ids_delete { delete from hf_ip_addresses where instance_id=:instance_id and ip_id in ([template::util::tcl_to_sql_list $ip_list]) }
-                    db_dml hf_ip_attr_map_del { delete from hf_sub_asset_map where instance_id=:instance_id and sub_f_id in ([template::util::tcl_to_sql_list $ip_list]) }
-                } on_error {
-                    set success_p 0
-                }
-            } else{
-                set success_p 0
-            }
-        }
-    }
-    return $success_p
-}
-
-
-
-ad_proc -private hf_attribute_ni_delete {
-    ni_id_list
-} {
-    Deletes hf_network_interfaces records. ni_id_list may be a one or a list. User must be a package admin.
-} {
-    set success_p 1
-    if { $ni_id_list ne "" } {
-        set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
-        set success_p $admin_p
-        if { $admin_p } {
-            if { [llength $ni_id_list] > 0 } {
-                set validated_p [hf_list_filter_by_natural_number $ni_id_list]
-                set ni_list $ni_id_list
-            } else {
-                set ni_id [lindex $ni_id_list 0]
-                set validated_p [hf_is_natural_number $ni_id]
-                set ni_list [list $ni_id]
-            }
-            if { $validated_p } {
-                db_transaction {
-                    db_dml hf_ni_ids_delete { delete from hf_network_interfaces where instance_id=:instance_id and ni_id in ([template::util::tcl_to_sql_list $ni_list]) }
-                    db_dml hf_ni_attr_map_del { delete from hf_sub_asset_map where instance_id=:instance_id and sub_f_id in ([template::util::tcl_to_sql_list $ni_list]) }
-                } on_error {
-                    set success_p 0
-                }
-            } else{
-                set success_p 0
-            }
-        }
+    if { $no_errors_p == 0 } {
+        set success_p 0
     }
     return $success_p
 }
 
 
-ad_proc -private hf_attribute_ss_delete {
-    ss_id_list
+ad_proc -private hf_call_delete {
+    hf_call_id
+    {asset_type_id ""}
+    {asset_template_id ""}
+    {asset_id ""}
+    {instance_id ""}
 } {
-    Deletes hf_service records.  ss_id_list may be a one or a list. User must be a package admin.
+    Deletes hf_call_id 
 } {
-    set success_p 1
-    if { $ss_id_list ne "" } {
-        set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
-        set success_p $admin_p
-        if { $admin_p } {
-            if { [llength $ss_id_list] > 0 } {
-                set validated_p [hf_list_filter_by_natural_number $ss_id_list]
-                set ss_list $ss_id_list
-            } else {
-                set ss_id [lindex $ss_id_list 0]
-                set validated_p [hf_is_natural_number $ss_id]
-                set ss_list [list $ss_id]
-            }
-            if { $validated_p } {
-                db_transaction {
-                    db_dml hf_ss_ids_delete { delete from hf_services where instance_id=:instance_id and ss_id in ([template::util::tcl_to_sql_list $ss_list]) }
-                    db_dml hf_ss_attr_map_del { delete from hf_sub_asset_map where instance_id=:instance_id and sub_f_id in ([template::util::tcl_to_sql_list $ss_list]) }
-                } on_error {
-                    set success_p 0
-                }
-            } else{
-                set success_p 0
+    hf_ua_go_ahead_q admin
+    # set proc_name ""
+    set success_p [hf_call_write $hf_call_id "" $asset_type_id $asset_template_id $asset_id $instance_id]
+}
+
+ad_proc -private hf_call_read {
+    hf_call_id
+    {asset_type_id ""}
+    {asset_template_id ""}
+    {asset_id ""}
+    {instance_id ""}
+} {
+    Returns proc_name to use with specified asset of highest specificity to allow for system-wide exceptions
+    of calling another proc_name for a more specific asset etc.
+
+} {
+    hf_ui_go_ahead_q read
+    set proc_name ""
+    if { $read_p } {
+        # param validation
+        set hf_call_id_exists_p [qf_is_natural_number $hf_call_id]
+        set asset_type_id [string range $asset_type_id 0 23]
+        if { $asset_type_id ne "" } {
+            if { ![regexp -- {^[[:graph:]]+$} $asset_type_id scratch ] } {
+                set asset_type_id ""
+                set no_errors_p 0
+                ns_log Warning "hf_call_read(3062): user_id ${user_id} attempted to read including unprintable characters asset_type_id '${asset_type_id}'"
             }
         }
     }
-    return $success_p
-}
-
-ad_proc -private hf_attribute_vh_delete {
-    vh_id_list
-} {
-    Deletes hf_vhosts records.  vh_id_list may be a one or a list. User must be a package admin.
-} {
-    set success_p 1
-    if { $vh_id_list ne "" } {
-        set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
-        set success_p $admin_p
-        if { $admin_p } {
-            if { [llength $vh_id_list] > 0 } {
-                set validated_p [hf_list_filter_by_natural_number $vh_id_list]
-                set vh_list $vh_id_list
-            } else {
-                set vh_id [lindex $vh_id_list 0]
-                set validated_p [hf_is_natural_number $vh_id]
-                set vh_list [list $vh_id]
-            }
-            if { $validated_p } {
-                db_transaction {
-                    db_dml hf_vh_ids_delete { delete from hf_vhosts where instance_id=:instance_id and vh_id in ([template::util::tcl_to_sql_list $vh_list]) }
-                    db_dml hf_vh_attr_map_del { delete from hf_sub_asset_map where instance_id=:instance_id and sub_f_id in ([template::util::tcl_to_sql_list $vh_list]) }
-                } on_error {
-                    set success_p 0
-                }
-            } else{
-                set success_p 0
-            }
+    if { ![qf_is_natural_number $asset_template_id] } {
+        ns_log Warning "hf_call_read(3066): user_id ${user_id} attempted to read with nonstandard asset_template_id '${asset_template_id}'"
+        set asset_template_id ""
+        set no_errors_p 0
+    }
+    if { ![qf_is_natural_number $asset_id] } {
+        ns_log Warning "hf_call_read(3071): user_id ${user_id} attempted to read with nonstandard asset_id '${asset_id}'"
+        set asset_id ""
+        set no_errors_p 0
+    }
+    if { $hf_call_id_exists_p } {
+        # verify hf_call_id, or set hf_call_id_exists_p 0 no_errors_p 0
+        if { $proc_name eq "" } {
+            # This write is to blank out ie remove an existing record
+            set remove_p 1
         }
     }
-    return $success_p
+    if { $hf_call_id_exists_p == 0 && $no_errors_p && $proc_name ne "" } {
+        # Check proc_name in context with asset_ids, see proc hf_asset_do at circa line 310
+        # Actually, don't check for asset_id resolution as determined at execution.
+        # Just make sure that hf_call_id matches with proc_name, or report an error.
+        set proc_name [string range $proc_name 0 39]
+
+        # get the appropriate hf_call_id
+        # Cannot use db_0or1row, because there maybe multiple assignments of proc_name
+        set query_suffix ""
+        if { $asset_type_id ne "" || $asset_template_id ne "" || $asset_id ne "" } {
+            set query_suffix ") or (asset_type_id=:asset_type_id or asset_template_id=:asset_template_id or asset_id=:asset_id"
+        } 
+        set hc_proc_lists [db_list_of_lists hf_calls_db_ids "select proc_name, asset_id, asset_template_id, asset_type_id from hf_calls where instance_id=:instance_id and id=:hf_call_id and ( ( asset_type_id='' and asset_type_id='' and asset_template_id='' ${query_suffix}) )"]
+        set hf_procs_count [llength $hc_proc_lists]
+        if { $hf_procs_count == 0 } {
+            ns_log Notice "hf_call_read(3110): no proc_name for hf_call_id '$hf_call_id' user_id ${user_id} instance_id '${instance_id}' query_suffix '${query_suffix}'. Check for UI issue."
+            set no_errors_p 0
+        } else {
+            # Get the most specific proc_name from available list
+            # prioritize
+            # asset_id most specific (10)
+            # asset_template_id (9)
+            # asset_type_id (8)
+            # blank blank blank (7) standard
+            # other other other (0) <- fail (not retrieved by query)
+            set priority_lists [list ]
+            for {set i 0} {i < $hf_procs_count} {incr i} {
+                set priority 7
+                set proc_list [lindex $hf_proc_lists $i]
+                # proc_name, asset_id, asset_template_id, asset_type_id
+                if { [lindex $proc_list 1] eq $asset_id } {
+                    set priority 10
+                } elseif { [lindex $proc_list 2] eq $asset_template_id } {
+                    set priority 9
+                } elseif { [lindex $proc_list 3] eq $asset_type_id } {
+                    set priority 8
+                }
+                lappend $proc_list $priority
+                lappend priority_lists $proc_list
+            }
+            set prioritized_lists [lsort -index 4 -decreasing $priority_lists]
+            set proc_name [lindex [lindex $prioritized_lists 0] 0]
+        }
+    }
+    return $proc_name
 }
 
 
-ad_proc -private hf_attribute_vm_delete {
-    vm_id_list
+ad_proc -private hf_call_role_write {
+    call_id
+    role_id
+    {instance_id ""}
 } {
-    Deletes hf_virtual_machines records.  vm_id_list may be a one or a list. User must be a package admin.
+    Writes an association  between an hf_call and a role
 } {
-    set success_p 1
-    if { $vm_id_list ne "" } {
-        set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
-        set success_p $admin_p
-        if { $admin_p } {
-            if { [llength $vm_id_list] > 0 } {
-                set validated_p [hf_list_filter_by_natural_number $vm_id_list]
-                set vm_list $vm_id_list
+    set success_p 0
+    set admin_p [hf_ua_go_ahead_q admin "" permissions_roles 0]
+    if { $admin_p && [qf_is_natural_number $call_id] && [qf_is_natural_number $role_id] } {
+        if { [hf_call_read $call_id] ne "" && [llength [hf_role_read $role_id]] > 0 } {
+            # if record already exists, do nothing, else add
+            set exists_p [db0or1row call_role_map_ck {select role_id as role_id_of_db from hf_call_role_map where instance_id=:instance_id and call_id=:call_id and role_id=:role_id} ]
+            if { $exists_p } {
+                ns_log Notice "hf_call_role_write(3155): duplicate write attempted by user_id '${user_id}' params role_id '${role_id}' call_id '${call_id}' instance_id '${instance_id}'"
             } else {
-                set vm_id [lindex $vm_id_list 0]
-                set validated_p [hf_is_natural_number $vm_id]
-                set vm_list [list $vm_id]
-            }
-            if { $validated_p } {
-                db_transaction {
-                    db_dml hf_vm_ids_delete { delete from hf_virtual_machines where instance_id=:instance_id and vm_id in ([template::util::tcl_to_sql_list $vm_list]) }
-                    db_dml hf_vm_attr_map_del { delete from hf_sub_asset_map where instance_id=:instance_id and sub_f_id in ([template::util::tcl_to_sql_list $vm_list]) }
-                } on_error {
-                    set success_p 0
+                db_dml hf_call_role_map_w {
+                    insert into hf_call_role_map 
+                    (instance_id,call_id,role_id)
+                    values (:instance_id,:call_id,:role_id)
                 }
-            } else{
-                set success_p 0
             }
+            set success_p 1
         }
     }
     return $success_p
 }
 
 
-ad_proc -private hf_attribute_hw_delete {
-    hw_id_list
+ad_proc -private hf_call_roles_read {
+    call_id
+    {instance_id ""}
 } {
-    Deletes hf_hardware records.  hw_id_list may be a one or a list. User must be a package admin.
+    reads assigned roles for an hf_call.  answers question: what roles are allowed to make call?
 } {
-    set success_p 1
-    if { $hw_id_list ne "" } {
-        set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
-        set success_p $admin_p
-        if { $admin_p } {
-            if { [llength $hw_id_list] > 0 } {
-                set validated_p [hf_list_filter_by_natural_number $hw_id_list]
-                set hw_list $hw_id_list
-            } else {
-                set hw_id [lindex $hw_id_list 0]
-                set validated_p [hf_is_natural_number $hw_id]
-                set hw_list [list $hw_id]
-            }
-            if { $validated_p } {
-                db_transaction {
-                    db_dml hf_hw_ids_delete { delete from hf_hardware where instance_id=:instance_id and hw_id in ([template::util::tcl_to_sql_list $hw_list]) }
-                    db_dml hf_hw_attr_map_del { delete from hf_sub_asset_map where instance_id=:instance_id and sub_f_id in ([template::util::tcl_to_sql_list $hw_list]) }
-                } on_error {
-                    set success_p 0
-                }
-            } else{
-                set success_p 0
-            }
+    set role_ids_list [list ]
+    if { [qf_is_natural_number $instance_id] } {
+        if { [qf_is_natural_number $call_id ] } {
+            set role_ids_list [db_list hf_call_roles_read "select role_id from hf_call_role_map where instance_id=:instance_id and call_id=:call_id"]
         }
     }
-    return $success_p
+    return $role_ids_list
 }
 
-
-ad_proc -private hf_attribute_dc_delete {
-    dc_id_list
-} {
-    Deletes hf_data_centers records.  dc_id_list may be a one or a list. User must be a package admin.
-} {
-    set success_p 1
-    if { $dc_id_list ne "" } {
-        set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
-        set success_p $admin_p
-        if { $admin_p } {
-            if { [llength $dc_id_list] > 0 } {
-                set validated_p [hf_list_filter_by_natural_number $dc_id_list]
-                set dc_list $dc_id_list
-            } else {
-                set dc_id [lindex $dc_id_list 0]
-                set validated_p [hf_is_natural_number $dc_id]
-                set dc_list [list $dc_id]
-            }
-            if { $validated_p } {
-                db_transaction {
-                    db_dml hf_dc_ids_delete { delete from hf_data_centers where instance_id=:instance_id and dc_id in ([template::util::tcl_to_sql_list $dc_list]) }
-                    db_dml hf_dc_attr_map_del { delete from hf_sub_asset_map where instance_id=:instance_id and sub_f_id in ([template::util::tcl_to_sql_list $dc_list]) }
-                } on_error {
-                    set success_p 0
-                }
-            } else{
-                set success_p 0
-            }
-        }
-    }
-    return $success_p
-}
-
-
-ad_proc -private hf_attribute_monitor_delete {
-    monitor_id_list
-} {
-    Deletes monitor_id records.  monitor_id_list may be a one or a list. User must be a package admin.
-} {
-    set success_p 1
-    if { $monitor_id_list ne "" } {
-        set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
-        set success_p $admin_p
-        if { $admin_p } {
-            if { [llength $monitor_id_list] > 0 } {
-                set validated_p [hf_list_filter_by_natural_number $monitor_id_list]
-                set monitor_list $monitor_id_list
-            } else {
-                set monitor_id [lindex $monitor_id_list 0]
-                set validated_p [hf_is_natural_number $monitor_id]
-                set monitor_list [list $monitor_id]
-            }
-            if { $validated_p } {
-                db_transaction {
-                    db_dml hf_monitor_fdc_delete { delete from hf_monitor_freq_dist_curves where monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list]) and instance_id=:instance_id }
-                    db_dml hf_monitor_stats_delete { delete from hf_monitor_statistics where monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list]) and instance_id=:instance_id }
-                    db_dml hf_monitor_status_delete { delete from hf_monitor_status where monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list]) and instance_id=:instance_id }
-                    db_dml hf_monitor_cnc_delete { delete from hf_monitor_config_n_control where monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list]) and instance_id=:instance_id and asset_id=:f_id }
-                    db_dml hf_monitor_log_delete { delete from hf_monitor_log where monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list]) and instance_id=:instance_id and asset_id=:f_id }
-                } on_error {
-                    set success_p 0
-                }
-            } else{
-                set success_p 0
-            }
-        }
-    }
-    return $success_p
-}
 

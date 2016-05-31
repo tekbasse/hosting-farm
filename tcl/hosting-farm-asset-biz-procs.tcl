@@ -294,3 +294,232 @@ ad_proc -public hf_f_id_untrash {
 
 
 
+ad_proc -private hf_asset_create_from_asset_template {
+    customer_id
+    asset_id
+    asset_label_new
+    {instance_id ""}
+} {
+    Creates a new asset record based on an existing template. Also schedules a scheduled proc for system maintenance part of process.
+} {
+
+
+    set read_p [hf_ui_go_ahead_q read "" published 0]
+    set create_p [hf_permission_p $user_id $customer_id assets create $instance_id]
+    set status_p $create_p
+
+    if { $create_p } {
+        # Copy other tables linked to asset.
+        # The usual hf_{asset_type_id}_read doesn't work here, because
+        # hf_dc, hf_hw and friends are designed for UI exposure of limited variables,
+        # whereas the hf_nc_* and copying an asset must include all subsystems and parts.
+        # See hf_asset_properties for possibilities by type.
+
+        # dc,hw in switch:
+        # Subtle difference between dc and hw.
+        # A dc can have 1 property exposed without
+        # necessitating a specific hw asset.
+        # Assume a simple asset for now, which is default
+        switch -exact -- $asset_type_id {
+            vm {
+                hf_vm_copy $asset_id $asset_label_new $instance_id
+            }
+            vh {
+                hf_vh_copy $asset_id $asset_label_new $instance_id
+            }
+            ss {
+                hf_ss_copy $asset_id $asset_label_new $instance_id
+            }
+            default {
+                set asset_list [hf_asset_read $instance_id $asset_id]
+                qf_lists_to_vars $asset_list [hf_asset_read_keys]
+                
+                if { $monitor_p } {
+                    #  Identify monitors
+                    set monitor_ids_list [hf_monitor_logs $asset_id $instance_id]
+                    foreach id $monitor_ids_list {
+                        set config_n_control_list [hf_monitor_configs_read $monitor_id $instance_id]
+                        # db procs don't use arrays, so have to put into vars.
+                        qf_lists_to_vars $config_n_control_list [hf_monitor_configs_keys]
+                        # cnc keys: instance_id monitor_id asset_id label active_p portions_count calculation_switches health_percentile_trigger health_threshold interval_s alert_by_privilege alert_by_role
+                        hf_monitor_configs_write $label $active_p $portions_count $calculation_switches $health_percentile_trigger $health_threashold $interval_s $new_asset_id "" $instance_id $alert_by_privilege $alert_by_role
+                    }
+                }
+                # Copy hf_ua table entry. 
+                set ua_id_new ""
+                if { $ua_id ne "" } {
+                    set ua_list [hf_ua_read $ua_id ""]
+                    #vars: ua_id ua connection_type instance_id pw details
+                    qf_lists_to_vars $ua_list [hf_ua_keys]
+                    set ua_id_new [hf_ua_write $ua $connection_type "" $instance_id]
+                    if { $ua_id_new > 0 } { 
+                        hf_up_write $ua_id_new $pw $instance_id
+                    } else {
+                        ns_log Warning "hf_asset_create_from_asset_template.257: Problem creating account for asset_id '${new_asset_id}'"
+                    }
+                }
+                # Copy hf_ns table entry. 
+                set ns_id_new ""
+                if { $ns_id ne "" } {
+                    set ns_list [hf_ns_read $ns_id $instance_id]
+                    qf_lists_to_vars $ns_list [list id active_p name_record]
+                    set ns_id_new [hf_ns_write "" $name_record $active_p $instance_id]
+                }
+                #
+                # template_p, publish_p, popularity should start false(0) for all copy cases,  op_status s/b ""
+                set new_asset_id [hf_asset_create $asset_label_new $name $asset_type_id $content $keywords $description $comments 0 $templated_p 0 $monitor_p 0 $triage_priority "" $ua_id_new $ns_id_new $qal_product_id $customer_id $template_id $flags $instance_id $user_id]
+                #hf_asset_create params: label, name, asset_type_id, content, keywords, description, comments, template_p, templated_p, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, template_id, flags, instance_id, user_id
+
+            }
+        }
+    }
+
+    
+    # Schedule process that performs system maintenance part.
+    # password and ns changes should take place here, to keep process sequential
+    # and not be broken by a process prioritization re-sort.
+
+    return $status_p
+}
+
+ad_proc -private hf_asset_create_from_asset_label {
+    asset_label_orig
+    asset_label_new
+    {instance_id ""}
+} {
+    Creates a new asset with asset_label based on an existing asset. Also scheduels a scheduled proc for system maintenance part of process. Returns 1 if successful, otherwise 0.
+} {
+    set asset_id_orig [hf_asset_id_of_label $asset_label_orig $instance_id]
+    set status_p [hf_asset_create_from_asset_template $customer_id $asset_label_orig $asset_label_new $instance_id]
+    return $status_p
+}
+
+ad_proc -private hf_asset_templates {
+    {label_match ""}
+    {inactives_included_p 0}
+    {published_p ""}
+    {instance_id ""}
+} {
+    returns active template references (id) and other info via a list of lists, where each list is an ordered tcl list of asset related values: id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,time_start,time_stop,trashed_p,trashed_by,flags,publish_p
+} {
+    # A variation on hf_assets, if include_inactives_p eq 1 and label_match eq ""
+    if { $instance_id eq "" } {
+        # set instance_id package_id
+        set instance_id [ad_conn package_id]
+    }
+    # scope to user_id
+    set user_id [ad_conn user_id]
+    set customer_ids_list [hf_customer_ids_for_user $user_id]
+    #    set all_assets_list_of_lists \[db_list_of_lists hf_asset_templates_list {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,time_start,time_stop,ns_id,op_status,trashed_p,trashed_by,popularity,flags,publish_p,monitor_p,triage_priority from hf_assets where template_p =:1 and instance_id =:instance_id} \]
+    if { $inactives_included_p } {
+        set templates_list_of_lists [db_list_of_lists hf_asset_templates_select_all {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,time_start,time_stop,trashed_p,trashed_by,flags,publish_p from hf_assets where template_p =:1 and instance_id =:instance_id and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc} ]
+    } else {
+        set templates_list_of_lists [db_list_of_lists hf_asset_templates_select {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,time_start,time_stop,trashed_p,trashed_by,flags,publish_p from hf_assets where template_p =:1 and instance_id =:instance_id and ( time_stop =null or time_stop < current_timestamp ) and ( trashed_p is null or trashed_p <> '1' ) and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc } ]
+    }
+    # build list of ids that meet at least one criteria
+    set return_list [list ]
+    foreach template_list $templates_lists_of_lists {
+        # first make sure that user_id has access to asset.
+        set customer_id [lindex $template_list 6]
+        set insert_p 0
+        if { $customer_id eq "" || [lsearch -exact $customer_ids_list $customer_id] > -1 } {
+
+            # now check the various requested criteria options. Matching any one or more qualifies.
+            # label?
+            if { $label_match ne "" && [string match -nocase $label_match [lindex $template_list 7]] } {
+                set insert_p 1
+            }
+            # published_p?
+            if { $published_p ne "" } {
+                set published_p_val [lindex $template_list 14]
+                if { $published_p eq $published_p_val } {
+                    set insert_p 1
+                }
+            }
+            if { $insert_p } {
+                set insert_p 0
+                # just id's:  lappend return_list [lindex $template_list 0]
+                lappend return_list $template_list
+            }
+        }
+    }
+    return $return_list
+}
+
+ad_proc -private hf_asset_do {
+    asset_id
+    hfl_proc_name
+    {instance_id ""}
+} {
+    Process an hfl_ procedure on asset_id.
+} {
+    set admin_p [hf_ui_go_ahead_q admin "" "" 0]
+
+    set success_p 0
+    if { $admin_p } {
+        set asset_stats_list [hf_asset_stats $asset_id $instance_id]
+        # label, name, asset_type_id, keywords, description, template_p, templated_p, trashed_p, trashed_by, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, instance_id, user_id, last_modified, created, flags
+        set asset_type_id [lindex $asset_stats_list 2]
+        set asset_template_p [lindex $asset_stats_list 5]
+        set asset_templated_p [lindex $asset_stats_list 6]
+        set asset_template_id [lindex $asset_stats_list 23]
+        
+        set template_ids_name_list [db_list_of_lists hf_calls_read_asset_type_choices { select asset_template_id, asset_id, proc_name from hf_calls where instance_id =:instance_id and asset_type_id =:id } ]
+        
+        set counter_max [llength $template_ids_name_list ]
+        set counter 0
+        ## first check all asset_ids
+        set proc_name_template ""
+        set proc_name_type ""
+        # Do we have to loop through all choice cases?  
+        # Yes.. Unless we create 3 separate queries instead of one.
+        # Unspecific cases would require all three queries. 
+        # This loop is instead of 3 separate trips to the db (queries).
+        while { $proc_name eq "" && $counter < $counter_max } {
+            set choice_list [lindex $template_ids_name_list $counter]
+            # a template_ids_name_list row: asset_template_id asset_id proc_name
+            set c_asset_template_id [lindex $choice_list 0]
+            set c_asset_id [lindex $choice_list 1]
+
+            # Find the most specific proc_name assignment.
+
+            # Each of these if's should only be true a maximimum of once.
+            # Is there a most fine grained (specific) proc_name assigned to this asset_id?
+            if { $c_asset_id eq $asset_id } {
+                # asset_id is most specific
+                set proc_name [lindex $choice_list 2]
+
+                # Does the template of this asset_id have an assigned proc_name?
+            } elseif { $asset_template_id eq $c_asset_template_id } {
+                # template_id is the next most specific ie all asset_ids with this template_id
+                set proc_name_template [lindex $choice_list 2]
+
+                # If other choices aren't available, go with asset_type_id
+            } elseif { $c_asset_id eq "" && $c_asset_template_id eq "" } {
+                # then go with asset_type_id 
+                set proc_name_type  [lindex $choice_list 2]
+            }
+            incr counter
+        }
+        # Assign the most specific proc_name
+        if { $proc_name eq "" } {
+            if { $proc_name_template ne "" } {
+                set proc_name $proc_name_template
+            } elseif { $proc_name_type ne "" } {
+                set proc_name $proc_name_type
+            }
+        }
+
+        if { $proc_name ne "" } {
+            #  add to operations stack that is listened to by an ad_scheduled_proc procedure working in short interval cycles
+            # proc_name should be mostly defined in hosting-farm-local-procs
+            set success_p [hf::schedule::add $proc_name [list $asset_id $user_id $instance_id] $user_id $instance_id $priority]
+        }
+    }
+    return $success_p
+}
+
+
+
+
+
