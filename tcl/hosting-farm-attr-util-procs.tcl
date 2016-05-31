@@ -109,7 +109,7 @@ ad_proc -private hf_ss_keys {
 }
 
 
-ad_proc -private hf_ip_id_exists {
+ad_proc -private hf_ip_id_exists_q {
     ip_id_q
     {instance_id ""}
 } {
@@ -130,7 +130,7 @@ ad_proc -private hf_ip_id_exists {
     return $ip_id_exists_p
 }
 
-ad_proc -private hf_ni_id_exists {
+ad_proc -private hf_ni_id_exists_q {
     ni_id_q
     {instance_id ""}
 } {

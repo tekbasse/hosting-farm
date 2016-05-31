@@ -62,6 +62,8 @@ ad_proc -public hf_asset_create {
             db_dml hf_asset_create " insert into hf_assets
                 ([hf_asset_keys ","])
             values ([hf_asset_keys ",:"])" 
+        db_dml hf_asset_label_update { update hf_asset_rev_map
+            set asset_id=:asset_id and label=:label where f_id=:f_id and instanece_id=:instance_id }
             hf_asset_rev_map_update $label $f_id $asset_id $trashed_p
             ns_log Notice "hf_asset_create: hf_asset_create id '$asset_id' f_id '$f_id' label '$label' instance_id '$instance_id' user_id '$user_id'"
         } on_error {
@@ -205,27 +207,27 @@ ad_proc -public hf_f_id_delete {
 
         # hf_monitor_id
         set monitor_id_list [hf_monitor_logs $f_id]
-        hf_attribute_monitor_delete $monitor_id_list
+        hf_monitor_delete $monitor_id_list
         
         # hf_services
         set ua_attr_list [hf_attributes_by_type_cascade $f_id "ua"]
-        hf_attribute_ua_delete $ua_attr_list
+        hf_ua_delete $ua_attr_list
         
         # hf_services
         set ss_attr_list [hf_attributes_by_type_cascade $f_id "ss"]
-        hf_attribute_ss_delete $ss_attr_list
+        hf_ss_delete $ss_attr_list
                 
         # hf_vh_hosts
         set vh_attr_list [hf_attributes_by_type_cascade $f_id "vh"]
-        hf_attribute_vh_delete $vh_attr_list
+        hf_vh_delete $vh_attr_list
         
         # hf_ip_addresses
         set ip_attr_list [hf_attributes_by_type_cascade $f_id "ip"]
-        hf_attribute_ip_delete $ip_attr_list
+        hf_ip_delete $ip_attr_list
 
         # hf_network_interfaces
         set ni_attr_list [hf_attributes_by_type_cascade $f_id "ni"]
-        hf_attribute_ni_delete $ni_attr_list
+        hf_ni_delete $ni_attr_list
 
         # hf_virtual_machines
         set vm_attr_list [hf_attributes_by_type_cascade $f_id "vm"]
@@ -233,11 +235,11 @@ ad_proc -public hf_f_id_delete {
 
         # hf_hardware
         set hw_attr_list [hf_attributes_by_type_cascade $f_id "hw"]
-        hf_attribute_hw_delete $hw_attr_list
+        hf_hw_delete $hw_attr_list
 
         # hf_data_centers
         set dc_attr_list [hf_attributes_by_type_cascade $f_id "dc"]
-        hf_attribute_dc_delete $dc_attr_list
+        hf_dc_delete $dc_attr_list
         
         # delete all revisions of f_id 
         db_dml hf_asset_delete { delete from hf_assets 
@@ -259,15 +261,32 @@ ad_proc -public hf_asset_trash {
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
-    set write_p [hf_ui_go_ahead_q write f_id "" 0]
-    
-    
+    set write_p [hf_ui_go_ahead_q write "" "" 0]
+    set success_p $write_p
+    if { $write_p } {
+        set asset_exists_p [hf_asset_id_exists_q $asset_id]
+        if { $asset_exists_p } {
+            set nowts [dt_systime -gmt 1]
+            set last_modified $nowts
+            db_transaction {
+                db_dml hf_asset_trash "update hf_assets set trash_p='1' where asset_id=:asset_id and instance_id=:instance_id"
+                if { [hf_asset_id_current_q $asset_id ] } {
+                    db_dml hf_asset_rev_map_trash "update hf_asset_rev_map set trashed+p='1' where asset_id=:asset_id and instance_id=:instance_id"
+                }
+            } on_error {
+                ns_log Warning "hf_asset_trash: error for asset_id '${asset_id}'"
+                set success_p 0
+            }
+        } 
+    } 
+    return $success_p
 }
+
 
 ad_proc -public hf_asset_untrash {
     asset_id
 } {
-    Untrashes an asset revision ie asset_id. Returns 1 if succeeds, else returns 0.
+    Untrashes an asset revision ie asset_id. Note, only 1 can be untrashed. Returns 1 if succeeds, else returns 0.
 } {
     
     

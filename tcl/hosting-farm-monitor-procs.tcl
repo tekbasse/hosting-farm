@@ -647,37 +647,6 @@ ad_proc -private hf::monitor::list {
 }
 
 
-# monitoring procs
-# hf::monitor::do
-# hf::monitor::read
-# hf::monitor::trash
-# hf::monitor::add
-# hf::monitor::list
-
-#   hf_monitor_configs_read   Read monitor configuration
-#   hf_monitor_configs_write  Write monitor configuration
-
-#   hf_monitor_update         Write an update to a log (this includes distribution curve info, ie time as delta-t)
-#   hf_monitor_status         Read status of asset_id, defaults to most recent status (like read, just status number)
-
-#   hf_monitor_statistics     Analyse most recent hf_monitor_update in context of distribution curve
-#                             Returns distribution curve of most recent configuration (table hf_monitor_freq_dist_curves)
-#                             Save an Analysis an hf_monitor_update (or FLAG ERROR)
-
-#   hf_monitor_logs           Returns monitor_ids of logs indirectly associated with an asset (direct is 1:1 via asset properties)
-
-#   hf_monitor_report         Returns a range of monitor history
-#   hf_monitor_status_history  Returns a range of status history
-
-#   hf_monitor_asset_of_id  Returns asset_id of monitor_id
-
-
-
-
-# triggers are configured in hf_monitor_configs_read
-# hf_monitor_alert_trigger (notifications and hf_log_create )
-# hf_monitor_alerts_status
-
 ad_proc -private hf_ui_go_ahead_q {
     privilege
     {asset_id_varnam "asset_id"}
@@ -723,7 +692,7 @@ ad_proc -private hf_ui_go_ahead_q {
                 ns_log Warning "hf_ui_go_ahead_q.650: Could not identify a unique customer_id for user_id '${user_id}'"
             }
         } else {
-            set customer_id [hf_customer_id_of_asset_id $asset_id $instance_id]
+            set customer_id [hf_customer_id_of_asset_id $asset_id ]
             if { $customer_id ne "" && [exists_and_not_null proc_customer_id_list]} {
                 set c_idx [lsearch -exact $proc_customer_id_list $customer_id]
                 if { $c_idx < 0 } {

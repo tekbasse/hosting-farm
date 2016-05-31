@@ -15,7 +15,7 @@ ad_library {
 }
 
 
-ad_proc -private hf_attribute_ua_delete {
+ad_proc -private hf_ua_delete {
     ua_id_list
 } {
     Deletes ua. ua may be a one or a list. User must be a package admin.
@@ -52,7 +52,7 @@ ad_proc -private hf_attribute_ua_delete {
     return $success_p
 }
 
-ad_proc -private hf_attribute_ns_delete {
+ad_proc -private hf_ns_delete {
     ns_id_list
 } {
     Deletes hf_ns_records. ns_id_list may be a one or a list. User must be a package admin.
@@ -87,7 +87,7 @@ ad_proc -private hf_attribute_ns_delete {
     return $success_p
 }
 
-ad_proc -private hf_attribute_ip_delete {
+ad_proc -private hf_ip_delete {
     ip_id_list
 } {
     Deletes hf_ip_addresses records. ip_id_list may be a one or a list. User must be a package admin.
@@ -124,7 +124,7 @@ ad_proc -private hf_attribute_ip_delete {
 
 
 
-ad_proc -private hf_attribute_ni_delete {
+ad_proc -private hf_ni_delete {
     ni_id_list
 } {
     Deletes hf_network_interfaces records. ni_id_list may be a one or a list. User must be a package admin.
@@ -160,7 +160,7 @@ ad_proc -private hf_attribute_ni_delete {
 }
 
 
-ad_proc -private hf_attribute_ss_delete {
+ad_proc -private hf_ss_delete {
     ss_id_list
 } {
     Deletes hf_service records.  ss_id_list may be a one or a list. User must be a package admin.
@@ -195,7 +195,7 @@ ad_proc -private hf_attribute_ss_delete {
     return $success_p
 }
 
-ad_proc -private hf_attribute_vh_delete {
+ad_proc -private hf_vh_delete {
     vh_id_list
 } {
     Deletes hf_vhosts records.  vh_id_list may be a one or a list. User must be a package admin.
@@ -231,7 +231,7 @@ ad_proc -private hf_attribute_vh_delete {
 }
 
 
-ad_proc -private hf_attribute_vm_delete {
+ad_proc -private hf_vm_delete {
     vm_id_list
 } {
     Deletes hf_virtual_machines records.  vm_id_list may be a one or a list. User must be a package admin.
@@ -267,7 +267,7 @@ ad_proc -private hf_attribute_vm_delete {
 }
 
 
-ad_proc -private hf_attribute_hw_delete {
+ad_proc -private hf_hw_delete {
     hw_id_list
 } {
     Deletes hf_hardware records.  hw_id_list may be a one or a list. User must be a package admin.
@@ -303,7 +303,7 @@ ad_proc -private hf_attribute_hw_delete {
 }
 
 
-ad_proc -private hf_attribute_dc_delete {
+ad_proc -private hf_dc_delete {
     dc_id_list
 } {
     Deletes hf_data_centers records.  dc_id_list may be a one or a list. User must be a package admin.
@@ -339,7 +339,7 @@ ad_proc -private hf_attribute_dc_delete {
 }
 
 
-ad_proc -private hf_attribute_monitor_delete {
+ad_proc -private hf_monitor_delete {
     monitor_id_list
 } {
     Deletes monitor_id records.  monitor_id_list may be a one or a list. User must be a package admin.

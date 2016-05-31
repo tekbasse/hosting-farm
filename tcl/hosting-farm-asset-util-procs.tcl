@@ -34,6 +34,7 @@ ad_proc -private hf_asset_ids_for_user {
     return $asset_ids_list
 }
 
+
 ad_proc -private hf_customer_id_of_asset_id {
     asset_id
 } {
@@ -238,7 +239,7 @@ ad_proc -private hf_asset_id_change {
 }
 
 
-ad_proc -private hf_f_id_exists {
+ad_proc -private hf_f_id_exists_q {
     f_id
 } {
     @param f_id
@@ -372,15 +373,17 @@ ad_proc -private hf_asset_rev_map_update {
     asset_id
     trashed_p
 } {
-    Creates or updates an asset map.
+    Creates or updates an asset map given f_id exists. If f_id does not exist, creates a new map record.
 } {
     upvar 1 instance_id instance_id
-    ns_log Notice "hf_asset_rev_map_create: label '${label}' asset_id '${asset_id}' trashed_p '${trashed_p}' instance_id '${instance_id}'"
+
     # Does f_id exist?
-    if { [hf_f_id_exists $f_id] } {
+    if { [hf_f_id_exists_q $f_id] } {
+        ns_log Notice "hf_asset_rev_map_update: update label '${label}' asset_id '${asset_id}' trashed_p '${trashed_p}' instance_id '${instance_id}'"
         db_dml hf_asset_label_update { update hf_asset_rev_map
             set asset_id=:asset_id and label=:label where f_id=:f_id and instanece_id=:instance_id }
     } else {
+        ns_log Notice "hf_asset_rev_map_update: create label '${label}' asset_id '${asset_id}' trashed_p '${trashed_p}' instance_id '${instance_id}'"
         db_dml hf_asset_label_create { insert into hf_asset_rev_map
             ( label, asset_id, trashed_p, instance_id )
             values ( :label, :asset_id, :trashed_p, :instance_id ) }
