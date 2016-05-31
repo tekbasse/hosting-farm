@@ -488,6 +488,28 @@ ad_proc -private hf_asset_attribute_types {
     return $type_id_list
 }
 
+
+ad_proc -private hf_asset_subassets {
+    f_id
+} {
+    Returns a list of untrashed f_id of direct subassets of asset.
+} {
+    set asset_id_list [db_list hf_subassets_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:f_id and instance_id=:instance_id and and attribute_p!='1' and trashed_p!='1'"]
+    return $asset_id_list
+}
+
+ad_proc -private hf_asset_subassets_by_type {
+    f_id
+    asset_type_id
+} {
+    Returns a list of f_id of untrashed, direct subassets of asset that are of type asset_type_id.
+} {
+    set asset_id_list [db_list hf_subassets_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:f_id and sub_type_id=:asset_type_id and instance_id=:instance_id and attribute_p!='1' and trashed_p!='1'"]
+    return $asset_id_list
+}
+
+
+
 ad_proc -private hf_asset_subassets_cascade {
     f_id
 } {

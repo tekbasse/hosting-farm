@@ -196,7 +196,7 @@ ad_proc -public hf_f_id_delete {
     if { $admin_p } {
         ns_log Notice "hf_f_id_delete.201: called by user_id '${user_id}' instance_id '${instance_id}'"
         # delete all sub assets and their attributes
-        set sub_list [hf_asset_subassets_cascading $f_id]
+        set sub_list [hf_asset_subassets $f_id]
         ns_log Notice "hf_f_id_delete.203: trashing dependent f_id list '${sub_list}'"
         foreach sub_f_id $sub_list {
             hf_f_id_delete $f_id
@@ -257,19 +257,18 @@ ad_proc -public hf_f_id_delete {
             hf_attribute_dc_delete $dc_attr_list
         }
         
-
         # delete all revisions of f_id 
         db_dml hf_asset_delete { delete from hf_assets 
             where f_id=:f_id and instance_id=:instance_id and trashed_p = '1' }
         db_dml hf_asset_rev_map_delete { delete from hf_asset_rev_map
             where f_id=:f_id and instance_id=:instance_id }
-##code
+
         set success_p 1
 
     }
     return $success_p
 }
-
+##code
 ad_proc -public hf_asset_trash {
     asset_id
 } {
