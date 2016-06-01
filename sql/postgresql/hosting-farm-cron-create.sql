@@ -10,8 +10,8 @@ SELECT nextval ('hf_sched_id_seq');
 -- For general qaf app delayed process logs
 CREATE TABLE hf_process_log (
     id integer not null primary key,
-    instance_id varchar(11) not null DEFAULT '',
-    user_id varchar(11) not null DEFAULT '',
+    instance_id integer,
+    user_id integer,
     asset_id integer,
     trashed_p varchar(1) default '0',
     name varchar(40),
@@ -29,8 +29,8 @@ create index hf_process_log_trashed_p_idx on hf_process_log (trashed_p);
 
 CREATE TABLE hf_process_log_viewed (
      id integer not null,
-     instance_id varchar(11) not null DEFAULT '',
-     user_id varchar(11) not null DEFAULT '',
+     instance_id integer,
+     user_id integer,
      asset_id integer, 
      last_viewed timestamptz
 );
@@ -55,8 +55,8 @@ CREATE TABLE hf_sched_proc_stack (
        proc_name varchar(40),
        proc_args text,
        proc_out text,
-       user_id varchar(11) not null DEFAULT '',
-       instance_id varchar(11) not null DEFAULT '',
+       user_id integer,
+       instance_id integer,
        priority integer,
        order_time timestamptz,
        started_time timestamptz,

@@ -79,7 +79,7 @@ SELECT nextval ('hf_permissions_id_seq');
 
 CREATE TABLE hf_role (
     -- qal_customer_id and user_id distill to a role_id(s) list
-    instance_id  varchar(11) not null DEFAULT '',
+    instance_id integer,
     -- hf_role.id
     id      integer unique not null DEFAULT nextval ( 'hf_permissions_id_seq' ),
     --     access_rights.technical_contact
@@ -102,7 +102,7 @@ create index hf_role_label_idx on hf_role (label);
 
 CREATE TABLE hf_property (
    -- for example, billing, technical, administrative differences per property
-   instance_id     varchar(11) not null DEFAULT '',
+   instance_id     integer,
    -- hf_asset_type.id or hard-coded label, such as main_contact_record,admin_contact_record,tech_contact_record etc.
    -- permissions_properties, permissions_roles, permissions_privileges
    -- customer_assets, customer_other (records etc), published (for ex. for ecommerce functions, assets (general customer, published etc)
@@ -122,8 +122,8 @@ create index hf_property_title_idx on hf_property (title);
 CREATE TABLE hf_user_roles_map (
     -- Permission for user_id to perform af hs_roles.allow on qal_customer_id hf_assets
     -- This is where roles for qal_customer_id are assigned to user_id
-    instance_id     varchar(11) not null DEFAULT '',
-    user_id         varchar(11) not null DEFAULT '',
+    instance_id     integer,
+    user_id         integer,
     -- from qal_customer.id defined in accounts-ledger package
     qal_customer_id integer,
     -- hf_role.id
@@ -137,7 +137,7 @@ create index hf_user_roles_map_hf_role_id_idx on hf_user_roles_map (hf_role_id);
 
 CREATE TABLE hf_property_role_privilege_map (
 -- only one combination of property_id and role_id per privilege
-    instance_id varchar(11) not null DEFAULT '',
+    instance_id integer,
     property_id integer,
     role_id integer,
     -- privilege can be read, create, write (includes trash), delete, or admin
