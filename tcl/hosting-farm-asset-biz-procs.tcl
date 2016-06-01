@@ -271,7 +271,7 @@ ad_proc -public hf_asset_trash {
             db_transaction {
                 db_dml hf_asset_trash "update hf_assets set trash_p='1' where asset_id=:asset_id and instance_id=:instance_id"
                 if { [hf_asset_id_current_q $asset_id ] } {
-                    db_dml hf_asset_rev_map_trash "update hf_asset_rev_map set trashed+p='1' where asset_id=:asset_id and instance_id=:instance_id"
+                    db_dml hf_asset_rev_map_trash "update hf_asset_rev_map set trashed_p='1' where asset_id=:asset_id and instance_id=:instance_id"
                 }
             } on_error {
                 ns_log Warning "hf_asset_trash: error for asset_id '${asset_id}'"
@@ -286,10 +286,29 @@ ad_proc -public hf_asset_trash {
 ad_proc -public hf_asset_untrash {
     asset_id
 } {
-    Untrashes an asset revision ie asset_id. Note, only 1 can be untrashed. Returns 1 if succeeds, else returns 0.
+    Untrashes an asset revision ie asset_id. Returns 1 if succeeds, else returns 0.
 } {
-    
-    
+    upvar 1 instance_id instance_id
+    upvar 1 user_id user_id
+    set write_p [hf_ui_go_ahead_q write "" "" 0]
+    set success_p $write_p
+    if { $write_p } {
+        set asset_exists_p [hf_asset_id_exists_q $asset_id]
+        if { $asset_exists_p } {
+            set nowts [dt_systime -gmt 1]
+            set last_modified $nowts
+            db_transaction {
+                db_dml hf_asset_untrash "update hf_assets set trash_p='0' where asset_id=:asset_id and instance_id=:instance_id"
+                if { [hf_asset_id_current_q $asset_id ] } {
+                    db_dml hf_asset_rev_map_trash "update hf_asset_rev_map set trashed_p='0' where asset_id=:asset_id and instance_id=:instance_id"
+                }
+            } on_error {
+                ns_log Warning "hf_asset_untrash: error for asset_id '${asset_id}'"
+                set success_p 0
+            }
+        } 
+    } 
+    return $success_p
 }
 
 ad_proc -public hf_f_id_trash {
@@ -300,6 +319,24 @@ ad_proc -public hf_f_id_trash {
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
+    set write_p [hf_ui_go_ahead_q write "" "" 0]
+    set success_p $write_p
+    if { $write_p } {
+        set asset_exists_p [hf_asset_id_exists_q $asset_id]
+        if { $asset_exists_p } {
+            set nowts [dt_systime -gmt 1]
+            set last_modified $nowts
+            db_transaction {
+                db_dml hf_assets_f_id_trash "update hf_assets set trash_p='1' where f_id=:f_id and instance_id=:instance_id and trashed_p='0'"
+                if { [hf_asset_id_current_q $f_id ] } {
+                    db_dml hf_asset_rev_map_trash "update hf_asset_rev_map set trashed_p='0' where asset_id=:asset_id and instance_id=:instance_id"
+                }
+            } on_error {
+                ns_log Warning "hf_asset_untrash: error for asset_id '${asset_id}'"
+                set success_p 0
+            }
+        } 
+    } 
 
 }
 
@@ -311,7 +348,23 @@ ad_proc -public hf_f_id_untrash {
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
-
+    set write_p [hf_ui_go_ahead_q write f_id "" 0]
+    set success_p $write_p
+    if { $write_p } {
+        set asset_id [hf_asset_id_current_of_f_id $f_id]
+        if { $asset_id ne "" } {
+            set nowts [dt_systime -gmt 1]
+            set last_modified $nowts
+            db_transaction {
+                db_dml hf_asset_untrash "update hf_assets set trash_p='0' where asset_id=:asset_id and instance_id=:instance_id"
+                db_dml hf_asset_rev_map_trash "update hf_asset_rev_map set trashed_p='0' where asset_id=:asset_id and instance_id=:instance_id"
+            } on_error {
+                ns_log Warning "hf_f_id_untrash: error for f_id '${f_id}'"
+                set success_p 0
+            }
+        } 
+    } 
+    return $success_p
 }
 
 
