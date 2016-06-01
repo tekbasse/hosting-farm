@@ -1017,7 +1017,7 @@ ad_proc -private hf_os_write {
     
     if { $os_exists_p } {
         # update existing record
-        #    set os_lists [db_list_of_lists hf_os_read "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id and os_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
+        #    set os_lists \[db_list_of_lists hf_os_read "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id and os_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" \]
         db_dml hf_os_update {
             update hf_operating_systems set label=:label, brand=:brand, version=:version, kernel=:kernel, orphaned_p=:orphaned_p, requires_upgrade_p=:requires_upgrade_p,description=:description,instance_id=:instance_id where os_id=:os_id
         }
