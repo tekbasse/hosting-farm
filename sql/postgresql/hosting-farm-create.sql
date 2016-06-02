@@ -618,7 +618,13 @@ CREATE TABLE hf_monitor_statistics (
     health_max      varchar(19) not null DEFAULT '',
     health_min      varchar(19) not null DEFAULT '',
     health_average  numeric,
-    health_median   numeric
+    health_median   numeric,
+    -- first and pre-last n-tiles are more stable versions of range min/max
+    -- As in first quartile, centile or whatever is used
+    health_first_tile  numeric,
+    -- As in pre-last or 3 quartile of 4 quartiles, or 99 of 100 centiles, or 
+    -- pre-last decitile (.90) as the case is at the writing of this comment.
+    health_pre_last_tile   numeric
 ); 
 
 create index hf_monitor_statistics_instance_id_idx on hf_monitor_statistics (instance_id);

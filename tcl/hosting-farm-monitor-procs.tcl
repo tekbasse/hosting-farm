@@ -1531,8 +1531,10 @@ ad_proc -private hf_monitor_statistics {
             set row_y_high [lindex $normed_lists end]
             set health_max [lindex $row_y_high 0]
             set health_average [expr{ ( $health_max + $health_min ) / 2. } ]
-            # Here, median means time-weighted median.
             set health_median [qaf_y_of_x_dist_curve 0.5 $normed_lists 1]
+            # first centile instead of first quartile
+            set health_first_tile [qaf_y_of_x_dist_curve 0.1 $normed_lists 1]
+            set health_pre_last_tile set health_median [qaf_y_of_x_dist_curve 0.9 $normed_lists 1]
         }
         
         #CREATE TABLE hf_monitor_statistics (
@@ -1552,18 +1554,24 @@ ad_proc -private hf_monitor_statistics {
         #    health_min      varchar(19) not null DEFAULT '',
         #    health_average  numeric,
         #    health_median   numeric
+        #    -- first and pre-last n-tiles are more stable versions of range min/max                                                         
+        #    -- As in first quartile, centile or whatever is used                                                                            
+        #    health_first_tile  numeric,
+        #    -- As in pre-last or 3 quartile of 4 quartiles, or 99 of 100 centiles, or                                                       
+        #    -- pre-last decitile (.90) as the case is at the writing of this comment.                                                       
+        #    health_pre_last_tile   numeric
         #); 
         
         # save calculations to hf_monitor_status and hf_monitor_statistics
         # use latest hf_monitor_log.report_id for analysis_id for new record ie analysis_id_1
         db_transaction {
             db_dml hf_monitor_status_add { insert into hf_monitor_status
-                ( instance_id,monitor_id,asset_id,analysis_id_p0,analysis_id_p1,health_p0,health_p1,health_percentile,expected_health,expected_percentile)
-                (:instance_id,:monitor_id,:asset_id,:analysis_id_p0,:analysis_id_p1,:health_p0,:health_p1,:health_percentile,:expected_health,:expected_percentile)
+                ( instance_id,monitor_id,asset_id,analysis_id_p0,analysis_id_p1,health_p0,health_p1,health_percentile,expected_health,expected_percentile,health_first_tile,health_pre_last_tile)
+                (:instance_id,:monitor_id,:asset_id,:analysis_id_p0,:analysis_id_p1,:health_p0,:health_p1,:health_percentile,:expected_health,:expected_percentile,:health_first_tile,:health_pre_last_tile)
             }
             db_dml hf_monitor_statistics_add { insert into hf_monitor_statistics
-                ( instance_id,monitor_id,analysis_id,sample_count,range_min,range_max,health_max,health_min,health_average,health_median )
-                values (:instance_id,:monitor_id,:analysis_id_p1,:sample_count,:range_min,:range_max,:health_max,:health_min,:health_average,:health_median)
+                ( instance_id,monitor_id,analysis_id,sample_count,range_min,range_max,health_max,health_min,health_average,health_median,health_first_tile,health_pre_last_tile)
+                values (:instance_id,:monitor_id,:analysis_id_p1,:sample_count,:range_min,:range_max,:health_max,:health_min,:health_average,:health_median,:health_first_tile,:health_pre_last_tile)
             }
 
         }
