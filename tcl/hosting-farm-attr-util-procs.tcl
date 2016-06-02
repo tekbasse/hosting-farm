@@ -20,17 +20,6 @@ ad_library {
 #   in each case, add ecds-pagination bar when displaying. defaults to all allowed by user permissions
 
 
-
-ad_proc -private hf_vh_keys {
-} {
-    Returns an ordered list of keys that is parallel to the ordered list returned by hf_vh_read: label name asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id v_ua_id v_ns_id domain_name details vm_id
-} {
-    set vh_list [list label name asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id v_ua_id v_ns_id domain_name details vm_id]
-    return $vh_list
-}
-
-
-
 ad_proc -private hf_asset_features {
     {instance_id ""}
     {asset_type_id_list ""}
@@ -54,8 +43,6 @@ ad_proc -private hf_asset_features {
     return $feature_list
 }
 
-
-# basic API
 
 ad_proc -private hf_asset_type_write {
     label
@@ -91,22 +78,109 @@ ad_proc -private hf_asset_type_write {
     return $return_val
 }
 
+ad_proc -private hf_sub_assets_map_keys {
+} {
+    Returns an ordered list of keys for hf_sub_assets_map
+} {
+    set keys_list [list instance_id id active_p name_record time_trashed time_created]
+    return $keys_list
+}
+
+ad_proc -private hf_ns_keys {
+    {separator ""}
+} {
+    Returns an ordered list of keys for hf_network_interfaces
+} {
+    set keys_list [list instance_id id active_p name_record time_trashed time_created]
+    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]
+    set keys [hf_keys_by $keys_list $separator]
+    return $keys
+}
+
+
+ad_proc -private hf_ni_keys {
+    {separator ""}
+} {
+    Returns an ordered list of keys for hf_network_interfaces
+} {
+    set keys_list [list instance_id ni_id os_dev_ref bia_mac_address ul_mac_address ipv4_addr_range ipv6_addr_range time_trashed time_created]
+    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]
+    set keys [hf_keys_by $keys_list $separator]
+    return $keys
+}
+
+ad_proc -private hf_ip_keys {
+    {separator ""}
+} {
+    Returns an ordered list of keys for hf_ip_addresses.
+} {
+    set keys_list [list instance_id ip_id ipv4_addr ipv4_status ipv6_addr ipv6_status time_trashed time_created]
+    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]
+    set keys [hf_keys_by $keys_list $separator]
+    return $keys
+}
+
+
+ad_proc -private hf_hw_keys {
+    {separator ""}
+} {
+    Returns an ordered list of keys for hf_hardware.
+} {
+    set keys_list [list instance_id hw_id system_name backup_sys os_id description details time_trashed time_created]
+    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]
+    set keys [hf_keys_by $keys_list $separator]
+    return $keys
+}
+
+
+ad_proc -private hf_dc_keys {
+    {separator ""}
+} {
+    Returns an ordered list of keys for hf_data_centers.
+} {
+    set keys_list [list instance_id dc_id affix description details time_trashed time_created]
+    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]
+    set keys [hf_keys_by $keys_list $separator]
+    return $keys
+}
+
+
+
+ad_proc -private hf_vh_keys {
+    {separator ""}
+} {
+    Returns an ordered list of keys for hf_vhosts.
+} {
+    set keys_list [list instance_id vh_id domain_name details time_trashed time_created]
+    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]
+    set keys [hf_keys_by $keys_list $separator]
+    return $keys
+}
+
+
 
 ad_proc -private hf_vm_keys {
+    {separator ""}
 } {
-    Returns an ordered list of keys that is parallel to the ordered list returned by hf_vm_read: label name asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id vm_domain_name vm_ip_id vm_ni_id vm_ns_id vm_os_id vm_type_id vm_resource_path vm_mount_union vm_details
+    Returns an ordered list of keys for hf_virtual_machines
 } {
-    set vm_list [list label name asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id vm_domain_name vm_ip_id vm_ni_id vm_ns_id vm_os_id vm_type_id vm_resource_path vm_mount_union vm_details
-    return $vm_list
+    set keys_list [list instance_id vm_id domain_name os_id type_id resource_path mount_union details time_trashed time_created]
+    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]
+    set keys [hf_keys_by $keys_list $separator]
+    return $keys
 }
 
 ad_proc -private hf_ss_keys {
+    {separator ""}
 } {
-    Returns an ordered list of keys that is parallel to the ordered list returned by hf_ss_read: label name asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id ss_server_name ss_service_name ss_daemon_ref ss_protocol ss_port ss_ua_id ss_ss_type ss_ss_subtype ss_ss_undersubtype ss_ss_ultrasubtype ss_config_uri ss_memory_bytes ss_details
+    Returns an ordered list of keys for hf_services
 } {
-    set ss_list [list label name asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created template_id ss_server_name ss_service_name ss_daemon_ref ss_protocol ss_port ss_ua_id ss_ss_type ss_ss_subtype ss_ss_undersubtype ss_ss_ultrasubtype ss_config_uri ss_memory_bytes ss_details]
-    return $ss_list
+    set keys_list [list instance_id ss_id server_name service_name daemon_ref protocol port ss_type ss_subtype ss_understubtype ss_ultrasubtype config_uri memory_bytes details time_trashed time_created] 
+    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]
+    set keys [hf_keys_by $keys_list $separator]
+    return $keys
 }
+
 
 
 ad_proc -private hf_ip_id_exists_q {
@@ -225,11 +299,14 @@ ad_proc -private hf_sub_f_id_of_label {
 
 
 ad_proc -private hf_ua_keys {
+    {separator ""}
 } {
-    Returns an ordered list of keys that is parallel to the ordered list returned by hf_ua_read: ua_id ua connection_type instance_id pw details
+    Returns an ordered list of keys for hf_ua
 } {
-    set ua_list [list ua_id ua connection_type instance_id pw details]
-    return $ua_list
+    set keys_list [list ua_id ua connection_type instance_id pw details]
+    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]
+    set keys [hf_keys_by $keys_list $separator]
+    return $keys
 }
 
 

@@ -411,76 +411,100 @@ ad_proc -private hf_attribute_sub_label_change {
 ad_proc -private hf_vh_write {
     vh_arr_name
 } {
-    Writes a new revision to an existing hf_vhost record.  If vh_id is empty, creates a new hf_vhost record.  A new asset_id is returned if successful, otherwise empty string is returned.
+    Writes a new revision to an existing hf_vhost record. If vh_id is empty, creates a new hf_vhost record.  A new sub_f_id is returned if successful, otherwise empty string is returned.
 } {
+    # requires f_id
     upvar 1 vh_arr_name arr_name
+    # defaults
+    set sub_sort_order "100"
+    set sub_label "vh${sub_f_id}"
+    set attribute_p "1"
     qf_array_to_vars $arr_name [hf_vh_keys]
     set new_vh_id ""
+    set status -1
     if { $vh_id ne "" } {
         # existing attribute
         set f_id_ck [hf_f_id_of_sub_f_id $vh_id]
         if { $f_id eq $f_id_ck } {
-            db_transaction {
-                # update hf_vm_vh_map
-                set vh_id_new [db_nextval hf_id_seq]
-                db_dml vh_sub_asset_map_update { update hf_sub_asset_map
-                    set sub_f_id=:vh_id_new where f_id=:f_id
-                }
-                # create new revision
-                db_dml vh_asset_create {insert into hf_vhosts
-                    (vh_id,ua_id,ns_id,domain_name,details,instance_id)
-                    values (:vh_id_new,:ua_id,:ns_id,:domain_name,:details,:instance_id)
-                }
-            }
+            set status 0
         } else {
             ns_log Warning "hf_vh_write.435: denied. attribute does not exist. vh_id '${vh_id} f_id '${f_id}'"
         }
-    } elseif { [hf_f_id_exists_q $f_id } {
+    } elseif { [hf_f_id_exists_q $f_id] } {
+        set status 1
+    }
+    if { $status > -1 } {
+        # insert vh asset in hf_vhosts 
+        set vh_id_new [db_nextval hf_id_seq]
+        set nowts [dt_systime -gmt 1]
         db_transaction {
-            # insert vh asset in hf_vhosts and hf_vm_vh_map
-            set vh_id_new [db_nextval hf_id_seq]
-            
-            db_dml vh_asset_create {insert into hf_vhosts
-                (vh_id,ua_id,ns_id,domain_name,details,instance_id)
-                values (:vh_id_new,:ua_id,:ns_id,:domain_name,:details,:instance_id)
+            if { $status == 0 } {
+                db_dml vh_sub_asset_map_update { update hf_sub_asset_map
+                    set sub_f_id=:vh_id_new where f_id=:f_id }
+            } else {
+                set vh_id $vh_id_new
+                set time_created $now_ts
+                set sub_type_id "vh"
+                db_dml vh_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }
+            # record revision/new
+            db_dml vh_asset_create "insert into hf_vhosts ([hf_vh_keys ","]) values ([hf_vh_keys ",:")"
         }
-
     }
     return $vh_id_new
 }
 
 
+ad_proc -private hf_dc_write {
+    dc_arr_name
+} {
+    Writes a new revision to an existing hf_data_centers record. If dc_id is empty, creates a new hf_data_centers record.  A new sub_f_id is returned if successful, otherwise empty string is returned.
+} {
+    # requires f_id
+    upvar 1 dc_arr_name arr_name
+    # defaults
+    set sub_sort_order "100"
+    set sub_label "vh${sub_f_id}"
+    set attribute_p "1"
+    qf_array_to_vars $arr_name [hf_dc_keys]
+    set new_dc_id ""
+    set status -1
+    if { $dc_id ne "" } {
+        # existing attribute
+        set f_id_ck [hf_f_id_of_sub_f_id $dc_id]
+        if { $f_id eq $f_id_ck } {
+            set status 0
+        } else {
+            ns_log Warning "hf_dc_write.435: denied. attribute does not exist. dc_id '${dc_id} f_id '${f_id}'"
+        }
+    } elseif { [hf_f_id_exists_q $f_id] } {
+        set status 1
+    }
+    if { $status > -1 } {
+        # insert vh asset in hf_data_centers
+        set dc_id_new [db_nextval hf_id_seq]
+        set nowts [dt_systime -gmt 1]
+        db_transaction {
+            if { $status == 0 } {
+                db_dml dc_sub_asset_map_update { update hf_sub_asset_map
+                    set sub_f_id=:dc_id_new where f_id=:f_id }
+            } else {
+                set dc_id $dc_id_new
+                set time_created $now_ts
+                set sub_type_id "vh"
+                db_dml dc_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
+            }
+            # record revision/new
+            db_dml dc_asset_create "insert into hf_data_centers ([hf_dc_keys ","]) values ([hf_dc_keys ",:")"
+        }
+    }
+    return $dc_id_new
+}
+
+
 
 ad_proc -private hf_dc_write {
-    dc_id
-    label
-    name
-    asset_type_id
-    keywords
-    description
-    content
-    comments
-    trashed_p
-    trashed_by
-    template_p
-    templated_p
-    publish_p
-    monitor_p
-    popularity
-    triage_priority
-    op_status
-    ua_id
-    ns_id
-    qal_product_id
-    qal_customer_id
-    instance_id
-    user_id
-    last_modified
-    created
-    dc_affix
-    dc_description
-    dc_details 
+    dc_arr_name
 } {
     writes or creates a dc asset_type_id. If asset_id (dc_id) is blank, a new one is created. The new asset_id is returned if successful, otherwise empty string is returned.
 } {

@@ -16,38 +16,16 @@ ad_library {
 
 
 ad_proc -public hf_asset_create { 
-    label
-    name
-    asset_type_id
-    keywords
-    description
-    trashed_p
-    trashed_by
-    template_p
-    templated_p
-    publish_p
-    monitor_p
-    popularity
-    triage_priority
-    op_status
-    qal_product_id
-    qal_customer_id
-    instance_id
-    user_id
-    last_modified
-    created
-    flags
-    template_id
-    f_id
-    content
-    comments
+    asset_arr_name
 } {
     Creates hf asset. returns asset_id, or 0 if error. See documentation for expectations.
 
     @return asset_id, or 0 if error
 } {
+    upvar 1 $asset_arr_name asset_arr
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
+    qf_array_to_vars asset_arr [hf_asset_keys]
     set create_p [hf_ui_go_ahead_q create f_id "" 0]
     set asset_id 0
     if { $create_p } {
@@ -76,37 +54,14 @@ ad_proc -public hf_asset_create {
 
 
 ad_proc -public hf_asset_write {
-    asset_id
-    label
-    name
-    asset_type_id
-    keywords
-    description
-    trashed_p
-    trashed_by
-    template_p
-    templated_p
-    publish_p
-    monitor_p
-    popularity
-    triage_priority
-    op_status
-    qal_product_id
-    qal_customer_id
-    instance_id
-    user_id
-    last_modified
-    created
-    flags
-    template_id
-    f_id
-    content
-    comments
+    asset_arr_name
 } {
     Writes a new revision of an existing asset. asset_id is an existing revision of template_id. returns the new asset_id or a blank asset_id if unsuccessful.
 } {
+    upvar 1 $asset_arr_name asset_arr
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
+    qf_array_to_vars asset_arr [hf_asset_keys]
     set write_p [hf_ui_go_ahead_q write f_id "" 0]
     set new_asset_id ""
     if { $write_p } {
@@ -505,21 +460,16 @@ ad_proc -private hf_asset_templates {
     {published_p ""}
     {instance_id ""}
 } {
-    returns active template references (id) and other info via a list of lists, where each list is an ordered tcl list of asset related values: id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,time_start,time_stop,trashed_p,trashed_by,flags,publish_p
+    returns active template references (id) and other info via a list of lists, where each list is an ordered tcl list of asset related values: see hf_asset_keys
 } {
-    # A variation on hf_assets, if include_inactives_p eq 1 and label_match eq ""
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
+    # This needs re-worked using revised api
     # scope to user_id
     set user_id [ad_conn user_id]
     set customer_ids_list [hf_customer_ids_for_user $user_id]
-    #    set all_assets_list_of_lists \[db_list_of_lists hf_asset_templates_list {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,templated_p,time_start,time_stop,ns_id,op_status,trashed_p,trashed_by,popularity,flags,publish_p,monitor_p,triage_priority from hf_assets where template_p =:1 and instance_id =:instance_id} \]
     if { $inactives_included_p } {
-        set templates_list_of_lists [db_list_of_lists hf_asset_templates_select_all {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,time_start,time_stop,trashed_p,trashed_by,flags,publish_p from hf_assets where template_p =:1 and instance_id =:instance_id and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc} ]
+        set templates_list_of_lists [db_list_of_lists hf_asset_templates_select_all  "select [hf_asset_keys ","] from hf_assets where template_p =:1 and instance_id =:instance_id and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc" ]
     } else {
-        set templates_list_of_lists [db_list_of_lists hf_asset_templates_select {select id,user_id,last_modified,created,asset_type_id,qal_product_id, qal_customer_id,label,keywords,time_start,time_stop,trashed_p,trashed_by,flags,publish_p from hf_assets where template_p =:1 and instance_id =:instance_id and ( time_stop =null or time_stop < current_timestamp ) and ( trashed_p is null or trashed_p <> '1' ) and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc } ]
+        set templates_list_of_lists [db_list_of_lists hf_asset_templates_select "select [hf_asset_keys ","] from hf_assets where template_p =:1 and instance_id=:instance_id and ( time_stop=null or time_stop < current_timestamp ) and ( trashed_p is null or trashed_p <> '1' ) and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc" ]
     }
     # build list of ids that meet at least one criteria
     set return_list [list ]
@@ -562,12 +512,8 @@ ad_proc -private hf_asset_do {
 
     set success_p 0
     if { $admin_p } {
-        set asset_stats_list [hf_asset_stats $asset_id $instance_id]
-        # label, name, asset_type_id, keywords, description, template_p, templated_p, trashed_p, trashed_by, publish_p, monitor_p, popularity, triage_priority, op_status, ua_id, ns_id, qal_product_id, qal_customer_id, instance_id, user_id, last_modified, created, flags
-        set asset_type_id [lindex $asset_stats_list 2]
-        set asset_template_p [lindex $asset_stats_list 5]
-        set asset_templated_p [lindex $asset_stats_list 6]
-        set asset_template_id [lindex $asset_stats_list 23]
+        hf_asset_stats $asset_id $instance_id [list asset_type_id template_id]
+        set asset_template_id $template_id
         
         set template_ids_name_list [db_list_of_lists hf_calls_read_asset_type_choices { select asset_template_id, asset_id, proc_name from hf_calls where instance_id =:instance_id and asset_type_id =:id } ]
         
@@ -623,8 +569,4 @@ ad_proc -private hf_asset_do {
     }
     return $success_p
 }
-
-
-
-
 
