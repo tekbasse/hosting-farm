@@ -108,64 +108,52 @@ ad_proc -private hf_asset_types {
 
 
 ad_proc -private hf_dc_read {
-    {dc_id ""}
-    {instance_id ""}
+    {dc_id_list ""}
 } {
-    reads full detail of dcs. This is not redundant to hf_dcs. This is for 1 dc_id. It includes all attributes and no summary counts of dependents. Returns general asset contents followed by specific dc details. dc description is contextual to dc, whereas asset description is in context of all assets. Returns ordered list: label,name,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id dc_affix, dc_description, dc_details 
+    Returns records from hf_data_centers as a list of lists. See hf_dc_keys
 } {
-    hf_ui_go_ahead_q read dc_id
-
-    set attribute_list [hf_asset_read $dc_id $instance_id $user_id]
-    # Returns asset contents of asset_id. Returns asset as list of attribute values: label,name,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id
-    set asset_type_id [lindex $attribute_list 2]
-    # is asset_id of type dc?
-    set return_list [list ]
-    if { $asset_type_id eq "dc" } {
-        set return_list $attribute_list
-        # get, append remaining detail
-
-        # tables hf_data_centers.instance_id,dc_id, affix (was datacentr.short_code), description, details
-        set dc_detail_list [db_list_of_lists hf_dc_detail_get "select affix, description, details from hf_data_centers where instance_id =:instance_id and dc_id=:dc_id"]
-        set dc_detail_list [lindex $dc_detail_list 0]
-        foreach dc_att_list $dc_detail_list {
-            lappend return_list $dc_att_list
+    upvar 1 instance_id instance_id
+    upvar 1 user_id user_id
+    set dc_ids_list [hf_list_filter_by_natural_number $dc_id_list]
+    set return_lists [list ]
+    foreach dc_id $dc_id_list {
+        set read_p [hf_ui_go_ahead_q read dc_id "" 0]
+        if { $read_p } {
+            set rows_list [db_list_of_lists hf_dc_detail_get "select [hf_dc_keys ","] from hf_data_centers where instance_id =:instance_id and dc_id=:dc_id"]
+            set row_list [lindex $rows_list 0]
+            if { [llength $row_list] > 0 } {
+                lappend return_lists $row_list
+            }
         }
     }
-    return $return_list
+    return $return_lists
 }
 
 
 ad_proc -private hf_hw_read {
-    hw_id
-    {instance_id ""}
+    {hw_id_list ""}
 } {
-    reads full detail of one hw. This is not redundant to hf_hws. This accepts only 1 id and includes all attributes and no summary counts of dependents.
-    Returns ordered list: label,name,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id, hw_system_name, hw_backup_sys, hw_ni_id, hw_os_id, hw_description, hw_details
+    Returns records from hf_hardware as a list of lists. See hf_hw_keys
 } {
-    hf_ui_go_ahead_q read hw_id
-
-    # Since the dependency tree is large, no dependencies are checked
-    set attribute_list [hf_asset_read $hw_id $instance_id $user_id]
-    # Returns asset contents of asset_id. Returns asset as list of attribute values: label,name,asset_type_id,keywords,description,content,comments,trashed_p,trashed_by,template_p,templated_p,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,template_id
-    set asset_type_id [lindex $attribute_list 2]
-    # is asset_id of type hw?
-    set return_list [list ]
-    if { $asset_type_id eq "hw" } {
-        set return_list $attribute_list
-        # get, append remaining detail
-
-        #  hf_hardware.instance_id, hw_id, system_name, backup_sys, ni_id, os_id, description, details
-        set hw_detail_list [db_list_of_lists hf_hw_detail_get "select system_name, backup_sys, ni_id, os_id, description, details from hf_hardware where instance_id =:instance_id and hw_id=:hw_id"]
-        set hw_detail_list [lindex $hw_detail_list 0]
-        foreach hw_att_list $hw_detail_list {
-            lappend return_list $hw_att_list
+    upvar 1 instance_id instance_id
+    upvar 1 user_id user_id
+    set hw_ids_list [hf_list_filter_by_natural_number $hw_id_list]
+    set return_lists [list ]
+    foreach hw_id $hw_id_list {
+        set read_p [hf_ui_go_ahead_q read hw_id "" 0]
+        if { $read_p } {
+            set rows_list [db_list_of_lists hf_hw_detail_get "select [hf_hw_keys ","] from hf_hardware where instance_id =:instance_id and hw_id=:hw_id"]
+            set row_list [lindex $rows_list 0]
+            if { [llength $row_list] > 0 } {
+                lappend return_lists $row_list
+            }
         }
     }
     return $return_list
 }
 
 
-
+##code
 ad_proc -private hf_vm_read {
     vm_id
     {instance_id ""}
