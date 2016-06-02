@@ -21,7 +21,6 @@ ad_proc -private hf_peek_pop_stack {
     return $last_out
 }
 
-
 ad_proc -private hf_keys_by {
     keys_list
     separator

@@ -52,8 +52,6 @@ ad_proc -private hf_oses {
             append sql_extra " and os_id in ([template::util::tcl_to_sql_list $clean_os_id_list])"
         }
     }
-    # not adding os detail to hf_hws or hf_vms to avoid extra joins. These joins can be readily handled via hashing in app.
-    # hf_operating_systems.instance_id os_id label brand version kernel orphaned_p requires_upgrade_p description
     set os_detail_list [db_list_of_lists hf_operating_systems_get "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id = :instance_id ${sql_extra}"]
     return $os_detail_list
 }
