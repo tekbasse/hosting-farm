@@ -368,6 +368,36 @@ ad_proc -public hf_f_id_untrash {
 }
 
 
+ad_proc -private hf_asset_label_change {
+    asset_id
+    new_label
+} {
+    Changes the asset_name where the asset is referenced from asset_id. Returns 1 if successful, otherwise 0.
+
+    @param asset_id  The label of the asset.
+    @param new_label   The new label.
+} {
+    upvar 1 instance_id instance_id
+    upvar 1 user_id user_id
+    set write_p [hf_ui_go_ahead_q write]
+    set success_p 0
+    if { $write_p } {
+        db_transaction {
+            db_dml hf_label_change_asset_map { update hf_asset_rev_map
+                set label=:new_label where asset_id=:asset_id and instance_id=:instance_id 
+            }
+            db_dml hf_label_change_hf_assets { update hf_assets
+                set last_modified = current_timestamp, label=:new_label where asset_id=:asset_id and instance_id=:instance_id 
+            }
+            set success_p 1
+        } on_error {
+            set success_p 0
+        }
+    }
+    return $success_p
+}
+
+
 
 ad_proc -private hf_asset_create_from_asset_template {
     customer_id

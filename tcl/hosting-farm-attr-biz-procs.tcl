@@ -1,4 +1,4 @@
-#hosting-farm/tcl/hosting-farm-attr-biz-procs.tcl
+# hosting-farm/tcl/hosting-farm-attr-biz-procs.tcl
 ad_library {
 
     business logic for hosting-farm asset attributes
@@ -378,14 +378,14 @@ ad_proc -private hf_monitor_delete {
 }
 
 
-ad_proc -private hf_asset_label_change {
-    asset_id
-    new_label
+ad_proc -private hf_attribute_sub_label_change {
+    sub_f_id
+    new_sub_label
 } {
-    Changes the asset_name where the asset is referenced from asset_id. Returns 1 if successful, otherwise 0.
+    Changes the attribute_name where the attribute is referenced from sub_f_id. Returns 1 if successful, otherwise 0.
 
-    @param asset_id  The label of the asset.
-    @param new_label   The new label.
+    @param sub_f_id  The sub_f_id of the asset.
+    @param new_sub_label   The new sub_label.
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -393,11 +393,11 @@ ad_proc -private hf_asset_label_change {
     set success_p 0
     if { $write_p } {
         db_transaction {
-            db_dml hf_label_change_asset_map { update hf_asset_rev_map
-                set label=:new_label where asset_id=:asset_id and instance_id=:instance_id 
+            db_dml hf_sub_label_change_asset_map { update hf_sub_asset_map
+                set sub_label=:new_sub_label where sub_f_id=:sub_f_id and instance_id=:instance_id 
             }
-            db_dml hf_label_change_hf_assets { update hf_assets
-                set last_modified = current_timestamp, label=:new_label where asset_id=:asset_id and instance_id=:instance_id 
+            db_dml hf_sub_label_change_hf_subassets { update hf_assets
+                set last_modified = current_timestamp, sub_label=:new_sub_label where sub_f_id=:sub_f_id and instance_id=:instance_id 
             }
             set success_p 1
         } on_error {
@@ -409,81 +409,43 @@ ad_proc -private hf_asset_label_change {
 
 
 ad_proc -private hf_vh_write {
-    vh_id
-    label
-    name
-    asset_type_id
-    keywords
-    description
-    content
-    comments
-    trashed_p
-    trashed_by
-    template_p
-    templated_p
-    publish_p
-    monitor_p
-    popularity
-    triage_priority
-    op_status
-    ua_id
-    ns_id
-    qal_product_id
-    qal_customer_id
-    instance_id
-    user_id
-    last_modified
-    created
-    template_id
-    v_ua_id
-    v_ns_id
-    domain_name
-    details
-    vm_id
+    vh_arr_name
 } {
-    writes or creates an vh asset_type_id. If asset_id (vh_id) is blank, a new one is created. The new asset_id is returned if successful, otherwise empty string is returned.
+    Writes a new revision to an existing hf_vhost record.  If vh_id is empty, creates a new hf_vhost record.  A new asset_id is returned if successful, otherwise empty string is returned.
 } {
-    # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
-    
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    set user_id [ad_conn user_id]
+    upvar 1 vh_arr_name arr_name
+    qf_array_to_vars $arr_name [hf_vh_keys]
     set new_vh_id ""
-    set error_p 0
-    if { $asset_type_id eq "vh" } {
-        if { $vh_id ne "" } {
-            # validate vh_id. If vh_id not an vh or does not exist, set vh_id ""
-            if { ![hf_asset_id_exists $vh_id $instance_id "vh"] } {
-                # make a new one instead of overwriting another asset type
-                set vh_id ""
+    if { $vh_id ne "" } {
+        # existing attribute
+        set f_id_ck [hf_f_id_of_sub_f_id $vh_id]
+        if { $f_id eq $f_id_ck } {
+            db_transaction {
+                # update hf_vm_vh_map
+                set vh_id_new [db_nextval hf_id_seq]
+                db_dml vh_sub_asset_map_update { update hf_sub_asset_map
+                    set sub_f_id=:vh_id_new where f_id=:f_id
+                }
+                # create new revision
+                db_dml vh_asset_create {insert into hf_vhosts
+                    (vh_id,ua_id,ns_id,domain_name,details,instance_id)
+                    values (:vh_id_new,:ua_id,:ns_id,:domain_name,:details,:instance_id)
+                }
+            }
+        } else {
+            ns_log Warning "hf_vh_write.435: denied. attribute does not exist. vh_id '${vh_id} f_id '${f_id}'"
+        }
+    } elseif { [hf_f_id_exists_q $f_id } {
+        db_transaction {
+            # insert vh asset in hf_vhosts and hf_vm_vh_map
+            set vh_id_new [db_nextval hf_id_seq]
+            
+            db_dml vh_asset_create {insert into hf_vhosts
+                (vh_id,ua_id,ns_id,domain_name,details,instance_id)
+                values (:vh_id_new,:ua_id,:ns_id,:domain_name,:details,:instance_id)
             }
         }
-    } else {
-        set vh_id ""
-        set error_p 1
-    }        
-    if { $vh_id eq "" } {
-        # hf_asset_create checks permission to create
-        set vh_id_new [hf_asset_create $label $name $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
-    } else {
-        # hf_asset_write checks permission to write
-        set vh_id_new [hf_asset_write $label $name $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $vh_id $flags $instance_id $user_id]
-    }
-    if { $vh_id_new ne "" } {
-        # insert vh asset in hf_vhosts and hf_vm_vh_map
-        db_dml vh_asset_create {insert into hf_vhosts
-            (vh_id,ua_id,ns_id,domain_name,details,instance_id)
-            values (:vh_id,:ua_id,:ns_id,:domain_name,:details,:instance_id)
-        }
-        db_dml vh_asset_assign_vm {insert into hf_vm_vh_map 
-            (vm_id,vh_id,instance_id)
-            values (:vm_id,:vh_id,:instance_id)
-        }
-    } 
-    if { $error_p } {
-        ns_log Warning "hf_vh_write.1265: Requested to over/write asset_type_id '${asset_type_id}' vh_id '{$vh_id}'. Creating asset_id '${vh_id_new}' instead."
+
     }
     return $vh_id_new
 }

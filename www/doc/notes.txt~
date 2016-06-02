@@ -45,7 +45,6 @@ programming guidelines:
     # These procs may be handy when manipulating the long lists of procedure parameters:
     # template::util::list_to_array $values_list array_name $keys_list
     # template::util::array_to_vars array_name
-    # qf_array_to_vars arr_name $keys_list
     # qf_lists_to_vars $vars_list $keys_list
     # list of values direct to variables:
     # lassign $values_list varName1 varName2.. varNameN

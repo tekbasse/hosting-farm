@@ -115,20 +115,13 @@ ad_proc -private hf_ip_id_exists_q {
 } {
     Checks if ip_id in hf_ip_addresses exists. 1 true, 0 false
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-
     set ip_id_exists_p 0
-    if { [ad_var_type_check_number_p $ip_id] } {
-        db_0or1row ip_id_exists_q "select ip_id from hf_ip_addresses where instance_id =:instance_id and ip_id = :ip_id_q"
-        if { $ip_id ne "" && $ip_id > 0 } {
-            set ip_id_exists_p 1
-        }
+    if { [qf_is_natural_number_p $ip_id] } {
+        set ip_id_exists_p 1 [db_0or1row ip_id_exists_q "select ip_id from hf_ip_addresses where instance_id =:instance_id and ip_id=:ip_id_q"]
     }
     return $ip_id_exists_p
 }
+
 
 ad_proc -private hf_ni_id_exists_q {
     ni_id_q
@@ -136,20 +129,98 @@ ad_proc -private hf_ni_id_exists_q {
 } {
     Checks if ni_id in hf_network_interfaces exists. 1 true, 0 false
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-
     set ni_id_exists_p 0
-    if { [ad_var_type_check_number_p $ni_id] } {
-        db_0or1row ni_id_exists_q "select ni_id from hf_network_interfaces where instance_id =:instance_id and ni_id = :ni_id_q"
-        if { $ni_id ne "" && $ni_id > 0 } {
-            set ni_id_exists_p 1
-        }
+    if { [qf_is_natural_number_p $ni_id] } {
+        set ni_id_exists_p 1 [db_0or1row ni_id_exists_q "select ni_id from hf_network_interfaces where instance_id =:instance_id and ni_id = :ni_id_q"]
     }
     return $ni_id_exists_p
 }
+
+ad_proc -private hf_f_id_of_sub_f_id {
+    sub_f_id
+} {
+    Returns the f_id of sub_f_id. f_id is the asset connected to attribute sub_f_id.
+
+    @return f_id, or "" if does not exist
+} {
+    upvar 1 instance_id instance_id
+    set f_id ""
+    db_0or1row hf_sub_asset_map_f_id_of_sub_f_id "select f_id from hf_sub_asset_map where sub_f_id=:sub_f_id"
+    return $f_id
+}
+
+
+ad_proc -private hf_sub_f_id_current_q { 
+    sub_f_id
+} {
+    Returns 1 if sub_f_id is the current revision for sub_f_id.
+
+    @param sub_f_id      The sub_f_id to check.
+
+    @return  1 if true, otherwise returns 0.
+} {
+    upvar 1 instance_id instance_id
+    set active_q 0
+    set trashed_p 0
+    set exists_p [db_0or1row hf_sub_f_id_current_q { select f_id from hf_sub_asset_map 
+        where sub_f_id=:sub_f_id and instance_id=:instance_id } ]
+    ns_log Notice "hf_sub_f_id_current_q: not found. sub_f_id '{$sub_f_id}' instance_id '${instance_id}'"
+    return $exists_p
+}
+
+ad_proc -private hf_sub_f_id_of_f_id_if_untrashed { 
+    f_id
+} {
+    Returns sub_f_id if f_id exists and is untrashed, else returns 0
+
+    @param f_id      The f_id to check.
+
+    @return sub_f_id if f_id exists and untrashed, otherwise 0.
+} {
+    upvar 1 instance_id instance_id
+    set sub_f_id 0
+    set exists_p [db_0or1row hf_f_id_of_sub_f_id_tr { select sub_f_id from hf_sub_asset_map 
+        where f_id=:f_id and instance_id=:instance_id and trashed_p='0' } ]
+    ns_log Notice "hf_sub_f_id_of_f_id_if_untrashed: not found. sub_f_id '{$sub_f_id}' instance_id '${instance_id}'"
+    
+    return $sub_f_id
+}
+
+
+ad_proc -private hf_label_of_sub_f_id {
+    sub_f_id
+} {
+    @param sub_f_id  
+
+    @return label of attribute with sub_f_id, or empty string if not exists or active.
+} {
+    upvar 1 instance_id instance_id
+    set label ""
+    set exists_p [db_0or1row hf_label_of_sub_f_id { select label from hf_sub_asset_map 
+        where sub_f_id=:sub_f_id and instance_id=:instance_id } ]
+    if { !$exists_p } {
+        ns_log Notice "hf_label_of_sub_f_id: not found. '${sub_f_id}' instance_id '${instance_id}'"
+    }
+    return $label
+}
+
+ad_proc -private hf_sub_f_id_of_label {
+    label
+} {
+    @param label  Label of attribute
+
+    @return sub_f_id of attribute with label, or empty string if not exists or active.
+} {
+    upvar 1 instance_id instance_id
+    set sub_f_id ""
+    set exists_p [db_0or1row hf_sub_f_id_of_label { select sub_f_id from hf_sub_asset_map 
+        where label=:label and instance_id=:instance_id }]
+    if { !$exists_p } {
+        ns_log Notice "hf_sub_f_id_of_label: not found. '${label}' instance_id '${instance_id}'"
+    }
+    return $sub_f_id
+}
+
 
 
 
