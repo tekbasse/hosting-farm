@@ -311,29 +311,22 @@ ad_proc -private hf_ns_read {
     return $return_list
 }
 
-##code
-
 ad_proc -private hf_vm_quota_read {
     {plan_id_list ""}
     {instance_id ""}
 } {
-    Given plan_id_list, returns list of list of: plan_id description base_storage base_traffic base_memory base_sku over_storage_sku over_traffic_sku over_memory_sku storage_unit traffic_unit memory_unit qemu_memory status_id vm_type max_domain private_vps.
+    Given plan_id_list, returns list of list of:hf_vm_quotas records. See hf_vm_quota_keys
     If plan_id_list is blank, returns all.
 } {
-    if { [qf_is_natural_number $instance_id] } {
-        
-        set vmq_lists [list ]
-        if { $plan_id_list eq "" } {
-            set vmq_lists [db_list_of_lists hf_dvmq_read_inst { select plan_id, description, base_storage, base_traffic, base_memory, base_sku, over_storage_sku, over_traffic_sku, over_memory_sku, storage_unit, traffic_unit, memory_unit, qemu_memory, status_id, vm_type, max_domain, private_vps from hf_vm_quotas where instance_id=:instance_id } ]
-        } else {
-            set filtered_ids_list [list ]
-            foreach plan_id $plan_id_list {
-                if { [qf_is_natural_number $plan_id] } {
-                    lappend filtered_ids_list $plan_id
-                }
-            }
-            set vmq_lists [db_list_of_lists hf_dvmq_read_some "select plan_id, description, base_storage, base_traffic, base_memory, base_sku, over_storage_sku, over_traffic_sku, over_memory_sku, storage_unit, traffic_unit, memory_unit, qemu_memory, status_id, vm_type, max_domain, private_vps from hf_vm_quotas where instance_id=:instance_id and plan_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
-        }
+    set id_list [hf_list_filter_by_natural_number $plan_id_list]
+    if { ![qf_is_natural_number $instance_id] && instance_id ne "" } {
+        set instance_id ""
+    }
+    set vmq_lists [list ]
+    if { [llength $id_list] > 0 } {
+        set vmq_lists [db_list_of_lists hf_dvmq_read_some "select [hf_vm_quota_keys ","] from hf_vm_quotas where instance_id=:instance_id and plan_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" ]
+    } else {
+        set vmq_lists [db_list_of_lists hf_dvmq_read_inst "select [hf_vm_quota_keys ","] from hf_vm_quotas where instance_id=:instance_id" ]
     }
     return $vmq_lists
 }
