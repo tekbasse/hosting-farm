@@ -18,9 +18,12 @@ ad_library {
 ad_proc -public hf_asset_create { 
     asset_arr_name
 } {
-    Creates hf asset. returns asset_id, or 0 if error. See documentation for expectations.
+    Creates hf asset from array, where values are passed using the array index names that coorrespond with hf_asset_keys. returns asset_id, or 0 if error. See hf_asset_keys for element names.
 
+    @param asset_array_name
     @return asset_id, or 0 if error
+    @see hf_asset_keys
+
 } {
     upvar 1 $asset_arr_name asset_arr
     upvar 1 instance_id instance_id

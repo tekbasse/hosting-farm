@@ -223,6 +223,20 @@ ad_proc -private hf_ni_id_exists_q {
     return $ni_id_exists_p
 }
 
+
+ad_proc -private hf_os_keys {
+    {separator ""}
+} {
+    Returns an ordered list of keys for hf_operating_systems
+} {
+    set keys_list [list instance_id os_id label brand version kernel orphaned_p requires_upgrade_p description time_trashed time_created]
+    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]]
+    set keys [hf_keys_by $keys_list $separator]
+    return $keys
+}
+
+
+
 ad_proc -private hf_f_id_of_sub_f_id {
     sub_f_id
 } {
