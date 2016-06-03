@@ -37,7 +37,7 @@ ad_proc -private hf_nc_go_ahead {
             ns_log Warning "hf_nc_go_head failed. Called by user_id '${user_id}' args: asset_id_varnam '${asset_id_varnam}' instance_id '${instance_id}' asset_id '${asset_id}' asset_type_id '${asst_type_id}'"
         }
     } else {
-        #if { ![string match {hf_*} $argv0 ] && ![string match {hfl_*} $argv0 ] } {
+                #if { ![string match {hf_*} $argv0 ] && ![string match {hfl_*} $argv0 ] } {
         #    set go_ahead 0
         #    ns_log Warning "hf_nc_go_head.42: failed. Called by proc '${argv0}' args: asset_id_varnam '${asset_id_varnam}' asset_id '${asset_id}' asset_type_id '${asst_type_id}'"
         #} else {
@@ -125,11 +125,10 @@ ad_proc -private hf_nc_asset_type_id {
 } {
     Returns asset_type_id
 } {
-    set success_p [hf_nc_go_ahead ]
+    # avoid infinite loop. do not call a permission proc from here.
+    upvar 1 instance_id instance_id
     set asset_type_id ""
-    if { $success_p } {
-        set success_p [db_0or1row hf_assets_asset_type_id_r "select asset_type_id from hf_assets where instance_id=:instance_id and id=:asset_id"]
-    }
+    db_0or1row hf_assets_asset_type_id_r "select asset_type_id from hf_assets where instance_id=:instance_id and id=:asset_id"
     return $asset_type_id
 }
 

@@ -707,7 +707,7 @@ ad_proc -private hf_ui_go_ahead_q {
                 }
             }
         }
-        if { ![info_exists_and_not_null go_ahead] } {
+        if { ![exists_and_not_null go_ahead] } {
             set go_ahead [hf_permission_p $user_id $customer_id $asset_type_id $privilege $instance_id]
         }
         if { !$go_ahead } {
