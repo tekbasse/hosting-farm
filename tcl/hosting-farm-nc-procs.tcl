@@ -34,12 +34,12 @@ ad_proc -private hf_nc_go_ahead {
         }
         set go_ahead [hf_permission_p $user_id $customer_id $asset_type_id admin $instance_id]
         if { !$go_ahead } {
-            ns_log Warning "hf_nc_go_head failed. Called by user_id '${user_id}' args: asset_id_varnam '${asset_id_varnam}' instance_id '${instance_id}' asset_id '${asset_id}' asset_type_id '${asst_type_id}'"
+            ns_log Warning "hf_nc_go_head failed. Called by user_id '${user_id}' args: asset_id_varnam '${asset_id_varnam}' instance_id '${instance_id}' asset_id '${asset_id}' asset_type_id '${asset_type_id}'"
         }
     } else {
                 #if { ![string match {hf_*} $argv0 ] && ![string match {hfl_*} $argv0 ] } {
         #    set go_ahead 0
-        #    ns_log Warning "hf_nc_go_head.42: failed. Called by proc '${argv0}' args: asset_id_varnam '${asset_id_varnam}' asset_id '${asset_id}' asset_type_id '${asst_type_id}'"
+        #    ns_log Warning "hf_nc_go_head.42: failed. Called by proc '${argv0}' args: asset_id_varnam '${asset_id_varnam}' asset_id '${asset_id}' asset_type_id '${asset_type_id}'"
         #} else {
         set go_ahead [hf_nc_proc_in_context_q ]
         #ns_log Notice "hf_nc_go_ahead: ns_thread name [ns_thread name] ns_thread id [ns_thread id] ns_info threads [ns_info threads] ns_info scheduled [ns_info scheduled]"

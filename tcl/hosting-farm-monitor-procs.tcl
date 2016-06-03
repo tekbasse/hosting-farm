@@ -711,7 +711,7 @@ ad_proc -private hf_ui_go_ahead_q {
             set go_ahead [hf_permission_p $user_id $customer_id $asset_type_id $privilege $instance_id]
         }
         if { !$go_ahead } {
-            ns_log Warning "hf_ui_go_head.700: failed. Called by user_id '${user_id}' args: asset_id_varnam '${asset_id_varnam}' instance_id '${instance_id}' asset_id '${asset_id}' asset_type_id '${asst_type_id}'"
+            ns_log Warning "hf_ui_go_head.700: failed. Called by user_id '${user_id}' args: asset_id_varnam '${asset_id_varnam}' instance_id '${instance_id}' asset_id '${asset_id}' asset_type_id '${asset_type_id}'"
         } else {
             if { ![exists_and_not_null proc_user_id] } {
                 set proc_user_id $user_id
@@ -752,7 +752,7 @@ ad_proc -private hf_ui_go_ahead_q {
             if { ![info exists $asset_id_varnam] } {
                 set asset_id "does *not* exist"
             }
-            ns_log Warning "hf_ui_go_head.734: failed. args: privilege '${privilege}' asset_id_varnam '${asset_id_varnam}' asset_id '${asset_id}' asset_type_id '${asst_type_id}' ${msg_extra}"
+            ns_log Warning "hf_ui_go_head.734: failed. args: privilege '${privilege}' asset_id_varnam '${asset_id_varnam}' asset_id '${asset_id}' asset_type_id '${asset_type_id}' ${msg_extra}"
         } else {
             set go_ahead 1
         }

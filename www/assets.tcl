@@ -30,7 +30,7 @@ set radio_checked_url [file join $icons_path1 radiochecked.gif]
 set radio_unchecked_url [file join $icons_path1 radio.gif]
 set redirect_before_v_p 0
 
-array set input_array [list \
+array set input_arr [list \
                            page_title $title\
                            customer_id ""\
                            asset_id ""\
