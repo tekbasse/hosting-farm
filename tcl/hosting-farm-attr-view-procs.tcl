@@ -265,7 +265,6 @@ ad_proc -private hf_ni_read {
     return $return_list
 }
 
-##code
 
 ad_proc -private hf_os_read {
     {os_id_list ""}
@@ -312,7 +311,7 @@ ad_proc -private hf_ns_read {
     return $return_list
 }
 
-
+##code
 
 ad_proc -private hf_vm_quota_read {
     {plan_id_list ""}

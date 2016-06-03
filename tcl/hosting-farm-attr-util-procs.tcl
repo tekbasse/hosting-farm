@@ -92,7 +92,7 @@ ad_proc -private hf_ns_keys {
     Returns an ordered list of keys for hf_network_interfaces
 } {
     set keys_list [list instance_id id active_p name_record time_trashed time_created]
-    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]
+    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]]
     set keys [hf_keys_by $keys_list $separator]
     return $keys
 }
@@ -104,7 +104,7 @@ ad_proc -private hf_ni_keys {
     Returns an ordered list of keys for hf_network_interfaces
 } {
     set keys_list [list instance_id ni_id os_dev_ref bia_mac_address ul_mac_address ipv4_addr_range ipv6_addr_range time_trashed time_created]
-    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]
+    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]]
     set keys [hf_keys_by $keys_list $separator]
     return $keys
 }
@@ -115,7 +115,7 @@ ad_proc -private hf_ip_keys {
     Returns an ordered list of keys for hf_ip_addresses.
 } {
     set keys_list [list instance_id ip_id ipv4_addr ipv4_status ipv6_addr ipv6_status time_trashed time_created]
-    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]
+    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]]
     set keys [hf_keys_by $keys_list $separator]
     return $keys
 }
@@ -127,7 +127,7 @@ ad_proc -private hf_hw_keys {
     Returns an ordered list of keys for hf_hardware.
 } {
     set keys_list [list instance_id hw_id system_name backup_sys os_id description details time_trashed time_created]
-    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]
+    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]]
     set keys [hf_keys_by $keys_list $separator]
     return $keys
 }
@@ -139,7 +139,7 @@ ad_proc -private hf_dc_keys {
     Returns an ordered list of keys for hf_data_centers.
 } {
     set keys_list [list instance_id dc_id affix description details time_trashed time_created]
-    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]
+    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]]
     set keys [hf_keys_by $keys_list $separator]
     return $keys
 }
@@ -152,7 +152,7 @@ ad_proc -private hf_vh_keys {
     Returns an ordered list of keys for hf_vhosts.
 } {
     set keys_list [list instance_id vh_id domain_name details time_trashed time_created]
-    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]
+    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]]
     set keys [hf_keys_by $keys_list $separator]
     return $keys
 }
@@ -165,10 +165,23 @@ ad_proc -private hf_vm_keys {
     Returns an ordered list of keys for hf_virtual_machines
 } {
     set keys_list [list instance_id vm_id domain_name os_id type_id resource_path mount_union details time_trashed time_created]
-    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]
+    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]]
     set keys [hf_keys_by $keys_list $separator]
     return $keys
 }
+
+
+ad_proc -private hf_vm_quota_keys {
+    {separator ""}
+} {
+    Returns an ordered list of keys for hf_vm_quotas
+} {
+    set keys_list [list instance_id plan_id description base_storage base_traffic base_memory base_sku over_storage_sku over_traffic_sku over_memory_sku storage_unit traffic_unit memory_unit qemu_memory status_id vm_type max_domain private_vps time_trashed time_created]
+    set keys_list [set_union $keys_list [hf_sub_assets_map_keys]]
+    set keys [hf_keys_by $keys_list $separator]
+    return $keys
+}
+
 
 ad_proc -private hf_ss_keys {
     {separator ""}
