@@ -26,7 +26,7 @@ ad_proc -private hf_nc_go_ahead {
         set user_id [ad_conn user_id]
         set instance_id [ad_conn package_id]
         #set go_ahead \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin\]
-        set customer_id [hf_customer_id_of_asset_id $asset_id $instance_id]
+        set customer_id [hf_customer_id_of_asset_id $asset_id]
         # Make sure asset_id is consistent to asset_type_id
         set asset_type_id [hf_nc_asset_type_id $asset_id]
         if { $asset_type_id eq "" } {
@@ -108,7 +108,7 @@ ad_proc -private hf_nc_users_of_asset_id {
         }
 
         if { $success_p && [llength $role_ids_list] > 0 } {
-            set customer_id [hf_customer_id_of_asset_id $asset_id $instance_id]
+            set customer_id [hf_customer_id_of_asset_id $asset_id]
             # get user_ids limited by hf_role_id in one query
             set user_ids_list [db_list hf_user_role_of_customer_id_r "select user_id from hf_user_roles_map where instance_id = :instance_id and qal_customer_id=:customer_id and role_id in ([template::util::tcl_to_sql_list $role_ids_list)"]
             
