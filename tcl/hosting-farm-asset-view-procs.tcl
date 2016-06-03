@@ -26,7 +26,7 @@ ad_proc -public hf_asset_read {
     asset_id
 } {
     Returns an asset record as a list. See hf_asset_keys
-} {
+
     @param asset_id
 
     @see hf_asset_keys for key order
