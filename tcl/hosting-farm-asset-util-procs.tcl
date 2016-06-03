@@ -42,12 +42,11 @@ ad_proc -private hf_customer_id_of_asset_id {
 } {
     upvar 1 instance_id instance_id
     # this is handy for helping fulfill hf_permission_p requirements
-    hf_ui_go_ahead_q read
+    # so do not create an infinite loop by referencing a permissions proc like this:
+    # hf_ui_go_ahead_q read
     set f_id [hf_f_id_of_asset_id $asset_id]
-    set cid_exists [db_0or1row hf_customer_id_of_asset_id "select qal_customer_id from hf_assets where instance_id = :instance_id and id=:f_id order by last_modified desc"]
-    if { !$cid_exists } {
-        set customer_id ""
-    }
+    set customer_id ""
+    db_0or1row hf_customer_id_of_asset_id "select qal_customer_id from hf_assets where instance_id = :instance_id and id=:f_id order by last_modified desc"
     return $customer_id
 }
 
