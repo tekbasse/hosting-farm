@@ -14,7 +14,10 @@ ad_proc -private hf_namelur {
     {n "3"}
     {m "5"}
 } {
-    Inspired by namelur GNU GPL v2 licensed code. Returns N words up to M pseudo-syllables.
+    Returns N words up to M pseudo-syllables.
+    Inspired by namelur GNU GPL v2 licensed, originally coded in C. 
+    Code and following starwars configuration data retrieved from 
+    https://sourceforge.net/projects/namelur/ on 3 June 2016
 } {
     # from namelur/nar/starwars.nar # 
     # sw_names.txt converted by Namelur (C) legolas558
