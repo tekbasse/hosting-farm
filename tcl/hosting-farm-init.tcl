@@ -268,14 +268,116 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                 set ss_nsd_name [ns_info name]
                 set nowts [dt_systime -gmt 1]
 
-#                array_set 
-                array set os_arr [list instance_id $instance_id os_id "" label $label brand $system_type2 version $system_type kernel $kernel orphaned_p "0" requires_upgrade_p "0" description "" time_trashed $nowts time_created $nowts]
+                array set os_arr [list \
+                                      instance_id $instance_id \
+                                      os_id "" \
+                                      label $label \
+                                      brand $system_type2 \
+                                      version $system_type \
+                                      kernel $kernel \
+                                      orphaned_p "0" \
+                                      requires_upgrade_p "0" \
+                                      description "" \
+                                      time_trashed "" \
+                                      time_created $nowts]
                 set os_arr(os_id) [hf_os_write os_arr]
 
-                # instance_id ss_id server_name service_name daemon_ref protocol port ss_type ss_subtype ss_understubtype ss_ultrasubtype config_uri memory_bytes details time_trashed time_created
-                qf_lists_to_array ss_arr [list $instance_id "" $ss_nsd_name $name $ss_nsd_file "http" $http_port "" "" "" "" $ss_config_file "" "" "" $nowts] [hf_ss_keys]
+                # make an asset of type ss
+                array set ss_arr [list asset_id ""\
+                                      label $label \
+                                      name $name \
+                                      asset_type_id "ss" \
+                                      keywords ""\
+                                      description ""\
+                                      trashed_p "0"\
+                                      trashed_by ""\
+                                      template_p ""\
+                                      templated_p "0"\
+                                      publish_p "0"\
+                                      monitor_p "0"\
+                                      popularity "0"\
+                                      triage_priority "0"\
+                                      op_status ""\
+                                      qal_product_id ""\
+                                      qal_customer_id ""\
+                                      instance_id $instance_id \
+                                      user_id $sysowner_user_id \
+                                      last_modified $nowts \
+                                      created $nowts \
+                                      flags ""\
+                                      template_id ""\
+                                      f_id ""\
+                                      content "Demo service"\
+                                      comments "Demo/ss system test case"]
+                set ss_arr(f_id) [hf_asset_write ss_arr]
+                # set attribute (fid) is 
+                array set ss_arr [list instance_id $instance_id \
+                                      ss_id "" \
+                                      server_name $ss_nsd_name \
+                                      service_name $name \
+                                      daemon_ref $ss_nsd_file \
+                                      protocol "http" \
+                                      port $http_port \
+                                      ss_type "" \
+                                      ss_subtype "" \
+                                      ss_undersubtype "" \
+                                      ss_ultrasubtype "" \
+                                      config_uri $ss_config_file \
+                                      memory_bytes "" \
+                                      details ""\
+                                      time_trashed ""\
+                                      time_created $nowts]
                 set ss_id [hf_ss_write ss_arr]
+                unset ss_arr
 
+                # problem server tests
+                set nowts [dt_systime -gmt 1]
+                # make an asset of type ss
+                array set ss_arr [list asset_id ""\
+                                      label "ProblemSS" \
+                                      name "Problem SS" \
+                                      asset_type_id "ss" \
+                                      keywords ""\
+                                      description ""\
+                                      trashed_p "0"\
+                                      trashed_by ""\
+                                      template_p ""\
+                                      templated_p "0"\
+                                      publish_p "0"\
+                                      monitor_p "0"\
+                                      popularity "0"\
+                                      triage_priority "0"\
+                                      op_status ""\
+                                      qal_product_id ""\
+                                      qal_customer_id ""\
+                                      instance_id $instance_id \
+                                      user_id $sysowner_user_id \
+                                      last_modified $nowts \
+                                      created $nowts \
+                                      flags ""\
+                                      template_id ""\
+                                      f_id ""\
+                                      content "A demo problem service"\
+                                      comments "Demo/ss system test case"]
+                set ss_arr(f_id) [hf_asset_write ss_arr]
+                # set attribute (fid) is 
+                array set ss_arr [list instance_id $instance_id \
+                                      ss_id "" \
+                                      server_name $name \
+                                      service_name "badbot" \
+                                      daemon_ref "/usr/local/badbot" \
+                                      protocol "http" \
+                                      port [randomRange 50000] \
+                                      ss_type "maybe bad" \
+                                      ss_subtype "" \
+                                      ss_undersubtype "" \
+                                      ss_ultrasubtype "" \
+                                      config_uri "/dev/null" \
+                                      memory_bytes "" \
+                                      details ""\
+                                      time_trashed ""\
+                                      time_created $nowts]
+                set ss_id [hf_ss_write ss_arr]
 
                 hf_asset_create problemvm ProblemVM vm "Problem VM" "" "" "Demo/vm system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
                 hf_vm_write vm_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created vm_domain_name vm_ip_id vm_ni_id vm_ns_id vm_type_id vm_resource_path vm_mount_union vm_details

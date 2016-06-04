@@ -188,7 +188,7 @@ ad_proc -private hf_ss_keys {
 } {
     Returns an ordered list of keys for hf_services
 } {
-    set keys_list [list instance_id ss_id server_name service_name daemon_ref protocol port ss_type ss_subtype ss_understubtype ss_ultrasubtype config_uri memory_bytes details time_trashed time_created] 
+    set keys_list [list instance_id ss_id server_name service_name daemon_ref protocol port ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details time_trashed time_created] 
     set keys_list [set_union $keys_list [hf_sub_assets_map_keys]
     set keys [hf_keys_by $keys_list $separator]
     return $keys
