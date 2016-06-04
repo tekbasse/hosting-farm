@@ -169,8 +169,17 @@ c1 kg 4 ]
     set header [list x y]
     set bc_lists [list ]
     set bv_lists [list ]
-    lappend c_lists $header
-    lappend v_lists $header
+    lappend bc_lists $header
+    lappend bv_lists $header
+    set mc_lists [list ]
+    set mv_lists [list ]
+    lappend mc_lists $header
+    lappend mv_lists $header
+    set ec_lists [list ]
+    set ev_lists [list ]
+    lappend ec_lists $header
+    lappend ev_lists $header
+
     set y 0
     foreach {entry} $nar_file_list {
         switch -regexp -- $entry {
@@ -223,19 +232,19 @@ c1 kg 4 ]
         } else {
             set y1 [qaf_y_of_x_dist_curve [random] $bv_lists]
         }
-        lappend chars_list $y($y1)
+        lappend chars_list $y(${y1})
         set max [randomRange $m]
         for {set i 0 } {$i < $max } { incr i } {
             set ymc [qaf_y_of_x_dist_curve [random] $mc_lists]
-            lappend chars_list $y($ymc)
+            lappend chars_list $y(${ymc})
             set ymv [qaf_y_of_x_dist_curve [random] $mv_lists]
-            lappend chars_list $y($ymv)
+            lappend chars_list $y(${ymv})
         }
         set yec [qaf_y_of_x_dist_curve [random] $ec_lists]
-        lappend chars_list $y($yec)
+        lappend chars_list $y(${yec})
         if { [random] > .5 } {
             set yev [qaf_y_of_x_dist_curve [random] $ev_lists]
-            lappend chars_list $y($yev)
+            lappend chars_list $y(${yev})
         }
         lappend names_list [join $chars_list ""]
     }
