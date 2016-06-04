@@ -330,6 +330,7 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                 set ss_id [hf_ss_write ss_arr]
                 unset ss_arr
 
+## code procs for returning an array with defaults for use with creating test cases etc.
                 # problem server tests
                 set nowts [dt_systime -gmt 1]
                 # make an asset of type ss
