@@ -184,6 +184,10 @@ c1 kg 4 ]
     lappend ev_lists $header
 
     set y 0
+    set cb_counter 0
+    set vb_counter 0
+    set ce_counter 0
+    set ve_counter 0
     foreach {entry} $nar_file_list {
         switch -regexp -- $entry {
             [c][0-9]+ {
@@ -212,15 +216,19 @@ c1 kg 4 ]
                     # can be at beginning
                     if { $letter eq "c" } {
                         lappend bc_lists $row
+                        incr cb_counter
                     } elseif { $letter eq "v" } {
+                        incr vb_counter
                         lappend bv_lists $row
                     }
                 }
                 if { [expr { $position & 1 } ] } {
                     # can be at end of word
                     if { $letter eq "c" } {
+                        incr ce_counter
                         lappend ec_lists $row
                     } elseif { $letter eq "v" } {
+                        incr ve_counter
                         lappend ev_lists $row
                     }
                 }
@@ -228,9 +236,12 @@ c1 kg 4 ]
         }
     }
     set names_list [list ]
+    # set up weighted beginnings and ends based on count of vowels vs constants
+    set bv_fraction [expr { $vb_counter / ( $vb_counter + $cb_counter + 1 ) } ]
+    set ev_fraction [expr { $ve_counter / ( $ve_counter + $ce_counter + 1 ) } ]
     for {set j 0} {$j < $n} {incr j} {
         set chars_list [list ]
-        if { [random] > .5 } {
+        if { [random] >  } {
             set y1 [qaf_y_of_x_dist_curve [random] $bc_lists]
             lappend chars_list $y(${y1})
         } 
@@ -246,7 +257,7 @@ c1 kg 4 ]
         }
         set yec [qaf_y_of_x_dist_curve [random] $ec_lists]
         lappend chars_list $y(${yec})
-        if { [random] > .5 } {
+        if { [random] < $ev_fraction } {
             set yev [qaf_y_of_x_dist_curve [random] $ev_lists]
             lappend chars_list $y(${yev})
         }
