@@ -41,9 +41,10 @@ ad_proc -private hf_domain_example {
                       shq euq atq nlq laq fmq itq coq agq plq scq hnq mnq tkq \
                       vcq peq auq chq ruq seq fiq ifq osq soq beq doq hiq hoq \
                       isq joq roq unq]
-    set tld [lindex [randomRange [llength $tld_list]]]
+    set tld [lindex $tld_list [randomRange [llength $tld_list]]]
     set name [lindex [qal_namelur 1 6 $dot] 0]
-    append name $tld
+    append name "." $tld
+    set name [string tolower [string trim $name "."]]
     return $name
 }
 
