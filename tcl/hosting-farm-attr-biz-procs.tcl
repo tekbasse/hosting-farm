@@ -601,10 +601,11 @@ ad_proc -private hf_ss_write {
 } {
     # requires f_id
     upvar 1 ss_arr_name arr_name
+    
     # defaults
-    set sub_sort_order "100"
-    set sub_label "vh${sub_f_id}"
+    hf_ss_defaults arr_name
     set attribute_p "1"
+
     qf_array_to_vars $arr_name [hf_ss_keys]
     set new_ss_id ""
     set status -1
@@ -640,429 +641,253 @@ ad_proc -private hf_ss_write {
     return $ss_id_new
 }
 
-
-
-##code
-
-
 ad_proc -private hf_ip_write {
-    asset_id
-    ip_id
-    ipv4_addr
-    ipv4_status
-    ipv6_addr
-    ipv6_status
-    {instance_id ""}
+    ip_arr_name
 } {
-    writes or creates an ip record. If ip_id is blank, a new one is created, and the new ip_id returned. The ip_id is returned if successful, otherwise 0 is returned. Does not check for address collisions.
+    Writes a new revision to an existing hf_ip_addresses record. If ip_id is empty, creates a new hf_ip_addresses record.  A new sub_f_id is returned if successful, otherwise empty string is returned.
 } {
-    set return_id 0
-
-    # check permissions, get customer_id of asset
-    if { [qf_is_natural_number $asset_id] && [qf_is_natural_number $instance_id ] } {
-        set admin_p [hf_ui_go_ahead_q admin "" "" 0]
-        if { $admin_p } {
-
-            # validate for db
-            # ipv4_status and ipv6_status must be integers
-            # length of ipv4_addr must be less than 16
-            # length of ipv6_addr must be less than 40
-            if { [qf_is_natural_number $ipv4_status] && [qf_is_natural_number $ipv6_status] && [string length $ipv4_addr] < 16 && [string length $ipv6_addr] < 40 } {
-
-                if { [hf_asset_id_exists $asset_id "" $instance_id] } {
-                    # if ip_id exists but not found asset_id or vm_id, then fail
-                    # write/create to hf_virtual_machines (ip_id,vm_id) and hf_ip_addresses
-                    if { [hf_ip_id_exists $ip_id] } {
-                        #write/update
-                        db_dml ip_address_write2vm {update hf_ip_addresses
-                            set ipv4_addr =:ipv4_addr, ipv4_status=:ipv4_status, ipv6_addr=:ipv6_addr, ipv6_status=:ipv6_status where instance_id =:instance_id and id=:ip_id
-                        }
-                    } else {
-                        #create/insert
-
-                        # get asset_type_id
-                        set asset_stats_list [hf_asset_stats $asset_id $instance_id]
-                        set asset_type_id [lindex $asset_stats_list 2]
-                        set ip_id [db_nextval hf_id_seq]
-                        db_transaction {
-                            if { $asset_type_id eq "vm" } {
-                                db_dml ip_address_write2vm { update hf_virtual_machines
-                                    set ip_id=:ip_id where instance_id=:instance_id,vm_id =:asset_id
-                                } 
-                            } elseif { $asset_type_id ne "" } {
-                                # write/create to hf_asset_ip_map (asset_id,ip_id) and hf_ip_addresses
-                                db_dml ip_address_write2ip_map { insert into hf_asset_ip_map
-                                    (instance_id,asset_id,ip_id) 
-                                    values (:instance_id,:asset_id,:ip_id) 
-                                }    
-                            }
-                            db_dml hf_ip_addresses_create {insert into hf_ip_addresses
-                                (instance_id,ip_id,ipv4_addr,ipv4_status,ipv6_addr,ipv6_status) 
-                                values (:instance_id,:ip_id,:ipv4_addr,:ipv4_status,:ipv6_addr,:ipv6_status)
-                            }
-                            set return_id $ip_id
-                        } 
-                    }
-                }
+    # requires f_id
+    upvar 1 ip_arr_name arr_name
+    # defaults
+    set sub_sort_order "100"
+    set sub_label "vh${sub_f_id}"
+    set attribute_p "1"
+    qf_array_to_vars $arr_name [hf_ip_keys]
+    set new_ip_id ""
+    set status -1
+    if { $ip_id ne "" } {
+        # existing attribute
+        set f_id_ck [hf_f_id_of_sub_f_id $ip_id]
+        if { $f_id eq $f_id_ck } {
+            set status 0
+        } else {
+            ns_log Warning "hf_ip_write.435: denied. attribute does not exist. ip_id '${ip_id} f_id '${f_id}'"
+        }
+    } elseif { [hf_f_id_exists_q $f_id] } {
+        set status 1
+    }
+    if { $status > -1 } {
+        # insert vh asset in hf_ip_addresses
+        set ip_id_new [db_nextval hf_id_seq]
+        set nowts [dt_systime -gmt 1]
+        db_transaction {
+            if { $status == 0 } {
+                db_dml ip_sub_asset_map_update { update hf_sub_asset_map
+                    set sub_f_id=:ip_id_new where f_id=:f_id }
+            } else {
+                set ip_id $ip_id_new
+                set time_created $now_ts
+                set sub_type_id "vh"
+                db_dml ip_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }
+            # record revision/new
+            db_dml ip_asset_create "insert into hf_ip_addresses ([hf_ip_keys ","]) values ([hf_ip_keys ",:")"
         }
     }
-    return $return_id
+    return $ip_id_new
 }
-
-
 
 ad_proc -private hf_ni_write {
-    asset_id
-    ni_id
-    os_dev_ref
-    bia_mac_address
-    ul_mac_address
-    ipv4_addr_range
-    ipv6_addr_range
-    {instance_id ""}
+    ni_arr_name
 } {
-    Writes or creates an network interface for an asset_id.
-    If ni_id is empty, a new one is created, and the new ni_id returned.
-    The ni_id is returned if successful, otherwise 0 is returned.
+    Writes a new revision to an existing hf_network_interfaces record. If ni_id is empty, creates a new hf_network_interfaces record.  A new sub_f_id is returned if successful, otherwise empty string is returned.
 } {
-    set return_ni_id 0
-
-    # check permissions, get customer_id of asset
-    if { [qf_is_natural_number $asset_id] } {
-        set admin_p [hf_ui_go_ahead_q admin "" "" 0]
-        if { $admin_p } {
-            
-            # validate
-            if { [string length $os_dev_ref] < 21 && [string length $bia_mac_address] < 21 && [string length $ul_mac_address] < 21 && [string length $ipv4_addr_range] < 21 && [string length $ipv6_addr_range] < 51 } {
-                # does asset_id exist?
-                # if asset_id not found, then fail
-                if { [hf_asset_id_exists $asset_id "" $instance_id] } {
-                    db_transaction { 
-                        set hf_ni_id_exists_p [hf_ni_id_exists $ni_id]
-                        set return_ni_id $ni_id
-                        if { $hf_ni_id_exists_p } {
-                            # update existing record
-                            db_dml network_interfaces_write2 {update hf_network_interfaces
-                                set os_dev_ref=:os_dev_ref, bia_mac_address=:bia_mac_address, ul_mac_address=:ul_mac_address, ipv4_addr_range=:ipv4_addr_range, ipv6_addr_range=:ipv6_addr_range 
-                                where instance_id =:instance_id and ni_id=:ni_id
-                            }
-                        } else {
-                            # create new ni_id, hf_network_interfaces record
-                            set ni_id [db_nextval hf_id_seq]
-                            set return_ni_id $ni_id
-                            db_dml { insert into hf_network_interfaces 
-                                (instance_id,ni_id,os_dev_ref,bia_mac_address,ul_mac_address,ipv4_addr_range,ipv6_addr_range)
-                                values (:instance_id,ni_id,:os_dev_ref,:bia_mac_address,:ul_mac_address,:ipv4_addr_range,:ipv6_addr_range)
-                            }
-                            #create linkages
-                            # get asset_type_id
-                            set asset_stats_list [hf_asset_stats $asset_id $instance_id]
-                            set asset_type_id [lindex $asset_stats_list 2]
-                            set asset_ni_id [lindex $asset_stats_list 15]
-
-                            # include linkage to hf_asset and maybe
-                            # if hf_hardware one is defined, use hw_ni_map for extras
-                            # if hf_asset is used and a dc, use dc_ni_map for others
-
-
-                            switch -exact -- $asset_type_id {
-                                vm {
-                                    # hf_virtual_machines.ni_id and chf_assets.ni_id should be same and not exist
-                                    set vm_stats_list [hf_vm_read $asset_id $instance_id]
-                                    set vm_ni_id [lindex $vm_stats_list 17]
-                                    if { $vm_ni_id eq "" || $asset_ni_id eq "" } {
-                                        # assume blank
-                                        if { $vm_ni_id ne $asset_ni_id } {
-                                            # for debugging purposes, signal if both are not blank and same (shouldn't happen)
-                                            ns_log Warning "hf_ni_write(2120): vm_ni_id ne asset_ni_id, vm_ni_id '${vm_ni_id}', asset_ni_id '${asset_ni_id}' This ni_id is now orphaned in hf_virtual_machines."
-                                        }
-                                        # For now, these should be same in both places.
-                                        # See note in sql/postgresql/hosting-farm-create.sql
-                                        # to remove ni_id from hf_virtual_machines as duplicate.
-                                        db_dml update_asset_ni_id_1 { update hf_assets set ni_id=:ni_id where instance_id =:instance_id and id=:asset_id }
-                                        db_dml update_hf_vm_ni_id_1 { update hf_virtual_machines set ni_id=:ni_id where instance_id=:instance_id and vm_id=:asset_id }
-                                    } else {
-                                        set return_ni_id 0
-                                        ns_log Warning "hf_ni_write(2130): Refused request to add a second network_interface to vm/asset_id '$asset_id'."
-                                    }
-                                }
-                                hw {
-                                    # if hf_hardware.ni_id exists and hf_assets.ni_id exists, use hf_hw_ni_map
-                                    set hw_stats_list [hf_hw_read $asset_id $instance_id]
-                                    set hw_ni_id [lindex $hw_stats_list 17]
-                                    if { $hw_ni_id eq "" || $asset_ni_id eq "" } {
-                                        if { $hw_ni_id ne $asset_ni_id } {
-                                            # for debugging purposes, signal if both are not blank and same (shouldn't happen)
-                                            ns_log Warning "hf_ni_write(2140): hw_ni_id ne asset_ni_id, hw_ni_id '${hw_ni_id}', asset_ni_id '${asset_ni_id}' This ni_id is now orphaned in hf_hardware."
-                                        }
-                                        # For now, these should be same in both places.
-                                        # See note in sql/postgresql/hosting-farm-create.sql
-                                        # to remove ni_id from hf_hardware as duplicate.
-                                        db_dml update_asset_ni_id_2 { update hf_assets set ni_id=:ni_id where instance_id =:instance_id and id=:asset_id }
-                                        db_dml update_hf_hw_ni_id_1 { update hf_hardware set ni_id=:ni_id where instance_id=:instance_id and hw_id=:asset_id }
-                                    } else {
-                                        #  create hf_hw_ni_map
-                                        db_dml { insert into hf_hw_ni_map (instance_id,hw_id,ni_id)
-                                            values (:instance_id,:hw_id,:ni_id)
-                                        }
-                                    }
-                                }
-                                dc {
-                                    if { $asset_ni_id eq "" } {
-                                        db_dml update_asset_ni_id_3 { update hf_assets set ni_id=:ni_id where instance_id =:instance_id and id=:asset_id }
-                                    } else {
-                                        #  create hf_dc_ni_map
-                                        db_dml { insert into hf_dc_ni_map (instance_id,dc_id,ni_id)
-                                            values (:instance_id,:dc_id,:ni_id)
-                                        }
-                                    }
-                                }
-                                default {
-                                    if { $asset_ni_id eq "" } {
-                                        db_dml update_asset_ni_id_4 { update hf_assets set ni_id=:ni_id where instance_id =:instance_id and id=:asset_id }
-                                    } else {
-                                        # no additional ones allowed
-                                        set return_ni_id 0
-                                        ns_log Warning "hf_ni_write(2170): Refused request to add a second network_interface to ${asset_type_id} with asset_id '$asset_id'."
-                                    }
-                                }
-                            }
-                            # previous brace is end of switch
-                        }
-                    }
-                    # end db_transaction
-                }
+    # requires f_id
+    upvar 1 ni_arr_name arr_name
+    # defaults
+    set sub_sort_order "100"
+    set sub_label "vh${sub_f_id}"
+    set attribute_p "1"
+    qf_array_to_vars $arr_name [hf_ni_keys]
+    set new_ni_id ""
+    set status -1
+    if { $ni_id ne "" } {
+        # existing attribute
+        set f_id_ck [hf_f_id_of_sub_f_id $ni_id]
+        if { $f_id eq $f_id_ck } {
+            set status 0
+        } else {
+            ns_log Warning "hf_ni_write.435: denied. attribute does not exist. ni_id '${ni_id} f_id '${f_id}'"
+        }
+    } elseif { [hf_f_id_exists_q $f_id] } {
+        set status 1
+    }
+    if { $status > -1 } {
+        # insert vh asset in hf_network_interfaces
+        set ni_id_new [db_nextval hf_id_seq]
+        set nowts [dt_systime -gmt 1]
+        db_transaction {
+            if { $status == 0 } {
+                db_dml ni_sub_asset_map_update { update hf_sub_asset_map
+                    set sub_f_id=:ni_id_new where f_id=:f_id }
+            } else {
+                set ni_id $ni_id_new
+                set time_created $now_ts
+                set sub_type_id "vh"
+                db_dml ni_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }
+            # record revision/new
+            db_dml ni_asset_create "insert into hf_network_interfaces ([hf_ni_keys ","]) values ([hf_ni_keys ",:")"
         }
     }
-    return $return_ni_id
+    return $ni_id_new
 }
+
 
 
 ad_proc -private hf_os_write {
-    os_id
-    label
-    brand
-    version
-    kernel
-    orphaned_p
-    requires_upgrade_p
-    description 
-    {instance_id ""}
+    os_arr_name
 } {
-    writes or creates an os asset_type_id. If os_id is blank, a new one is created, and the new asset_id returned. The asset_id is returned if successful, otherwise 0 is returned.
+    Writes a new revision to an existing hf_operating_systems record. If os_id is empty, creates a new hf_operating_systems record.  A new sub_f_id is returned if successful, otherwise empty string is returned.
 } {
-    hf_ui_go_ahead_q admin
-
-    set success_p 0
-    set os_exists_p 0
-
-    if { ![qf_is_natural_number $os_id] } {
-        set os_id ""
-    }
+    # requires f_id
+    upvar 1 os_arr_name arr_name
+    # defaults
+    set sub_sort_order "100"
+    set sub_label "vh${sub_f_id}"
+    set attribute_p "1"
+    qf_array_to_vars $arr_name [hf_os_keys]
+    set new_os_id ""
+    set status -1
     if { $os_id ne "" } {
-        set os_exists_p [db_0or1row check_os_id_exists "select os_id as os_id_db from hf_operating_systems where os_id=:os_id"]
-    }
-    # filter data to limits
-    set label [string range $label 0 19]
-    set brand [string range $brand 0 79]
-    set version [string range $version 0 299]
-    set kernel [string range $kernel 0 299]
-    if { $orphaned_p ne "1" } {
-        set orphaned_p 0
-    }
-    if { $requires_upgrade_p ne "1" } {
-        set requires_upgrade_p 0
-    }
-    
-    if { $os_exists_p } {
-        # update existing record
-        #    set os_lists \[db_list_of_lists hf_os_read "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id =:instance_id and os_id in ([template::util::tcl_to_sql_list $filtered_ids_list])" \]
-        db_dml hf_os_update {
-            update hf_operating_systems set label=:label, brand=:brand, version=:version, kernel=:kernel, orphaned_p=:orphaned_p, requires_upgrade_p=:requires_upgrade_p,description=:description,instance_id=:instance_id where os_id=:os_id
+        # existing attribute
+        set f_id_ck [hf_f_id_of_sub_f_id $os_id]
+        if { $f_id eq $f_id_ck } {
+            set status 0
+        } else {
+            ns_log Warning "hf_os_write.435: denied. attribute does not exist. os_id '${os_id} f_id '${f_id}'"
         }
-        set success_p 1
-    } else {
-        # insert new record
-        set os_id [db_nextval hf_id_seq]
-        db_dml hf_os_insert {
-            insert into hf_operating_systems (label,brand,version,kernel,orphaned_p,requires_upgrade_p,description,instance_id,os_id )
-            values (:label,:brand,:version,:kernel,:orphaned_p,:requires_upgrade_p,:description,:instance_id,:os_id)
-        }
-        set success_p 1
+    } elseif { [hf_f_id_exists_q $f_id] } {
+        set status 1
     }
-    return $success_p
+    if { $status > -1 } {
+        # insert vh asset in hf_operating_systems
+        set os_id_new [db_nextval hf_id_seq]
+        set nowts [dt_systime -gmt 1]
+        db_transaction {
+            if { $status == 0 } {
+                db_dml os_sub_asset_map_update { update hf_sub_asset_map
+                    set sub_f_id=:os_id_new where f_id=:f_id }
+            } else {
+                set os_id $os_id_new
+                set time_created $now_ts
+                set sub_type_id "vh"
+                db_dml os_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
+            }
+            # record revision/new
+            db_dml os_asset_create "insert into hf_operating_systems ([hf_os_keys ","]) values ([hf_os_keys ",:")"
+        }
+    }
+    return $os_id_new
 }
-
-
 
 ad_proc -private hf_ns_write {
-    ns_id
-    name_record
-    active_p
-    {instance_id ""}
+    ns_arr_name
 } {
-    writes or creates an ns_id. If ns_id is blank, a new one is created, and the new ns_id returned. The ns_id is returned if successful, otherwise 0 is returned.
+    Writes a new revision to an existing hf_ns_records record. If ns_id is empty, creates a new hf_ns_records record.  A new sub_f_id is returned if successful, otherwise empty string is returned.
 } {
-    # TABLE hf_ns_records (
-    #   instance_id integer,
-    #   -- ns_id
-    #   id          integer not null DEFAULT nextval ( 'hf_id_seq' ),
-    #   -- should be validated before allowed to go live.
-    #   active_p    integer,
-    #   -- DNS records to be added to domain name service
-    #   name_record text
-    hf_ui_go_ahead_q admin
-    set success_p 0
-    set ns_exists_p 0
-    if { ![qf_is_natural_number $ns_id] } {
-        set ns_id ""
-    }
+    # requires f_id
+    upvar 1 ns_arr_name arr_name
+    # defaults
+    set sub_sort_order "100"
+    set sub_label "vh${sub_f_id}"
+    set attribute_p "1"
+    qf_array_to_vars $arr_name [hf_ns_keys]
+    set new_ns_id ""
+    set status -1
     if { $ns_id ne "" } {
-        set ns_exists_p [db_0or1row check_ns_id_exists "select id as ns_id_db from hf_ns_records where id=:ns_id"]
-    }
-    # filter data to limits
-    if { $active_p ne "1" } {
-        set active_p 0
-    }
-    if { $ns_exists_p } {
-        # update existing record
-        db_dml hf_ns_update {
-            update hf_ns_records set name_record=:name_record, active_p=:active_p,instance_id=:instance_id where id=:ns_id
+        # existing attribute
+        set f_id_ck [hf_f_id_of_sub_f_id $ns_id]
+        if { $f_id eq $f_id_ck } {
+            set status 0
+        } else {
+            ns_log Warning "hf_ns_write.435: denied. attribute does not exist. ns_id '${ns_id} f_id '${f_id}'"
         }
-        set success_p 1
-    } else {
-        # insert new record
-        set ns_id [db_nextval hf_id_seq]
-        db_dml hf_ns_insert {
-            insert into hf_ns_records (active_p,name_record,instance_id,id)
-            values (:active_p,:name_record,:instance_id,:ns_id)
-        }
-        set success_p 1
+    } elseif { [hf_f_id_exists_q $f_id] } {
+        set status 1
     }
-    return $success_p
+    if { $status > -1 } {
+        # insert vh asset in hf_ns_records
+        set ns_id_new [db_nextval hf_id_seq]
+        set nowts [dt_systime -gmt 1]
+        db_transaction {
+            if { $status == 0 } {
+                db_dml ns_sub_asset_map_update { update hf_sub_asset_map
+                    set sub_f_id=:ns_id_new where f_id=:f_id }
+            } else {
+                set ns_id $ns_id_new
+                set time_created $now_ts
+                set sub_type_id "vh"
+                db_dml ns_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
+            }
+            # record revision/new
+            db_dml ns_asset_create "insert into hf_ns_records ([hf_ns_keys ","]) values ([hf_ns_keys ",:")"
+        }
+    }
+    return $ns_id_new
 }
-
 
 
 ad_proc -private hf_vm_quota_write {
-    plan_id
-    description
-    base_storage
-    base_traffic
-    base_memory
-    base_sku
-    over_storage_sku
-    over_traffic_sku
-    over_memory_sku
-    storage_unit
-    traffic_unit
-    memory_unit
-    qemu_memory
-    status_id
-    vm_type
-    max_domain
-    private_vps
-    {instance_id ""}
+    vm_quota_arr_name
 } {
-    writes or creates a vm_quota. If id is blank, a new one is created, and the new id returned. id is returned if successful, otherwise 0 is returned.
+    Writes a new revision to an existing hf_vm_quotas record. If vm_quota_id is empty, creates a new hf_vm_quotas record.  A new sub_f_id is returned if successful, otherwise empty string is returned.
 } {
-    hf_ui_go_ahead admin
-
-    set success_p 1
-    set vmq_exists_p 0
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { ![qf_is_natural_number $plan_id] } {
-        set plan_id ""
-    }
-    if { $plan_id ne "" } {
-        set vmq_exists_p [db_0or1row check_plan_id_exists "select id as plan_id_db from hf_vm_quotas where id=:plan_id"]
-    }
-    # filter data to limits
-    set description [string range $description 0 39]
-    if { ![qf_is_integer $base_storage] } {
-        set base_storage -1
-    }
-    if { ![qf_is_integer $base_traffic] } {
-        set base_traffic -1
-    }
-    if { ![qf_is_integer $base_memory] } {
-        set base_memory -1
-    }
-    set base_sku [string range $base_sku 0 39]
-    set over_storage_sku [string range $over_storage_sku 0 39]
-    set over_traffic_sku [string range $over_traffic_sku 0 39]
-    set over_memory_sku [string range $over_memory_sku 0 39]
-    if { ![qf_is_integer $storage_unit] } {
-        set success_p 0
-    }
-    if { ![qf_is_integer $traffic_unit] } {
-        set success_p 0
-    }
-    if { ![qf_is_integer $memory_unit] } {
-        set success_p 0
-    }
-    if { ![qf_is_integer $qemu_memory] } {
-        set success_p 0
-    }
-    if { ![qf_is_integer $status_id] } {
-        set success_p 0
-    }
-    if { ![qf_is_integer $vm_type] } {
-        set success_p 0
-    }
-    if { ![qf_is_integer $max_domain] } {
-        set success_p 0
-    }
-    if { $private_vps ne "1" } {
-        set private_vps "0"
-    }
-    # hf_vm_quotas.instance_id plan_id description base_storage base_traffic base_memory base_sku over_storage_sku over_traffic_sku over_memory_sku storage_unit traffic_unit memory_unit qemu_memory status_id vm_type max_domain private_vps
-    if { $success_p } {
-        if { $vmq_exists_p } {
-            # update existing record
-            db_dml hf_vmq_update {
-                update hf_vmq_records set description:=description, base_storage=:base_storage, base_traffic=:base_traffic, base_memory=:base_memory, base_sku=:base_sku, over_storage_sku=:over_storage_sku, over_traffic_sku=:over_traffic_sku, over_memory_sku=:over_memory_sku, storage_unit=:storage_unit, traffic_unit=:traffic_unit, memory_unit=:memory_unit, qemu_memory=:qemu_memory, status_id=:status_id, vm_type=:vm_type, max_domain=:max_domain, private_vps=:private_vps where id=:plan_id and instance_id=:instance_id
-            }
+    # requires f_id
+    upvar 1 vm_quota_arr_name arr_name
+    # defaults
+    set sub_sort_order "100"
+    set sub_label "vh${sub_f_id}"
+    set attribute_p "1"
+    qf_array_to_vars $arr_name [hf_vm_quota_keys]
+    set new_vm_quota_id ""
+    set status -1
+    if { $vm_quota_id ne "" } {
+        # existing attribute
+        set f_id_ck [hf_f_id_of_sub_f_id $vm_quota_id]
+        if { $f_id eq $f_id_ck } {
+            set status 0
         } else {
-            # insert new record
-            set plan_id [db_nextval hf_id_seq]
-            db_dml hf_vmq_insert {
-                insert into hf_vmq_records (plan_id, description, base_storage, base_traffic, base_memory, base_sku, over_storage_sku, over_traffic_sku, over_memory_sku, storage_unit, traffic_unit, memory_unit, qemu_memory, status_id, vm_type, max_domain, private_vps,instance_id)
-                values (:plan_id,:description,:base_storage,:base_traffic,:base_memory,:base_sku,:over_storage_sku,:over_traffic_sku,:over_memory_sku,:storage_unit,:traffic_unit,:memory_unit,:qemu_memory,:status_id,:vm_type,:max_domain,:private_vps,:instance_id)
-            }
+            ns_log Warning "hf_vm_quota_write.435: denied. attribute does not exist. vm_quota_id '${vm_quota_id} f_id '${f_id}'"
         }
-    } else {
-        ns_log Notice "hf_vm_quota_write: success_p 0 at least one value doesn't fit: '${instance_id}' '${plan_id}' '${description}' '${base_storage}' '${base_traffic}' '${base_memory}' '${base_sku}' '${over_storage_sku}' '${over_traffic_sku}' '${over_memory_sku}' '${storage_unit}' '${traffic_unit}' '${memory_unit}' '${qemu_memory}' '${status_id}' '${vm_type}' '${max_domain}' '${private_vps}'"
+    } elseif { [hf_f_id_exists_q $f_id] } {
+        set status 1
     }
-    return $success_p
+    if { $status > -1 } {
+        # insert vh asset in hf_vm_quotas
+        set vm_quota_id_new [db_nextval hf_id_seq]
+        set nowts [dt_systime -gmt 1]
+        db_transaction {
+            if { $status == 0 } {
+                db_dml vm_quota_sub_asset_map_update { update hf_sub_asset_map
+                    set sub_f_id=:vm_quota_id_new where f_id=:f_id }
+            } else {
+                set vm_quota_id $vm_quota_id_new
+                set time_created $now_ts
+                set sub_type_id "vh"
+                db_dml vm_quota_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
+            }
+            # record revision/new
+            db_dml vm_quota_asset_create "insert into hf_vm_quotas ([hf_vm_quota_keys ","]) values ([hf_vm_quota_keys ",:")"
+        }
+    }
+    return $vm_quota_id_new
 }
 
 ad_proc -private hf_ua_write {
     ua
     connection_type
     {ua_id ""}
-    {instance_id ""}
 } {
     writes or creates a ua. If ua_id is blank, a new one is created. If successful,  ua_id is returned, otherwise 0.
 } {
-    # permissions must be careful here. Should have already been vetted. Log anything suspect
-    # only admin_p or create_p create new
-    
-    set new_ua_id 0
-    if { [regexp -- {^[[:graph:]]+$} $details scratch ] } {    
+    upvar 1 instance_id instance_id
+    hf_ui_go_ahead admin "" ""
+
+    if { [regexp -- {^[[:graph:]]+$} $ua scratch ] } {    
         set log_p 0
-        if { ![qf_is_natural_number $instance_id] } {
-            # set instance_id package_id
-            set instance_id [ad_conn package_id]
-            if { $ua_id eq "" } {
-                set log_p 1
-            }
-        }
+        set id_exists_p 0
+
         # validation and limits
         set connection_type [string range $connection_type 0 23]
         set vk_list [list ]
@@ -1073,10 +898,9 @@ ad_proc -private hf_ua_write {
         set sdetail [string map $vk_list $details]
         if { $ua_id ne "" } {
             # update
-            set id_exists_p 0
             # does ua_id exist?
             if { [qf_is_natural_number $ua_id] } {
-                set id_exists_p [db_0or1row hf_ua_id_get "select ua_id as new_ua_id from hf_ua where instance_id =:instance_id and ua_id =:ua_id"]
+                set id_exists_p [db_0or1row hf_ua_id_get "select ua_id as ua_id_ck from hf_ua where instance_id =:instance_id and ua_id =:ua_id"]
             }
             if { $id_exists_p } {
                 db_dml hf_ua_update {
@@ -1084,12 +908,11 @@ ad_proc -private hf_ua_write {
                 }
             }
         }
-        if { $new_ua_id eq "" }
-        # create
-        set new_ua_id [db_nextval hf_id_seq]
-        db_dml hf_ua_create {
-            insert into hf_ua (ua_id, instance_id, details, connection_type)
-            values (:new_ua_id,:instance_id,:sdetail,:connection_type)
+        if { !$id_exists_p } {
+            # create
+            set ua_id [db_nextval hf_id_seq]
+            db_dml hf_ua_create "insert into hf_ua ([hf_ua_keys ","])
+            values ([hf_a_keys ",:"])"
         }
         if { $log_p } {
             if { [ns_conn isconnected] } {
@@ -1107,15 +930,17 @@ ad_proc -private hf_ua_write {
             ns_log Warning "hf_ua_write(2513): Poor call rejected. New ua '${details}' for conn '${connection_type}' requested with unprintable or no characters by process without a connection."
         }
     }
-    return $new_ua_id
+    return $ua_id
 }
 
+
+##code
 
 
 ad_proc -private hf_ss_defaults {
     array_name
 } {
-    Sets defaults for an hf_service record into array_name.
+    Sets defaults for an hf_service record into array_name, if element is not in array. 
 } {
     upvar 1 $array_name ss_arr
     upvar 1 $instance_id instance_id
@@ -1135,7 +960,11 @@ ad_proc -private hf_ss_defaults {
                 details ""\
                 time_trashed ""\
                 time_created $nowts]
-    array set ss_arr $ss
+    foreach {key value} $ss {
+        if { ![info exists ss_arr(${key}) ] } {
+            set ss_arr(${key}) $value
+        }
+    }
     if { [llength [set_difference_named_v ss [hf_ss_keys]]] > 0 } {
         ns_log Warning "hf_ss_defaults: Update this proc. It is out of sync with hf_ss_keys"
     }
