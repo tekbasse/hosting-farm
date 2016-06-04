@@ -13,8 +13,13 @@ ad_library {
 ad_proc -private hf_namelur { 
     {n "3"}
     {m "5"}
+    {dot "."}
 } {
-    Returns N words up to M pseudo-syllables.
+    @param n     word count
+    @param m     Max pseudo-syllables.
+    @param dots  Substitute a period with another letter or space or empty string.
+    @return N words up to M pseudo-syllables. Words of one call may not be unique.
+    
     Inspired by namelur GNU GPL v2 licensed, originally coded in C. 
     Code and following starwars configuration data retrieved from 
     https://sourceforge.net/projects/namelur/ on 3 June 2016
@@ -29,10 +34,10 @@ ad_proc -private hf_namelur {
     incr r2
     set mystery1 [ad_generate_random_string ]
     set mystery2 [ad_generate_random_string ]
-    regsub -all -- {[0-9]+} $mystery1 "."  mystery1
-    regsub -all -- {[0-9]+} $mystery2 "."  mystery2
-    set mystery1 [string range "[string trim $mystery1 " ."]." 0 $r1]
-    set mystery2 [string range "[string trim $mystery2 " ."]." 0 $r2]
+    regsub -all -- {[0-9]+} $mystery1 $dot  mystery1
+    regsub -all -- {[0-9]+} $mystery2 $dot  mystery2
+    set mystery1 [string range "[string trim $mystery1 " ${dot}"]${dot}" 0 $r1]
+    set mystery2 [string range "[string trim $mystery2 " ${dot}"]${dot}" 0 $r2]
     #ns_log Notice "hf_namelur.36: mystery1 $mystery1 mystery2 $mystery2"
     set n_list [list \
                     v10790 ${mystery1} 2 \
