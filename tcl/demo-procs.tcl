@@ -229,12 +229,13 @@ c1 kg 4 ]
         set chars_list [list ]
         if { [random] > .5 } {
             set y1 [qaf_y_of_x_dist_curve [random] $bc_lists]
-        } else {
-            set y1 [qaf_y_of_x_dist_curve [random] $bv_lists]
-        }
+            lappend chars_list $y(${y1})
+        } 
+        set y1 [qaf_y_of_x_dist_curve [random] $bv_lists]
         lappend chars_list $y(${y1})
+
         set max [randomRange $m]
-        for {set i 0 } {$i < $max } { incr i } {
+        for {set i 1 } {$i < $max } { incr i } {
             set ymc [qaf_y_of_x_dist_curve [random] $mc_lists]
             lappend chars_list $y(${ymc})
             set ymv [qaf_y_of_x_dist_curve [random] $mv_lists]
