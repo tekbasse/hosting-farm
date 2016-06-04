@@ -501,273 +501,148 @@ ad_proc -private hf_dc_write {
     return $dc_id_new
 }
 
-##code
-
-ad_proc -private hf_dc_write {
-    dc_arr_name
-} {
-    writes or creates a dc asset_type_id. If asset_id (dc_id) is blank, a new one is created. The new asset_id is returned if successful, otherwise empty string is returned.
-} {
-    # hf_data_centers.instance_id, dc_id, affix, description, details
-    # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
-    hf_ui_go_ahead_q write dc_id
-
-    set new_dc_id ""
-    if { $asset_type_id eq "dc" } {
-        if { $dc_id ne "" } {
-            # validate dc_id. If dc_id not a dc or does not exist, set dc_id ""
-            if { ![hf_asset_id_exists $dc_id $instance_id "dc"] } {
-                set dc_id ""
-            }
-        }
-        
-        if { $dc_id eq "" } {
-            # hf_asset_create checks permission to create
-            set dc_id_new [hf_asset_create $label $name $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
-        } else {
-            # hf_asset_write checks permission to write
-            set dc_id_new [hf_asset_write $label $name $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $dc_id $flags $instance_id $user_id]
-        }
-        if { $dc_id_new ne "" } {
-            # insert dc asset hf_datacenters
-            db_dml dc_asset_create {insert into hf_data_centers
-                (instance_id, dc_id, affix, description, details)
-                values (:instance_id,:dc_id_new,:dc_affix,:dc_description,:dc_details) }
-        } 
-    } else {
-        ns_log Notice "hf_dc_write.1606: Wrong asset_type_id '${asset_type_id}'. Write denied. label '${label}' name '${name}' content '${content}' keywords '${keywords}' description '${description}' comments '${comments}' template_p '${template_p}' templated_p '${templated_p}' publish_p '${publish_p}' monitor_p '${monitor_p}' popularity '${popularity}' triage_priority '${triage_priority}' op_status '${op_status}' ua_id '${ua_id}' ns_id '${ns_id}' qal_product_id '${qal_product_id}' qal_customer_id '${qal_customer_id}' template_id '${template_id}' dc_id '${dc_id}' flags '${flags}' instance_id '${instance_id}' user_id '${user_id}'"
-    }
-    return $dc_id_new
-}
-
-
 
 ad_proc -private hf_hw_write {
-    hw_id
-    label
-    name
-    asset_type_id
-    keywords
-    description
-    content
-    comments
-    trashed_p
-    trashed_by
-    template_p
-    templated_p
-    publish_p
-    monitor_p
-    popularity
-    triage_priority
-    op_status
-    ua_id
-    ns_id
-    qal_product_id
-    qal_customer_id
-    instance_id
-    user_id
-    last_modified
-    created
-    hw_system_name
-    hw_backup_sys
-    hw_ni_id
-    hw_os_id
-    hw_description
-    hw_details
+    hw_arr_name
 } {
-    writes or creates an hw asset_type_id. If asset_id (hw_id) is blank, a new one is created. The new asset_id is returned if successful, otherwise empty string is returned.
+    Writes a new revision to an existing hf_hardware record. If hw_id is empty, creates a new hf_hardware record.  A new sub_f_id is returned if successful, otherwise empty string is returned.
 } {
-    # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
-    #  hf_hardware.instance_id, hw_id, system_name, backup_sys, ni_id, os_id, description, details
-    if { $hw_id ne "" } {
-        hf_ui_go_ahead_q write hw_id
-    } else {
-        hf_ui_go_ahead_q create hw_id
-    }
+    # requires f_id
+    upvar 1 hw_arr_name arr_name
+    # defaults
+    set sub_sort_order "100"
+    set sub_label "vh${sub_f_id}"
+    set attribute_p "1"
+    qf_array_to_vars $arr_name [hf_hw_keys]
     set new_hw_id ""
-    if { $asset_type_id eq "hw" } {
-        if { $hw_id ne "" } {
-            # validate hw_id. If hw_id not an hw or does not exist, set hw_id ""
-            if { ![hf_asset_id_exists $hw_id $instance_id "hw"] } {
-                set hw_id ""
-            }
-        }
-        
-        if { $hw_id eq "" } {
-            # hf_asset_create checks permission to create
-            set hw_id_new [hf_asset_create $label $name $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
+    set status -1
+    if { $hw_id ne "" } {
+        # existing attribute
+        set f_id_ck [hf_f_id_of_sub_f_id $hw_id]
+        if { $f_id eq $f_id_ck } {
+            set status 0
         } else {
-            # hf_asset_write checks permission to write
-            set hw_id_new [hf_asset_write $label $name $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $hw_id $flags $instance_id $user_id]
+            ns_log Warning "hf_hw_write.435: denied. attribute does not exist. hw_id '${hw_id} f_id '${f_id}'"
         }
-        if { $hw_id_new ne "" } {
-            # insert hw asset hf_hardware
-            db_dml hw_asset_create {insert into hf_hardware
-                (instance_id, hw_id, system_name, backup_sys, ni_id, os_id, description, details)
-                values (:instance_id,:hw_id_new,:hw_system_name,:hw_backup_sys,:hw_ni_id,:hw_os_id,:hw_description,:hw_details) }
-        } 
-    } else {
-        ns_log Notice "hf_dc_write.1709: Wrong asset_type_id '${asset_type_id}'. Write denied. label '${label}' name '${name}' content '${content}' keywords '${keywords}' description '${description}' comments '${comments}' template_p '${template_p}' templated_p '${templated_p}' publish_p '${publish_p}' monitor_p '${monitor_p}' popularity '${popularity}' triage_priority '${triage_priority}' op_status '${op_status}' ua_id '${ua_id}' ns_id '${ns_id}' qal_product_id '${qal_product_id}' qal_customer_id '${qal_customer_id}' template_id '${template_id}' hw_id '${hw_id}' flags '${flags}' instance_id '${instance_id}' user_id '${user_id}'"
+    } elseif { [hf_f_id_exists_q $f_id] } {
+        set status 1
+    }
+    if { $status > -1 } {
+        # insert vh asset in hf_hardware
+        set hw_id_new [db_nextval hf_id_seq]
+        set nowts [dt_systime -gmt 1]
+        db_transaction {
+            if { $status == 0 } {
+                db_dml hw_sub_asset_map_update { update hf_sub_asset_map
+                    set sub_f_id=:hw_id_new where f_id=:f_id }
+            } else {
+                set hw_id $hw_id_new
+                set time_created $now_ts
+                set sub_type_id "vh"
+                db_dml hw_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
+            }
+            # record revision/new
+            db_dml hw_asset_create "insert into hf_hardware ([hf_hw_keys ","]) values ([hf_hw_keys ",:")"
+        }
     }
     return $hw_id_new
 }
 
-
 ad_proc -private hf_vm_write {
-    vm_id
-    label
-    name
-    asset_type_id
-    keywords
-    description
-    content
-    comments
-    trashed_p
-    trashed_by
-    template_p
-    templated_p
-    publish_p
-    monitor_p
-    popularity
-    triage_priority
-    op_status
-    ua_id
-    ns_id
-    qal_product_id
-    qal_customer_id
-    instance_id
-    user_id
-    last_modified
-    created
-    vm_domain_name
-    vm_ip_id
-    vm_ni_id
-    vm_ns_id
-    vm_type_id
-    vm_resource_path
-    vm_mount_union
-    vm_details
+    vm_arr_name
 } {
-    writes or creates an vm asset_type_id. If asset_id (vm_id) is blank, a new one is created. The new asset_id is returned if successful, otherwise empty string is returned.
+    Writes a new revision to an existing hf_virtual_machines record. If vm_id is empty, creates a new hf_virtual_machines record.  A new sub_f_id is returned if successful, otherwise empty string is returned.
 } {
-    if { $vm_id ne "" } {
-        hf_ui_go_ahead_q write vm_id
-    } else {
-        hf_ui_go_ahead_q create vm_id
-    }
-    # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
-
+    # requires f_id
+    upvar 1 vm_arr_name arr_name
+    # defaults
+    set sub_sort_order "100"
+    set sub_label "vh${sub_f_id}"
+    set attribute_p "1"
+    qf_array_to_vars $arr_name [hf_vm_keys]
     set new_vm_id ""
-    if { $asset_type_id eq "vm" } {
-        if { $vm_id ne "" } {
-            # validate vm_id. If vm_id not an vm or does not exist, set vm_id ""
-            if { ![hf_asset_id_exists $vm_id $instance_id "vm"] } {
-                set vm_id ""
-            }
-        }
-        
-        if { $vm_id eq "" } {
-            # hf_asset_create checks permission to create
-            set vm_id_new [hf_asset_create $label $name $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
+    set status -1
+    if { $vm_id ne "" } {
+        # existing attribute
+        set f_id_ck [hf_f_id_of_sub_f_id $vm_id]
+        if { $f_id eq $f_id_ck } {
+            set status 0
         } else {
-            # hf_asset_write checks permission to write
-            set vm_id_new [hf_asset_write $label $name $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $vm_id $flags $instance_id $user_id]
+            ns_log Warning "hf_vm_write.435: denied. attribute does not exist. vm_id '${vm_id} f_id '${f_id}'"
         }
-        if { $vm_id_new ne "" } {
-            # insert vm asset hf_virtual_machines
-            # hf_virtual_machines.instance_id, vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details
-            db_dml vm_asset_create {insert into hf_virtual_machines
-                (instance_id, vm_id, domain_name, ip_id, ni_id, ns_id, type_id, resource_path, mount_union, details)
-                values (:instance_id, :new_vm_id, :vm_domain_name, :vm_ip_id, :vm_ni_id, :vm_ns_id, :vm_type_id, :vm_resource_path, :vm_mount_union, :vm_details) }
-        } 
-    } else {
-        ns_log Notice "hf_vm_write.1815: Wrong asset_type_id '${asset_type_id}'. Write denied. label '${label}' name '${name}' content '${content}' keywords '${keywords}' description '${description}' comments '${comments}' template_p '${template_p}' templated_p '${templated_p}' publish_p '${publish_p}' monitor_p '${monitor_p}' popularity '${popularity}' triage_priority '${triage_priority}' op_status '${op_status}' ua_id '${ua_id}' ns_id '${ns_id}' qal_product_id '${qal_product_id}' qal_customer_id '${qal_customer_id}' template_id '${template_id}' vm_id '${vm_id}' flags '${flags}' instance_id '${instance_id}' usr_id '${user_id}'"
+    } elseif { [hf_f_id_exists_q $f_id] } {
+        set status 1
+    }
+    if { $status > -1 } {
+        # insert vh asset in hf_virtual_machines
+        set vm_id_new [db_nextval hf_id_seq]
+        set nowts [dt_systime -gmt 1]
+        db_transaction {
+            if { $status == 0 } {
+                db_dml vm_sub_asset_map_update { update hf_sub_asset_map
+                    set sub_f_id=:vm_id_new where f_id=:f_id }
+            } else {
+                set vm_id $vm_id_new
+                set time_created $now_ts
+                set sub_type_id "vh"
+                db_dml vm_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
+            }
+            # record revision/new
+            db_dml vm_asset_create "insert into hf_virtual_machines ([hf_vm_keys ","]) values ([hf_vm_keys ",:")"
+        }
     }
     return $vm_id_new
 }
 
-
 ad_proc -private hf_ss_write {
-    ss_id
-    label
-    name
-    asset_type_id
-    keywords
-    description
-    content
-    comments
-    trashed_p
-    trashed_by
-    template_p
-    templated_p
-    publish_p
-    monitor_p
-    popularity
-    triage_priority
-    op_status
-    ua_id
-    ns_id
-    qal_product_id
-    qal_customer_id
-    instance_id
-    user_id
-    last_modified
-    created
-    ss_server_name
-    ss_service_name
-    ss_daemon_ref
-    ss_protocol
-    ss_port
-    ss_ua_id
-    ss_ss_type
-    ss_ss_subtype
-    ss_ss_undersubtype
-    ss_ss_ultrasubtype
-    ss_config_uri
-    ss_memory_bytes
-    ss_details
+    ss_arr_name
 } {
-    writes or creates an ss asset_type_id. If asset_id (ss_id) is blank, a new one is created. The new asset_id is returned if successful, otherwise empty string is returned.
+    Writes a new revision to an existing hf_services record. If ss_id is empty, creates a new hf_services record.  A new sub_f_id is returned if successful, otherwise empty string is returned.
 } {
-    # hf_assets.instance_id, id, template_id, user_id, last_modified, created, asset_type_id, qal_product_id, qal_customer_id, label, keywords, description, content, coments, templated_p, template_p, time_start, time_stop, ns_id, ua_id, op_status, trashed_p, trashed_by, popularity, flags, publish_p, monitor_p, triage_priority
-    # hf_services.instance_id ss_id server_name service_name daemon_ref protocol port ua_id ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details
-    if { $ss_id ne "" } {
-        hf_ui_go_ahead_q write ss_id
-    } else {
-        hf_ui_go_ahead_q create ss_id
-    }
-
+    # requires f_id
+    upvar 1 ss_arr_name arr_name
+    # defaults
+    set sub_sort_order "100"
+    set sub_label "vh${sub_f_id}"
+    set attribute_p "1"
+    qf_array_to_vars $arr_name [hf_ss_keys]
     set new_ss_id ""
-    set error_p 0
-    if { $asset_type_id eq "ss" } {
-        if { $ss_id ne "" } {
-            # validate ss_id. If ss_id not an ss or does not exist, set ss_id ""
-            if { ![hf_asset_id_exists $ss_id $instance_id "ss"] } {
-                set ss_id ""
-            }
+    set status -1
+    if { $ss_id ne "" } {
+        # existing attribute
+        set f_id_ck [hf_f_id_of_sub_f_id $ss_id]
+        if { $f_id eq $f_id_ck } {
+            set status 0
+        } else {
+            ns_log Warning "hf_ss_write.435: denied. attribute does not exist. ss_id '${ss_id} f_id '${f_id}'"
         }
-    } else {
-        set error_p 1
-        set ss_id ""
+    } elseif { [hf_f_id_exists_q $f_id] } {
+        set status 1
     }
-    if { $ss_id eq "" } {
-        # hf_asset_create checks permission to create
-        set ss_id_new [hf_asset_create $label $name $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $flags $instance_id $user_id]
-    } else {
-        # hf_asset_write checks permission to write
-        set ss_id_new [hf_asset_write $label $name $asset_type_id $content $keywords $description $comments $template_p $templated_p $publish_p $monitor_p $popularity $triage_priority $op_status $ua_id $ns_id $qal_product_id $qal_customer_id $template_id $ss_id $flags $instance_id $user_id]
-    }
-    if { $ss_id_new ne "" } {
-        # insert ss asset hf_services
-        db_dml ss_asset_create {insert into hf_services
-            (instance_id, ss_id, server_name, service_name, daemon_ref, protocol, port, ua_id, ss_type, ss_subtype, ss_undersubtype, ss_ultrasubtype, config_uri, memory_bytes, details)
-            values (:instance_id,:ss_id_new,:ss_server_name,:ss_service_name,:ss_daemon_ref,:ss_protocol,:ss_port,:ss_ua_id,:ss_ss_type,:ss_ss_subtype,:ss_ss_undersubtype,:ss_ss_ultrasubtype,:ss_config_uri,:ss_memory_bytes,:ss_details)}
-    } 
-    if { $error_p } {
-        ns_log Warning "hf_ss_write.2245: Requested to over/write asset_type_id '${asset_type_id}' ss_id '{$ss_id}'. Creating asset_id '${ss_id_new}' instead."
+    if { $status > -1 } {
+        # insert vh asset in hf_services
+        set ss_id_new [db_nextval hf_id_seq]
+        set nowts [dt_systime -gmt 1]
+        db_transaction {
+            if { $status == 0 } {
+                db_dml ss_sub_asset_map_update { update hf_sub_asset_map
+                    set sub_f_id=:ss_id_new where f_id=:f_id }
+            } else {
+                set ss_id $ss_id_new
+                set time_created $now_ts
+                set sub_type_id "vh"
+                db_dml ss_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
+            }
+            # record revision/new
+            db_dml ss_asset_create "insert into hf_services ([hf_ss_keys ","]) values ([hf_ss_keys ",:")"
+        }
     }
     return $ss_id_new
 }
+
+
+
+##code
 
 
 ad_proc -private hf_ip_write {
