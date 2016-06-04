@@ -1235,3 +1235,36 @@ ad_proc -private hf_ua_write {
     return $new_ua_id
 }
 
+
+
+ad_proc -private hf_ss_defaults {
+    array_name
+} {
+    Sets defaults for an hf_service record into array_name.
+} {
+    upvar 1 $array_name ss_arr
+    upvar 1 $instance_id instance_id
+    set ss [list instance_id $instance_id \
+                ss_id "" \
+                server_name  \
+                service_name $name \
+                daemon_ref $ss_nsd_file \
+                protocol "http" \
+                port $http_port \
+                ss_type "" \
+                ss_subtype "" \
+                ss_undersubtype "" \
+                ss_ultrasubtype "" \
+                config_uri $ss_config_file \
+                memory_bytes "" \
+                details ""\
+                time_trashed ""\
+                time_created $nowts]
+    array set ss_arr $ss
+    if { [llength [set_difference_named_v ss [hf_ss_keys]]] > 0 } {
+        ns_log Warning "hf_ss_defaults: Update this proc. It is out of sync with hf_ss_keys"
+    }
+    return 1
+}
+
+
