@@ -21,12 +21,19 @@ ad_proc -private hf_namelur {
 } {
     # from namelur/nar/starwars.nar # 
     # sw_names.txt converted by Namelur (C) legolas558
-    set r1 [randomRange 3]
-    set r2 [randomRange 3]
+    # The double spaces in the original file are meant to provide a space.
+    # Here, they have been revised to insert initials and/or capitalization.
+    set r1 [randomRange 1]
+    set r2 [randomRange 1]
     incr r1
     incr r2
-    set mystery1 [string trimleft [ad_generate_random_string $r1] "0"]
-    set mystery2 [string trimleft [ad_generate_random_string $r2] "0"]
+    set mystery1 [ad_generate_random_string ]
+    set mystery2 [ad_generate_random_string ]
+    regsub -all -- {[0-9]+} $mystery1 "."  mystery1
+    regsub -all -- {[0-9]+} $mystery2 "."  mystery2
+    set mystery1 [string range "[string trim $mystery1 " ."]." 0 $r1]
+    set mystery2 [string range "[string trim $mystery2 " ."]." 0 $r2]
+    #ns_log Notice "hf_namelur.36: mystery1 $mystery1 mystery2 $mystery2"
     set n_list [list \
                     v10790 ${mystery1} 2 \
                     v382 a 4 \
@@ -201,29 +208,29 @@ ad_proc -private hf_namelur {
             ^[c][0-9]+$ {
                 set letter "c"
                 set x [string range $entry 1 end]
-                ns_log Notice "hf_namelur.196. entry '${entry}' c x ${x}"
+                #ns_log Notice "hf_namelur.196. entry '${entry}' c x ${x}"
             }
             ^[v][0-9]+$ {
                 set letter "v"
                 set x [string range $entry 1 end]
-                ns_log Notice "hf_namelur.201. entry '${entry}' v x ${x}"
+                #ns_log Notice "hf_namelur.201. entry '${entry}' v x ${x}"
             }
-            ^[a-z\ ]+$ {
-                set y_arr(${y}) $entry
+            ^[A-Za-z\ \.]+$ {
                 incr y
-                ns_log Notice "hf_namelur.206. entry '${entry}' y_arr(${y}) '${entry}'"
+                set y_arr(${y}) $entry
+                #ns_log Notice "hf_namelur.206. entry '${entry}' y_arr(${y}) '${entry}'"
             }
             ^[0-9]+$ {
                 set row [list $x $y]
-                ns_log Notice "hf_namelur.209. entry '${entry}' row '${row}'"
+                #ns_log Notice "hf_namelur.209. entry '${entry}' row '${row}'"
                 if { [expr { $entry & 4 } ] == 4 } {
                     # can be in middle
                     if { $letter eq "c" } {
                         lappend mc_lists $row
-                        ns_log Notice "hf_namelur.215. entry '${entry}' mc"
+                        #ns_log Notice "hf_namelur.215. entry '${entry}' mc"
                     } elseif { $letter eq "v" } {
                         lappend mv_lists $row
-                        ns_log Notice "hf_namelur.218. entry '${entry}' mv"
+                        #ns_log Notice "hf_namelur.218. entry '${entry}' mv"
                     }
                 }
                 if { [expr { $entry & 2 } ] == 2 } {
@@ -231,11 +238,11 @@ ad_proc -private hf_namelur {
                     if { $letter eq "c" } {
                         lappend bc_lists $row
                         incr bc_counter
-                        ns_log Notice "hf_namelur.215. entry '${entry}' bc"
+                        #ns_log Notice "hf_namelur.215. entry '${entry}' bc"
                     } elseif { $letter eq "v" } {
                         incr bv_counter
                         lappend bv_lists $row
-                        ns_log Notice "hf_namelur.215. entry '${entry}' bv"
+                        #ns_log Notice "hf_namelur.215. entry '${entry}' bv"
                     }
                 }
                 if { [expr { $entry & 1 } ] == 1 } {
@@ -243,11 +250,11 @@ ad_proc -private hf_namelur {
                     if { $letter eq "c" } {
                         incr ec_counter
                         lappend ec_lists $row
-                        ns_log Notice "hf_namelur.215. entry '${entry}' ec"
+                        #ns_log Notice "hf_namelur.215. entry '${entry}' ec"
                     } elseif { $letter eq "v" } {
                         incr ev_counter
                         lappend ev_lists $row
-                        ns_log Notice "hf_namelur.215. entry '${entry}' ev"
+                        #ns_log Notice "hf_namelur.215. entry '${entry}' ev"
                     }
                 }
             }
@@ -256,7 +263,7 @@ ad_proc -private hf_namelur {
             }
         }
     }
-    ns_log Notice "hf_namelur.239: bc_lists '${bc_lists}' bc_counter ${bc_counter}"
+    #ns_log Notice "hf_namelur.239: bc_lists '${bc_lists}' bc_counter ${bc_counter}"
     set names_list [list ]
     # set up weighted beginnings and ends based on count of vowels vs constants
     set bv_fraction [expr { $bv_counter / ( $bv_counter + $bc_counter + 1 ) } ]
