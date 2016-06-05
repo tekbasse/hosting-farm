@@ -4,7 +4,8 @@ ad_library {
     business logic for hosting-farm assets
     @creation-date 25 May 2013
     @Copyright (c) 2014-2016 Benjamin Brink
-    @license GNU General Public License 2, see project home or http://www.gnu.org/licenses/gpl-2.0.en.html
+    @license GNU General Public License 2
+    @see project home or http://www.gnu.org/licenses/gpl-2.0.en.html
     @project home: http://github.com/tekbasse/hosting-farm
     @address: po box 20, Marylhurst, OR 97036-0020 usa
     @email: tekbasse@yahoo.com
@@ -18,7 +19,9 @@ ad_library {
 ad_proc -public hf_asset_create { 
     asset_arr_name
 } {
-    Creates hf asset from array, where values are passed using the array index names that coorrespond with hf_asset_keys. returns asset_id, or 0 if error. See hf_asset_keys for element names.
+    Creates hf asset from array, where values are passed using the array
+    index names that coorrespond with hf_asset_keys.
+    Returns asset_id, or 0 if error. See hf_asset_keys for element names.
 
     @param asset_array_name
     @return asset_id, or 0 if error
@@ -43,13 +46,17 @@ ad_proc -public hf_asset_create {
             db_dml hf_asset_create " insert into hf_assets
                 ([hf_asset_keys ","])
             values ([hf_asset_keys ",:"])" 
-        db_dml hf_asset_label_update { update hf_asset_rev_map
-            set asset_id=:asset_id and label=:label where f_id=:f_id and instanece_id=:instance_id }
+            db_dml hf_asset_label_update { update hf_asset_rev_map
+                set asset_id=:asset_id and label=:label
+                where f_id=:f_id and instanece_id=:instance_id
+            }
             hf_asset_rev_map_update $label $f_id $asset_id $trashed_p
-            ns_log Notice "hf_asset_create: hf_asset_create id '$asset_id' f_id '$f_id' label '$label' instance_id '$instance_id' user_id '$user_id'"
+            ns_log Notice "hf_asset_create: hf_asset_create id '$asset_id' \
+f_id '$f_id' label '$label' instance_id '$instance_id' user_id '$user_id'"
         } on_error {
             set asset_id 0
-            ns_log Error "hf_asset_create: general psql error during db_dml for label $label"
+            ns_log Error "hf_asset_create: general psql error during db_dml \
+for label $label"
         }
     }
     return $asset_id
@@ -59,7 +66,9 @@ ad_proc -public hf_asset_create {
 ad_proc -public hf_asset_write {
     asset_arr_name
 } {
-    Writes a new revision of an existing asset. asset_id is an existing revision of template_id. returns the new asset_id or a blank asset_id if unsuccessful.
+    Writes a new revision of an existing asset.
+    asset_id is an existing revision of template_id.
+    Returns the new asset_id or a blank asset_id if unsuccessful.
 } {
     upvar 1 $asset_arr_name asset_arr
     upvar 1 instance_id instance_id
@@ -80,9 +89,12 @@ ad_proc -public hf_asset_write {
                 ([hf_asset_keys ","])
                 values ([hf_asset_keys ",:"])"
                 hf_asset_rev_map_update $label $f_id $asset_id $trashed_p
-                ns_log Notice "hf_asset_write:  asset_id '${asset_id}' old_asset_id '${old_asset_id}'"
+                ns_log Notice "hf_asset_write: \
+ asset_id '${asset_id}' old_asset_id '${old_asset_id}'"
             } on_error {
-                ns_log Notice "hf_asset_write: id '${asset_id}' f_id '${f_id}' name '${name}' instance_id '${instance_id}' user_id '${user_id}'"
+                ns_log Notice "hf_asset_write: \
+id '${asset_id}' f_id '${f_id}' name '${name}' instance_id '${instance_id}' \
+user_id '${user_id}'"
                 ns_log Error "hf_asset_write: general db error during db_dml"
             }
         } 
@@ -116,18 +128,25 @@ ad_proc -public hf_asset_delete {
         if { [hf_asset_revison_current_q $asset_id] } {
             # In q-wiki, the process is to
             # 1. Point to another untrashed revision if available
-            # 2. Otherwise point an available trashed revision and mark as trashed
-            # 3. Delete the entire asset if no other trashed or untrashed revsions exist.
+            # 2. Otherwise point an available trashed revision
+            #    and mark as trashed
+            # 3. Delete the entire asset
+            #    if no other trashed or untrashed revsions exist.
             # This is not expected behavior here.
             
-            # Deleting an asset this way is not permitted. Reject. Must leave at least one trashed for archives.
+            # Deleting an asset this way is not permitted. Reject.
+            # Must leave at least one trashed for archives.
             set delete_p 0
-            ns_log Notice "hf_asset_revision_delete.164: Cannot delete an asset by deleting current revision trashed_p '${trashed_p}'."
+            ns_log Notice "hf_asset_revision_delete.164: Cannot delete \
+an asset by deleting current revision trashed_p '${trashed_p}'."
         }
     }
     if { $delete_p && $trashed_p } {
         db_dml hf_asset_rev_delete { delete from hf_assets 
-            where id=:asset_id and instance_id=:instance_id and trashed_p = '1' }
+            where id=:asset_id and \
+            instance_id=:instance_id \
+                                         and trashed_p = '1'
+        }
     } else {
         set delete_p 0
     }

@@ -24,7 +24,8 @@ ad_proc -private hf_ua_delete {
     if { $ua_id_list ne "" } {
         set user_id [ad_conn user_id]
         set instance_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
+        set admin_p [permission::permission_p -party_id $user_id -object_id \
+                         $package_id -privilege admin]
         set success_p $admin_p
         if { $admin_p } {
             if { [llength $ua_id_list] > 0 } {
@@ -37,10 +38,23 @@ ad_proc -private hf_ua_delete {
             }
             if { $validated_p } {
                 db_transaction {
-                    db_dml hf_uas_up_delete { delete from hf_up where up_id in ( select up_id from hf_ua_up_map where instance_id=:instance_id and ua_id in ([template::util::tcl_to_sql_list $ua_list])) }
-                    db_dml hf_uas_map_delete { delete from hf_ua_up_map where instance_id=:instance_id and ua_id in ([template::util::tcl_to_sql_list $ua_list]) }
-                    db_dml hf_uas_delete { delete from hf_ua where instance_id=:instance_id and ua_id in ([template::util::tcl_to_sql_list $ua_list]) }
-                    db_dml hf_ua_attr_map_del { delete from hf_sub_asset_map where instance_id=:instance_id and sub_f_id in ([template::util::tcl_to_sql_list $ua_list]) }
+                    set ups_list [hf_up_id_of_ua_id ]
+                    db_dml hf_uas_up_delete {
+                        delete from hf_up \
+                            where up_id in \
+                            ([template::util::tcl_to_sql_list $ups_list]) }
+                    db_dml hf_uas_map_delete {
+                        delete from hf_ua_up_map \
+                            where instance_id=:instance_id and ua_id in \
+                            ([template::util::tcl_to_sql_list $ua_list]) }
+                    db_dml hf_uas_delete { 
+                        delete from hf_ua \
+                            where instance_id=:instance_id and ua_id in \
+                            ([template::util::tcl_to_sql_list $ua_list]) }
+                    db_dml hf_ua_attr_map_del {
+                        delete from hf_sub_asset_map \
+                            where instance_id=:instance_id and sub_f_id in \
+                            ([template::util::tcl_to_sql_list $ua_list]) }
                 } on_error {
                     set success_p 0
                 }
@@ -55,13 +69,16 @@ ad_proc -private hf_ua_delete {
 ad_proc -private hf_ns_delete {
     ns_id_list
 } {
-    Deletes hf_ns_records. ns_id_list may be a one or a list. User must be a package admin.
+    Deletes hf_ns_records.
+    ns_id_list may be a one or a list.
+    User must be a package admin.
 } {
     set sucess_p 1
     if { $ns_id_list ne "" } {
         set user_id [ad_conn user_id]
         set instance_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
+        set admin_p [permission::permission_p -party_id $user_id \
+                         -object_id $package_id -privilege admin]
         set success_p $admin_p
         if { $admin_p } {
             if { [llength $ns_id_list] > 0 } {
@@ -74,8 +91,14 @@ ad_proc -private hf_ns_delete {
             }
             if { $validated_p } {
                 db_transaction {
-                    db_dml hf_ns_ids_delete { delete from hf_ns_records where instance_id=:instance_id and ns_id in ([template::util::tcl_to_sql_list $ns_list]) }
-                    db_dml hf_ns_attr_map_del { delete from hf_sub_asset_map where instance_id=:instance_id and sub_f_id in ([template::util::tcl_to_sql_list $ns_list]) }
+                    db_dml hf_ns_ids_delete {
+                        delete from hf_ns_records \
+                            where instance_id=:instance_id and ns_id in \
+                            ([template::util::tcl_to_sql_list $ns_list]) }
+                    db_dml hf_ns_attr_map_del {
+                        delete from hf_sub_asset_map \
+                            where instance_id=:instance_id and sub_f_id in \
+                            ([template::util::tcl_to_sql_list $ns_list]) }
                 } on_error {
                     set success_p 0
                 }
@@ -90,13 +113,16 @@ ad_proc -private hf_ns_delete {
 ad_proc -private hf_ip_delete {
     ip_id_list
 } {
-    Deletes hf_ip_addresses records. ip_id_list may be a one or a list. User must be a package admin.
+    Deletes hf_ip_addresses records.
+    ip_id_list may be a one or a list.
+    User must be a package admin.
 } {
     set success_p 1
     if { $ip_id_list ne "" } {
         set user_id [ad_conn user_id]
         set instance_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
+        set admin_p [permission::permission_p -party_id $user_id \
+                         -object_id $package_id -privilege admin]
         set success_p $admin_p
         if { $admin_p } {
             if { [llength $ip_id_list] > 0 } {
@@ -109,8 +135,14 @@ ad_proc -private hf_ip_delete {
             }
             if { $validated_p } {
                 db_transaction {
-                    db_dml hf_ip_ids_delete { delete from hf_ip_addresses where instance_id=:instance_id and ip_id in ([template::util::tcl_to_sql_list $ip_list]) }
-                    db_dml hf_ip_attr_map_del { delete from hf_sub_asset_map where instance_id=:instance_id and sub_f_id in ([template::util::tcl_to_sql_list $ip_list]) }
+                    db_dml hf_ip_ids_delete {
+                        delete from hf_ip_addresses \
+                            where instance_id=:instance_id and ip_id in \
+                            ([template::util::tcl_to_sql_list $ip_list]) }
+                    db_dml hf_ip_attr_map_del {
+                        delete from hf_sub_asset_map \
+                            where instance_id=:instance_id and sub_f_id in \
+                            ([template::util::tcl_to_sql_list $ip_list]) }
                 } on_error {
                     set success_p 0
                 }
@@ -127,13 +159,16 @@ ad_proc -private hf_ip_delete {
 ad_proc -private hf_ni_delete {
     ni_id_list
 } {
-    Deletes hf_network_interfaces records. ni_id_list may be a one or a list. User must be a package admin.
+    Deletes hf_network_interfaces records.
+    ni_id_list may be a one or a list.
+    User must be a package admin.
 } {
     set success_p 1
     if { $ni_id_list ne "" } {
         set user_id [ad_conn user_id]
         set instance_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
+        set admin_p [permission::permission_p -party_id $user_id \
+                         -object_id $package_id -privilege admin]
         set success_p $admin_p
         if { $admin_p } {
             if { [llength $ni_id_list] > 0 } {
@@ -146,8 +181,14 @@ ad_proc -private hf_ni_delete {
             }
             if { $validated_p } {
                 db_transaction {
-                    db_dml hf_ni_ids_delete { delete from hf_network_interfaces where instance_id=:instance_id and ni_id in ([template::util::tcl_to_sql_list $ni_list]) }
-                    db_dml hf_ni_attr_map_del { delete from hf_sub_asset_map where instance_id=:instance_id and sub_f_id in ([template::util::tcl_to_sql_list $ni_list]) }
+                    db_dml hf_ni_ids_delete {
+                        delete from hf_network_interfaces \
+                            where instance_id=:instance_id and ni_id in \
+                            ([template::util::tcl_to_sql_list $ni_list]) }
+                    db_dml hf_ni_attr_map_del {
+                        delete from hf_sub_asset_map \
+                            where instance_id=:instance_id and sub_f_id in \
+                            ([template::util::tcl_to_sql_list $ni_list]) }
                 } on_error {
                     set success_p 0
                 }
@@ -163,13 +204,16 @@ ad_proc -private hf_ni_delete {
 ad_proc -private hf_ss_delete {
     ss_id_list
 } {
-    Deletes hf_service records.  ss_id_list may be a one or a list. User must be a package admin.
+    Deletes hf_service records.
+    ss_id_list may be a one or a list.
+    User must be a package admin.
 } {
     set success_p 1
     if { $ss_id_list ne "" } {
         set user_id [ad_conn user_id]
         set instance_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
+        set admin_p [permission::permission_p -party_id $user_id \
+                         -object_id $package_id -privilege admin]
         set success_p $admin_p
         if { $admin_p } {
             if { [llength $ss_id_list] > 0 } {
@@ -182,8 +226,14 @@ ad_proc -private hf_ss_delete {
             }
             if { $validated_p } {
                 db_transaction {
-                    db_dml hf_ss_ids_delete { delete from hf_services where instance_id=:instance_id and ss_id in ([template::util::tcl_to_sql_list $ss_list]) }
-                    db_dml hf_ss_attr_map_del { delete from hf_sub_asset_map where instance_id=:instance_id and sub_f_id in ([template::util::tcl_to_sql_list $ss_list]) }
+                    db_dml hf_ss_ids_delete {
+                        delete from hf_services \
+                            where instance_id=:instance_id and ss_id in \
+                            ([template::util::tcl_to_sql_list $ss_list]) }
+                    db_dml hf_ss_attr_map_del {
+                        delete from hf_sub_asset_map \
+                            where instance_id=:instance_id and sub_f_id in \
+                            ([template::util::tcl_to_sql_list $ss_list]) }
                 } on_error {
                     set success_p 0
                 }
@@ -198,13 +248,16 @@ ad_proc -private hf_ss_delete {
 ad_proc -private hf_vh_delete {
     vh_id_list
 } {
-    Deletes hf_vhosts records.  vh_id_list may be a one or a list. User must be a package admin.
+    Deletes hf_vhosts records.
+    vh_id_list may be a one or a list.
+    User must be a package admin.
 } {
     set success_p 1
     if { $vh_id_list ne "" } {
         set user_id [ad_conn user_id]
         set instance_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
+        set admin_p [permission::permission_p -party_id $user_id \
+                         -object_id $package_id -privilege admin]
         set success_p $admin_p
         if { $admin_p } {
             if { [llength $vh_id_list] > 0 } {
@@ -217,8 +270,14 @@ ad_proc -private hf_vh_delete {
             }
             if { $validated_p } {
                 db_transaction {
-                    db_dml hf_vh_ids_delete { delete from hf_vhosts where instance_id=:instance_id and vh_id in ([template::util::tcl_to_sql_list $vh_list]) }
-                    db_dml hf_vh_attr_map_del { delete from hf_sub_asset_map where instance_id=:instance_id and sub_f_id in ([template::util::tcl_to_sql_list $vh_list]) }
+                    db_dml hf_vh_ids_delete {
+                        delete from hf_vhosts \
+                            where instance_id=:instance_id and vh_id in \
+                            ([template::util::tcl_to_sql_list $vh_list]) }
+                    db_dml hf_vh_attr_map_del {
+                        delete from hf_sub_asset_map \
+                            where instance_id=:instance_id and sub_f_id in \
+                            ([template::util::tcl_to_sql_list $vh_list]) }
                 } on_error {
                     set success_p 0
                 }
@@ -234,13 +293,16 @@ ad_proc -private hf_vh_delete {
 ad_proc -private hf_vm_delete {
     vm_id_list
 } {
-    Deletes hf_virtual_machines records.  vm_id_list may be a one or a list. User must be a package admin.
+    Deletes hf_virtual_machines records.
+    vm_id_list may be a one or a list.
+    User must be a package admin.
 } {
     set success_p 1
     if { $vm_id_list ne "" } {
         set user_id [ad_conn user_id]
         set instance_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
+        set admin_p [permission::permission_p -party_id $user_id \
+                         -object_id $package_id -privilege admin]
         set success_p $admin_p
         if { $admin_p } {
             if { [llength $vm_id_list] > 0 } {
@@ -253,8 +315,14 @@ ad_proc -private hf_vm_delete {
             }
             if { $validated_p } {
                 db_transaction {
-                    db_dml hf_vm_ids_delete { delete from hf_virtual_machines where instance_id=:instance_id and vm_id in ([template::util::tcl_to_sql_list $vm_list]) }
-                    db_dml hf_vm_attr_map_del { delete from hf_sub_asset_map where instance_id=:instance_id and sub_f_id in ([template::util::tcl_to_sql_list $vm_list]) }
+                    db_dml hf_vm_ids_delete {
+                        delete from hf_virtual_machines \
+                            where instance_id=:instance_id and vm_id in \
+                            ([template::util::tcl_to_sql_list $vm_list]) }
+                    db_dml hf_vm_attr_map_del {
+                        delete from hf_sub_asset_map \
+                            where instance_id=:instance_id and sub_f_id in \
+                            ([template::util::tcl_to_sql_list $vm_list]) }
                 } on_error {
                     set success_p 0
                 }
@@ -270,13 +338,16 @@ ad_proc -private hf_vm_delete {
 ad_proc -private hf_hw_delete {
     hw_id_list
 } {
-    Deletes hf_hardware records.  hw_id_list may be a one or a list. User must be a package admin.
+    Deletes hf_hardware records.
+    hw_id_list may be a one or a list.
+    User must be a package admin.
 } {
     set success_p 1
     if { $hw_id_list ne "" } {
         set user_id [ad_conn user_id]
         set instance_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
+        set admin_p [permission::permission_p -party_id $user_id \
+                         -object_id $package_id -privilege admin]
         set success_p $admin_p
         if { $admin_p } {
             if { [llength $hw_id_list] > 0 } {
@@ -289,8 +360,14 @@ ad_proc -private hf_hw_delete {
             }
             if { $validated_p } {
                 db_transaction {
-                    db_dml hf_hw_ids_delete { delete from hf_hardware where instance_id=:instance_id and hw_id in ([template::util::tcl_to_sql_list $hw_list]) }
-                    db_dml hf_hw_attr_map_del { delete from hf_sub_asset_map where instance_id=:instance_id and sub_f_id in ([template::util::tcl_to_sql_list $hw_list]) }
+                    db_dml hf_hw_ids_delete {
+                        delete from hf_hardware \
+                            where instance_id=:instance_id and hw_id in \
+                            ([template::util::tcl_to_sql_list $hw_list]) }
+                    db_dml hf_hw_attr_map_del {
+                        delete from hf_sub_asset_map \
+                            where instance_id=:instance_id and sub_f_id in \
+                            ([template::util::tcl_to_sql_list $hw_list]) }
                 } on_error {
                     set success_p 0
                 }
@@ -306,13 +383,16 @@ ad_proc -private hf_hw_delete {
 ad_proc -private hf_dc_delete {
     dc_id_list
 } {
-    Deletes hf_data_centers records.  dc_id_list may be a one or a list. User must be a package admin.
+    Deletes hf_data_centers records.
+    dc_id_list may be a one or a list.
+    User must be a package admin.
 } {
     set success_p 1
     if { $dc_id_list ne "" } {
         set user_id [ad_conn user_id]
         set instance_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
+        set admin_p [permission::permission_p -party_id $user_id \
+                         -object_id $package_id -privilege admin]
         set success_p $admin_p
         if { $admin_p } {
             if { [llength $dc_id_list] > 0 } {
@@ -325,8 +405,14 @@ ad_proc -private hf_dc_delete {
             }
             if { $validated_p } {
                 db_transaction {
-                    db_dml hf_dc_ids_delete { delete from hf_data_centers where instance_id=:instance_id and dc_id in ([template::util::tcl_to_sql_list $dc_list]) }
-                    db_dml hf_dc_attr_map_del { delete from hf_sub_asset_map where instance_id=:instance_id and sub_f_id in ([template::util::tcl_to_sql_list $dc_list]) }
+                    db_dml hf_dc_ids_delete {
+                        delete from hf_data_centers \
+                            where instance_id=:instance_id and dc_id in \
+                            ([template::util::tcl_to_sql_list $dc_list]) }
+                    db_dml hf_dc_attr_map_del {
+                        delete from hf_sub_asset_map \
+                            where instance_id=:instance_id and sub_f_id in \
+                            ([template::util::tcl_to_sql_list $dc_list]) }
                 } on_error {
                     set success_p 0
                 }
@@ -342,13 +428,16 @@ ad_proc -private hf_dc_delete {
 ad_proc -private hf_monitor_delete {
     monitor_id_list
 } {
-    Deletes monitor_id records.  monitor_id_list may be a one or a list. User must be a package admin.
+    Deletes monitor_id records.
+    monitor_id_list may be a one or a list.
+    User must be a package admin.
 } {
     set success_p 1
     if { $monitor_id_list ne "" } {
         set user_id [ad_conn user_id]
         set instance_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
+        set admin_p [permission::permission_p -party_id $user_id \
+                         -object_id $package_id -privilege admin]
         set success_p $admin_p
         if { $admin_p } {
             if { [llength $monitor_id_list] > 0 } {
@@ -361,11 +450,33 @@ ad_proc -private hf_monitor_delete {
             }
             if { $validated_p } {
                 db_transaction {
-                    db_dml hf_monitor_fdc_delete { delete from hf_monitor_freq_dist_curves where monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list]) and instance_id=:instance_id }
-                    db_dml hf_monitor_stats_delete { delete from hf_monitor_statistics where monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list]) and instance_id=:instance_id }
-                    db_dml hf_monitor_status_delete { delete from hf_monitor_status where monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list]) and instance_id=:instance_id }
-                    db_dml hf_monitor_cnc_delete { delete from hf_monitor_config_n_control where monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list]) and instance_id=:instance_id and asset_id=:f_id }
-                    db_dml hf_monitor_log_delete { delete from hf_monitor_log where monitor_id in ([template::util::tcl_to_sql_list $monitor_id_list]) and instance_id=:instance_id and asset_id=:f_id }
+                    db_dml hf_monitor_fdc_delete {
+                        delete from hf_monitor_freq_dist_curves \
+                            where instance_id=:instance_id and \
+                            monitor_id in \
+                            ([template::util::tcl_to_sql_list $monitor_id_list])}
+                    db_dml hf_monitor_stats_delete {
+                        delete from hf_monitor_statistics \
+                            where instance_id=:instance_id and \
+                            monitor_id in \
+                            ([template::util::tcl_to_sql_list $monitor_id_list])}
+                    db_dml hf_monitor_status_delete {
+                        delete from hf_monitor_status \
+                            where instance_id=:instance_id and \
+                            monitor_id in \
+                            ([template::util::tcl_to_sql_list $monitor_id_list])}
+                    db_dml hf_monitor_cnc_delete {
+                        delete from hf_monitor_config_n_control \
+                            where instance_id=:instance_id and \
+                            asset_id=:f_id and \
+                            monitor_id in \
+                            ([template::util::tcl_to_sql_list $monitor_id_list])}
+                    db_dml hf_monitor_log_delete {
+                        delete from hf_monitor_log \
+                            where instance_id=:instance_id and \
+                            asset_id=:f_id and \
+                            monitor_id in \
+                            ([template::util::tcl_to_sql_list $monitor_id_list])}
                 } on_error {
                     set success_p 0
                 }
@@ -382,7 +493,9 @@ ad_proc -private hf_attribute_sub_label_change {
     sub_f_id
     new_sub_label
 } {
-    Changes the attribute_name where the attribute is referenced from sub_f_id. Returns 1 if successful, otherwise 0.
+    Changes the attribute_name
+    where the attribute is referenced from sub_f_id.
+    Returns 1 if successful, otherwise 0.
 
     @param sub_f_id  The sub_f_id of the asset.
     @param new_sub_label   The new sub_label.
@@ -393,11 +506,16 @@ ad_proc -private hf_attribute_sub_label_change {
     set success_p 0
     if { $write_p } {
         db_transaction {
-            db_dml hf_sub_label_change_asset_map { update hf_sub_asset_map
-                set sub_label=:new_sub_label where sub_f_id=:sub_f_id and instance_id=:instance_id 
+            db_dml hf_sub_label_change_asset_map {
+                update hf_sub_asset_map \
+                    set sub_label=:new_sub_label \
+                    where sub_f_id=:sub_f_id and instance_id=:instance_id 
             }
-            db_dml hf_sub_label_change_hf_subassets { update hf_assets
-                set last_modified = current_timestamp, sub_label=:new_sub_label where sub_f_id=:sub_f_id and instance_id=:instance_id 
+            db_dml hf_sub_label_change_hf_subassets {
+                update hf_assets \
+                    set last_modified = current_timestamp, \
+                    sub_label=:new_sub_label \
+                    where sub_f_id=:sub_f_id and instance_id=:instance_id 
             }
             set success_p 1
         } on_error {
@@ -411,7 +529,10 @@ ad_proc -private hf_attribute_sub_label_change {
 ad_proc -private hf_vh_write {
     vh_arr_name
 } {
-    Writes a new revision to an existing hf_vhost record. If vh_id is empty, creates a new hf_vhost record.  A new sub_f_id is returned if successful, otherwise empty string is returned.
+    Writes a new revision to an existing hf_vhost record.
+    If vh_id is empty, creates a new hf_vhost record.
+    A new sub_f_id is returned if successful.
+    Otherwise empty string is returned.
 } {
     # requires f_id
     upvar 1 vh_arr_name arr_name
@@ -428,7 +549,8 @@ ad_proc -private hf_vh_write {
         if { $f_id eq $f_id_ck } {
             set status 0
         } else {
-            ns_log Warning "hf_vh_write.435: denied. attribute does not exist. vh_id '${vh_id} f_id '${f_id}'"
+            ns_log Warning "hf_vh_write.435: denied. \
+attribute does not exist. vh_id '${vh_id} f_id '${f_id}'"
         }
     } elseif { [hf_f_id_exists_q $f_id] } {
         set status 1
@@ -445,10 +567,12 @@ ad_proc -private hf_vh_write {
                 set vh_id $vh_id_new
                 set time_created $now_ts
                 set sub_type_id "vh"
-                db_dml vh_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
+                db_dml vh_sub_asset_map_cr "insert into hf_sub_asset_map \
+ ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }
             # record revision/new
-            db_dml vh_asset_create "insert into hf_vhosts ([hf_vh_keys ","]) values ([hf_vh_keys ",:")"
+            db_dml vh_asset_create "insert into hf_vhosts \
+ ([hf_vh_keys ","]) values ([hf_vh_keys ",:")"
         }
     }
     return $vh_id_new
@@ -458,7 +582,10 @@ ad_proc -private hf_vh_write {
 ad_proc -private hf_dc_write {
     dc_arr_name
 } {
-    Writes a new revision to an existing hf_data_centers record. If dc_id is empty, creates a new hf_data_centers record.  A new sub_f_id is returned if successful, otherwise empty string is returned.
+    Writes a new revision to an existing hf_data_centers record.
+    If dc_id is empty, creates a new hf_data_centers record.
+    A new sub_f_id is returned if successful.
+    Otherwise empty string is returned.
 } {
     # requires f_id
     upvar 1 dc_arr_name arr_name
@@ -475,7 +602,8 @@ ad_proc -private hf_dc_write {
         if { $f_id eq $f_id_ck } {
             set status 0
         } else {
-            ns_log Warning "hf_dc_write.435: denied. attribute does not exist. dc_id '${dc_id} f_id '${f_id}'"
+            ns_log Warning "hf_dc_write.435: denied. \
+attribute does not exist. dc_id '${dc_id} f_id '${f_id}'"
         }
     } elseif { [hf_f_id_exists_q $f_id] } {
         set status 1
@@ -492,10 +620,12 @@ ad_proc -private hf_dc_write {
                 set dc_id $dc_id_new
                 set time_created $now_ts
                 set sub_type_id "vh"
-                db_dml dc_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
+                db_dml dc_sub_asset_map_cr "insert into hf_sub_asset_map \
+ ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }
             # record revision/new
-            db_dml dc_asset_create "insert into hf_data_centers ([hf_dc_keys ","]) values ([hf_dc_keys ",:")"
+            db_dml dc_asset_create "insert into hf_data_centers \
+ ([hf_dc_keys ","]) values ([hf_dc_keys ",:")"
         }
     }
     return $dc_id_new
@@ -505,7 +635,10 @@ ad_proc -private hf_dc_write {
 ad_proc -private hf_hw_write {
     hw_arr_name
 } {
-    Writes a new revision to an existing hf_hardware record. If hw_id is empty, creates a new hf_hardware record.  A new sub_f_id is returned if successful, otherwise empty string is returned.
+    Writes a new revision to an existing hf_hardware record.
+    If hw_id is empty, creates a new hf_hardware record.
+    A new sub_f_id is returned if successful.
+    Otherwise empty string is returned.
 } {
     # requires f_id
     upvar 1 hw_arr_name arr_name
@@ -522,7 +655,8 @@ ad_proc -private hf_hw_write {
         if { $f_id eq $f_id_ck } {
             set status 0
         } else {
-            ns_log Warning "hf_hw_write.435: denied. attribute does not exist. hw_id '${hw_id} f_id '${f_id}'"
+            ns_log Warning "hf_hw_write.435: denied. \
+attribute does not exist. hw_id '${hw_id} f_id '${f_id}'"
         }
     } elseif { [hf_f_id_exists_q $f_id] } {
         set status 1
@@ -539,10 +673,12 @@ ad_proc -private hf_hw_write {
                 set hw_id $hw_id_new
                 set time_created $now_ts
                 set sub_type_id "vh"
-                db_dml hw_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
+                db_dml hw_sub_asset_map_cr "insert into hf_sub_asset_map \
+ ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }
             # record revision/new
-            db_dml hw_asset_create "insert into hf_hardware ([hf_hw_keys ","]) values ([hf_hw_keys ",:")"
+            db_dml hw_asset_create "insert into hf_hardware \
+ ([hf_hw_keys ","]) values ([hf_hw_keys ",:")"
         }
     }
     return $hw_id_new
@@ -551,7 +687,10 @@ ad_proc -private hf_hw_write {
 ad_proc -private hf_vm_write {
     vm_arr_name
 } {
-    Writes a new revision to an existing hf_virtual_machines record. If vm_id is empty, creates a new hf_virtual_machines record.  A new sub_f_id is returned if successful, otherwise empty string is returned.
+    Writes a new revision to an existing hf_virtual_machines record.
+    If vm_id is empty, creates a new hf_virtual_machines record.
+    A new sub_f_id is returned if successful.
+    Otherwise empty string is returned.
 } {
     # requires f_id
     upvar 1 vm_arr_name arr_name
@@ -568,7 +707,8 @@ ad_proc -private hf_vm_write {
         if { $f_id eq $f_id_ck } {
             set status 0
         } else {
-            ns_log Warning "hf_vm_write.435: denied. attribute does not exist. vm_id '${vm_id} f_id '${f_id}'"
+            ns_log Warning "hf_vm_write.435: denied. \
+ attribute does not exist. vm_id '${vm_id} f_id '${f_id}'"
         }
     } elseif { [hf_f_id_exists_q $f_id] } {
         set status 1
@@ -585,10 +725,12 @@ ad_proc -private hf_vm_write {
                 set vm_id $vm_id_new
                 set time_created $now_ts
                 set sub_type_id "vh"
-                db_dml vm_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
+                db_dml vm_sub_asset_map_cr "insert into hf_sub_asset_map \
+ ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }
             # record revision/new
-            db_dml vm_asset_create "insert into hf_virtual_machines ([hf_vm_keys ","]) values ([hf_vm_keys ",:")"
+            db_dml vm_asset_create "insert into hf_virtual_machines \
+ ([hf_vm_keys ","]) values ([hf_vm_keys ",:")"
         }
     }
     return $vm_id_new

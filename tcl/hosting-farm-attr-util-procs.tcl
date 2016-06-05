@@ -322,8 +322,18 @@ ad_proc -private hf_sub_f_id_of_label {
     return $sub_f_id
 }
 
-
-
+ad_proc -private hf_up_id_of_ua_id {
+    ua_list
+} {
+    Returns one or more up_id as a list.
+} {
+    upvar 1 instance_id instance_id
+    set up_id_list [db_list up_id_of_ua_id_r
+                    select up_id from hf_ua_up_map \
+                        where instance_id=:instance_id and \
+                        ua_id in ([template::util::tcl_to_sql_list $ua_list])]
+    return $ua_list
+}
 
 ad_proc -private hf_ua_keys {
     {separator ""}
