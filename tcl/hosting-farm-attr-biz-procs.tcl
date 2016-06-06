@@ -739,7 +739,10 @@ ad_proc -private hf_vm_write {
 ad_proc -private hf_ss_write {
     ss_arr_name
 } {
-    Writes a new revision to an existing hf_services record. If ss_id is empty, creates a new hf_services record.  A new sub_f_id is returned if successful, otherwise empty string is returned.
+    Writes a new revision to an existing hf_services record.
+    If ss_id is empty, creates a new hf_services record.
+    A new sub_f_id is returned if successful.
+    Otherwise empty string is returned.
 } {
     # requires f_id
     upvar 1 ss_arr_name arr_name
@@ -757,7 +760,8 @@ ad_proc -private hf_ss_write {
         if { $f_id eq $f_id_ck } {
             set status 0
         } else {
-            ns_log Warning "hf_ss_write.435: denied. attribute does not exist. ss_id '${ss_id} f_id '${f_id}'"
+            ns_log Warning "hf_ss_write.435: denied. \
+attribute does not exist. ss_id '${ss_id} f_id '${f_id}'"
         }
     } elseif { [hf_f_id_exists_q $f_id] } {
         set status 1
@@ -774,10 +778,12 @@ ad_proc -private hf_ss_write {
                 set ss_id $ss_id_new
                 set time_created $now_ts
                 set sub_type_id "vh"
-                db_dml ss_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
+                db_dml ss_sub_asset_map_create "insert into hf_sub_asset_map \
+ ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }
             # record revision/new
-            db_dml ss_asset_create "insert into hf_services ([hf_ss_keys ","]) values ([hf_ss_keys ",:")"
+            db_dml ss_asset_create "insert into hf_services \
+ ([hf_ss_keys ","]) values ([hf_ss_keys ",:")"
         }
     }
     return $ss_id_new
@@ -786,7 +792,10 @@ ad_proc -private hf_ss_write {
 ad_proc -private hf_ip_write {
     ip_arr_name
 } {
-    Writes a new revision to an existing hf_ip_addresses record. If ip_id is empty, creates a new hf_ip_addresses record.  A new sub_f_id is returned if successful, otherwise empty string is returned.
+    Writes a new revision to an existing hf_ip_addresses record.
+    If ip_id is empty, creates a new hf_ip_addresses record.
+    A new sub_f_id is returned if successful.
+    Otherwise empty string is returned.
 } {
     # requires f_id
     upvar 1 ip_arr_name arr_name
@@ -803,7 +812,8 @@ ad_proc -private hf_ip_write {
         if { $f_id eq $f_id_ck } {
             set status 0
         } else {
-            ns_log Warning "hf_ip_write.435: denied. attribute does not exist. ip_id '${ip_id} f_id '${f_id}'"
+            ns_log Warning "hf_ip_write.435: denied. \
+attribute does not exist. ip_id '${ip_id} f_id '${f_id}'"
         }
     } elseif { [hf_f_id_exists_q $f_id] } {
         set status 1
@@ -820,10 +830,12 @@ ad_proc -private hf_ip_write {
                 set ip_id $ip_id_new
                 set time_created $now_ts
                 set sub_type_id "vh"
-                db_dml ip_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
+                db_dml ip_sub_asset_map_create "insert into hf_sub_asset_map \
+ ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }
             # record revision/new
-            db_dml ip_asset_create "insert into hf_ip_addresses ([hf_ip_keys ","]) values ([hf_ip_keys ",:")"
+            db_dml ip_asset_create "insert into hf_ip_addresses \
+ ([hf_ip_keys ","]) values ([hf_ip_keys ",:")"
         }
     }
     return $ip_id_new
@@ -832,7 +844,10 @@ ad_proc -private hf_ip_write {
 ad_proc -private hf_ni_write {
     ni_arr_name
 } {
-    Writes a new revision to an existing hf_network_interfaces record. If ni_id is empty, creates a new hf_network_interfaces record.  A new sub_f_id is returned if successful, otherwise empty string is returned.
+    Writes a new revision to an existing hf_network_interfaces record.
+    If ni_id is empty, creates a new hf_network_interfaces record.
+    A new sub_f_id is returned if successful.
+    Otherwise empty string is returned.
 } {
     # requires f_id
     upvar 1 ni_arr_name arr_name
@@ -849,7 +864,8 @@ ad_proc -private hf_ni_write {
         if { $f_id eq $f_id_ck } {
             set status 0
         } else {
-            ns_log Warning "hf_ni_write.435: denied. attribute does not exist. ni_id '${ni_id} f_id '${f_id}'"
+            ns_log Warning "hf_ni_write.435: denied. \
+attribute does not exist. ni_id '${ni_id} f_id '${f_id}'"
         }
     } elseif { [hf_f_id_exists_q $f_id] } {
         set status 1
@@ -880,7 +896,10 @@ ad_proc -private hf_ni_write {
 ad_proc -private hf_os_write {
     os_arr_name
 } {
-    Writes a new revision to an existing hf_operating_systems record. If os_id is empty, creates a new hf_operating_systems record.  A new sub_f_id is returned if successful, otherwise empty string is returned.
+    Writes a new revision to an existing hf_operating_systems record.
+    If os_id is empty, creates a new hf_operating_systems record.
+    A new sub_f_id is returned if successful.
+    Otherwise empty string is returned.
 } {
     # requires f_id
     upvar 1 os_arr_name arr_name
@@ -897,7 +916,8 @@ ad_proc -private hf_os_write {
         if { $f_id eq $f_id_ck } {
             set status 0
         } else {
-            ns_log Warning "hf_os_write.435: denied. attribute does not exist. os_id '${os_id} f_id '${f_id}'"
+            ns_log Warning "hf_os_write.435: denied. \
+attribute does not exist. os_id '${os_id} f_id '${f_id}'"
         }
     } elseif { [hf_f_id_exists_q $f_id] } {
         set status 1
@@ -914,10 +934,12 @@ ad_proc -private hf_os_write {
                 set os_id $os_id_new
                 set time_created $now_ts
                 set sub_type_id "vh"
-                db_dml os_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
+                db_dml os_sub_asset_map_create "insert into hf_sub_asset_map \
+ ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }
             # record revision/new
-            db_dml os_asset_create "insert into hf_operating_systems ([hf_os_keys ","]) values ([hf_os_keys ",:")"
+            db_dml os_asset_create "insert into hf_operating_systems \
+ ([hf_os_keys ","]) values ([hf_os_keys ",:")"
         }
     }
     return $os_id_new
@@ -926,7 +948,10 @@ ad_proc -private hf_os_write {
 ad_proc -private hf_ns_write {
     ns_arr_name
 } {
-    Writes a new revision to an existing hf_ns_records record. If ns_id is empty, creates a new hf_ns_records record.  A new sub_f_id is returned if successful, otherwise empty string is returned.
+    Writes a new revision to an existing hf_ns_records record.
+    If ns_id is empty, creates a new hf_ns_records record.
+    A new sub_f_id is returned if successful.
+    Otherwise empty string is returned.
 } {
     # requires f_id
     upvar 1 ns_arr_name arr_name
@@ -943,7 +968,8 @@ ad_proc -private hf_ns_write {
         if { $f_id eq $f_id_ck } {
             set status 0
         } else {
-            ns_log Warning "hf_ns_write.435: denied. attribute does not exist. ns_id '${ns_id} f_id '${f_id}'"
+            ns_log Warning "hf_ns_write.435: denied. \
+attribute does not exist. ns_id '${ns_id} f_id '${f_id}'"
         }
     } elseif { [hf_f_id_exists_q $f_id] } {
         set status 1
@@ -960,10 +986,12 @@ ad_proc -private hf_ns_write {
                 set ns_id $ns_id_new
                 set time_created $now_ts
                 set sub_type_id "vh"
-                db_dml ns_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
+                db_dml ns_sub_asset_map_create "insert into hf_sub_asset_map \
+ ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }
             # record revision/new
-            db_dml ns_asset_create "insert into hf_ns_records ([hf_ns_keys ","]) values ([hf_ns_keys ",:")"
+            db_dml ns_asset_create "insert into hf_ns_records \
+ ([hf_ns_keys ","]) values ([hf_ns_keys ",:")"
         }
     }
     return $ns_id_new
@@ -973,7 +1001,10 @@ ad_proc -private hf_ns_write {
 ad_proc -private hf_vm_quota_write {
     vm_quota_arr_name
 } {
-    Writes a new revision to an existing hf_vm_quotas record. If vm_quota_id is empty, creates a new hf_vm_quotas record.  A new sub_f_id is returned if successful, otherwise empty string is returned.
+    Writes a new revision to an existing hf_vm_quotas record.
+    If vm_quota_id is empty, creates a new hf_vm_quotas record.
+    A new sub_f_id is returned if successful.
+    Otherwise empty string is returned.
 } {
     # requires f_id
     upvar 1 vm_quota_arr_name arr_name
@@ -990,7 +1021,8 @@ ad_proc -private hf_vm_quota_write {
         if { $f_id eq $f_id_ck } {
             set status 0
         } else {
-            ns_log Warning "hf_vm_quota_write.435: denied. attribute does not exist. vm_quota_id '${vm_quota_id} f_id '${f_id}'"
+            ns_log Warning "hf_vm_quota_write.435: denied. \
+attribute does not exist. vm_quota_id '${vm_quota_id} f_id '${f_id}'"
         }
     } elseif { [hf_f_id_exists_q $f_id] } {
         set status 1
@@ -1001,16 +1033,21 @@ ad_proc -private hf_vm_quota_write {
         set nowts [dt_systime -gmt 1]
         db_transaction {
             if { $status == 0 } {
-                db_dml vm_quota_sub_asset_map_update { update hf_sub_asset_map
-                    set sub_f_id=:vm_quota_id_new where f_id=:f_id }
+                db_dml vm_quota_sub_asset_map_update {
+                    update hf_sub_asset_map
+                    set sub_f_id=:vm_quota_id_new where f_id=:f_id
+                }
             } else {
                 set vm_quota_id $vm_quota_id_new
                 set time_created $now_ts
                 set sub_type_id "vh"
-                db_dml vm_quota_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
+                db_dml vm_quota_sub_asset_map_create \
+                    "insert into hf_sub_asset_map \
+ ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }
             # record revision/new
-            db_dml vm_quota_asset_create "insert into hf_vm_quotas ([hf_vm_quota_keys ","]) values ([hf_vm_quota_keys ",:")"
+            db_dml vm_quota_asset_create "insert into hf_vm_quotas \
+ ([hf_vm_quota_keys ","]) values ([hf_vm_quota_keys ",:")"
         }
     }
     return $vm_quota_id_new
@@ -1021,7 +1058,9 @@ ad_proc -private hf_ua_write {
     connection_type
     {ua_id ""}
 } {
-    writes or creates a ua. If ua_id is blank, a new one is created. If successful,  ua_id is returned, otherwise 0.
+    writes or creates a ua.
+    If ua_id is blank, a new one is created.
+    If successful,  ua_id is returned, otherwise 0.
 } {
     upvar 1 instance_id instance_id
     hf_ui_go_ahead admin "" ""
@@ -1042,34 +1081,46 @@ ad_proc -private hf_ua_write {
             # update
             # does ua_id exist?
             if { [qf_is_natural_number $ua_id] } {
-                set id_exists_p [db_0or1row hf_ua_id_get "select ua_id as ua_id_ck from hf_ua where instance_id =:instance_id and ua_id =:ua_id"]
+                set id_exists_p [db_0or1row hf_ua_id_get \
+                                     "select ua_id as ua_id_ck \
+ from hf_ua where instance_id =:instance_id and ua_id =:ua_id"]
             }
             if { $id_exists_p } {
                 db_dml hf_ua_update {
-                    update hf_ua set details=:sdetail, connection_type=:connection_type where ua_id=:ua_id and instance_id=:instance_id
+                    update hf_ua \
+                        set details=:sdetail, connection_type=:connection_type \
+                        where ua_id=:ua_id and instance_id=:instance_id
                 }
             }
         }
         if { !$id_exists_p } {
             # create
             set ua_id [db_nextval hf_id_seq]
-            db_dml hf_ua_create "insert into hf_ua ([hf_ua_keys ","])
+            db_dml hf_ua_create "insert into hf_ua ([hf_ua_keys ","]) \
             values ([hf_a_keys ",:"])"
         }
         if { $log_p } {
             if { [ns_conn isconnected] } {
                 set user_id [ad_conn user_id]
-                ns_log Warning "hf_ua_write(2511): Poor call. New ua '${details}' created by user_id ${user_id} called with blank instance_id."
+                ns_log Warning "hf_ua_write(2511): Poor call. \
+New ua '${details}' created by user_id ${user_id} \
+called with blank instance_id."
             } else {
-                ns_log Warning "hf_ua_write(2513): Poor call. New ua '${details}' with ua_id ${ua_id} created without a connection and called with blank instance_id."
+                ns_log Warning "hf_ua_write(2513): Poor call. \
+New ua '${details}' with ua_id ${ua_id} created without a connection \
+and called with blank instance_id."
             }
         }
     } else {
         if { [ns_conn isconnected] } {
             set user_id [ad_conn user_id]
-            ns_log Warning "hf_ua_write(2552): Poor call rejected. New ua '${details}' for conn '${connection_type}' requested with unprintable or no characters by user_id ${user_id}."
+            ns_log Warning "hf_ua_write(2552): Poor call rejected. \
+New ua '${details}' for conn '${connection_type}' requested with unprintable \
+ or no characters by user_id ${user_id}."
         } else {
-            ns_log Warning "hf_ua_write(2513): Poor call rejected. New ua '${details}' for conn '${connection_type}' requested with unprintable or no characters by process without a connection."
+            ns_log Warning "hf_ua_write(2513): Poor call rejected. \
+New ua '${details}' for conn '${connection_type}' requested with unprintable \
+or no characters by process without a connection."
         }
     }
     return $ua_id
@@ -1082,7 +1133,8 @@ ad_proc -private hf_ua_write {
 ad_proc -private hf_ss_defaults {
     array_name
 } {
-    Sets defaults for an hf_service record into array_name, if element is not in array. 
+    Sets defaults for an hf_service record into array_name
+    if element does not yet exist in array. 
 } {
     upvar 1 $array_name ss_arr
     upvar 1 $instance_id instance_id
@@ -1108,7 +1160,8 @@ ad_proc -private hf_ss_defaults {
         }
     }
     if { [llength [set_difference_named_v ss [hf_ss_keys]]] > 0 } {
-        ns_log Warning "hf_ss_defaults: Update this proc. It is out of sync with hf_ss_keys"
+        ns_log Warning "hf_ss_defaults: Update this proc. \
+It is out of sync with hf_ss_keys"
     }
     return 1
 }
