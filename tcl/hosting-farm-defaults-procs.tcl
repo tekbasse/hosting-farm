@@ -13,6 +13,77 @@ ad_library {
 
 }
 
+ad_proc -private hf_asset_defaults {
+    array_name
+} {
+    Sets defaults for an hf_assets record into array_name
+    if element does not yet exist in array. 
+} {
+    upvar 1 $array_name asset_arr
+    upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
+    set asset [list asset_id "" \
+                   label "" \
+                   name "" \
+                   asset_type_id "" \
+                   keywords "" \
+                   description "" \
+                   trashed_p "0" \
+                   trashed_by "" \
+                   template_p "0" \
+                   templated_p "" \
+                   publish_p "0" \
+                   monitor_p "0" \
+                   popularity "" \
+                   triage_priority "" \
+                   op_status "" \
+                   qal_product_id "" \
+                   qal_customer_id "" \
+                   instance_id $instance_id \
+                   user_id "" \
+                   last_modified $nowts \
+                   created "" \
+                   flags "" \
+                   template_id "" \
+                   f_id "" \
+                   content "" \
+                   comments ""]
+
+    foreach {key value} $asset {
+        if { ![info exists asset_arr(${key}) ] } {
+            set asset_arr(${key}) $value
+        }
+    }
+    if { [llength [set_difference_named_v asset [hf_asset_keys]]] > 0 } {
+        ns_log Warning "hf_asset_defaults: Update this proc. \
+It is out of sync with hf_asset_keys"
+    }
+    return 1
+}
+
+
+hf_sub_asset_map_defaults {
+    { attribute_p "1" }
+} {
+    upvar 1 $array_name sam_arr
+    upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
+    set sam_list [list f_id "" \
+                      type_id "" \
+                      sub_f_id "" \
+                      sub_type_id "" \
+                      sub_sort_order "" \
+                      sub_label "" \
+                      attribute_p $attribute_p \
+                      trashed_p "" ]
+    foreach {key value} $sam {
+        if { ![info exists sam_arr(${key}) ] } {
+            set sam_arr(${key}) $value
+        }
+    }
+    return 1
+}
+
 
 ad_proc -private hf_ss_defaults {
     array_name
@@ -22,6 +93,7 @@ ad_proc -private hf_ss_defaults {
 } {
     upvar 1 $array_name ss_arr
     upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
     set ss [list instance_id $instance_id \
                 ss_id "" \
                 server_name  \
@@ -50,25 +122,265 @@ It is out of sync with hf_ss_keys"
     return 1
 }
 
-hf_sub_asset_map_defaults {
-    { attribute_p "1" }
+
+ad_proc -private hf_monitor_configs_defaults {
+    array_name
 } {
-    upvar 1 $array_name sam_arr
+    Sets defaults for an hf_monitor_config_n_control record into array_name
+    if element does not yet exist in array. 
+} {
+    upvar 1 $array_name monitor_configs_arr
     upvar 1 instance_id instance_id
-    set sam_list [list f_id "" \
-                      type_id "" \
-                      sub_f_id "" \
-                      sub_type_id "" \
-                      sub_sort_order "" \
-                      sub_label "" \
-                      attribute_p $attribute_p \
-                      trashed_p "" ]
-    foreach {key value} $sam {
-        if { ![info exists sam_arr(${key}) ] } {
-            set sam_arr(${key}) $value
+    set nowts [dt_systime -gmt 1]
+    set monitor_configs [list instance_id $instance_id \
+                             monitor_configs_id "" \
+                             time_trashed ""\
+                             time_created $nowts]
+    foreach {key value} $monitor_configs {
+        if { ![info exists monitor_configs_arr(${key}) ] } {
+            set monitor_configs_arr(${key}) $value
         }
+    }
+    if { [llength [set_difference_named_v monitor_configs [hf_monitor_configs_keys]]] > 0 } {
+        ns_log Warning "hf_monitor_configs_defaults: Update this proc. \
+It is out of sync with hf_monitor_configs_keys"
     }
     return 1
 }
 
 
+ad_proc -private hf_os_defaults {
+    array_name
+} {
+    Sets defaults for an hf_operating_systems record into array_name
+    if element does not yet exist in array. 
+} {
+    upvar 1 $array_name os_arr
+    upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
+    set os [list instance_id $instance_id \
+                os_id "" \
+                time_trashed ""\
+                time_created $nowts]
+    foreach {key value} $os {
+        if { ![info exists os_arr(${key}) ] } {
+            set os_arr(${key}) $value
+        }
+    }
+    if { [llength [set_difference_named_v os [hf_os_keys]]] > 0 } {
+        ns_log Warning "hf_os_defaults: Update this proc. \
+It is out of sync with hf_os_keys"
+    }
+    return 1
+}
+
+
+ad_proc -private hf_vm_quota_defaults {
+    array_name
+} {
+    Sets defaults for an hf_vm_quotas record into array_name
+    if element does not yet exist in array. 
+} {
+    upvar 1 $array_name vm_quota_arr
+    upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
+    set vm_quota [list instance_id $instance_id \
+                      vm_quota_id "" \
+                      time_trashed ""\
+                      time_created $nowts]
+    foreach {key value} $vm_quota {
+        if { ![info exists vm_quota_arr(${key}) ] } {
+            set vm_quota_arr(${key}) $value
+        }
+    }
+    if { [llength [set_difference_named_v vm_quota [hf_vm_quota_keys]]] > 0 } {
+        ns_log Warning "hf_vm_quota_defaults: Update this proc. \
+It is out of sync with hf_vm_quota_keys"
+    }
+    return 1
+}
+
+
+
+ad_proc -private hf_vm_defaults {
+    array_name
+} {
+    Sets defaults for an hf_virtual_machines record into array_name
+    if element does not yet exist in array. 
+} {
+    upvar 1 $array_name vm_arr
+    upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
+    set vm [list instance_id $instance_id \
+                vm_id "" \
+                time_trashed ""\
+                time_created $nowts]
+    foreach {key value} $vm {
+        if { ![info exists vm_arr(${key}) ] } {
+            set vm_arr(${key}) $value
+        }
+    }
+    if { [llength [set_difference_named_v vm [hf_vm_keys]]] > 0 } {
+        ns_log Warning "hf_vm_defaults: Update this proc. \
+It is out of sync with hf_vm_keys"
+    }
+    return 1
+}
+
+
+ad_proc -private hf_vh_defaults {
+    array_name
+} {
+    Sets defaults for an hf_vhosts record into array_name
+    if element does not yet exist in array. 
+} {
+    upvar 1 $array_name vh_arr
+    upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
+    set vh [list instance_id $instance_id \
+                vh_id "" \
+                time_trashed ""\
+                time_created $nowts]
+    foreach {key value} $vh {
+        if { ![info exists vh_arr(${key}) ] } {
+            set vh_arr(${key}) $value
+        }
+    }
+    if { [llength [set_difference_named_v vh [hf_vh_keys]]] > 0 } {
+        ns_log Warning "hf_vh_defaults: Update this proc. \
+It is out of sync with hf_vh_keys"
+    }
+    return 1
+}
+
+
+
+ad_proc -private hf_dc_defaults {
+    array_name
+} {
+    Sets defaults for an hf_data_centers record into array_name
+    if element does not yet exist in array. 
+} {
+    upvar 1 $array_name dc_arr
+    upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
+    set dc [list instance_id $instance_id \
+                dc_id "" \
+                time_trashed ""\
+                time_created $nowts]
+    foreach {key value} $dc {
+        if { ![info exists dc_arr(${key}) ] } {
+            set dc_arr(${key}) $value
+        }
+    }
+    if { [llength [set_difference_named_v dc [hf_dc_keys]]] > 0 } {
+        ns_log Warning "hf_dc_defaults: Update this proc. \
+It is out of sync with hf_dc_keys"
+    }
+    return 1
+}
+
+
+
+ad_proc -private hf_hw_defaults {
+    array_name
+} {
+    Sets defaults for an hf_hardware record into array_name
+    if element does not yet exist in array. 
+} {
+    upvar 1 $array_name hw_arr
+    upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
+    set hw [list instance_id $instance_id \
+                hw_id "" \
+                time_trashed ""\
+                time_created $nowts]
+    foreach {key value} $hw {
+        if { ![info exists hw_arr(${key}) ] } {
+            set hw_arr(${key}) $value
+        }
+    }
+    if { [llength [set_difference_named_v hw [hf_hw_keys]]] > 0 } {
+        ns_log Warning "hf_hw_defaults: Update this proc. \
+It is out of sync with hf_hw_keys"
+    }
+    return 1
+}
+
+
+ad_proc -private hf_ip_defaults {
+    array_name
+} {
+    Sets defaults for an hf_ip_addresses record into array_name
+    if element does not yet exist in array. 
+} {
+    upvar 1 $array_name ip_arr
+    upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
+    set ip [list instance_id $instance_id \
+                ip_id "" \
+                time_trashed ""\
+                time_created $nowts]
+    foreach {key value} $ip {
+        if { ![info exists ip_arr(${key}) ] } {
+            set ip_arr(${key}) $value
+        }
+    }
+    if { [llength [set_difference_named_v ip [hf_ip_keys]]] > 0 } {
+        ns_log Warning "hf_ip_defaults: Update this proc. \
+It is out of sync with hf_ip_keys"
+    }
+    return 1
+}
+
+
+ad_proc -private hf_ni_defaults {
+    array_name
+} {
+    Sets defaults for an hf_network_interfaces record into array_name
+    if element does not yet exist in array. 
+} {
+    upvar 1 $array_name ni_arr
+    upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
+    set ni [list instance_id $instance_id \
+                ni_id "" \
+                time_trashed ""\
+                time_created $nowts]
+    foreach {key value} $ni {
+        if { ![info exists ni_arr(${key}) ] } {
+            set ni_arr(${key}) $value
+        }
+    }
+    if { [llength [set_difference_named_v ni [hf_ni_keys]]] > 0 } {
+        ns_log Warning "hf_ni_defaults: Update this proc. \
+It is out of sync with hf_ni_keys"
+    }
+    return 1
+}
+
+
+ad_proc -private hf_ns_defaults {
+    array_name
+} {
+    Sets defaults for an hf_records record into array_name
+    if element does not yet exist in array. 
+} {
+    upvar 1 $array_name ns_arr
+    upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
+    set ns [list instance_id $instance_id \
+                ns_id "" \
+                time_trashed ""\
+                time_created $nowts]
+    foreach {key value} $ns {
+        if { ![info exists ns_arr(${key}) ] } {
+            set ns_arr(${key}) $value
+        }
+    }
+    if { [llength [set_difference_named_v ns [hf_ns_keys]]] > 0 } {
+        ns_log Warning "hf_ns_defaults: Update this proc. \
+It is out of sync with hf_ns_keys"
+    }
+    return 1
+}
