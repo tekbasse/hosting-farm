@@ -72,10 +72,10 @@ hf_sub_asset_map_defaults {
                       type_id "" \
                       sub_f_id "" \
                       sub_type_id "" \
-                      sub_sort_order "" \
+                      sub_sort_order "100" \
                       sub_label "" \
                       attribute_p $attribute_p \
-                      trashed_p "" ]
+                      trashed_p "0" ]
     foreach {key value} $sam {
         if { ![info exists sam_arr(${key}) ] } {
             set sam_arr(${key}) $value
@@ -96,19 +96,19 @@ ad_proc -private hf_ss_defaults {
     set nowts [dt_systime -gmt 1]
     set ss [list instance_id $instance_id \
                 ss_id "" \
-                server_name  \
-                service_name $name \
-                daemon_ref $ss_nsd_file \
+                server_name "" \
+                service_name "" \
+                daemon_ref "" \
                 protocol "http" \
-                port $http_port \
+                port "" \
                 ss_type "" \
                 ss_subtype "" \
                 ss_undersubtype "" \
                 ss_ultrasubtype "" \
-                config_uri $ss_config_file \
+                config_uri "" \
                 memory_bytes "" \
-                details ""\
-                time_trashed ""\
+                details "" \
+                time_trashed "" \
                 time_created $nowts]
     foreach {key value} $ss {
         if { ![info exists ss_arr(${key}) ] } {
@@ -133,15 +133,24 @@ ad_proc -private hf_monitor_configs_defaults {
     upvar 1 instance_id instance_id
     set nowts [dt_systime -gmt 1]
     set monitor_configs [list instance_id $instance_id \
-                             monitor_configs_id "" \
-                             time_trashed ""\
-                             time_created $nowts]
+                             monitor_id "" \
+                             asset_id "" \
+                             label "" \
+                             active_p "0" \
+                             portions_count "" \
+                             calculation_switches "" \
+                             health_percentile_trigger "" \
+                             health_threshold "" \
+                             interval_s "" \
+                             alert_by_privilege "" \
+                             alert_by_role "" \
     foreach {key value} $monitor_configs {
         if { ![info exists monitor_configs_arr(${key}) ] } {
             set monitor_configs_arr(${key}) $value
         }
     }
-    if { [llength [set_difference_named_v monitor_configs [hf_monitor_configs_keys]]] > 0 } {
+    if { [llength [set_difference_named_v monitor_configs \
+                       [hf_monitor_configs_keys]]] > 0 } {
         ns_log Warning "hf_monitor_configs_defaults: Update this proc. \
 It is out of sync with hf_monitor_configs_keys"
     }
@@ -160,6 +169,13 @@ ad_proc -private hf_os_defaults {
     set nowts [dt_systime -gmt 1]
     set os [list instance_id $instance_id \
                 os_id "" \
+                label "" \
+                brand "" \
+                version "" \
+                kernel "" \
+                orphaned_p "0" \
+                requires_upgrade_p "1" \
+                description "" \
                 time_trashed ""\
                 time_created $nowts]
     foreach {key value} $os {
