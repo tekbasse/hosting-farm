@@ -176,7 +176,7 @@ ad_proc -private hf_os_defaults {
                 orphaned_p "0" \
                 requires_upgrade_p "1" \
                 description "" \
-                time_trashed ""\
+                time_trashed "" \
                 time_created $nowts]
     foreach {key value} $os {
         if { ![info exists os_arr(${key}) ] } {
@@ -201,8 +201,25 @@ ad_proc -private hf_vm_quota_defaults {
     upvar 1 instance_id instance_id
     set nowts [dt_systime -gmt 1]
     set vm_quota [list instance_id $instance_id \
+                      plan_id "" \
+                      description "" \
+                      base_storage "" \
+                      base_traffic "" \
+                      base_memory "" \
+                      base_sku "" \
+                      over_storage_sku "" \
+                      over_traffic_sku "" \
+                      over_memory_sku "" \
+                      storage_unit "" \
+                      traffic_unit "" \
+                      memory_unit "" \
+                      qemu_memory "" \
+                      status_id "" \
+                      vm_type "" \
+                      max_domain "" \
+                      private_vps "" \
                       vm_quota_id "" \
-                      time_trashed ""\
+                      time_trashed "" \
                       time_created $nowts]
     foreach {key value} $vm_quota {
         if { ![info exists vm_quota_arr(${key}) ] } {
@@ -229,7 +246,13 @@ ad_proc -private hf_vm_defaults {
     set nowts [dt_systime -gmt 1]
     set vm [list instance_id $instance_id \
                 vm_id "" \
-                time_trashed ""\
+                domain_name "" \
+                os_id "" \
+                type_id "" \
+                resource_path "" \
+                mount_union "" \
+                details "" \
+                time_trashed "" \
                 time_created $nowts]
     foreach {key value} $vm {
         if { ![info exists vm_arr(${key}) ] } {
@@ -255,7 +278,9 @@ ad_proc -private hf_vh_defaults {
     set nowts [dt_systime -gmt 1]
     set vh [list instance_id $instance_id \
                 vh_id "" \
-                time_trashed ""\
+                domain_name "" \
+                details "" \
+                time_trashed "" \
                 time_created $nowts]
     foreach {key value} $vh {
         if { ![info exists vh_arr(${key}) ] } {
@@ -282,7 +307,10 @@ ad_proc -private hf_dc_defaults {
     set nowts [dt_systime -gmt 1]
     set dc [list instance_id $instance_id \
                 dc_id "" \
-                time_trashed ""\
+                affix "" \
+                description "" \
+                details "" \
+                time_trashed "" \
                 time_created $nowts]
     foreach {key value} $dc {
         if { ![info exists dc_arr(${key}) ] } {
@@ -309,7 +337,12 @@ ad_proc -private hf_hw_defaults {
     set nowts [dt_systime -gmt 1]
     set hw [list instance_id $instance_id \
                 hw_id "" \
-                time_trashed ""\
+                system_name "" \
+                backup_sys "" \
+                os_id "" \
+                description "" \
+                details "" \
+                time_trashed "" \
                 time_created $nowts]
     foreach {key value} $hw {
         if { ![info exists hw_arr(${key}) ] } {
@@ -335,7 +368,11 @@ ad_proc -private hf_ip_defaults {
     set nowts [dt_systime -gmt 1]
     set ip [list instance_id $instance_id \
                 ip_id "" \
-                time_trashed ""\
+                ipv4_addr "" \
+                ipv4_status "" \
+                ipv6_addr "" \
+                ipv6_status "" \
+                time_trashed "" \
                 time_created $nowts]
     foreach {key value} $ip {
         if { ![info exists ip_arr(${key}) ] } {
@@ -361,7 +398,12 @@ ad_proc -private hf_ni_defaults {
     set nowts [dt_systime -gmt 1]
     set ni [list instance_id $instance_id \
                 ni_id "" \
-                time_trashed ""\
+                os_dev_ref "" \
+                bia_mac_address "" \
+                ul_mac_address "" \
+                ipv4_addr_range "" \
+                ipv6_addr_range "" \
+                time_trashed "" \
                 time_created $nowts]
     foreach {key value} $ni {
         if { ![info exists ni_arr(${key}) ] } {
@@ -386,8 +428,10 @@ ad_proc -private hf_ns_defaults {
     upvar 1 instance_id instance_id
     set nowts [dt_systime -gmt 1]
     set ns [list instance_id $instance_id \
-                ns_id "" \
-                time_trashed ""\
+                id "" \
+                active_p "" \
+                name_record "" \
+                time_trashed "" \
                 time_created $nowts]
     foreach {key value} $ns {
         if { ![info exists ns_arr(${key}) ] } {
