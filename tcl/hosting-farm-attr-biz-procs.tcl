@@ -4,7 +4,8 @@ ad_library {
     business logic for hosting-farm asset attributes
     @creation-date 29 May 2016
     @Copyright (c) 2014-2016 Benjamin Brink
-    @license GNU General Public License 2, see project home or http://www.gnu.org/licenses/gpl-2.0.en.html
+    @license GNU General Public License 2, 
+    @see project home or http://www.gnu.org/licenses/gpl-2.0.en.html
     @project home: http://github.com/tekbasse/hosting-farm
     @address: po box 20, Marylhurst, OR 97036-0020 usa
     @email: tekbasse@yahoo.com
@@ -536,9 +537,7 @@ ad_proc -private hf_vh_write {
 } {
     # requires f_id
     upvar 1 vh_arr_name arr_name
-    # defaults
-    set sub_sort_order "100"
-    set sub_label "vh${sub_f_id}"
+    hf_ss_defaults
     set attribute_p "1"
     qf_array_to_vars $arr_name [hf_vh_keys]
     set new_vh_id ""
@@ -1128,42 +1127,3 @@ or no characters by process without a connection."
 
 
 ##code
-
-
-ad_proc -private hf_ss_defaults {
-    array_name
-} {
-    Sets defaults for an hf_service record into array_name
-    if element does not yet exist in array. 
-} {
-    upvar 1 $array_name ss_arr
-    upvar 1 $instance_id instance_id
-    set ss [list instance_id $instance_id \
-                ss_id "" \
-                server_name  \
-                service_name $name \
-                daemon_ref $ss_nsd_file \
-                protocol "http" \
-                port $http_port \
-                ss_type "" \
-                ss_subtype "" \
-                ss_undersubtype "" \
-                ss_ultrasubtype "" \
-                config_uri $ss_config_file \
-                memory_bytes "" \
-                details ""\
-                time_trashed ""\
-                time_created $nowts]
-    foreach {key value} $ss {
-        if { ![info exists ss_arr(${key}) ] } {
-            set ss_arr(${key}) $value
-        }
-    }
-    if { [llength [set_difference_named_v ss [hf_ss_keys]]] > 0 } {
-        ns_log Warning "hf_ss_defaults: Update this proc. \
-It is out of sync with hf_ss_keys"
-    }
-    return 1
-}
-
-
