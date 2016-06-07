@@ -5,7 +5,8 @@
 
 #    @creation-date 2016-05-05
 #    @Copyright (c) 2016 Benjamin Brink
-#    @license GNU General Public License 2, see project home or http://www.gnu.org/licenses/gpl-2.0.html
+#    @license GNU General Public License 2.
+#    @see project home or http://www.gnu.org/licenses/gpl-2.0.html
 #    @project home: http://github.com/tekbasse/hosting-farm
 #    @address: po box 20, Marylhurst, OR 97036-0020 usa
 #    @email: tekbasse@yahoo.com
@@ -33,24 +34,29 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
         set roles_lists [db_list_of_lists get_all_roles "select id,label,title,description from hf_role"]
         set roles_lists_len [llength $roles_lists]
         if { [llength $roles_lists] == 0 } {
-            # This is the first run of the first instance. Insert defaults
-            # here instead of via sql files to minimize permissions files timestamp changes.
+            # This is the first run of the first instance. 
+            # Insert defaults here instead of via sql files
+            # to minimize permissions files timestamp changes.
             # To help detect any system tampering during operation.
             # role is <division>_<role_level> where role_level are privileges.
-            set roles_defaults_list [list \
-                                         [list main_admin "Main Admin" "Primary administrator"] \
-                                         [list main_manager "Main Manager" "Primary manager"] \
-                                         [list main_staff "Main Staff" "Main monitor"] \
-                                         [list technical_admin "Technical Admin" "Primary technical administrator"] \
-                                         [list technical_manager "Technical Manager" "Oversees daily technical operations"] \
-                                         [list technical_staff "Technical Staff" "Monitors asset performance etc"] \
-                                         [list billing_admin "Billing Admin" "Primary billing administrator"] \
-                                         [list billing_manager "Billing Manager" "Oversees daily billing operations"] \
-                                         [list billing_staff "Billing Staff" "Monitors billing, bookkeeping etc."] \
-                                         [list site_developer "Site Developer" "Builds websites etc"] ]
+            # r_d_lists is abbrev for role_defaults_list
+            set r_d_lists \
+                [list \
+                     [list main_admin "Main Admin" "Primary administrator"] \
+                     [list main_manager "Main Manager" "Primary manager"] \
+                     [list main_staff "Main Staff" "Main monitor"] \
+                     [list technical_admin "Technical Admin" "Primary technical administrator"] \
+                     [list technical_manager "Technical Manager" "Oversees daily technical operations"] \
+                     [list technical_staff "Technical Staff" "Monitors asset performance etc"] \
+                     [list billing_admin "Billing Admin" "Primary billing administrator"] \
+                     [list billing_manager "Billing Manager" "Oversees daily billing operations"] \
+                     [list billing_staff "Billing Staff" "Monitors billing, bookkeeping etc."] \
+                     [list site_developer "Site Developer" "Builds websites etc"] ]
             
-            # admin to have admin permissions, manager to have read/write permissions, staff to have read permissions
-            foreach def_role_list $roles_defaults_list {
+            # admin to have admin permissions, 
+            # manager to have read/write permissions, 
+            # staff to have read permissions
+            foreach def_role_list $r_d_lists {
                 # No need for instance_id since these are system defaults
                 set label [lindex $def_role_list 0]
                 set title [lindex $def_role_list 1]
@@ -79,26 +85,30 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
         set props_lists_len [llength $props_lists]
         if { $props_lists_len == 0 } {
             # This is the first run of the first instance. 
-            # ns could be an asset or not. For now, it is a property (ie requires an asset besides the ns), but 
-            # maybe we give it special permissions or other asset-like qualities for now
-            set props_defaults_lists [list \
-                                          [list main_contact_record "Main Contact Record"] \
-                                          [list admin_contact_record "Administrative Contact Record"] \
-                                          [list tech_contact_record "Technical Contact Record"] \
-                                          [list permissions_properties "Permissions properties"] \
-                                          [list permissions_roles "Permissions roles"] \
-                                          [list permissions_privileges "Permissions privileges"] \
-                                          [list non_assets "non-assets ie customer records etc."] \
-                                          [list published "World viewable"] \
-                                          [list assets "Assets"] \
-                                          [list ss "Asset: Software as a service"] \
-                                          [list dc "Asset: Data center"] \
-                                          [list hw "Asset: Hardware"] \
-                                          [list vm "Asset: Virtual machine"] \
-                                          [list vh "Asset: Virtual host"] \
-                                          [list ns "Asset property: Domain name record"] \
-                                          [list ot "Asset: other"] ]
-            foreach def_prop_list $props_defaults_lists {
+            # ns could be an asset or not. 
+            # For now, ns is a property (ie requires an asset besides the ns),
+            # but maybe we give it special permissions 
+            # or other asset-like qualities for now.
+            # p_d_lists is abbrev for props_defaults_lists
+            set p_d_lists \
+                [list \
+                     [list main_contact_record "Main Contact Record"] \
+                     [list admin_contact_record "Administrative Contact Record"] \
+                     [list tech_contact_record "Technical Contact Record"] \
+                     [list permissions_properties "Permissions properties"] \
+                     [list permissions_roles "Permissions roles"] \
+                     [list permissions_privileges "Permissions privileges"] \
+                     [list non_assets "non-assets ie customer records etc."] \
+                     [list published "World viewable"] \
+                     [list assets "Assets"] \
+                     [list ss "Asset: Software as a service"] \
+                     [list dc "Asset: Data center"] \
+                     [list hw "Asset: Hardware"] \
+                     [list vm "Asset: Virtual machine"] \
+                     [list vh "Asset: Virtual host"] \
+                     [list ns "Asset property: Domain name record"] \
+                     [list ot "Asset: other"] ]
+            foreach def_prop_list $p_d_lists {
                 set asset_type_id [lindex $def_prop_list 0]
                 set title [lindex $def_prop_list 1]
                 db_dml default_props_cr {
@@ -127,8 +137,11 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
         if { $privs_lists_len == 0 } {
             # This is the first run of the first instance. 
             # In general:
-            # admin roles to have admin permissions, manager to have read/write permissions, staff to have read permissions
-            # techs to have write privileges on tech stuff, admins to have write privileges on contact stuff
+            # admin roles to have admin permissions, 
+            # manager to have read/write permissions, 
+            # staff to have read permissions
+            # techs to have write privileges on tech stuff, 
+            # admins to have write privileges on contact stuff
             # write includes trash, admin includes create where appropriate
             set privs_larr(admin) [list "create" "read" "write" "admin"]
             set privs_larr(developer) [list "create" "read" "write"]
@@ -158,9 +171,11 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                     set asset_type_id [lindex $prop_list 0]
                     set property_id [lindex $prop_list 1]
                     # For each role_id and property_id create privileges
-                    # Privileges are base on $privs_larr($role) and props_larr(asset_type_id)
-                    # For example,  $privs_larr(manager) = list read write
-                    #               $props_larr(billing) = admin_contact_record non_assets published
+                    # Privileges are base on 
+                    #     $privs_larr($role) and props_larr(asset_type_id)
+                    # For example, 
+                    #     $privs_larr(manager) = list read write
+                    #     $props_larr(billing) = admin_contact_record non_assets published
 
                     if { [lsearch $props_larr($division) $asset_type_id ] > -1 } {
                         # This division has privileges.
@@ -200,15 +215,17 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
         set as_types_lists_len [llength $as_types_lists]
         if { $as_types_lists_len == 0 } {
             # This is the first run of the first instance. 
-            set as_types_defaults_lists [list \
-                                             [list ss "#hosting-farm.SAAS#" "#hosting-farm.Software_as_a_service#"] \
-                                             [list dc "#hosting-farm.DC#" "#hosting-farm.Data_Center#"] \
-                                             [list hw "#hosting-farm.HW#" "#hosting-farm.Hardware#"] \
-                                             [list vm "#hosting-farm.VM#" "#hosting-farm.Virtual_Machine#"] \
-                                             [list vh "#hosting-farm.VH#" "#hosting-farm.Virtual_Host#"] \
-                                             [list ns "#hosting-farm.NS#" "#hosting-farm.Name_Service#"] \
-                                             [list ot "#hosting-farm.OT#" "#hosting-farm.Other#"] ]
-            foreach def_as_type_list $as_types_defaults_lists {
+            # ast_d_lists is abbrev for asset_type_defaults_lists
+            set ast_d_lists \
+                [list \
+                     [list ss "#hosting-farm.SAAS#" "#hosting-farm.Software_as_a_service#"] \
+                     [list dc "#hosting-farm.DC#" "#hosting-farm.Data_Center#"] \
+                     [list hw "#hosting-farm.HW#" "#hosting-farm.Hardware#"] \
+                     [list vm "#hosting-farm.VM#" "#hosting-farm.Virtual_Machine#"] \
+                     [list vh "#hosting-farm.VH#" "#hosting-farm.Virtual_Host#"] \
+                     [list ns "#hosting-farm.NS#" "#hosting-farm.Name_Service#"] \
+                     [list ot "#hosting-farm.OT#" "#hosting-farm.Other#"] ]
+            foreach def_as_type_list $ast_d_lists {
                 set asset_type_id [lindex $def_as_type_list 0]
                 set label [lindex $def_as_type_list 1]
                 set title [lindex $def_as_type_list 2]
@@ -247,11 +264,11 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                 set kernel [lindex $def_asset_list 2]
                 # instance name:
                 set title [apm_instance_name_from_id $instance_id]
-                #                db_dml default_assets_cr {
-                #                    insert into hf_assets
-                #                    (asset_type_id,label,user_id,instance_id)
-                #                    values (:asset_type_id,:label,:sysowner_user_id,:instance_id)
-                #                }
+                #db_dml default_assets_cr {
+                #  insert into hf_assets
+                #  (asset_type_id,label,user_id,instance_id)
+                #  values (:asset_type_id,:label,:sysowner_user_id,:instance_id)
+                #}
                 # use the api
                 # Make an example local system profile
                 set uname "uname"
@@ -270,16 +287,10 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
 
                 array set os_arr [list \
                                       instance_id $instance_id \
-                                      os_id "" \
                                       label $label \
                                       brand $system_type2 \
                                       version $system_type \
                                       kernel $kernel \
-                                      orphaned_p "0" \
-                                      requires_upgrade_p "0" \
-                                      description "" \
-                                      time_trashed "" \
-                                      time_created $nowts]
                 set os_arr(os_id) [hf_os_write os_arr]
 
                 # make an asset of type ss
@@ -287,97 +298,46 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                                       label $label \
                                       name $name \
                                       asset_type_id "ss" \
-                                      keywords ""\
-                                      description ""\
-                                      trashed_p "0"\
-                                      trashed_by ""\
-                                      template_p ""\
-                                      templated_p "0"\
-                                      publish_p "0"\
-                                      monitor_p "0"\
-                                      popularity "0"\
-                                      triage_priority "0"\
-                                      op_status ""\
-                                      qal_product_id ""\
-                                      qal_customer_id ""\
-                                      instance_id $instance_id \
                                       user_id $sysowner_user_id \
-                                      last_modified $nowts \
-                                      created $nowts \
-                                      flags ""\
-                                      template_id ""\
-                                      f_id ""\
                                       content "Demo service"\
                                       comments "Demo/ss system test case"]
                 set ss_arr(f_id) [hf_asset_write ss_arr]
                 # set attribute (fid) is 
-                array set ss_arr [list instance_id $instance_id \
-                                      ss_id "" \
+                array set ss_arr [list \
                                       server_name $ss_nsd_name \
                                       service_name $name \
                                       daemon_ref $ss_nsd_file \
                                       protocol "http" \
                                       port $http_port \
-                                      ss_type "" \
-                                      ss_subtype "" \
-                                      ss_undersubtype "" \
-                                      ss_ultrasubtype "" \
-                                      config_uri $ss_config_file \
-                                      memory_bytes "" \
-                                      details ""\
-                                      time_trashed ""\
-                                      time_created $nowts]
+                                      config_uri $ss_config_file ]
                 set ss_id [hf_ss_write ss_arr]
                 unset ss_arr
 
 ## code procs for returning an array with defaults for use with creating test cases etc.
+
                 # problem server tests
                 set nowts [dt_systime -gmt 1]
+
                 # make an asset of type ss
-                array set ss_arr [list asset_id ""\
+                array set ss_arr [list \
                                       label "ProblemSS" \
                                       name "Problem SS" \
                                       asset_type_id "ss" \
-                                      keywords ""\
-                                      description ""\
-                                      trashed_p "0"\
-                                      trashed_by ""\
-                                      template_p ""\
-                                      templated_p "0"\
-                                      publish_p "0"\
-                                      monitor_p "0"\
-                                      popularity "0"\
-                                      triage_priority "0"\
-                                      op_status ""\
-                                      qal_product_id ""\
-                                      qal_customer_id ""\
                                       instance_id $instance_id \
                                       user_id $sysowner_user_id \
-                                      last_modified $nowts \
-                                      created $nowts \
-                                      flags ""\
-                                      template_id ""\
-                                      f_id ""\
                                       content "A demo problem service"\
                                       comments "Demo/ss system test case"]
                 set ss_arr(f_id) [hf_asset_write ss_arr]
                 # set attribute (fid) is 
+
                 array set ss_arr [list instance_id $instance_id \
-                                      ss_id "" \
                                       server_name $name \
                                       service_name "badbot" \
                                       daemon_ref "/usr/local/badbot" \
                                       protocol "http" \
                                       port [randomRange 50000] \
                                       ss_type "maybe bad" \
-                                      ss_subtype "" \
-                                      ss_undersubtype "" \
-                                      ss_ultrasubtype "" \
                                       config_uri "/dev/null" \
-                                      memory_bytes "" \
-                                      details ""\
-                                      time_trashed ""\
-                                      time_created $nowts]
                 set ss_id [hf_ss_write ss_arr]
 
                 hf_asset_create problemvm ProblemVM vm "Problem VM" "" "" "Demo/vm system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
