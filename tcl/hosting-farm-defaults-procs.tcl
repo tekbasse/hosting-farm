@@ -65,6 +65,9 @@ It is out of sync with hf_asset_keys"
 hf_sub_asset_map_defaults {
     { attribute_p "1" }
 } {
+    Sets defaults for an hf_sub_asset_map record into array_name
+    if element does not yet exist in array.
+} {
     upvar 1 $array_name sam_arr
     upvar 1 instance_id instance_id
     set nowts [dt_systime -gmt 1]
