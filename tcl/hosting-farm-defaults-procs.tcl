@@ -62,7 +62,7 @@ It is out of sync with hf_asset_keys"
 }
 
 
-hf_sub_asset_map_defaults {
+ad_proc -private hf_sub_asset_map_defaults {
     { attribute_p "1" }
 } {
     Sets defaults for an hf_sub_asset_map record into array_name
