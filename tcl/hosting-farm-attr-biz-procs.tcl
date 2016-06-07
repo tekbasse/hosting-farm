@@ -503,6 +503,7 @@ ad_proc -private hf_attribute_sub_label_change {
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
+
     set write_p [hf_ui_go_ahead_q write]
     set success_p 0
     if { $write_p } {
@@ -536,9 +537,11 @@ ad_proc -private hf_vh_write {
     Otherwise empty string is returned.
 } {
     # requires f_id
-    upvar 1 vh_arr_name arr_name
-    hf_ss_defaults
+    upvar 1 $vh_arr_name arr_name
+
+    hf_vh_defaults arr_name
     set attribute_p "1"
+
     qf_array_to_vars $arr_name [hf_vh_keys]
     set new_vh_id ""
     set status -1
@@ -587,11 +590,11 @@ ad_proc -private hf_dc_write {
     Otherwise empty string is returned.
 } {
     # requires f_id
-    upvar 1 dc_arr_name arr_name
-    # defaults
-    set sub_sort_order "100"
-    set sub_label "vh${sub_f_id}"
+    upvar 1 $dc_arr_name arr_name
+
+    hf_dc_defaults arr_name
     set attribute_p "1"
+
     qf_array_to_vars $arr_name [hf_dc_keys]
     set new_dc_id ""
     set status -1
@@ -640,11 +643,11 @@ ad_proc -private hf_hw_write {
     Otherwise empty string is returned.
 } {
     # requires f_id
-    upvar 1 hw_arr_name arr_name
-    # defaults
-    set sub_sort_order "100"
-    set sub_label "vh${sub_f_id}"
+    upvar 1 $hw_arr_name arr_name
+
+    hf_hw_defaults arr_name
     set attribute_p "1"
+
     qf_array_to_vars $arr_name [hf_hw_keys]
     set new_hw_id ""
     set status -1
@@ -692,11 +695,11 @@ ad_proc -private hf_vm_write {
     Otherwise empty string is returned.
 } {
     # requires f_id
-    upvar 1 vm_arr_name arr_name
-    # defaults
-    set sub_sort_order "100"
-    set sub_label "vh${sub_f_id}"
+    upvar 1 $vm_arr_name arr_name
+
+    hf_vm_defaults arr_name
     set attribute_p "1"
+
     qf_array_to_vars $arr_name [hf_vm_keys]
     set new_vm_id ""
     set status -1
@@ -744,9 +747,8 @@ ad_proc -private hf_ss_write {
     Otherwise empty string is returned.
 } {
     # requires f_id
-    upvar 1 ss_arr_name arr_name
+    upvar 1 $ss_arr_name arr_name
     
-    # defaults
     hf_ss_defaults arr_name
     set attribute_p "1"
 
@@ -797,11 +799,11 @@ ad_proc -private hf_ip_write {
     Otherwise empty string is returned.
 } {
     # requires f_id
-    upvar 1 ip_arr_name arr_name
-    # defaults
-    set sub_sort_order "100"
-    set sub_label "vh${sub_f_id}"
+    upvar 1 $ip_arr_name arr_name
+
+    hf_ip_defaults arr_name
     set attribute_p "1"
+
     qf_array_to_vars $arr_name [hf_ip_keys]
     set new_ip_id ""
     set status -1
@@ -850,10 +852,10 @@ ad_proc -private hf_ni_write {
 } {
     # requires f_id
     upvar 1 ni_arr_name arr_name
-    # defaults
-    set sub_sort_order "100"
-    set sub_label "vh${sub_f_id}"
+
+    hf_ni_defaults arr_name
     set attribute_p "1"
+
     qf_array_to_vars $arr_name [hf_ni_keys]
     set new_ni_id ""
     set status -1
@@ -901,11 +903,11 @@ ad_proc -private hf_os_write {
     Otherwise empty string is returned.
 } {
     # requires f_id
-    upvar 1 os_arr_name arr_name
-    # defaults
-    set sub_sort_order "100"
-    set sub_label "vh${sub_f_id}"
+    upvar 1 $os_arr_name arr_name
+
+    hf_os_defaults arr_name
     set attribute_p "1"
+
     qf_array_to_vars $arr_name [hf_os_keys]
     set new_os_id ""
     set status -1
@@ -953,11 +955,11 @@ ad_proc -private hf_ns_write {
     Otherwise empty string is returned.
 } {
     # requires f_id
-    upvar 1 ns_arr_name arr_name
-    # defaults
-    set sub_sort_order "100"
-    set sub_label "vh${sub_f_id}"
+    upvar 1 $ns_arr_name arr_name
+
+    hf_ns_defaults arr_name
     set attribute_p "1"
+
     qf_array_to_vars $arr_name [hf_ns_keys]
     set new_ns_id ""
     set status -1
@@ -1006,10 +1008,8 @@ ad_proc -private hf_vm_quota_write {
     Otherwise empty string is returned.
 } {
     # requires f_id
-    upvar 1 vm_quota_arr_name arr_name
-    # defaults
-    set sub_sort_order "100"
-    set sub_label "vh${sub_f_id}"
+    upvar 1 $vm_quota_arr_name arr_name
+    hf_vm_quota_defaults arr_name
     set attribute_p "1"
     qf_array_to_vars $arr_name [hf_vm_quota_keys]
     set new_vm_quota_id ""
@@ -1062,7 +1062,8 @@ ad_proc -private hf_ua_write {
     If successful,  ua_id is returned, otherwise 0.
 } {
     upvar 1 instance_id instance_id
-    hf_ui_go_ahead admin "" ""
+
+    hf_ui_go_ahead admin
 
     if { [hf_are_visible_characters $ua ] } {    
         set log_p 0
