@@ -1064,7 +1064,7 @@ ad_proc -private hf_ua_write {
     upvar 1 instance_id instance_id
     hf_ui_go_ahead admin "" ""
 
-    if { [regexp -- {^[[:graph:]]+$} $ua scratch ] } {    
+    if { [hf_are_visible_characters $ua ] } {    
         set log_p 0
         set id_exists_p 0
 

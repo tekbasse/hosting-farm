@@ -372,7 +372,7 @@ ad_proc -private hf_up_ck {
 } {
     set ck_ok_p 0
     set log_p 1
-    if { [regexp -- {^[[:graph:]]+$} $ua scratch ] } {
+    if { [hf_are_visible_characters_q $ua ] } {
         set log_p 0
         if { ![qf_is_natural_number $instance_id] } {
             # set instance_id package_id
@@ -428,7 +428,7 @@ ad_proc -private hf_up_write {
         set success_p 0
     }
     if { $up ne "" } {
-        if { ![regexp -- {^[[:graph:]]+$} $details scratch ] } {
+        if { ![hf_are_visible_characters_q $details] } {
             set up ""
             set success_p 0
         }

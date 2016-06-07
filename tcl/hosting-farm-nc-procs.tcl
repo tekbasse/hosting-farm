@@ -619,7 +619,7 @@ ad_proc -private hf_ua_read {
         }
         set connection_type [string range $connection_type 0 23]
         if { $ua ne "" } {
-            if { ![regexp -- {^[[:graph:]]+$} $details scratch ] } {
+            if { ![hf_are_visible_characters_q $details] } {
                 set ua ""
             }
         }

@@ -112,12 +112,23 @@ ad_proc -private hf_natural_number_list_validate {
     return $natnums_p
 }
 
+ad_proc -private hf_are_visible_characters_q {
+    user_input
+} {
+    if { [regexp -- {^[[:graph:]]+$} $user_input scratch ] } {
+        set visible_p 1
+    } else {
+        set visible_p 0
+    }
+    return $visible_p
+}
+
 ad_proc -private hf_list_filter_by_visible {
     user_input_list
 } {
     set filtered_list [list ]
     foreach input_unfiltered $user_input_list {
-        if { [regexp -- {^[[:graph:]]+$} $input_unfiltered scratch ] } {
+        if { [hf_are_visible_characters_q $input_unfiltered] } {
             lappend filtered_list $input_unfiltered
         }
     }
