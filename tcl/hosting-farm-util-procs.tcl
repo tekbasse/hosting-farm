@@ -111,3 +111,15 @@ ad_proc -private hf_natural_number_list_validate {
     }
     return $natnums_p
 }
+
+ad_proc -private hf_list_filter_by_visible {
+    user_input_list
+} {
+    set filtered_list [list ]
+    foreach input_unfiltered $user_input_list {
+        if { [regexp -- {^[[:graph:]]+$} $input_unfiltered scratch ] } {
+            lappend filtered_list $input_unfiltered
+        }
+    }
+    return $filtered_list
+}

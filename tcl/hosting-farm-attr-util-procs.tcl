@@ -16,31 +16,41 @@ ad_library {
 # hf_customer_ids_for_user
 # hf_active_asset_ids_for_customer 
 
-# API for various asset types:
-#   in each case, add ecds-pagination bar when displaying. defaults to all allowed by user permissions
+# API for various asset attributes
+#  in each case, add ecds-pagination bar when displaying. 
+#  defaults to all allowed by user permissions
 
 
 ad_proc -private hf_asset_features {
-    {instance_id ""}
     {asset_type_id_list ""}
 } {
-    returns a tcl_list_of_lists of features with attributes in order of: asset_type_id, feature_id, label, feature_type, publish_p, title, description
+    returns a tcl_list_of_lists of features with attributes.
+    Each feature is related to one asset_type_id
+
+    @return asset_type_id This is something like vm, vh, ss etc.
+    @return feature_id    Uniquely identifies feature record
+    @return label         An abbreviation identifying the feature.
+    @return feature_type  For grouping features
+    @return publish_p     Answers question. Publish this feature?
+    @return title         Feature title
+    @return description   A description of feature.
 } {
+    upvar 1 instance_id instance_id
     hf_ui_go_ahead_q read "" published
+    set new_as_type_id_list [hf_list_filter_by_visible $asset_type_id_list ]
+    set keys_list [db_list_of_lists hf_asset_type_features_get "select [hf_asset_feature_keys ","] where instance_id =:instance_id and asset_type_id in ([template::util::tcl_to_sql_list $new_as_type_id_list])"]
+    set keys [hf_keys_by $keys_list $separator]
+    return $keys
+}
 
-    # asset type doesn't involve specific client data, so no permissions check required
-    # validate/filter the asset_type_id_list for nonqualifying reference types
-    set new_as_type_id_list [list ]
-    foreach asset_type_id $asset_type_id_list {
-        if { [ad_var_type_check_number_p $asset_type_id] } {
-            lappend new_as_type_id_list $asset_type_id
-        }
-    }
 
-    # hf_asset_type_features.instance_id feature_id asset_type_id label feature_type publish_p title description
-    # hf_asset_feature_map.instance_id asset_id feature_id
-    set feature_list [db_list_of_lists hf_asset_type_features_get "select asset_type_id, feature_id, label, feature_type, publish_p, title, description from from hf_asset_type_features where instance_id =:instance_id and asset_type_id in ([template::util::tcl_to_sql_list $new_as_type_id_list])"]
-    return $feature_list
+ad_proc -private hf_asset_feature_keys {
+} {
+    Returns an ordered list of keys for hf_asset_type_features
+} {
+    set keys_list [list instance_id id asset_type_id label feature_type publish_p title description]
+    set keys [hf_keys_by $keys_list $separator]
+    return $keys
 }
 
 
@@ -48,34 +58,38 @@ ad_proc -private hf_asset_type_write {
     label
     title
     description
-    {id ""}
-    {instance_id ""}
+    id
 } {
-    creates or writes asset type, if id is blank, returns id of new asset type; otherwise returns 1 if id exists and db updated. 
+    Creates or writes asset type.
+    If id record exists, updates id. Otherwise creates a new record.
+    User must be a site admin.
+    @return 1 if successful. Otherwise returns 0.
 } {
-    set admin_p [hf_ui_go_ahead_q admin "" "" 0]
-    set asset_type_id ""
-    set return_val $admin_p
+    set user_id [ad_conn user_id]
+    set instance_id [ad_conn package_id]
+    set admin_p [permission::permission_p -party_id $user_id -object_id \
+                     $package_id -privilege admin]
+    set success_p $admin_p
     if { $admin_p } {
-        if { $id eq "" } {
+        set at_list [hf_asset_type_id_list]
+        if { $id ni $at_list } {
             # create new id
-            set asset_type_id [db_nextval hf_id_seq]
-            db_dml asset_type_create {insert into hf_asset_type
-                (instance_id,id,label,title,description)
-                values (:instance_id,:asset_type_id,:label,:title,:description) }
-            set return_val $asset_type_id
+            db_dml asset_type_create "insert into hf_asset_type ([hf_asset_type_keys ","]) values ([hf_asset_type_keys ",:"])"
         } else {
-            # check if id exists
-            db_0or1row asset_type_id_ck "select label as id_ck from hf_asset_type where instance_id =:instance_id and id=:id"
-            if { [info exists id_ck] } {
-                db_dml asset_type_write {update hf_asset_type
-                    set label =:label, title =:title, description=:description where instance_id =:instance_id and id=:id}
-            } else {
-                set return_val 0
-            }
+            db_dml asset_type_write {update hf_asset_type
+                set label=:label,title=:title,description=:description where instance_id=:instance_id and id=:id}
         }
     }
-    return $return_val
+    return $success_p
+}
+
+ad_proc -private hf_asset_type_keys {
+} {
+    Returns an ordered list of keys for hf_asset_type
+} {
+    set keys_list [list as set_type_id feature_id label feature_type publish_p title description from from hf_asset_type_features]
+    set keys [hf_keys_by $keys_list $separator]
+    return $keys
 }
 
 ad_proc -private hf_sub_asset_map_keys {
@@ -83,7 +97,8 @@ ad_proc -private hf_sub_asset_map_keys {
     Returns an ordered list of keys for hf_sub_asset_map
 } {
     set keys_list [list f_id type_id sub_f_id sub_type_id sub_sort_order sub_label attribute_p trashed_p]
-    return $keys_list
+    set keys [hf_keys_by $keys_list $separator]
+    return $keys
 }
 
 ad_proc -private hf_ns_keys {
