@@ -352,20 +352,37 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                                          os_id $os_arr(os_id) ]
                 set vm_id [hf_vm_write asset_arr ]
 
+                array unset asset_arr
+                array set asset_arr [list \
+                                         asset_type_id "vh" \
+                                         name "problemVH" \
+                                         title "Problem VH" \
+                                         description "Demo/vh test" \
+                                         user_id $yssowner_user_id ]
+                set asset_id [hf_asset_create asset_arr]
+                set vh_domain [hf_domain_example ""]
+                array set asset_arr [list \
+                                         domain_name $vh_domain]
+                set vh_id [hf_vh_write asset_arr ]
 
 
+                array set asset_arr [list \
+                                         name_record "problem NS record for $vh_domain" \
+                                         active_p "1"]
+                set ns_id [hf_ns_write asset_arr]
 
-                hf_asset_create problemvh ProblemVH vh "Problem VH" "" "" "Demo/vh system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
 
-                hf_asset_create problemns ProblemNS ns "Problem NS" "" "" "Demo/ns system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
-                hf_ns_write ns_id name_record active_p {instance_id ""} 
-
-
-                hf_asset_create problemdc ProblemDC dc "Problem DC" "" "" "Demo/dc system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
-                hf_dc_write dc_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created dc_affix dc_description dc_details 
+                array unset asset_arr
+                array set asset_arr [list \
+                                         asset_type_id "dc" \
+                                         name "problemDC" \
+                                         title "Problem DC" \
+                                         description "Demo/dc test" \
+                                         user_id $yssowner_user_id ]
+                set dc_id [hf_dc_write asset_arr ]
 
             }
         }
     }
-
+    return 1
 }
