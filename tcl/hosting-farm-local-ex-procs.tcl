@@ -334,6 +334,9 @@ ad_proc -private hfl_problem_server_cpu {
     # The cycle can start most anywhere in the timeline.
 
     set cycle_s 75600
+    # in case there are multiple systems, lets further vary by an asset_id
+    # factor. 
+    set cycle_s [expr { round( $cycle_s / sqrt( $asset_id ) ) } ]
     #expr acos(0) * 2. =
     set twopi 3.141592653589793
     set one_7th 0.14285714285714285 
