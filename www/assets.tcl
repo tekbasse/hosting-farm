@@ -1,26 +1,23 @@
 # hosting-farm/www/assets.tcl
 # part of the hosting-farm package 
 # depends on OpenACS website toolkit at OpenACS.org
-# copyrigh 2016
-# released under GPL license
+# copyrigh 2016 by Benjamin Brink
+# released under GPL license 2 or greater
+
 # this page split into components:
-#  inputs/observations (controller), actions (model), and outputs/reports (view) sections
+#  inputs/observations (model), 
+#  actions (controller), and 
+#  outputs/reports (view) sections
 
-## For consistency, user_id can only make modifications if they have create_p permissions. 
-## User_id is not enough, as there would be issues with choosing active revisions
-## so, user_id revsion changes are moderated. ie user_id can create a revision, but it takes write_p user to make revision active.
-
-# Initializations
-
-set title "#hosting-farm.Assets#"
 set read_p [hf_ui_go_ahead_q read "" "" 0]
 if { !$read_p } {
     ad_redirect_for_registration
     ad_script_abort
 }
-#set delete_p \[permission::permission_p -party_id $user_id -object_id $package_id -privilege delete\]
-# delete_p 
 
+# Initializations
+
+set title "#hosting-farm.Assets#"
 set icons_path1 "/resources/acs-subsite/"
 set icons_path2 "/resources/ajaxhelper/icons/"
 set delete_icon_url [file join $icons_path2 delete.png]
@@ -29,32 +26,44 @@ set untrash_icon_url [file join $icons_path2 page_add.png]
 set radio_checked_url [file join $icons_path1 radiochecked.gif]
 set radio_unchecked_url [file join $icons_path1 radio.gif]
 set redirect_before_v_p 0
-
-array set input_arr [list \
-                           page_title $title\
-                           customer_id ""\
-                           asset_id ""\
-                           submit "" \
-                           reset "" \
-                           mode "v" \
-                           next_mode "" \
-                          ]
-
 set user_message_list [list ]
-set title $input_arr(page_title)
 
+array set input_arr \
+    [list \
+         page_title $title\
+         customer_id ""\
+         asset_id ""\
+         submit "" \
+         reset "" \
+         mode "v" \
+         next_mode ""]
 
 # INPUTS / CONTROLLER
 
-# get form inputs if they exist
+# defaults
+qf_array_to_vars input_arr \
+    [list mode \
+         next_mode \
+         customer_id \
+         asset_id \
+         page_title]
+set title $page_title
 
+# get form inputs if they exist
 set form_posted_p [qf_get_inputs_as_array input_arr hash_check 1]
 # ignore x,y vars from image-based submit
-qf_array_to_vars input_arr [list mode next_mode customer_id asset_id page_title]
 
+# special permissions
 set create_p [hf_ui_go_ahead_q create "" "" 0]
 set write_p [hf_ui_go_ahead_q write "" "" 0]
 set admin_p [hf_ui_go_ahead_q admin "" "" 0]
+if { $admin_p } {
+    # check package admin for extras
+    set pkg_admin_p [permission:permission_p -party_id $user_id -object_id $instance_id -privilege admin]
+} else {
+    set pkg_admin_p 0
+}
+
 
 ns_log Notice "hosting-farm/assets.tcl(63): mode $mode next_mode $next_mode"
 # Modes are views, or one of these compound action/views
