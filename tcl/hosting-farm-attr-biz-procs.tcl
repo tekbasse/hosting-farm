@@ -567,6 +567,7 @@ attribute does not exist. vh_id '${vh_id} f_id '${f_id}'"
                     set sub_f_id=:vh_id_new where f_id=:f_id }
             } else {
                 set vh_id $vh_id_new
+                set sub_sort_order [hf_asset_subassets_count $f_id ]
                 set time_created $now_ts
                 set sub_type_id "vh"
                 db_dml vh_sub_asset_map_cr "insert into hf_sub_asset_map \
@@ -620,6 +621,7 @@ attribute does not exist. dc_id '${dc_id} f_id '${f_id}'"
                     set sub_f_id=:dc_id_new where f_id=:f_id }
             } else {
                 set dc_id $dc_id_new
+                set sub_sort_order [hf_asset_subassets_count $f_id ]
                 set time_created $now_ts
                 set sub_type_id "vh"
                 db_dml dc_sub_asset_map_cr "insert into hf_sub_asset_map \
@@ -673,6 +675,7 @@ attribute does not exist. hw_id '${hw_id} f_id '${f_id}'"
                     set sub_f_id=:hw_id_new where f_id=:f_id }
             } else {
                 set hw_id $hw_id_new
+                set sub_sort_order [hf_asset_subassets_count $f_id ]
                 set time_created $now_ts
                 set sub_type_id "vh"
                 db_dml hw_sub_asset_map_cr "insert into hf_sub_asset_map \
@@ -725,6 +728,7 @@ ad_proc -private hf_vm_write {
                     set sub_f_id=:vm_id_new where f_id=:f_id }
             } else {
                 set vm_id $vm_id_new
+                set sub_sort_order [hf_asset_subassets_count $f_id ]
                 set time_created $now_ts
                 set sub_type_id "vh"
                 db_dml vm_sub_asset_map_cr "insert into hf_sub_asset_map \
@@ -777,6 +781,7 @@ attribute does not exist. ss_id '${ss_id} f_id '${f_id}'"
                     set sub_f_id=:ss_id_new where f_id=:f_id }
             } else {
                 set ss_id $ss_id_new
+                set sub_sort_order [hf_asset_subassets_count $f_id ]
                 set time_created $now_ts
                 set sub_type_id "vh"
                 db_dml ss_sub_asset_map_create "insert into hf_sub_asset_map \
@@ -829,6 +834,7 @@ attribute does not exist. ip_id '${ip_id} f_id '${f_id}'"
                     set sub_f_id=:ip_id_new where f_id=:f_id }
             } else {
                 set ip_id $ip_id_new
+                set sub_sort_order [hf_asset_subassets_count $f_id ]
                 set time_created $now_ts
                 set sub_type_id "vh"
                 db_dml ip_sub_asset_map_create "insert into hf_sub_asset_map \
@@ -881,6 +887,7 @@ attribute does not exist. ni_id '${ni_id} f_id '${f_id}'"
                     set sub_f_id=:ni_id_new where f_id=:f_id }
             } else {
                 set ni_id $ni_id_new
+                set sub_sort_order [hf_asset_subassets_count $f_id ]
                 set time_created $now_ts
                 set sub_type_id "vh"
                 db_dml ni_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
@@ -933,6 +940,7 @@ attribute does not exist. os_id '${os_id} f_id '${f_id}'"
                     set sub_f_id=:os_id_new where f_id=:f_id }
             } else {
                 set os_id $os_id_new
+                set sub_sort_order [hf_asset_subassets_count $f_id ]
                 set time_created $now_ts
                 set sub_type_id "vh"
                 db_dml os_sub_asset_map_create "insert into hf_sub_asset_map \
@@ -985,6 +993,7 @@ attribute does not exist. ns_id '${ns_id} f_id '${f_id}'"
                     set sub_f_id=:ns_id_new where f_id=:f_id }
             } else {
                 set ns_id $ns_id_new
+                set sub_sort_order [hf_asset_subassets_count $f_id ]
                 set time_created $now_ts
                 set sub_type_id "vh"
                 db_dml ns_sub_asset_map_create "insert into hf_sub_asset_map \
@@ -1038,6 +1047,7 @@ attribute does not exist. vm_quota_id '${vm_quota_id} f_id '${f_id}'"
                 }
             } else {
                 set vm_quota_id $vm_quota_id_new
+                set sub_sort_order [hf_asset_subassets_count $f_id ]
                 set time_created $now_ts
                 set sub_type_id "vh"
                 db_dml vm_quota_sub_asset_map_create \

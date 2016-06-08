@@ -290,7 +290,7 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                                       label $label \
                                       brand $system_type2 \
                                       version $system_type \
-                                      kernel $kernel \
+                                      kernel $kernel ]
                 set os_arr(os_id) [hf_os_write os_arr]
 
                 # make an asset of type ss
@@ -313,7 +313,7 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                 set ss_id [hf_ss_write ss_arr]
                 unset ss_arr
 
-## code procs for returning an array with defaults for use with creating test cases etc.
+                ## code procs for returning an array with defaults for use with creating test cases etc.
 
                 # problem server tests
                 set nowts [dt_systime -gmt 1]
@@ -328,8 +328,8 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                                       content "A demo problem service"\
                                       comments "Demo/ss system test case"]
                 set ss_arr(f_id) [hf_asset_write ss_arr]
-                # set attribute (fid) is 
 
+                # make a bad bot service
                 array set ss_arr [list instance_id $instance_id \
                                       server_name $name \
                                       service_name "badbot" \
@@ -337,15 +337,22 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                                       protocol "http" \
                                       port [randomRange 50000] \
                                       ss_type "maybe bad" \
-                                      config_uri "/dev/null" \
+                                      config_uri "/dev/null" ]
                 set ss_id [hf_ss_write ss_arr]
+                
+                array set asset_arr [list \
+                                         asset_type_id "vm" \
+                                         name "problemVM" \
+                                         title "Problem VM" \
+                                         description "Demo/vm test" \
+                                         user_id $yssowner_user_id ]
+                set asset_id [hf_asset_create asset_arr]
+                array set asset_arr [list \
+                                         domain_name [hf_domain_example ""] \
+                                         os_id $os_arr(os_id) ]
+                set vm_id [hf_vm_write asset_arr ]
 
-                hf_asset_create problemvm ProblemVM vm "Problem VM" "" "" "Demo/vm system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
-                hf_vm_write vm_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created vm_domain_name vm_ip_id vm_ni_id vm_ns_id vm_type_id vm_resource_path vm_mount_union vm_details
 
-
-                hf_asset_create problemhw ProblemHW hw "Problem HW" "" "" "Demo/hw system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""
-                hf_hw_write hw_id name title asset_type_id keywords description content comments trashed_p trashed_by template_p templated_p publish_p monitor_p popularity triage_priority op_status ua_id ns_id qal_product_id qal_customer_id instance_id user_id last_modified created hw_system_name hw_backup_sys hw_ni_id hw_os_id hw_description hw_details 
 
 
                 hf_asset_create problemvh ProblemVH vh "Problem VH" "" "" "Demo/vh system test case" "" 0 0 0 0 0 0 0 "" "" "" "" "" "" $instance_id $sysowner_user_id ""

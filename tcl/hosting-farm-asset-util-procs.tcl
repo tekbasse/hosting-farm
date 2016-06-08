@@ -468,6 +468,34 @@ ad_proc -private hf_asset_subassets_cascade {
     return $final_id_list
 }
 
+ad_proc -private hf_asset_subassets_count {
+    f_id
+} {
+    Returns count of all subassets and trashed revisions of f_id.
+    This is useful for creating a chronological sort order
+} {
+    set current_id_list [list $f_id]
+    # to search for more.
+    set next_id_list [list ]
+    # final list
+    set final_id_list [list ]
+    set current_id_list_len 1
+    set q_count 0
+    while { $current_id_list_len > 0 } {
+        foreach s_id $current_id_list {
+            set new_list [db_list hf_subassets_all_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and instance_id=:instance_id and and attribute_p!='1'"]
+            foreach sb_id $new_list {
+                lappend next_id_list $sb_id
+                lappend final_id_list $s_id
+            }
+        }
+        set current_id_list $next_id_list
+        set current_id_list_len [llength $current_id_list]
+    }
+    set count [llength $final_id_list ]
+}
+
+
 ad_proc -private hf_asset_subassets_by_type_cascade {
     f_id
     asset_type_id

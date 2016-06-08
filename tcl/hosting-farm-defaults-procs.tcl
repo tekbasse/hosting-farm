@@ -71,11 +71,12 @@ ad_proc -private hf_sub_asset_map_defaults {
     upvar 1 $array_name sam_arr
     upvar 1 instance_id instance_id
     set nowts [dt_systime -gmt 1]
+
     set sam_list [list f_id "" \
                       type_id "" \
                       sub_f_id "" \
                       sub_type_id "" \
-                      sub_sort_order "100" \
+                      sub_sort_order "" \
                       sub_label "" \
                       attribute_p $attribute_p \
                       trashed_p "0" ]
