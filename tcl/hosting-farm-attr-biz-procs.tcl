@@ -558,7 +558,7 @@ attribute does not exist. vh_id '${vh_id} f_id '${f_id}'"
         set status 1
     }
     if { $status > -1 } {
-        # insert vh asset in hf_vhosts 
+        # insert attribute in hf_vhosts 
         set vh_id_new [db_nextval hf_id_seq]
         set nowts [dt_systime -gmt 1]
         db_transaction {
@@ -612,7 +612,7 @@ attribute does not exist. dc_id '${dc_id} f_id '${f_id}'"
         set status 1
     }
     if { $status > -1 } {
-        # insert vh asset in hf_data_centers
+        # insert attribute in hf_data_centers
         set dc_id_new [db_nextval hf_id_seq]
         set nowts [dt_systime -gmt 1]
         db_transaction {
@@ -666,7 +666,7 @@ attribute does not exist. hw_id '${hw_id} f_id '${f_id}'"
         set status 1
     }
     if { $status > -1 } {
-        # insert vh asset in hf_hardware
+        # insert attribute in hf_hardware
         set hw_id_new [db_nextval hf_id_seq]
         set nowts [dt_systime -gmt 1]
         db_transaction {
@@ -719,7 +719,7 @@ ad_proc -private hf_vm_write {
         set status 1
     }
     if { $status > -1 } {
-        # insert vh asset in hf_virtual_machines
+        # insert attribute in hf_virtual_machines
         set vm_id_new [db_nextval hf_id_seq]
         set nowts [dt_systime -gmt 1]
         db_transaction {
@@ -772,7 +772,7 @@ attribute does not exist. ss_id '${ss_id} f_id '${f_id}'"
         set status 1
     }
     if { $status > -1 } {
-        # insert vh asset in hf_services
+        # insert attribute in hf_services
         set ss_id_new [db_nextval hf_id_seq]
         set nowts [dt_systime -gmt 1]
         db_transaction {
@@ -825,7 +825,7 @@ attribute does not exist. ip_id '${ip_id} f_id '${f_id}'"
         set status 1
     }
     if { $status > -1 } {
-        # insert vh asset in hf_ip_addresses
+        # insert attribute in hf_ip_addresses
         set ip_id_new [db_nextval hf_id_seq]
         set nowts [dt_systime -gmt 1]
         db_transaction {
@@ -878,7 +878,7 @@ attribute does not exist. ni_id '${ni_id} f_id '${f_id}'"
         set status 1
     }
     if { $status > -1 } {
-        # insert vh asset in hf_network_interfaces
+        # insert attribute in hf_network_interfaces
         set ni_id_new [db_nextval hf_id_seq]
         set nowts [dt_systime -gmt 1]
         db_transaction {
@@ -931,7 +931,7 @@ attribute does not exist. os_id '${os_id} f_id '${f_id}'"
         set status 1
     }
     if { $status > -1 } {
-        # insert vh asset in hf_operating_systems
+        # insert attribute in hf_operating_systems
         set os_id_new [db_nextval hf_id_seq]
         set nowts [dt_systime -gmt 1]
         db_transaction {
@@ -984,7 +984,7 @@ attribute does not exist. ns_id '${ns_id} f_id '${f_id}'"
         set status 1
     }
     if { $status > -1 } {
-        # insert vh asset in hf_ns_records
+        # insert attribute in hf_ns_records
         set ns_id_new [db_nextval hf_id_seq]
         set nowts [dt_systime -gmt 1]
         db_transaction {
@@ -1016,50 +1016,38 @@ ad_proc -private hf_vm_quota_write {
     A new sub_f_id is returned if successful.
     Otherwise empty string is returned.
 } {
-    # requires f_id
     upvar 1 $vm_quota_arr_name arr_name
     hf_vm_quota_defaults arr_name
-    set attribute_p "1"
     qf_array_to_vars $arr_name [hf_vm_quota_keys]
-    set new_vm_quota_id ""
-    set status -1
-    if { $vm_quota_id ne "" } {
-        # existing attribute
-        set f_id_ck [hf_f_id_of_sub_f_id $vm_quota_id]
-        if { $f_id eq $f_id_ck } {
-            set status 0
-        } else {
-            ns_log Warning "hf_vm_quota_write.435: denied. \
-attribute does not exist. vm_quota_id '${vm_quota_id} f_id '${f_id}'"
-        }
-    } elseif { [hf_f_id_exists_q $f_id] } {
-        set status 1
+
+    if { $plan_id ne "" } {
+        set exists_p [db_0or1row hf_vm_quota_read_ck {
+            select plan_id as plan_id_ck from hf_vm_quotas
+            where plan_id=:plan_id
+            and instance_id=:instance_id
+            and time_trashed=null
+        } ]
+    } else {
+        set exists_p 0
     }
-    if { $status > -1 } {
-        # insert vh asset in hf_vm_quotas
-        set vm_quota_id_new [db_nextval hf_id_seq]
+    db_transaction {
         set nowts [dt_systime -gmt 1]
-        db_transaction {
-            if { $status == 0 } {
-                db_dml vm_quota_sub_asset_map_update {
-                    update hf_sub_asset_map
-                    set sub_f_id=:vm_quota_id_new where f_id=:f_id
-                }
-            } else {
-                set vm_quota_id $vm_quota_id_new
-                set sub_sort_order [hf_asset_subassets_count $f_id ]
-                set time_created $now_ts
-                set sub_type_id "vh"
-                db_dml vm_quota_sub_asset_map_create \
-                    "insert into hf_sub_asset_map \
- ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
+        if { $exists_p } {
+            db_dml hf_vm_quotas_trash_plan_id {
+                update hf_vm_quotas
+                set time_trashed=:nowts
+                where plan_id=:plan_id
+                and instance_id=:instance_id
+                and time_trashed=null
             }
-            # record revision/new
-            db_dml vm_quota_asset_create "insert into hf_vm_quotas \
+        } else {
+            set plan_id [db_nextval hf_id_seq]
+        }
+        db_dml hf_vm_quota_create "insert into hf_vm_quotas \
  ([hf_vm_quota_keys ","]) values ([hf_vm_quota_keys ",:")"
         }
     }
-    return $vm_quota_id_new
+    return $plan_id
 }
 
 ad_proc -private hf_ua_write {
