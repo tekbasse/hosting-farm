@@ -222,7 +222,6 @@ ad_proc -private hf_vm_quota_defaults {
                       vm_type "" \
                       max_domain "" \
                       private_vps "" \
-                      vm_quota_id "" \
                       time_trashed "" \
                       time_created $nowts]
     foreach {key value} $vm_quota {
