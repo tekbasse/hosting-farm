@@ -615,3 +615,43 @@ ad_proc -private hf_key_create {
 }
 
 
+ad_proc -private hf_types_allowed_by {
+    asset_type_id
+} {
+    Returns asset_type_ids allowed to be in/below/a-child-of asset_type_id
+
+
+    @param type_id of an asset or attribute ie from hf_asset_type_id_list
+
+    @return asset_type_id as a list
+} {
+    # Assume all cases are not allowed unless 
+    # explicitly stated
+    # [hf_asset_type_id_list \]
+    # y for yes
+    # n for no
+    set y_list [list ]
+    switch -exact $asset_type_id {
+        dc {
+            set y_list [list dc hw vm vh ss ip ni ns]
+        }
+        hw {
+            set y_list [list hw vm vh ss ip ni ns]
+        }
+        vm { 
+            set y_list [list vh ss ip ni ns]
+        }
+        vh {
+            set y_list [list ss ns ]
+        }
+        ss { 
+            set y_list [list ns ]
+        }
+        ip {
+            set y_list $at_list
+        }
+    }
+    # To use a slower, allowed unless explicitly stated, rules set:
+    # set y_list \[set_difference_named_v at_list $n_list\]
+    return $y_list
+}
