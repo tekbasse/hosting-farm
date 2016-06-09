@@ -626,29 +626,29 @@ ad_proc -private hf_types_allowed_by {
     @return asset_type_id as a list
 } {
     # Assume all cases are not allowed unless 
-    # explicitly stated
-    # [hf_asset_type_id_list \]
+    # explicitly stated. See proc hf_asset_type_id_list
     # y for yes
     # n for no
     set y_list [list ]
     switch -exact $asset_type_id {
         dc {
-            set y_list [list dc hw vm vh ss ip ni ns]
+            set y_list [list dc hw vm vh ss ip ni ns ua]
         }
         hw {
-            set y_list [list hw vm vh ss ip ni ns]
+            set y_list [list hw vm vh ss ip ni ns ua]
         }
         vm { 
-            set y_list [list vh ss ip ni ns]
+            set y_list [list vh ss ip ni ns ua]
         }
         vh {
-            set y_list [list ss ns ]
+            set y_list [list ss ns ua]
         }
         ss { 
-            set y_list [list ns ]
+            set y_list [list ns ua]
         }
         ip {
-            set y_list $at_list
+        }
+        ua {
         }
     }
     # To use a slower, allowed unless explicitly stated, rules set:
