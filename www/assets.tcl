@@ -202,23 +202,35 @@ if { $form_posted_p } {
     #   r  = view history (can only delete if pkg admin)
     #   "" = view list of role oriented summaries
     #          such as many customers and assets as possible etc.
-        
-    if { $mode eq "w" } {
+
+    # keeping the logic simple in this section
+    # Using IF instead of SWITCH to allow mode to be modified successively
+    if { $mode eq "w" } { 
         if { $write_p || $create_p || $admin_p } {
-            # give the user a chance to save their form input elsewhere
-            # instead of erasing the input altogether
-            set mode "e"
+            # allowed
+            if { $create_p && !$write_p } {
+                # create only. Remove any existing revision references
+                set asset_id ""
+                set sub_asset_id ""
+                set f_id ""
+                set sub_f_id ""
+            }
         } else {
             set mode ""
             set next_mode ""
             set validated_p 0
-            ns_log Warning "hosting-farm/assets.tcl(215): write denied for '${user_id}'."
+            ns_log Warning "hosting-farm/assets.tcl(215): \
+ write denied for '${user_id}'."
         }
     }
 
     if { $mode eq "t" } {
-        if { (!$write_p == 0 && $admin_p == 0 } {
-            ns_log Warning "hosting-farm/assets.tcl(222): trash denied for '${user_id}'."
+        if { $write_p || $admin_p } {
+            # allowed
+        } else {
+            ns_log Warning "hosting-farm/assets.tcl(222): \
+ trash denied for '${user_id}'."
+            set validated_p 0
             if { $read_p } {
                 set mode "l"
             } else {
@@ -226,100 +238,103 @@ if { $form_posted_p } {
             }
         }
     }
-    if { ( $mode eq "d" || $mode eq "D" ) && !$pkg_admin_p } {
-        ns_log Warning "hosting-farm/assets.tcl(222): mode '${mode}' denied for '${user_id}'."
-        set mode ""
-    }
 
+    if { $mode eq "d" || $mode eq "D" } {
+        if { $pkg_admin_p } {
+            # allowed
+        } else {
+            ns_log Warning "hosting-farm/assets.tcl(244): \
+ mode '${mode}' denied for '${user_id}'."
+            set mode ""
+            set validated_p 0
+        }
+    }
 
     if { $mode eq "e" } {
-    }
-    ns_log Notice "hosting-farm/assets.tcl(252): mode $mode next_mode $next_mode"
-    if { $mode eq "l" } {
-        if { $read_p } {
-            set validated_p 1
-            ns_log Notice "hosting-farm/assets.tcl validated for l"
+        if { $write_p || $admin_p } {
+            # allowed
+        } elseif { $read_p } {
+            set mode "v"
         } else {
-            set mode ""
-            set next_mode ""
-        }
-    }
-    ns_log Notice "hosting-farm/assets.tcl(262): mode $mode next_mode $next_mode"
-    if { $mode eq "v" } {
-        if { $read_p } {
-            # url vetted previously
-            set validated_p 1
-            if { $asset_id_from_url ne "" } {
-                # page exists
-            } else {
-                set mode "l"
-                ns_log Notice "hosting-farm/assets.tcl(405): mode = $mode ie. list of pages, index"
-            }
-        } else {
-            set mode ""
-            set next_mode ""
+            set mode "l"
+            set validated_p 0
+            ns_log Warning "hosting-farm/assets.tcl(258): \
+ mode 'e' denied for '${user_id}'."
         }
     }
 
-    # ACTIONS, PROCESSES / MODEL
-    ns_log Notice "hosting-farm/assets.tcl(268): mode $mode next_mode $next_mode validated $validated_p"
+    if { $mode eq "a" } {
+        if { $create_p || $admin_p } {
+            # allowed
+        } elseif { $read_p } {
+            set mode "v"
+        } else {
+            set mode "l"
+            set validated_p 0
+            ns_log Warning "hosting-farm/assets.tcl(262): \
+ mode 'a' denied for '${user_id}'."
+        }
+    }
+
+    if { $mode eq "l" } {
+        if { $read_p } {
+            # allowed
+        } else {
+            set mode ""
+            set next_mode ""
+            ns_log Warning "hosting-farm/assets.tcl(268): \
+ mode 'l' denied for '${user_id}'."
+            set validated_p 0
+        }
+    }
+
+    if { $mode eq "v" } {
+        if { $read_p } {
+            # allowed
+        } else {
+            set mode ""
+            set next_mode ""
+            set validated 0
+            ns_log Warning "hosting-farm/assets.tcl(280): \
+ mode 'v' denied for '${user_id}'."
+        }
+    }
+    if { !$validated_p } {
+        ns_log Notice "hosting-farm/assets.tcl(287): \
+ mode '${mode} next_mode '${next_mode}' validated_p '${validated_p}'"
+    }
+
+    # ACTIONS
+ 
     if { $validated_p } {
-        ns_log Notice "hosting-farm/assets.tcl ACTION mode $mode validated_p 1"
+        ns_log Notice "hosting-farm/assets.tcl(300): ACTION \
+ mode '${mode} next_mode '${next_mode}' validated_p '${validated_p}'"
+
         # execute process using validated input
-        # IF is used instead of SWITCH, so multiple sub-modes can be processed in a single mode.
-        ns_log Notice "hosting-farm/assets.tcl(358): mode $mode"
+        # Using IF instead of SWITCH to allow mode to be modified successively
+
         if { $mode eq "a" } {
-            # change active revision of page_f_id_from_url to asset_id
-            if { $write_p } {
-                if { [qw_change_asset_id_for_url $asset_id $url $package_id] } {
-                    set mode $next_mode
-                    set asset_id_from_url $asset_id
-                } else {
-                    lappend user_message_list "#q-wiki.Revision_could_not_be_activated# #q-wiki.Try_again_or_report_to_admin#"
-		    util_user_message -message [lindex $user_message_list end]
-                    set mode "r"
-                }                    
-            }
-            set next_mode ""
+
         }
-        ns_log Notice "hosting-farm/assets.tcl(344): mode $mode"
+
+
         if { $mode eq "t" } {
-            #  toggle trash
-            ns_log Notice "hosting-farm/assets.tcl mode = trash"
-            # which page to trash asset_id or asset_id_from_url?
-            if { $asset_id ne "" } {
-                set asset_id_stats [qw_page_stats $asset_id]
-                set trashed_p [lindex $asset_id_stats 7]
-                set page_user_id [lindex $asset_id_stats 11]
-            } elseif { $page_f_id ne "" } {
-                set asset_id_stats [qw_page_stats $asset_id_from_url]
-                set trashed_p [lindex $asset_id_stats 7]
-                set page_user_id [lindex $asset_id_stats 11]
+            # choose the most specific reference only
+            if { $sub_asset_id ne "" } {
+
+            } elseif { $asset_id ne "" } {
+
+            } elseif { $sub_f_id ne "" } {
+
+            } elseif { $f_id ne "" } {
+            } else {
+                ns_log Warning "hosting-farm/assets.tcl(331): \
+ trash requested without an expected reference"
             }
-#            set f_id \[lindex $asset_id_stats 5\]
-            set trash_done_p 0
-            if { $write_p || $page_user_id eq $user_id } {
-                if { $trashed_p } {
-                    set trash "0"
-                } else {
-                    set trash "1"
-                }
-                ns_log Notice "hosting-farm/assets.tcl(419): qw_page_trash asset_id $asset_id trash_p $trash templat_id $page_f_id"
-                set trash_done_p [qw_page_trash $asset_id $trash $page_f_id]
-                set mode $next_mode
-            } 
-            if { !$trash_done_p } {
-                lappend user_message_list "#q-wiki.Item_could_not_be_trashed# #q-wiki.You_don_t_have_permission#"
-            util_user_message -message [lindex $user_message_list end]
-            }
+            set mode $next_mode
             set next_mode ""
-            # update the asset_id
-            set asset_id_from_url [qw_asset_id_from_url $url $package_id]
-            if { $asset_id_from_url ne "" && $mode eq "" } {
-                set mode "v"
-            }
         }
-        ns_log Notice "hosting-farm/assets.tcl(374): mode $mode"
+ ##code
         if { $mode eq "w" } {
             if { $write_p } {
                 ns_log Notice "hosting-farm/assets.tcl permission to write the write.."
