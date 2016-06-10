@@ -4,12 +4,18 @@
 # copyrigh 2016 by Benjamin Brink
 # released under GPL license 2 or greater
 
-# this page split into components:
-#  inputs/observations (model), 
-#  actions (controller), and 
-#  outputs/reports (view) sections
+# This page split into components:
+#  Inputs (model/mode), 
+#  Actions (controller), and 
+#  Outputs (reports/view) sections
 
-set read_p [hf_ui_go_ahead_q read "" "" 0]
+# Initial permissions
+set user_id [ad_conn user_id]
+set instance_id [ad_conn package_id]
+set read_p [permission:permission_p \
+                -party_id $user_id \
+                -object_id $instance_id \
+                -privilege read]
 if { !$read_p } {
     ad_redirect_for_registration
     ad_script_abort
@@ -17,6 +23,10 @@ if { !$read_p } {
 
 # Initializations
 
+set create_p 0
+set write_p 0
+set admin_p 0
+set pkg_admin_p 0
 set title "#hosting-farm.Assets#"
 set icons_path1 "/resources/acs-subsite/"
 set icons_path2 "/resources/ajaxhelper/icons/"
@@ -30,207 +40,199 @@ set user_message_list [list ]
 
 array set input_arr \
     [list \
-         page_title $title\
-         customer_id ""\
-         asset_id ""\
-         submit "" \
-         reset "" \
+         asset_id "" \
+         asset_type_id "" \
+         customer_id "" \
+         f_id "" \
          mode "v" \
-         next_mode ""]
+         next_mode "" \
+         page_title $title \
+         reset "" \
+         sub_asset_id "" \
+         sub_f_id "" \
+         submit "" ]
 
-# INPUTS / CONTROLLER
+# INPUTS
 
-# defaults
-qf_array_to_vars input_arr \
-    [list mode \
-         next_mode \
-         customer_id \
-         asset_id \
-         page_title]
-set title $page_title
-
-# get form inputs if they exist
+# Get form inputs if they exist
 set form_posted_p [qf_get_inputs_as_array input_arr hash_check 1]
-# ignore x,y vars from image-based submit
-
-# special permissions
-set create_p [hf_ui_go_ahead_q create "" "" 0]
-set write_p [hf_ui_go_ahead_q write "" "" 0]
-set admin_p [hf_ui_go_ahead_q admin "" "" 0]
-if { $admin_p } {
-    # check package admin for extras
-    set pkg_admin_p [permission:permission_p -party_id $user_id -object_id $instance_id -privilege admin]
-} else {
-    set pkg_admin_p 0
-}
-
-
-ns_log Notice "hosting-farm/assets.tcl(63): mode $mode next_mode $next_mode"
-# Modes are views, or one of these compound action/views
-    # d delete (d x) then view as before (where x = l, r or v)
-    # t trash (d x) then view as before (where x = l, r or v)
-    # w write (d x) , then view page_id (v)
-# Actions
-    # d = delete template_id or page_id
-    # t = trash template_id or page_id
-    # w = write page_id,template_id, make new page_id for template_id
-    # a = make page_id the active revision for template_id
-# Views
-    # e = edit page_url, presents defaults (new) if page doesn't exist
-    # v = view page_url
-    # l = list pages of instance
-    # r = view/edit page_url revisions
-    # default = view list of as many customers and assets as possible
-
 
 if { $form_posted_p } {
-    set validated_p 0
-    # validate input
-    # cleanse data, verify values for consistency
-    # determine input completeness
+    if { [qf_is_natural_number $customer_id] } {
 
-    # A blank referrer means a direct request
-    # otherwise make sure referrer is from same domain when editing
-    set referrer_url [get_referrer]
-    set http_header_method [ad_conn method]
-    ns_log Notice "hosting-farm/assets.tcl(88): form_posted_p mode '${mode}' next_mode '${next_mode}' http_header_method ${http_header_method} referrer '${referrer_url}'"
-
-    if { ![qf_is_natural_number $asset_id] } {
-        set asset_id ""
-    } 
-    if { ![qf_is_natural_number $customer_id] } {
-        set customer_id ""
     }
+    
 
-    # validate input values for specific modes
-    # failovers for permissions follow reverse order (skipping ok): admin_p delete_p write_p create_p read_p
+    # Convert input_array to variables
+    qf_array_to_vars input_arr \
+        [list \
+             asset_id \
+             asset_type_id \
+             customer_id \
+             f_id \
+             mode \
+             next_mode \
+             page_title \
+             sub_asset_id \
+             sub_f_id ]
+    # x,y elements in input_arr holds position of image-based submit
+    array unset input_arr
+
+    # Validate input
+
     # possibilities are: d, t, w, e, v, l, r, "" where "" is invalid input or unreconcilable error condition.
-    # options include    d, l, r, t, e, "", w, v
-    if { [string first $mode "dtwvaelr"] == -1 } {
+    # options include    d, D, l, r, t, e, "", w, v, a
+    if { [string length $mode] != 1 } {
         set mode "v"
         set next_mode ""
-    } elseif { [string first $mode "dt"] > -1 && [string first $mode "lrv"] == -1 } {
+    }
+    if { [string length $next_mode] > 1 } {
+        set next_mode ""
+    }
+    if { [string first $mode "Ddtwvaelr"] == -1 } {
+        set mode "v"
+
+    } elseif { [string first $mode "dt"] > -1 \
+                   && [string first $next_mode "lrv"] == -1 } {
         set next_mode "v"
     }
-        
-    set asset_exists_p [hf_asset_id_exists $asset_id "" $instance_id]
-    if { !$asset_exists_p } {
+
+    ns_log Notice "hosting-farm/www/assets.tcl(115): \
+ mode '${mode} next_mode ${next_mode}"
+
+    set validated_p 0
+    # Cleanse data, verify values for consistency
+    # Determine input completeness
+
+    if { [qf_is_natural_number $asset_id] } {
+        if { [hf_asset_id_exists_q $asset_id ] } {
+            # Probably valid asset_id
+        } else {
+            set asset_id ""
+        }
+    } else {
         set asset_id ""
     }
-    set customer_ids_list [hf_customer_ids_for_user $user_id $instance_id]
-    if { [llength $customer_ids_list ] == 0 || ( $customer_id ne "" && [lsearch -exact $customer_ids_list $customer_id] == -1 ) } {
-        # else should show default in View section.
-        set asset_id ""
-        set customer_id ""
-        set mode "l"
-        set next_mode ""
+    if { [qf_is_natural_number $sub_asset_id] } {
+        if { [hf_asset_id_exists_q $sub_asset_id ] } {
+            # Probably valid sub_asset_id
+        } else {
+            set sub_asset_id ""
+        }
+    } else {
+        set sub_asset_id ""
+    }
+    if { [qf_is_natural_number $f_id] } {
+        if { [hf_asset_id_exists_q $f_id ] } {
+            # Probably valid f_id
+        } else {
+            set f_id ""
+        }
+    } else {
+        set f_id ""
+    }
+    if { [qf_is_natural_number $sub_f_id] } {
+        if { [hf_asset_id_exists_q $sub_f_id ] } {
+            # Probably valid sub_f_id
+        } else {
+            set sub_f_id ""
+        }
+    } else {
+        set sub_f_id ""
+    }
 
-    } 
-    ns_log Notice "hosting-farm/assets.tcl(124): mode '${mode}' next_mode '${next_mode}' customer_id '${customer_id}' asset_id '${asset_id}'"
+    if { $asset_type_id ne "" &&  $asset_type_id ni [hf_asset_type_id_list ] } {
+        set asset_type_id ""
+    }
+
+    if { $customer_id ne "" && [qf_is_natural_number $customer_id ] } {
+        set customer_ids_list [hf_customer_ids_for_user $user_id $instance_id]
+        if { $customer_id ni $customer_ids_list } {
+            set customer_id ""
+        }
+    }
+
+    ns_log Notice "hosting-farm/assets.tcl(152): user_id '${user_id}' \
+ customer_id '${customer_id}' asset_id '${asset_id}' "
+    # special cases require special permissions
+    # Re-checking read_p in context of input.
+    set read_p [hf_ui_go_ahead_q read "" "" 0]
+    set create_p [hf_ui_go_ahead_q create "" "" 0]
+    set write_p [hf_ui_go_ahead_q write "" "" 0]
+    set admin_p [hf_ui_go_ahead_q admin "" "" 0]
+    if { $admin_p } {
+        # check package admin for extras
+        set pkg_admin_p [permission:permission_p \
+                             -party_id $user_id \
+                             -object_id $instance_id \
+                             -privilege admin]
+    }
+    ns_log Notice "hosting-farm/assets.tcl(165): read_p '${read_p}' \
+ create_p ${create_p} write_p ${write_p} admin_p ${admin_p} \
+ pkg_admin_p '${pkg_admin_p}'"
+
+    set referrer_url [get_referrer]
+    set http_header_method [ad_conn method]
+    # A blank referrer means a direct request
+    # otherwise make sure referrer is from same domain when editing.
+    if { $referrer_url ne "" } {
+        ns_log Notice "hosting-farm/assets.tcl(189): form_posted_p \
+ http_header_method ${http_header_method} referrer '${referrer_url}'"
+    }
+
     set validated_p 1
+    # Validate input for specific modes
 
+    # Modes are views, or one of these compound action/views
+    #   d   delete (d x) then view as before (where x = l, r or v)
+    #   t   trash (d x) then view as before (where x = l, r or v)
+    #   w   write (d x) , then view asset_id (v)
+    
+    # Actions
+    #   d  = delete asset_id or sub_asset_id
+    #   D  = delete f_id or sub_f_id 
+    #   t  = trash asset_id or sub_asset_id
+    #   w  = write asset_id/sub_asset_id asset_type_id
+    #   a  = add asset_type_id
 
+    # Views
+    #   e  = edit asset_id/sub_asset_id, presents defaults if no prior data
+    #   v  = view asset_id or sub_asset_id
+    #   l  = list assets
+    #   r  = view history (can only delete if pkg admin)
+    #   "" = view list of role oriented summaries
+    #          such as many customers and assets as possible etc.
+        
     if { $mode eq "w" } {
-        if { $write_p } {
-            set validated_p 1
-        } elseif { $read_p } {
-            # give the user a chance to save their changes elsewhere instead of erasing the input
+        if { $write_p || $create_p || $admin_p } {
+            # give the user a chance to save their form input elsewhere
+            # instead of erasing the input altogether
             set mode "e"
         } else {
             set mode ""
             set next_mode ""
+            set validated_p 0
+            ns_log Warning "hosting-farm/assets.tcl(215): write denied for '${user_id}'."
         }
     }
-    ns_log Notice "hosting-farm/assets.tcl(169): mode $mode next_mode $next_mode"
-    if { $mode eq "r" || $mode eq "a" } {
-        if { $write_p } {
-            if { [qf_is_natural_number $page_template_id_from_url ] } {
-                set validated_p 1
-                ns_log Notice "hosting-farm/assets.tcl validated for $mode"
-            } elseif { $read_p } {
-                # This is a 404 return, but we list pages for more convenient UI
-                lappend user_message_list "#q-wiki.Page_not_found# #q-wiki.Showing_a_list_of_pages#"
-                util_user_message -message [lindex $user_message_list end]
-                set mode "l"
-            }
-        } else {
-            set mode ""
-            set next_mode ""
-        }
-    }
-    ns_log Notice "hosting-farm/assets.tcl(185): mode $mode next_mode $next_mode"
+
     if { $mode eq "t" } {
-        if { ( $write_p || $user_id > 0 ) && ([qw_page_id_exists $page_id $package_id] || [qw_page_id_exists $page_id_from_url $package_id] ) } {
-            # complete validation occurs while trashing.
-            set validated_p 1
-            ns_log Notice "hosting-farm/assets.tcl validated for t"
-        } elseif { $read_p } {
-            set mode "l"
-        } else {
-            set mode ""
+        if { (!$write_p == 0 && $admin_p == 0 } {
+            ns_log Warning "hosting-farm/assets.tcl(222): trash denied for '${user_id}'."
+            if { $read_p } {
+                set mode "l"
+            } else {
+                set mode ""
+            }
         }
     }
+    if { ( $mode eq "d" || $mode eq "D" ) && !$pkg_admin_p } {
+        ns_log Warning "hosting-farm/assets.tcl(222): mode '${mode}' denied for '${user_id}'."
+        set mode ""
+    }
 
-    if { $page_id_from_url eq "" && $write_p && $mode eq "" && $next_mode eq "" } {
-        # page is blank
-        # switch to edit mode automatically for users with write_p
-        set mode "e"
-    } 
 
-    ns_log Notice "hosting-farm/assets.tcl(197): mode $mode next_mode $next_mode"
     if { $mode eq "e" } {
-        # validate for new and existing pages. 
-        # For new pages, template_id will be blank (template_exists_p == 0)
-        # For revisions, page_id will be blank.
-        set template_exists_p [qw_page_id_exists $page_template_id]
-        if { !$template_exists_p } {
-            set page_template_id ""
-        }
-        if { $write_p || ( $create_p && !$template_exists_p ) } {
-            
-            # page_title cannot be blank
-            if { $page_title eq "" && $page_template_id eq "" } {
-                set page_title "[clock format [clock seconds] -format %Y%m%d-%X]"
-            } elseif { $page_title eq "" } {
-                set page_title "${page_template_id}"
-            } else {
-                set page_title_length [parameter::get -package_id $package_id -parameter PageTitleLen -default 80]
-                incr page_title_length -1
-                set page_title [string range $page_title 0 $page_title_length]
-            }
-            
-            if { $page_template_id eq "" && $page_name ne "" } {
-                # this is a new page
-                set url [ad_urlencode $page_name]
-                set page_id ""
-            } elseif { $page_template_id eq "" } {
-                if { [regexp -nocase -- {[^a-z0-9\%\_\-\.]} $url] } {
-                    # url contains unencoded characters
-                    set url [ad_urlencode $url]
-                    set page_id ""
-                }
-                
-                # Want to enforce unchangeable urls for pages?
-                # If so, set url from db for template_id here.
-            }
-            ns_log Notice "hosting-farm/assets.tcl(226): url $url"
-            # page_name is pretty version of url, cannot be blank
-            if { $page_name eq "" } {
-                set page_name $url
-            } else {
-                set page_name_length [parameter::get -package_id $package_id -parameter PageNameLen -default 40]
-                incr page_name_length -1
-                set page_name [string range $page_name 0 $page_name_length]
-            }
-            set validated_p 1
-            ns_log Notice "hosting-farm/assets.tcl validated for $mode"
-        } elseif { $read_p && $template_exists_p } {
-            set mode v
-            set next_mode ""
-        } else {
-            set mode ""
-            set next_mode ""
-        }
     }
     ns_log Notice "hosting-farm/assets.tcl(252): mode $mode next_mode $next_mode"
     if { $mode eq "l" } {
@@ -247,7 +249,7 @@ if { $form_posted_p } {
         if { $read_p } {
             # url vetted previously
             set validated_p 1
-            if { $page_id_from_url ne "" } {
+            if { $asset_id_from_url ne "" } {
                 # page exists
             } else {
                 set mode "l"
@@ -267,11 +269,11 @@ if { $form_posted_p } {
         # IF is used instead of SWITCH, so multiple sub-modes can be processed in a single mode.
         ns_log Notice "hosting-farm/assets.tcl(358): mode $mode"
         if { $mode eq "a" } {
-            # change active revision of page_template_id_from_url to page_id
+            # change active revision of page_f_id_from_url to asset_id
             if { $write_p } {
-                if { [qw_change_page_id_for_url $page_id $url $package_id] } {
+                if { [qw_change_asset_id_for_url $asset_id $url $package_id] } {
                     set mode $next_mode
-                    set page_id_from_url $page_id
+                    set asset_id_from_url $asset_id
                 } else {
                     lappend user_message_list "#q-wiki.Revision_could_not_be_activated# #q-wiki.Try_again_or_report_to_admin#"
 		    util_user_message -message [lindex $user_message_list end]
@@ -284,17 +286,17 @@ if { $form_posted_p } {
         if { $mode eq "t" } {
             #  toggle trash
             ns_log Notice "hosting-farm/assets.tcl mode = trash"
-            # which page to trash page_id or page_id_from_url?
-            if { $page_id ne "" } {
-                set page_id_stats [qw_page_stats $page_id]
-                set trashed_p [lindex $page_id_stats 7]
-                set page_user_id [lindex $page_id_stats 11]
-            } elseif { $page_template_id ne "" } {
-                set page_id_stats [qw_page_stats $page_id_from_url]
-                set trashed_p [lindex $page_id_stats 7]
-                set page_user_id [lindex $page_id_stats 11]
+            # which page to trash asset_id or asset_id_from_url?
+            if { $asset_id ne "" } {
+                set asset_id_stats [qw_page_stats $asset_id]
+                set trashed_p [lindex $asset_id_stats 7]
+                set page_user_id [lindex $asset_id_stats 11]
+            } elseif { $page_f_id ne "" } {
+                set asset_id_stats [qw_page_stats $asset_id_from_url]
+                set trashed_p [lindex $asset_id_stats 7]
+                set page_user_id [lindex $asset_id_stats 11]
             }
-#            set template_id \[lindex $page_id_stats 5\]
+#            set f_id \[lindex $asset_id_stats 5\]
             set trash_done_p 0
             if { $write_p || $page_user_id eq $user_id } {
                 if { $trashed_p } {
@@ -302,8 +304,8 @@ if { $form_posted_p } {
                 } else {
                     set trash "1"
                 }
-                ns_log Notice "hosting-farm/assets.tcl(419): qw_page_trash page_id $page_id trash_p $trash templat_id $page_template_id"
-                set trash_done_p [qw_page_trash $page_id $trash $page_template_id]
+                ns_log Notice "hosting-farm/assets.tcl(419): qw_page_trash asset_id $asset_id trash_p $trash templat_id $page_f_id"
+                set trash_done_p [qw_page_trash $asset_id $trash $page_f_id]
                 set mode $next_mode
             } 
             if { !$trash_done_p } {
@@ -311,9 +313,9 @@ if { $form_posted_p } {
             util_user_message -message [lindex $user_message_list end]
             }
             set next_mode ""
-            # update the page_id
-            set page_id_from_url [qw_page_id_from_url $url $package_id]
-            if { $page_id_from_url ne "" && $mode eq "" } {
+            # update the asset_id
+            set asset_id_from_url [qw_asset_id_from_url $url $package_id]
+            if { $asset_id_from_url ne "" && $mode eq "" } {
                 set mode "v"
             }
         }
@@ -409,17 +411,17 @@ if { $form_posted_p } {
                     # given:
 
                     # create or write page
-                    if { $page_id eq "" } {
+                    if { $asset_id eq "" } {
                         # create page
-                        set page_id [qw_page_create $url $page_name $page_title $page_contents_filtered $keywords $description $page_comments $page_template_id $page_flags $package_id $user_id]
-                        if { $page_id == 0 } {
+                        set asset_id [qw_page_create $url $page_name $page_title $page_contents_filtered $keywords $description $page_comments $page_f_id $page_flags $package_id $user_id]
+                        if { $asset_id == 0 } {
                             ns_log Warning "q-wiki/hosting-farm/assets.tcl page write error for url '${url}'"
                             lappend user_messag_list "There was an error creating the wiki page at '${url}'."
                         }
                     } else {
                         # write page
-                        set page_id [qw_page_write $page_name $page_title $page_contents_filtered $keywords $description $page_comments $page_id $page_template_id $page_flags $package_id $user_id]
-                        if { $page_id eq "" } {
+                        set asset_id [qw_page_write $page_name $page_title $page_contents_filtered $keywords $description $page_comments $asset_id $page_f_id $page_flags $package_id $user_id]
+                        if { $asset_id eq "" } {
                             ns_log Warning "q-wiki/hosting-farm/assets.tcl page write error for url '${url}'"
                             lappend user_messag_list "#q-wiki.There_was_an_error_creating_page# '${url}'."
                         }
@@ -481,20 +483,20 @@ switch -exact -- $mode {
 
             append title " #q-wiki.index#" 
             # show page
-            # sort by template_id, columns
+            # sort by f_id, columns
             
-            set page_ids_list [qw_pages $package_id]
+            set asset_ids_list [qw_pages $package_id]
             set pages_stats_lists [list ]
             # we get the entire data set, 1 row(list) per page as table pages_stats_lists
-            foreach page_id $page_ids_list {
-                set stats_mod_list [list $page_id]
-                set stats_orig_list [qw_page_stats $page_id]
-                #   a list: name, title, comments, keywords, description, template_id, flags, trashed, popularity, time last_modified, time created, user_id
+            foreach asset_id $asset_ids_list {
+                set stats_mod_list [list $asset_id]
+                set stats_orig_list [qw_page_stats $asset_id]
+                #   a list: name, title, comments, keywords, description, f_id, flags, trashed, popularity, time last_modified, time created, user_id
                 foreach stat $stats_orig_list {
                     lappend stats_mod_list $stat
                 }
-                lappend stats_mod_list [qw_page_url_from_id $page_id]
-                # new: page_id, name, title, comments, keywords, description, template_id, flags, trashed, popularity, time last_modified, time created, user_id, url
+                lappend stats_mod_list [qw_page_url_from_id $asset_id]
+                # new: asset_id, name, title, comments, keywords, description, f_id, flags, trashed, popularity, time last_modified, time created, user_id, url
                 lappend pages_stats_lists $stats_mod_list
             }
             set pages_stats_lists [lsort -index 2 $pages_stats_lists]
@@ -508,9 +510,9 @@ switch -exact -- $mode {
                 lappend stats_list [lindex $stats_mod_list 5]
                 lappend stats_list [lindex $stats_mod_list 3]
 
-                set page_id [lindex $stats_mod_list 0]
+                set asset_id [lindex $stats_mod_list 0]
                 set name [lindex $stats_mod_list 1]
-                set template_id [lindex $stats_mod_list 6]
+                set f_id [lindex $stats_mod_list 6]
                 set page_user_id [lindex $stats_mod_list 12]
                 set trashed_p [lindex $stats_mod_list 8]
                 set page_url [lindex $stats_mod_list 13]
@@ -525,16 +527,16 @@ switch -exact -- $mode {
                 if {  $write_p } {
                     # trash the page
                     if { $trashed_p } {
-                        set active_link2 " <a href=\"${page_url}?page_template_id=${template_id}&mode=t&next_mode=l\"><img src=\"${untrash_icon_url}\" alt=\"#acs-tcl.undelete#\" title=\"#acs-tcl.undelete#\" width=\"16\" height=\"16\"></a>"
+                        set active_link2 " <a href=\"${page_url}?page_f_id=${f_id}&mode=t&next_mode=l\"><img src=\"${untrash_icon_url}\" alt=\"#acs-tcl.undelete#\" title=\"#acs-tcl.undelete#\" width=\"16\" height=\"16\"></a>"
                     } else {
-                        set active_link2 " <a href=\"${page_url}?page_template_id=${template_id}&mode=t&next_mode=l\"><img src=\"${trash_icon_url}\" alt=\"#acs-tcl.delete#\" title=\"#acs-tcl.delete#\" width=\"16\" height=\"16\"></a>"
+                        set active_link2 " <a href=\"${page_url}?page_f_id=${f_id}&mode=t&next_mode=l\"><img src=\"${trash_icon_url}\" alt=\"#acs-tcl.delete#\" title=\"#acs-tcl.delete#\" width=\"16\" height=\"16\"></a>"
                     }
                 } elseif { $page_user_id == $user_id } {
                     # trash the revision
                     if { $trashed_p } {
-                        set active_link2 " <a href=\"${page_url}?page_id=${page_id}&mode=t&next_mode=l\"><img src=\"${untrash_icon_url}\" alt=\"#acs-tcl.undelete#\" title=\"#acs-tcl.undelete#\" width=\"16\" height=\"16\"></a>"
+                        set active_link2 " <a href=\"${page_url}?asset_id=${asset_id}&mode=t&next_mode=l\"><img src=\"${untrash_icon_url}\" alt=\"#acs-tcl.undelete#\" title=\"#acs-tcl.undelete#\" width=\"16\" height=\"16\"></a>"
                     } else {
-                        set active_link2 " <a href=\"${page_url}?page_id=${page_id}&mode=t&next_mode=l\"><img src=\"${trash_icon_url}\" alt=\"#acs-tcl.delete#\" title=\"#acs-tcl.delete#\" width=\"16\" height=\"16\"></a>"
+                        set active_link2 " <a href=\"${page_url}?asset_id=${asset_id}&mode=t&next_mode=l\"><img src=\"${trash_icon_url}\" alt=\"#acs-tcl.delete#\" title=\"#acs-tcl.delete#\" width=\"16\" height=\"16\"></a>"
                     }
                 } 
 
@@ -580,33 +582,33 @@ switch -exact -- $mode {
             lappend menu_list [list #q-wiki.edit# "${url}?mode=e" ]
             
             # show page revisions
-            # sort by template_id, columns
-            set template_id $page_template_id_from_url
+            # sort by f_id, columns
+            set f_id $page_f_id_from_url
             # these should be sorted by last_modified
-            set page_ids_list [qw_pages $package_id $user_id $template_id]
+            set asset_ids_list [qw_pages $package_id $user_id $f_id]
 
             set pages_stats_lists [list ]
             # we get the entire data set, 1 row(list) per revision as table pages_stats_lists
             # url is same for each
-            set page_id_active [qw_page_id_from_url $url $package_id]
-            foreach list_page_id $page_ids_list {
-                set stats_mod_list [list $list_page_id]
-                set stats_orig_list [qw_page_stats $list_page_id]
-                set page_list [qw_page_read $list_page_id]
-                #   a list: name, title, comments, keywords, description, template_id, flags, trashed, popularity, time last_modified, time created, user_id
+            set asset_id_active [qw_asset_id_from_url $url $package_id]
+            foreach list_asset_id $asset_ids_list {
+                set stats_mod_list [list $list_asset_id]
+                set stats_orig_list [qw_page_stats $list_asset_id]
+                set page_list [qw_page_read $list_asset_id]
+                #   a list: name, title, comments, keywords, description, f_id, flags, trashed, popularity, time last_modified, time created, user_id
                 foreach stat $stats_orig_list {
                     lappend stats_mod_list $stat
                 }
                 lappend stats_mod_list $url
                 lappend stats_mod_list [string length [lindex $page_list 11]]
-                lappend stats_mod_list [expr { $list_page_id == $page_id_active } ]
-                # new: page_id, name, title, comments, keywords, description, template_id, flags, trashed, popularity, time last_modified, time created, user_id, url, content_length, active_revision
+                lappend stats_mod_list [expr { $list_asset_id == $asset_id_active } ]
+                # new: asset_id, name, title, comments, keywords, description, f_id, flags, trashed, popularity, time last_modified, time created, user_id, url, content_length, active_revision
                 lappend pages_stats_lists $stats_mod_list
             }
             # build tables (list_of_lists) stats_list and their html filtered versions page_*_lists for display
             set page_stats_lists [list ]
 
-            # stats_list should contain page_id, user_id, size (string_length) ,last_modified, comments,flags, live_revision_p, trashed? , actions: untrash delete
+            # stats_list should contain asset_id, user_id, size (string_length) ,last_modified, comments,flags, live_revision_p, trashed? , actions: untrash delete
 
             set contributor_nbr 0
             set contributor_last_id ""
@@ -616,7 +618,7 @@ switch -exact -- $mode {
             foreach stats_mod_list $pages_stats_lists {
                 set stats_list [list]
                 # create these vars:
-                set index_list [list page_id 0 page_user_id 12 size 14 last_modified 10 created 11 comments 3 flags 7 live_revision_p 15 trashed_p 8]
+                set index_list [list asset_id 0 page_user_id 12 size 14 last_modified 10 created 11 comments 3 flags 7 live_revision_p 15 trashed_p 8]
                 foreach {list_item_name list_item_index} $index_list {
                     set list_item_value [lindex $stats_mod_list $list_item_index]
                     set $list_item_name $list_item_value
@@ -624,7 +626,7 @@ switch -exact -- $mode {
                 }
                 # convert stats_list for use with html
 
-                set active_link "<a href=\"${url}?page_id=$page_id&mode=e\">${page_id}</a>"
+                set active_link "<a href=\"${url}?asset_id=$asset_id&mode=e\">${asset_id}</a>"
                 set stats_list [lreplace $stats_list 0 0 $active_link]
 
                 if { $page_user_id ne $contributor_last_id } {
@@ -647,16 +649,16 @@ switch -exact -- $mode {
                         set stats_list [lreplace $stats_list 7 7 "&nbsp;"]   
                     } else {
                         # it's untrashed, user can make it live.
-                        set stats_list [lreplace $stats_list 7 7 "<a href=\"$url?page_id=${page_id}&mode=a&next_mode=r\"><img src=\"${radio_unchecked_url}\" alt=\"activate\" title=\"activate\" width=\"13\" height=\"13\"></a>"]
+                        set stats_list [lreplace $stats_list 7 7 "<a href=\"$url?asset_id=${asset_id}&mode=a&next_mode=r\"><img src=\"${radio_unchecked_url}\" alt=\"activate\" title=\"activate\" width=\"13\" height=\"13\"></a>"]
                     }
                 } 
 
                 set active_link_list [list $active_link]
                 set active_link2 ""
                 if { ( $write_p || $page_user_id == $user_id ) && $trashed_p } {
-                    set active_link2 " <a href=\"${url}?page_id=${page_id}&mode=t&next_mode=r\"><img src=\"${untrash_icon_url}\" alt=\"#acs-tcl.undelete#\" title=\"#acs-tcl.undelete#\" width=\"16\" height=\"16\"></a>"
+                    set active_link2 " <a href=\"${url}?asset_id=${asset_id}&mode=t&next_mode=r\"><img src=\"${untrash_icon_url}\" alt=\"#acs-tcl.undelete#\" title=\"#acs-tcl.undelete#\" width=\"16\" height=\"16\"></a>"
                 } elseif { $page_user_id == $user_id || $write_p } {
-                    set active_link2 " <a href=\"${url}?page_id=${page_id}&mode=t&next_mode=r\"><img src=\"${trash_icon_url}\" alt=\"#acs-tcl.delete#\" title=\"#acs-tcl.delete#\" width=\"16\" height=\"16\"></a>"
+                    set active_link2 " <a href=\"${url}?asset_id=${asset_id}&mode=t&next_mode=r\"><img src=\"${trash_icon_url}\" alt=\"#acs-tcl.delete#\" title=\"#acs-tcl.delete#\" width=\"16\" height=\"16\"></a>"
                 } 
                 set stats_list [lreplace $stats_list 8 8 $active_link2]
 
@@ -689,20 +691,20 @@ switch -exact -- $mode {
             ns_log Notice "hosting-farm/assets.tcl mode = edit"
             set cancel_link_html "<a hrer=\"list?mode=l\">#acs-kernel.common_Cancel#</a>"
 
-            # for existing pages, add template_id
+            # for existing pages, add f_id
             set conn_package_url [ad_conn package_url]
             set post_url [file join $conn_package_url $url]
 
             ns_log Notice "hosting-farm/assets.tcl(636): conn_package_url $conn_package_url post_url $post_url"
-            if { $page_id_from_url ne "" && [llength $user_message_list ] == 0 } {
+            if { $asset_id_from_url ne "" && [llength $user_message_list ] == 0 } {
 
                 # get page info
-                set page_list [qw_page_read $page_id_from_url $package_id $user_id ]
+                set page_list [qw_page_read $asset_id_from_url $package_id $user_id ]
                 set page_name [lindex $page_list 0]
                 set page_title [lindex $page_list 1]
                 set keywords [lindex $page_list 2]
                 set description [lindex $page_list 3]
-                set page_template_id [lindex $page_list 4]
+                set page_f_id [lindex $page_list 4]
                 set page_flags [lindex $page_list 5]
                 set page_contents [lindex $page_list 11]
                 set page_comments [lindex $page_list 12]
@@ -732,8 +734,8 @@ switch -exact -- $mode {
             qf_input type hidden value w name mode
             qf_input type hidden value v name next_mode
             qf_input type hidden value $page_flags name page_flags
-            qf_input type hidden value $page_template_id name page_template_id
-            #        qf_input type hidden value $page_id name page_id label ""
+            qf_input type hidden value $page_f_id name page_f_id
+            #        qf_input type hidden value $asset_id name asset_id label ""
             qf_append html "<h3>Q-Wiki #acs-templating.Page# #q-wiki.edit#</h3>"
             qf_append html "<div style=\"width: 70%; text-align: right;\">"
             set page_name_unquoted [qf_unquote $page_name]
@@ -766,7 +768,7 @@ switch -exact -- $mode {
     v {
         #  view page(s) (standard, html page document/report)
         if { $read_p } {
-            # if $url is different than ad_conn url stem, 303/305 redirect to page_id's primary url
+            # if $url is different than ad_conn url stem, 303/305 redirect to asset_id's primary url
             
             if { $redirect_before_v_p } {
                 ns_log Notice "hosting-farm/assets.tcl(835): redirecting to url $url for clean url view"
@@ -778,17 +780,17 @@ switch -exact -- $mode {
             lappend menu_list [list #q-wiki.index# "index?mode=l"]
 
             # get page info
-            if { $page_id eq "" } {
-                # cannot use previous $page_id_from_url, because it might be modified from an ACTION
+            if { $asset_id eq "" } {
+                # cannot use previous $asset_id_from_url, because it might be modified from an ACTION
                 # Get it again.
-                set page_id_from_url [qw_page_id_from_url $url $package_id]
-                set page_list [qw_page_read $page_id_from_url $package_id $user_id ]
+                set asset_id_from_url [qw_asset_id_from_url $url $package_id]
+                set page_list [qw_page_read $asset_id_from_url $package_id $user_id ]
             } else {
-                set page_list [qw_page_read $page_id $package_id $user_id ]
+                set page_list [qw_page_read $asset_id $package_id $user_id ]
             }
 
             if { $create_p } {
-                if { $page_id_from_url ne "" || $page_id ne "" } {
+                if { $asset_id_from_url ne "" || $asset_id ne "" } {
                     lappend menu_list [list #q-wiki.revisions# "${url}?mode=r"]
                 } 
                 lappend menu_list [list #q-wiki.edit# "${url}?mode=e" ]
@@ -800,7 +802,7 @@ switch -exact -- $mode {
                 set description [lindex $page_list 3]
                 set page_contents [lindex $page_list 11]
                 set trashed_p [lindex $page_list 6]
-                set template_id [lindex $page_list 4]
+                set f_id [lindex $page_list 4]
                 # trashed pages cannot be viewed by public, but can be viewed with permission
                 
                 if { $keywords ne "" } {
@@ -821,7 +823,7 @@ switch -exact -- $mode {
         }
     }
     w {
-        #  save.....  (write) page_id 
+        #  save.....  (write) asset_id 
         # should already have been handled above
         ns_log Warning "hosting-farm/assets.tcl(575): mode = save/write THIS SHOULD NOT BE CALLED."
         # it's called in validation section.
