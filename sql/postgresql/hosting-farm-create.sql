@@ -239,12 +239,27 @@ CREATE TABLE hf_ns_records (
        -- should be validated before allowed to go live.
        active_p    integer not null DEFAULT '0',
        -- DNS records to be added to domain name service
-       -- These are to be auto built by code and availabe data
-       -- or can be custom edited as needed.
-       name_record text,
+       -- These are to be auto built by UI and system widgets 
+       -- using availabe data. Or custom text edited as needed.
+       -- Essentially, this contains configured text block
+       -- for inserting in a dns configuration zone file.
+       -- No need for repeat builds of records of elements of:
+       -- dns_type A, AAAA, CNAME, MX, PTR, NS SOA, SRV, TXT, NAPTR
+       -- domainname
+       -- ttl  duration of cache (seconds)
+       -- class IN=internet (others historic)
+       -- nameserver 
+       -- email_address
+       -- serial_number  increases with each zone file change
+       -- refresh  secondary nameserver refresh rate (seconds/cycle)
+       -- retry    secondary poll rate if primary errors
+       -- expiry   max time secondary keeps cache before quitting
+       -- minimum  secondary nameserver minimum cache period (seconds)
+       --
+       name_record    text,
+       user_id        integer,
        time_trashed   timestamptz,
        time_created   timestamptz not null DEFAULT now()
-
 );
 
 create index hf_ns_records_instance_id_idx on hf_ns_records (instance_id);
