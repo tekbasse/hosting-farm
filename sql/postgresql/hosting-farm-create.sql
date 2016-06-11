@@ -60,15 +60,15 @@ create index hf_asset_type_label_idx on hf_asset_type (label);
 -- q-wiki ref template_id is now f_id.
 
 CREATE TABLE hf_assets (
-    instance_id     integer,
+    instance_id    integer,
     -- An asset_id. See hf_asset_label_map.asset_id
     -- A revision of hf_asset_label_map.f_id
-    id              integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+    id             integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- following 3 fields are similar in use to q-wiki template mapping
     -- f_id is similar usage as template_id in q-wiki
     -- f_id is fixed for all revisions of an asset
     -- See also hf_asset_label_map.f_id
-    f_id             integer,
+    f_id            integer,
     -- owner_id
     user_id         integer,
     last_modified   timestamptz,
@@ -95,16 +95,7 @@ CREATE TABLE hf_assets (
     -- Label might be domain, machine name etc.
     label           varchar(65),
     -- A pretty version of label, spaces allowed etc
-    -- (was q-wiki.title ie page title)
     name           varchar(65),
-    keywords        varchar(100),
-    -- one line description
-    -- (was q-wiki.description)
-    description     varchar(80),
-    -- publishable content. ported from q-wiki for publishing
-    content         text,
-    -- internal comments. ported from q-wiki for publishing
-    comments        text,
     -- If this is a copy of a template, is original template hf_assets.id
     template_id     integer,
     -- see server.templated
@@ -120,9 +111,9 @@ CREATE TABLE hf_assets (
     -- expires/expired on
     time_stop       timestamptz,
     -- ua_id           varchar(19) not null DEFAULT '',
-  -- status aka vm_to_configure, on,off etc.
-  -- use with qal_product_id for vm_to_configure.plan_id
-  -- and qal_customer_id for vm_to_configure.company_id
+    -- status aka vm_to_configure, on,off etc.
+    -- use with qal_product_id for vm_to_configure.plan_id
+    -- and qal_customer_id for vm_to_configure.company_id
     op_status       varchar(20),
     -- for use with monitoring.
     trashed_p       varchar(1) not null DEFAULT '0',
@@ -132,10 +123,12 @@ CREATE TABLE hf_assets (
     popularity      varchar(19) not null DEFAULT '',
     -- built-in customization flags
     flags       varchar(12),
+    monitor_p       varchar(1) not null DEFAULT '0',
     -- mainly for promoting clients by linking to their website
     -- was table.advert_link
-    publish_p       varchar(1) not null DEFAULT '0',
-    monitor_p       varchar(1) not null DEFAULT '0',
+    -- If 1, provide a link to page 'label' of local implementation of q-wiki
+    -- that implements q-wiki with hf_permissions_p
+    publish_p      varchar(1) not null DEFAULT '0',
     -- when monitoring, higher value is higher priority for alerts, alert reponses
     triage_priority varchar(19) not null DEFAULT ''
 );
@@ -150,6 +143,7 @@ create index hf_assets_asset_type_id_idx on hf_assets (asset_type_id);
 create index hf_assets_qal_product_id_idx on hf_assets (qal_product_id);
 create index hf_assets_qal_customer_id_idx on hf_assets (qal_customer_id);
 create index hf_assets_label_idx on hf_assets (label);
+
 
 -- following table ported from q-wiki for versioning
 -- was hf_asset_label_map
