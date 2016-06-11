@@ -79,8 +79,9 @@ ad_proc -private hfl_asset_halt_example {
     # check permission
     # basic pre-check:  Using hf_nc_go_ahead instead of hfl_allow_q, because this can be called via UI directly.
     hf_nc_go_ahead
+
     # determine customer_id of asset
-    # name,title,asset_type_id,keywords,description,template_p,templated_p,trashed_p,trashed_by,publish_p,monitor_p,popularity,triage_priority,op_status,ua_id,ns_id,qal_product_id,qal_customer_id,instance_id,user_id,last_modified,created,flags
+
     
     # determine asset_type
     set asset_type_id [lindex $asset_stats_list 2]

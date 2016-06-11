@@ -76,7 +76,7 @@ ad_proc -public hf_asset_stats {
 
     @return stats as a list.
     
-    @see hf_asset_stats_keys for order of keys.
+    @see hf_asset_keys for order of keys.
 } {
     # Asset stats do not include large asset values such as content
     upvar 1 instance_id instance_id
@@ -84,11 +84,11 @@ ad_proc -public hf_asset_stats {
     set read_p [hf_ui_go_ahead_q read "" "" 0]
     set return_list [list ]
     if { $read_p } {
-        set return_list_of_lists [db_list_of_lists hf_asset_stats "select [hf_asset_stats_keys ","] from hf_assets where id=:asset_id and instance_id=:instance_id" ] 
+        set return_list_of_lists [db_list_of_lists hf_asset_stats "select [hf_asset_keys ","] from hf_assets where id=:asset_id and instance_id=:instance_id" ] 
         # convert return_lists_of_lists to return_list
         set return_list [lindex $return_list_of_lists 0]
     } 
-    set all_keys_list [hf_asset_stats_keys]
+    set all_keys_list [hf_asset_keys]
     foreach key [split $keys_list " ,"] {
         set key_idx [lsearch -exact key $all_keys_list $key]
         if { $key_idx > -1 } {

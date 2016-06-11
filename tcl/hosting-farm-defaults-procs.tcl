@@ -26,8 +26,6 @@ ad_proc -private hf_asset_defaults {
                    label "" \
                    name "" \
                    asset_type_id "" \
-                   keywords "" \
-                   description "" \
                    trashed_p "0" \
                    trashed_by "" \
                    template_p "0" \
@@ -45,9 +43,7 @@ ad_proc -private hf_asset_defaults {
                    created "" \
                    flags "" \
                    template_id "" \
-                   f_id "" \
-                   content "" \
-                   comments ""]
+                   f_id "" ]
 
     foreach {key value} $asset {
         if { ![info exists asset_arr(${key}) ] } {

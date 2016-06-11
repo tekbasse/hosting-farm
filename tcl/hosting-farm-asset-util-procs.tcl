@@ -314,21 +314,20 @@ ad_proc -private hf_asset_id_current {
     return $asset_id_current
 }
 
-ad_proc -private hf_asset_stats_keys {
+
+ad_proc -private hf_asset_keys {
     {separator ""}
 } {
-    Returns an ordered list of keys that is parallel to the ordered list returned by hf_asset_stats.
+    Returns an ordered list of keys that is parallel to the ordered list returned by hf_asset_read.
+
     If separator is not "", returns a string joined with separator.
+    @see hf_keys_by
 } {
-    # naming convention is: label, name, description
-    # old way from (q-wiki): name, title, description
     set keys_list [list \
                        asset_id \
                        label \
                        name \
                        asset_type_id \
-                       keywords \
-                       description \
                        trashed_p \
                        trashed_by \
                        template_p \
@@ -347,22 +346,6 @@ ad_proc -private hf_asset_stats_keys {
                        flags \
                        template_id \
                       f_id]
-    set keys [hf_keys_by $keys_list $separator]
-    return $keys
-}
-
-ad_proc -private hf_asset_keys {
-    {separator ""}
-} {
-    Returns an ordered list of keys that is parallel to the ordered list returned by hf_asset_read.
-    
-    Adds content and comments fields to hf_asset_stats_keys list
-
-    @see hf_asset_stats_keys
-} {
-    set keys_list [hf_asset_stats_keys]
-    lappend keys_list "content"
-    lappend keys_list "comments"
     set keys [hf_keys_by $keys_list $separator]
     return $keys
 }
