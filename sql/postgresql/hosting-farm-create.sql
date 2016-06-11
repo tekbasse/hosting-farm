@@ -239,6 +239,8 @@ CREATE TABLE hf_ns_records (
        -- should be validated before allowed to go live.
        active_p    integer not null DEFAULT '0',
        -- DNS records to be added to domain name service
+       -- These are to be auto built by code and availabe data
+       -- or can be custom edited as needed.
        name_record text,
        time_trashed   timestamptz,
        time_created   timestamptz not null DEFAULT now()
