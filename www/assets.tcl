@@ -179,6 +179,10 @@ if { $form_posted_p } {
         ns_log Notice "hosting-farm/assets.tcl(189): form_posted_p \
  http_header_method ${http_header_method} referrer '${referrer_url}'"
     }
+    if { 1[string match -nocase "post*" $http_header_method ] } {
+        # Make sure there is a clean url, should page be bookmarked etc
+        set $redirect_before_v_p 1
+    }
 
     set validated_p 1
     # Validate input for specific modes
@@ -334,133 +338,16 @@ if { $form_posted_p } {
             set mode $next_mode
             set next_mode ""
         }
- ##code
+
         if { $mode eq "w" } {
             if { $write_p } {
-                ns_log Notice "hosting-farm/assets.tcl permission to write the write.."
-                set page_contents_quoted $page_contents
-                set page_contents [ad_unquotehtml $page_contents]
-                set allow_adp_tcl_p [parameter::get -package_id $package_id -parameter AllowADPTCL -default 0]
-                set flagged_list [list ]
+                # ad-unquotehtml values before posting to db
+                set mode $next_mode
                 
-                if { $allow_adp_tcl_p } {
-                    ns_log Notice "hosting-farm/assets.tcl(311): adp tags allowed. Fine grain filtering.."
-                    # filter page_contents for allowed and banned procs in adp tags
-                    set banned_proc_list [split [parameter::get -package_id $package_id -parameter BannedProc]]
-                    set allowed_proc_list [split [parameter::get -package_id $package_id -parameter AllowedProc]]
-                    
-                    set code_block_list [qf_get_contents_from_tags_list "<%" "%>" $page_contents]
-                    foreach code_block $code_block_list {
-                        # split into lines
-                        set code_segments_list [split $code_block \n\r]
-                        foreach code_segment $code_segments_list  {
-                            # see filters in accounts-finance/tcl/modeling-procs.tcl for inspiration
-                            # split at the beginning of each open square bracket
-                            set executable_fragment_list [split $code_segment \[]
-                            set executable_list [list ]
-                            foreach executable_fragment $executable_fragment_list {
-                                # right-clip to just the executable for screening purposes
-                                set space_idx [string first " " $executable_fragment]
-                                if { $space_idx > -1 } {
-                                    set end_idx [expr { $space_idx - 1 } ]
-                                    set executable [string range $executable_fragment 0 $end_idx]
-                                } else {
-                                    set executable $executable_fragment
-                                }
-                                # screen executable
-                                if { $executable eq "" } {
-                                    # skip an empty executable
-                                    # ns_log Notice "hosting-farm/assets.tcl(395): executable is empty. Screening incomplete?"
-                                } else {
-                                    # see if this proc is allowed
-                                    set proc_allowed_p 0
-                                    foreach allowed_proc $allowed_proc_list {
-                                        if { [string match $allowed_proc $executable] } {
-                                            set proc_allowed_p 1
-                                        }
-                                    }
-                                    # see if this proc is banned. Banned takes precedence over allowed.
-                                    if { $proc_allowed_p } {
-                                        foreach banned_proc $banned_proc_list {
-                                            if { [string match $banned_proc $executable] } {
-                                                # banned executable found
-                                                set proc_allowed_p 0
-                                                lappend flagged_list $executable
-                                                lappend user_message_list "'$executable' #q-wiki.is_banned_from_use#"
-            util_user_message -message [lindex $user_message_list end]
-                                            }
-                                        }            
-                                    } else {
-                                        lappend flagged_list $executable
-                                        lappend user_message_list "'$executable' #q-wiki.is_not_allowed_at_this_time#"
-            util_user_message -message [lindex $user_message_list end]
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if { [llength $flagged_list] == 0 } {
-                        # content passed filters
-                        set page_contents_filtered $page_contents
-                    } else {
-                        set page_contents_filtered $page_contents_quoted
-                    }
-                } else {
-                    # filtering out all adp tags (allow_adp_tcl_p == 0)
-                    ns_log Notice "hosting-farm/assets.tcl(358): filtering out adp tags"
-                    # ns_log Notice "hosting-farm/assets.tcl(359): range page_contents 0 120: '[string range ${page_contents} 0 120]'"
-                    set page_contents_list [qf_remove_tag_contents "<%" "%>" $page_contents]
-                    set page_contents_filtered [join $page_contents_list ""]
-                    # ns_log Notice "hosting-farm/assets.tcl(427): range page_contents_filtered 0 120: '[string range ${page_contents_filtered} 0 120]'"
-                }
-                # use $page_contents_filtered, was $page_contents
-                set page_contents [ad_quotehtml $page_contents_filtered]
-                
-                if { [llength $flagged_list ] > 0 } {
-                    ns_log Notice "hosting-farm/assets.tcl(369): content flagged, changing to edit mode."
-                    set mode e
-                } else {
-                    # write the data
-                    # a different user_id makes new context based on current context, otherwise modifies same context
-                    # or create a new context if no context provided.
-                    # given:
-
-                    # create or write page
-                    if { $asset_id eq "" } {
-                        # create page
-                        set asset_id [qw_page_create $url $page_name $page_title $page_contents_filtered $keywords $description $page_comments $page_f_id $page_flags $package_id $user_id]
-                        if { $asset_id == 0 } {
-                            ns_log Warning "q-wiki/hosting-farm/assets.tcl page write error for url '${url}'"
-                            lappend user_messag_list "There was an error creating the wiki page at '${url}'."
-                        }
-                    } else {
-                        # write page
-                        set asset_id [qw_page_write $page_name $page_title $page_contents_filtered $keywords $description $page_comments $asset_id $page_f_id $page_flags $package_id $user_id]
-                        if { $asset_id eq "" } {
-                            ns_log Warning "q-wiki/hosting-farm/assets.tcl page write error for url '${url}'"
-                            lappend user_messag_list "#q-wiki.There_was_an_error_creating_page# '${url}'."
-                        }
-                    }
-
-                    # rename existing pages?
-                    if { $url ne $page_name } {
-                        # rename url, but first post the page
-                        if { [qw_page_rename $url $page_name $package_id ] } {
-                            # if success, update url and redirect
-                            set redirect_before_v_p 1
-                            set url $page_name
-                            set next_mode "v"
-                        }
-                    }
-
-                    # switch modes..
-                    ns_log Notice "hosting-farm/assets.tcl(396): activating next mode $next_mode"
-                    set mode $next_mode
-                }
             } else {
                 # does not have permission to write
                 lappend user_message_list "#q-wiki.Write_operation_did_not_succeed# #q-wiki.You_don_t_have_permission#"
-		util_user_message -message [lindex $user_message_list end]
+                util_user_message -message [lindex $user_message_list end]
                 ns_log Notice "hosting-farm/assets.tcl(402) User attempting to write content without permission."
                 if { $read_p } {
                     set mode "v"
@@ -474,18 +361,19 @@ if { $form_posted_p } {
     }
 } else {
     # form not posted
-    ns_log Warning "hosting-farm/assets.tcl(451): Form not posted. This shouldn't happen via index.vuh."
+
 }
 
 
 set menu_list [list ]
+
+ ##code
 
 # OUTPUT / VIEW
 # using switch, because there's only one view at a time
 ns_log Notice "hosting-farm/assets.tcl(508): OUTPUT mode $mode"
 switch -exact -- $mode {
     l {
-        #  list...... presents a list of pages  (Branch this off as a procedure and/or lib page fragment to be called by view action)
         if { $read_p } {
             if { $redirect_before_v_p } {
                 ns_log Notice "hosting-farm/assets.tcl(587): redirecting to url $url for clean url view"
