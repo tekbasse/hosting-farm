@@ -20,3 +20,4 @@
 # @param separator is html used between page numbers, defaults to &nbsp;
 
 
+set content "[llength $x] $x"
