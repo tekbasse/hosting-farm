@@ -2,8 +2,14 @@
 # show a list of hf asset
 #
 
-# to pass array via include, see: /doc/acs-templating/tagref/include
-# ie: &local_arr_name="calling_page_arr_name"
+# requires:
+# @param array with elements of hf_asset_keys
+# optional:
 #
-# Array expects..
+
+# to pass array via include, see: /doc/acs-templating/tagref/include
+# ie: &asset_arr="calling_page_arr_name"
+#
+#
 # 
+qf_array_to_vars asset_arr [hf_asset_keys ]

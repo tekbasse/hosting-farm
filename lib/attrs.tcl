@@ -4,7 +4,9 @@
 
 # to pass array via include, see: /doc/acs-templating/tagref/include
 # ie: &local_arr_name="calling_page_arr_name"
-#
+# or: &local_lists_name=calling_page_lists_nam
+
+##
 # Array expects
 # up to one key per asset_type_id
 # each key's value consists of a list of lists.

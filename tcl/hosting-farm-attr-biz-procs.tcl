@@ -1025,8 +1025,7 @@ ad_proc -private hf_vm_quota_write {
             select plan_id as plan_id_ck from hf_vm_quotas
             where plan_id=:plan_id
             and instance_id=:instance_id
-            and time_trashed=null
-        } ]
+            and time_trashed=null } ]
     } else {
         set exists_p 0
     }
@@ -1045,7 +1044,6 @@ ad_proc -private hf_vm_quota_write {
         }
         db_dml hf_vm_quota_create "insert into hf_vm_quotas \
  ([hf_vm_quota_keys ","]) values ([hf_vm_quota_keys ",:")"
-        }
     }
     return $plan_id
 }
