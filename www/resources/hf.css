@@ -1,3 +1,178 @@
+/*  BEGIN openacs rigid stuff, re-sorted for browser rendering stability */
+
+
+/* HEADER TAGS ---------------------------------------------------------------------*/
+
+#header {
+  background-color: #EFEFEF;
+  color: #444444;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#system-name {
+  font-size: 1.4em;
+  font-weight: bold;
+  float: left;
+  padding-left: 0.2em;
+}
+
+#system-name a {
+  color: #333333;
+  text-decoration: none;
+}
+
+#header-navigation {
+  float: right;
+  padding-right: 0.4em;
+}
+
+/* CONTEXT BAR ---- */
+
+#breadcrumbs {
+  clear: both;
+  padding-left: 0.4em;
+}
+
+/* END CONTEXT BAR ---- */ 
+
+/* Main navigation */
+ 
+
+#main-navigation #main-navigation-active a {
+	background-image:url("/resources/openacs-default-theme/images/right_on.gif");
+	color:#000;
+	padding-bottom:5px;
+}
+
+#main-navigation #main-navigation-active {
+	background-image:url("/resources/openacs-default-theme/images/left_on.gif");
+}
+	
+#main-navigation a:hover {
+    color: #000;
+    text-decoration: underline;
+}
+ 
+#main-navigation a {
+	float:left;
+	display:block;
+	background:url("/resources/openacs-default-theme/images/right.gif") no-repeat right top;
+	padding:5px 15px 4px 6px;
+	text-decoration:none;
+	font-weight:bold;
+	font-size: .95em;
+	color:#666666;
+}
+	
+#main-navigation li {
+	float:left;
+	background:url("/resources/openacs-default-theme/images/left.gif") no-repeat left top;
+	margin:0;
+	padding:0 0 0 9px;
+	list-style: none;
+}
+
+#main-navigation ul {
+	margin:0;
+	padding:10px 10px 0;
+}
+ 
+#main-navigation {
+	float:left;
+	width:100%;
+	background: url("/resources/openacs-default-theme/images/bg.gif") repeat-x bottom;
+	clear: both;
+	display: block;
+}
+ 
+ 
+/* End of main navigation */
+
+/* Subnavigation */
+
+#sub-navigation li#sub-navigation-active a {
+    color: #000;
+}
+
+#sub-navigation li a:hover {
+    color: #000;
+    text-decoration: underline;
+}
+
+#sub-navigation a {
+    float:left;
+    display:block;
+    color:#666666;
+    padding:4px 0px 6px 0px;
+    text-decoration: none;
+    font-weight:bold;
+    font-size: .95em;
+}
+
+#sub-navigation li {
+    float:left;
+    border-right: 1px solid #a0a3a1;
+    padding: 0px 20px 0px 20px ; 
+}
+	
+#sub-navigation ul {
+    margin: 0;
+    padding:0px 10px 10px 10px;
+    list-style:none;
+    line-height: .7em;
+}
+	
+#sub-navigation {
+    float: left;
+    width:100%;
+    background: url("/resources/openacs-default-theme/images/bg.gif") repeat-x bottom;
+    clear: both;
+    padding-top: 5px;  /* remove this padding to make the subnavigation links to appear completly enclosed */
+    padding-bottom: 5px  /* remove this padding to make the subnavigation links to appear completly enclosed */
+}
+	
+
+/* User Messages */
+
+#login-box {
+  border: black 1px solid;
+  padding: 4px;
+}
+
+#alert-message .alert {
+  margin-left: 0;
+  padding-left: 2px;
+  border: none;
+}
+
+#alert-message {
+/*  background-color: #ccff99; */
+  padding: 4px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+/*  font-size: 85%; */
+}
+
+#subsite-name { 
+}
+
+#wrapper {
+}
+
+#content-wrapper {
+  clear: both;
+  border-top: 1px solid #fff;
+  /*padding-bottom: 10px;*/
+}
+
+#footer { 
+    clear: both;
+    text-align: center;
+}
+
+/*  END openacs rigid stuff */
+
 /*! normalize.css v2.1.3 | MIT License | git.io/normalize */
 
 /* ==========================================================================

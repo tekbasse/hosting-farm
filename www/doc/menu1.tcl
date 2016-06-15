@@ -1,3 +1,6 @@
+# css resources for example
+template::head::add_css -href /resources/hosting-farm/hf.css -media all
+
 # defaults
 set title "menu"
 set context [list $title]

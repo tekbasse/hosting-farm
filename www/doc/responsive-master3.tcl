@@ -78,7 +78,8 @@ template::head::add_meta \
     
 # Add standard javascript
 #
-template::head::add_javascript -src "/resources/acs-subsite/core.js"
+#template::head::add_javascript -src "/resources/acs-subsite/core.js"
+template::add_body_script -type "text/javascript" -src "/resources/acs-subsite/core.js"
 
 # The following (forms, list and xinha) should
 # be done in acs-templating.
@@ -103,7 +104,8 @@ if { $css ne "" } {
             foreach param $css {
                 lappend params -[lindex $param 0] [lindex $param 1]
             }
-            eval [concat template::head::add_css $params]
+            ns_log Notice "responsive-master3.tcl.106: params '${params}'"
+            template::head::add_css {*}$params
         }
     }
 
