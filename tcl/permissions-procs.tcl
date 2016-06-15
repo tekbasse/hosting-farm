@@ -284,13 +284,12 @@ ad_proc -private hf_privilege_exists_q {
 
 ad_proc -private hf_roles_of_user {
     user_id
-    {instance_id ""}
     {customer_id ""}
 } {
     Returns list of roles of user. Empty list if none found.
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
+    upvar 1 instance_id instance_id
+    if { ![info exists instance_id] } {
         set instance_id [ad_conn package_id]
     }
     if { ![qf_is_natural_number $user_id] } {
