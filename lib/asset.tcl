@@ -68,10 +68,9 @@ if { ![info exists detail_p] } {
     set detail_p 0
 }
 if { ![info exists tech_p] } {
-    set tech_p 0
-}
-if { $tech_p } {
-    set detail_p 1
+    set user_id [ad_conn user_id]
+    set user_roles [hf_roles_of_user $user_id $qal_customer_id]
+    set tech_p [string match "*technical_*" $user_roles]
 }
 
 
