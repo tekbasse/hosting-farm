@@ -303,12 +303,12 @@ ad_proc -private hf_sub_f_id_current_q {
     @return  1 if true, otherwise returns 0.
 } {
     upvar 1 instance_id instance_id
-    set active_q 0
-    set trashed_p 0
-    set exists_p [db_0or1row hf_sub_f_id_current_q { select f_id from hf_sub_asset_map 
-        where sub_f_id=:sub_f_id and instance_id=:instance_id } ]
-    ns_log Notice "hf_sub_f_id_current_q: not found. sub_f_id '{$sub_f_id}' instance_id '${instance_id}'"
-    return $exists_p
+    set current_p 0
+    set f_id [hf_sub_f_id_of_f_id_if_untrashed $sub_f_id]
+    if { $f_id > 0 } {
+        set current_p 1
+    }
+    return $current_p
 }
 
 ad_proc -private hf_sub_f_id_of_f_id_if_untrashed { 

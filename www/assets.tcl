@@ -179,7 +179,7 @@ if { $form_posted_p } {
         ns_log Notice "hosting-farm/assets.tcl(189): form_posted_p \
  http_header_method ${http_header_method} referrer '${referrer_url}'"
     }
-    if { 1[string match -nocase "post*" $http_header_method ] } {
+    if { ![string match -nocase "post*" $http_header_method ] } {
         # Make sure there is a clean url, should page be bookmarked etc
         set $redirect_before_v_p 1
     }
@@ -257,6 +257,38 @@ if { $form_posted_p } {
     if { $mode eq "e" } {
         if { $write_p || $admin_p } {
             # allowed
+
+            # Cases to consider, depending on vars:
+            #    asset_type_id f_id sub_f_id
+            set f_id [hf_f_id_of_asset_id $asset_id]
+            set sub_id_valid_p 0
+            if { $sub_f_id ne "" } {
+                set sub_id_valid_p [hf_sub_f_id_current_q $sub_f_id]
+                if { $sub_id_valid_p } {
+
+                }
+            }
+            set f_id_of_sub_f_id [hf_sub_f_id_of_f_id_if_untrashed $f_id]
+
+            #         
+            # 0. asset_type_id:
+            #    Edit new combo asset and primary attribute
+            # 1. asset_id/f_id:
+            #    Edit asset
+            # 3. asset_id/f_id,primary sub_asset_id/f_id:
+            #    Edit combo asset and attribute 
+            # 2. sub_asset_id/sub_f_id, asset_type_id:
+            #    Edit attribute
+            # 4. asset_id/f_id and asset_type_id supplied.
+            #    Edit new attribute
+            # 
+            # In the case where an asset has multiple attributes of same 
+            # type, the sort_order determines primary, lowest number first.
+            # Default to most specific case.
+            # If asset and non primary attribute exist, just
+            # edit the attribute.
+
+
         } elseif { $read_p } {
             set mode "v"
         } else {
@@ -403,14 +435,6 @@ switch -exact -- $mode {
     e {
         if { $write_p } {
             #  edit...... edit/form mode of current context
-            # Either asset_id/f_id or sub_asset_id/sub_f_id, or both
-            # as in the case of an asset and its primary attribute
-            # of same type.
-            # In the case where an asset has multiple attributes of same 
-            # type, the sort_order determines primary, lowest number first.
-            # Default to most specific case.
-            # If asset and non primary attribute exist, just
-            # edit the attribute.
             # If context already exists, use most recent/active case
             # for default values.
             if { $sub_f_id ne "" } {
