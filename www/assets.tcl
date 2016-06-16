@@ -403,8 +403,16 @@ switch -exact -- $mode {
     e {
         if { $write_p } {
             #  edit...... edit/form mode of current context
-            # either asset_id/f_id or sub_asset_id/sub_f_id
-            # default to most specific 
+            # Either asset_id/f_id or sub_asset_id/sub_f_id, or both
+            # as in the case of an asset and its primary attribute
+            # of same type.
+            # In the case where an asset has multiple attributes of same 
+            # type, the sort_order determines primary, lowest number first.
+            # Default to most specific case.
+            # If asset and non primary attribute exist, just
+            # edit the attribute.
+            # If context already exists, use most recent/active case
+            # for default values.
             if { $sub_f_id ne "" } {
                 # attribute
                 set type "attr"
