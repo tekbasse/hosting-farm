@@ -14,23 +14,21 @@
 </ul>
 </if>
 
+<if @include_assets_p@ not nil>
+  <include src="/packages/hosting-farm/lib/assets" &assets_lists=assets_lists>
+</if>
+<if @include_asset_p@ not nil>
+  <include src="/packages/hosting-farm/lib/asset" &asset_arr=asset_arr>
+</if>
+<if @include_attrs_p@ not nil>
+  <include src="/packages/hosting-farm/lib/attrs" &attrs_lists=attrs_lists>
+</if>
+<if @include_attr_p@ not nil>
+  <include src="/packages/hosting-farm/lib/attr" &attr_arr=attr_arr>
+</if>
+
 <if @form_html@ not nil>
  @form_html;noquote@
 </if>
-
-<if @page_stats_html@ not nil>
- <h3>#acs-admin.Pages#</h3>
- @page_stats_html;noquote@
-</if>
-
-<if @page_trashed_html@ not nil>
-<h3>#acs-kernel.member_state_Deleted#</h3>
- @page_trashed_html;noquote@
-</if>
-
-<if @page_main_code_html@ not nil>
- @page_main_code_html;noquote@
-</if>
-
 
 

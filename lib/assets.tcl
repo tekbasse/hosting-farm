@@ -1,13 +1,18 @@
 # hosting-farm/lib/assets.tcl
 # show a list of hf assets
 #
+# requires:
+# assets_lists  As if from a db_lists_of_lists query hf_assets
+#               where elements are returned in order of hf_asset_keys
+# 
 
-# to pass array via include, see: /doc/acs-templating/tagref/include
+
+# to pass array (or lists) via include: /doc/acs-templating/tagref/include
 # ie: &local_arr_name=calling_page_arr_name
 # or: &local_lists_name=calling_page_lists_name
 #
-# Array expects..
-# up to one key per asset_type_id, or
+
+
 # all_types combined in the element "all"
 
 

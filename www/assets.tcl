@@ -372,225 +372,39 @@ set menu_list [list ]
 # OUTPUT / VIEW
 # using switch, because there's only one view at a time
 ns_log Notice "hosting-farm/assets.tcl(508): OUTPUT mode $mode"
+# initializations
+set include_assets_p 0
+set include_attrs_p 0
+set include_asset_p 0
+set include_attr_p 0
+
 switch -exact -- $mode {
     l {
         if { $read_p } {
             if { $redirect_before_v_p } {
+                set url "assets"
                 ns_log Notice "hosting-farm/assets.tcl(587): redirecting to url $url for clean url view"
                 ad_returnredirect "$url?mode=l"
                 ad_script_abort
             }
-
-            ns_log Notice "hosting-farm/assets.tcl(427): mode = $mode ie. list of pages, index"
-            #lappend menu_list [list #q-wiki.edit# "${url}?mode=e" ]
-
-            append title " #q-wiki.index#" 
-            # show page
-            # sort by f_id, columns
-            
-            set asset_ids_list [qw_pages $package_id]
-            set pages_stats_lists [list ]
-            # we get the entire data set, 1 row(list) per page as table pages_stats_lists
-            foreach asset_id $asset_ids_list {
-                set stats_mod_list [list $asset_id]
-                set stats_orig_list [qw_page_stats $asset_id]
-                #   a list: name, title, comments, keywords, description, f_id, flags, trashed, popularity, time last_modified, time created, user_id
-                foreach stat $stats_orig_list {
-                    lappend stats_mod_list $stat
-                }
-                lappend stats_mod_list [qw_page_url_from_id $asset_id]
-                # new: asset_id, name, title, comments, keywords, description, f_id, flags, trashed, popularity, time last_modified, time created, user_id, url
-                lappend pages_stats_lists $stats_mod_list
-            }
-            set pages_stats_lists [lsort -index 2 $pages_stats_lists]
-            # build tables (list_of_lists) stats_list and their html filtered versions page_*_lists for display
-            set page_scratch_lists [list]
-            set page_stats_lists [list ]
-            set page_trashed_lists [list ]
-
-            foreach stats_mod_list $pages_stats_lists {
-                set stats_list [lrange $stats_mod_list 0 2]
-                lappend stats_list [lindex $stats_mod_list 5]
-                lappend stats_list [lindex $stats_mod_list 3]
-
-                set asset_id [lindex $stats_mod_list 0]
-                set name [lindex $stats_mod_list 1]
-                set f_id [lindex $stats_mod_list 6]
-                set page_user_id [lindex $stats_mod_list 12]
-                set trashed_p [lindex $stats_mod_list 8]
-                set page_url [lindex $stats_mod_list 13]
-
-                # convert stats_list for use with html
-
-                # change Name to an active link and add actions if available
-                set active_link "<a href=\"${page_url}\">$name</a>"
-                set active_link_list [list $active_link]
-                set active_link2 ""
-
-                if {  $write_p } {
-                    # trash the page
-                    if { $trashed_p } {
-                        set active_link2 " <a href=\"${page_url}?page_f_id=${f_id}&mode=t&next_mode=l\"><img src=\"${untrash_icon_url}\" alt=\"#acs-tcl.undelete#\" title=\"#acs-tcl.undelete#\" width=\"16\" height=\"16\"></a>"
-                    } else {
-                        set active_link2 " <a href=\"${page_url}?page_f_id=${f_id}&mode=t&next_mode=l\"><img src=\"${trash_icon_url}\" alt=\"#acs-tcl.delete#\" title=\"#acs-tcl.delete#\" width=\"16\" height=\"16\"></a>"
-                    }
-                } elseif { $page_user_id == $user_id } {
-                    # trash the revision
-                    if { $trashed_p } {
-                        set active_link2 " <a href=\"${page_url}?asset_id=${asset_id}&mode=t&next_mode=l\"><img src=\"${untrash_icon_url}\" alt=\"#acs-tcl.undelete#\" title=\"#acs-tcl.undelete#\" width=\"16\" height=\"16\"></a>"
-                    } else {
-                        set active_link2 " <a href=\"${page_url}?asset_id=${asset_id}&mode=t&next_mode=l\"><img src=\"${trash_icon_url}\" alt=\"#acs-tcl.delete#\" title=\"#acs-tcl.delete#\" width=\"16\" height=\"16\"></a>"
-                    }
-                } 
-
-                set stats_list [lreplace $stats_list 0 0 $active_link]
-                set stats_list [lreplace $stats_list 1 1 $active_link2]
-
-                # add stats_list to one of the tables for display
-                if { $trashed_p && ( $write_p || $page_user_id eq $user_id ) } {
-                    lappend page_trashed_lists $stats_list
-                } elseif { $trashed_p } {
-                    # ignore this row, but track for errors
-                } else {
-                    lappend page_stats_lists $stats_list
-                }
-            }
-
-            # convert table (list_of_lists) to html table
-            set page_stats_sorted_lists $page_stats_lists
-            set page_stats_sorted_lists [linsert $page_stats_sorted_lists 0 [list "#acs-subsite.Name#" "&nbsp;" "#acs-kernel.common_Title#" "#acs-subsite.Description#" "#acs-subsite.Comment#"] ]
-            set page_tag_atts_list [list border 0 cellspacing 0 cellpadding 3]
-            set cell_formating_list [list ]
-            set page_stats_html [qss_list_of_lists_to_html_table $page_stats_sorted_lists $page_tag_atts_list $cell_formating_list]
-            # trashed table
-            if { [llength $page_trashed_lists] > 0 } {
-                set page_trashed_sorted_lists $page_trashed_lists
-                set page_trashed_sorted_lists [linsert $page_trashed_sorted_lists 0 [list "#acs-subsite.Name#" "&nbsp;" "#acs-kernel.common_Title#" "#acs-subsite.Description#" "#acs-subsite.Comment#"] ]
-                set page_tag_atts_list [list border 0 cellspacing 0 cellpadding 3]
-                
-                set page_trashed_html [qss_list_of_lists_to_html_table $page_trashed_sorted_lists $page_tag_atts_list $cell_formating_list]
-            }
-        } else {
-            # does not have permission to read. This should not happen.
-            ns_log Warning "hosting-farm/assets.tcl:(465) user did not get expected 404 error when not able to read page."
-        }
+            set include_assets_p 1
+            set asset_ids_list [hf_asset_ids_for_user $user_id]
+            set assets_lists [hf_assets_read $asset_ids_list]
+        } 
     }
     r {
-        #  revisions...... presents a list of page revisions
-            lappend menu_list [list #q-wiki.index# "index?mode=l"]
-
+        #  revisions. presents a list of revisions of asset and/or attributes
         if { $write_p } {
             ns_log Notice "hosting-farm/assets.tcl mode = $mode ie. revisions"
-            # build menu options
-            lappend menu_list [list #q-wiki.edit# "${url}?mode=e" ]
-            
-            # show page revisions
-            # sort by f_id, columns
-            set f_id $page_f_id_from_url
-            # these should be sorted by last_modified
-            set asset_ids_list [qw_pages $package_id $user_id $f_id]
-
-            set pages_stats_lists [list ]
-            # we get the entire data set, 1 row(list) per revision as table pages_stats_lists
-            # url is same for each
-            set asset_id_active [qw_asset_id_from_url $url $package_id]
-            foreach list_asset_id $asset_ids_list {
-                set stats_mod_list [list $list_asset_id]
-                set stats_orig_list [qw_page_stats $list_asset_id]
-                set page_list [qw_page_read $list_asset_id]
-                #   a list: name, title, comments, keywords, description, f_id, flags, trashed, popularity, time last_modified, time created, user_id
-                foreach stat $stats_orig_list {
-                    lappend stats_mod_list $stat
-                }
-                lappend stats_mod_list $url
-                lappend stats_mod_list [string length [lindex $page_list 11]]
-                lappend stats_mod_list [expr { $list_asset_id == $asset_id_active } ]
-                # new: asset_id, name, title, comments, keywords, description, f_id, flags, trashed, popularity, time last_modified, time created, user_id, url, content_length, active_revision
-                lappend pages_stats_lists $stats_mod_list
-            }
-            # build tables (list_of_lists) stats_list and their html filtered versions page_*_lists for display
-            set page_stats_lists [list ]
-
-            # stats_list should contain asset_id, user_id, size (string_length) ,last_modified, comments,flags, live_revision_p, trashed? , actions: untrash delete
-
-            set contributor_nbr 0
-            set contributor_last_id ""
-            set page_name [lindex [lindex $pages_stats_lists 0] 1]
-            append title "${page_name} - page revisions"
-
-            foreach stats_mod_list $pages_stats_lists {
-                set stats_list [list]
-                # create these vars:
-                set index_list [list asset_id 0 page_user_id 12 size 14 last_modified 10 created 11 comments 3 flags 7 live_revision_p 15 trashed_p 8]
-                foreach {list_item_name list_item_index} $index_list {
-                    set list_item_value [lindex $stats_mod_list $list_item_index]
-                    set $list_item_name $list_item_value
-                    lappend stats_list $list_item_value
-                }
-                # convert stats_list for use with html
-
-                set active_link "<a href=\"${url}?asset_id=$asset_id&mode=e\">${asset_id}</a>"
-                set stats_list [lreplace $stats_list 0 0 $active_link]
-
-                if { $page_user_id ne $contributor_last_id } {
-                    set contributor_last_id $page_user_id
-                    incr contributor_nbr
-                }
-                set contributor_title ${contributor_nbr}
-                set active_link3 " &nbsp; <a href=\"/shared/community-member?user_id=${page_user_id}\" title=\"page contributor ${contributor_title}\">${contributor_title}</a>"
-                set stats_list [lreplace $stats_list 1 1 $active_link3]
-
-                if { $live_revision_p } {
-                        # no links or actions. It's live, whatever its status
-                    if { $trashed_p } {
-                        set stats_list [lreplace $stats_list 7 7 "<img src=\"${radio_unchecked_url}\" alt=\"inactive\" title=\"inactive\" width=\"13\" height=\"13\">"]
-                    } else {
-                        set stats_list [lreplace $stats_list 7 7 "<img src=\"${radio_checked_url}\" alt=\"active\" title=\"active\" width=\"13\" height=\"13\">"]
-                    }
-                } else {
-                    if { $trashed_p } {
-                        set stats_list [lreplace $stats_list 7 7 "&nbsp;"]   
-                    } else {
-                        # it's untrashed, user can make it live.
-                        set stats_list [lreplace $stats_list 7 7 "<a href=\"$url?asset_id=${asset_id}&mode=a&next_mode=r\"><img src=\"${radio_unchecked_url}\" alt=\"activate\" title=\"activate\" width=\"13\" height=\"13\"></a>"]
-                    }
-                } 
-
-                set active_link_list [list $active_link]
-                set active_link2 ""
-                if { ( $write_p || $page_user_id == $user_id ) && $trashed_p } {
-                    set active_link2 " <a href=\"${url}?asset_id=${asset_id}&mode=t&next_mode=r\"><img src=\"${untrash_icon_url}\" alt=\"#acs-tcl.undelete#\" title=\"#acs-tcl.undelete#\" width=\"16\" height=\"16\"></a>"
-                } elseif { $page_user_id == $user_id || $write_p } {
-                    set active_link2 " <a href=\"${url}?asset_id=${asset_id}&mode=t&next_mode=r\"><img src=\"${trash_icon_url}\" alt=\"#acs-tcl.delete#\" title=\"#acs-tcl.delete#\" width=\"16\" height=\"16\"></a>"
-                } 
-                set stats_list [lreplace $stats_list 8 8 $active_link2]
-
-
-
-                # if the user can delete or trash this stats_list, display it.
-                if { $write_p || $page_user_id eq $user_id } {
-                    lappend page_stats_lists $stats_list
-                } 
-            }
-
-            # convert table (list_of_lists) to html table
-            set page_stats_sorted_lists $page_stats_lists
-            set page_stats_sorted_lists [linsert $page_stats_sorted_lists 0 [list "#q-wiki.ID#" "#q-wiki.Contributor#" "#q-wiki.Length#" "#q-wiki.Last_Modified#" "#q-wiki.Created#" "#acs-subsite.Comment#" "#q-wiki.Flags#" "#q-wiki.Liveq#" "#acs-subsite.Status#"] ]
-            set page_tag_atts_list [list border 0 cellspacing 0 cellpadding 3]
-            set cell_formating_list [list ]
-            set page_stats_html [qss_list_of_lists_to_html_table $page_stats_sorted_lists $page_tag_atts_list $cell_formating_list]
-        } else {
-            # does not have permission to read. This should not happen.
-            ns_log Warning "hosting-farm/assets.tcl:(465) user did not get expected 404 error when not able to read page."
+            # sort by date
+##code
         }
-
     }
     e {
-
-
         if { $write_p } {
             #  edit...... edit/form mode of current context
-
+            # either asset_id/f_id or sub_asset_id/sub_f_id
+            # default to most specific 
             ns_log Notice "hosting-farm/assets.tcl mode = edit"
             set cancel_link_html "<a hrer=\"list?mode=l\">#acs-kernel.common_Cancel#</a>"
 
@@ -598,40 +412,8 @@ switch -exact -- $mode {
             set conn_package_url [ad_conn package_url]
             set post_url [file join $conn_package_url $url]
 
-            ns_log Notice "hosting-farm/assets.tcl(636): conn_package_url $conn_package_url post_url $post_url"
-            if { $asset_id_from_url ne "" && [llength $user_message_list ] == 0 } {
-
-                # get page info
-                set page_list [qw_page_read $asset_id_from_url $package_id $user_id ]
-                set page_name [lindex $page_list 0]
-                set page_title [lindex $page_list 1]
-                set keywords [lindex $page_list 2]
-                set description [lindex $page_list 3]
-                set page_f_id [lindex $page_list 4]
-                set page_flags [lindex $page_list 5]
-                set page_contents [lindex $page_list 11]
-                set page_comments [lindex $page_list 12]
-
-                set cancel_link_html "<a href=\"$page_name\">#acs-kernel.common_Cancel#</a>"
-            } 
-           
             append title "${page_name} -  #q-wiki.edit#"
 
-            set rows_list [split $page_contents "\n\r"]
-            set rows_max [llength $rows_list]
-            set columns_max 40
-            foreach row $rows_list {
-                set col_len [string length $row]
-                if { $col_len > $columns_max } {
-                    set columns_max $col_len
-                }
-            }
-            if { $rows_max > 200 } {
-                set rows_max [expr { int( sqrt( hypot( $columns_max, $rows_max ) ) ) } ]
-            }
-            set columns_max [f::min 200 $columns_max]
-            set rows_max [f::min 800 $rows_max]
-            set rows_max [f::max $rows_max 6]
 
             qf_form action $post_url method post id 20130309 hash_check 1
             qf_input type hidden value w name mode
