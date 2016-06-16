@@ -394,7 +394,7 @@ switch -exact -- $mode {
     }
     r {
         #  revisions. presents a list of revisions of asset and/or attributes
-        if { $write_p } {
+        if { $admin_p } {
             ns_log Notice "hosting-farm/assets.tcl mode = $mode ie. revisions"
             # sort by date
 ##code
@@ -405,6 +405,18 @@ switch -exact -- $mode {
             #  edit...... edit/form mode of current context
             # either asset_id/f_id or sub_asset_id/sub_f_id
             # default to most specific 
+            if { $sub_f_id ne "" } {
+                # attribute
+                set type "attr"
+                # could still be asset.. must rule out
+                # check hf_sub_assets_map.attribute_p
+            } elseif { $f_id ne "" } {
+                # asset
+                set type "asset"
+            } else {
+                set type ""
+                # nothing to edit?
+            }
             ns_log Notice "hosting-farm/assets.tcl mode = edit"
             set cancel_link_html "<a hrer=\"list?mode=l\">#acs-kernel.common_Cancel#</a>"
 
