@@ -34,13 +34,16 @@ ad_proc -private hf_asset_primary_attr {
     If the asset has more than one of attribute of same type,
     the primary attributed is the one with the lowest sub_sort_order.
 } {
+    upvar 1 instance_id instance_id
     set sub_f_id ""
+    set f_id [hf_f_id_of_asset_id $asset_id]
     db_0or1row hf_sub_asset_id_prime_get {select sub_f_id 
         from hf_sub_asset_map 
         where f_id=:f_id 
         and type_id=sub_type_id
         and attribute_p='1'
         and trashed_p='0'
+        and instance_id=:instance_id
         order by sub_sort_order asc limit 1}
     return $sub_f_id
 }
