@@ -20,6 +20,30 @@ ad_library {
 #  in each case, add ecds-pagination bar when displaying. 
 #  defaults to all allowed by user permissions
 
+ad_proc -private hf_asset_primary_attr {
+    asset_id
+} {
+    Returns primary sub_asset_id for asset_id, or empty string if not
+    existing.
+
+    Each asset is of a type asset_type_id and has a record in hf_assets.
+    Each asset has a primary attribute. 
+    A primary attribute is of the same type as asset_type_id,
+    and of the associated attribute table, 
+    hf_virtual_machines for vm asset_type_id for example.
+    If the asset has more than one of attribute of same type,
+    the primary attributed is the one with the lowest sub_sort_order.
+} {
+    set sub_f_id ""
+    db_0or1row hf_sub_asset_id_prime_get {select sub_f_id 
+        from hf_sub_asset_map 
+        where f_id=:f_id 
+        and type_id=sub_type_id
+        and attribute_p='1'
+        and trashed_p='0'
+        order by sub_sort_order asc limit 1}
+    return $sub_f_id
+}
 
 ad_proc -private hf_asset_features {
     {asset_type_id_list ""}
