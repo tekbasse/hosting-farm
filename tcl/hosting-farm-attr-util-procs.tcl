@@ -65,7 +65,7 @@ ad_proc -private hf_asset_features {
     upvar 1 instance_id instance_id
     hf_ui_go_ahead_q read "" published
     set new_as_type_id_list [hf_list_filter_by_visible $asset_type_id_list ]
-    set keys_list [db_list_of_lists hf_asset_type_features_get "select [hf_asset_feature_keys ","] where instance_id =:instance_id and asset_type_id in ([template::util::tcl_to_sql_list $new_as_type_id_list])"]
+    set keys_list [db_list_of_lists hf_asset_type_features_get "select [hf_asset_feature_keys ","] where instance_id=:instance_id and asset_type_id in ([template::util::tcl_to_sql_list $new_as_type_id_list])"]
     set keys [hf_keys_by $keys_list $separator]
     return $keys
 }
@@ -246,7 +246,11 @@ ad_proc -private hf_ip_id_exists_q {
 } {
     set ip_id_exists_p 0
     if { [qf_is_natural_number_p $ip_id] } {
-        set ip_id_exists_p 1 [db_0or1row ip_id_exists_q "select ip_id from hf_ip_addresses where instance_id =:instance_id and ip_id=:ip_id_q"]
+        set ip_id_exists_p 1 [db_0or1row ip_id_exists_q {
+            select ip_id 
+            from hf_ip_addresses 
+            where instance_id=:instance_id 
+            and ip_id=:ip_id_q } ]
     }
     return $ip_id_exists_p
 }
@@ -260,7 +264,11 @@ ad_proc -private hf_ni_id_exists_q {
 } {
     set ni_id_exists_p 0
     if { [qf_is_natural_number_p $ni_id] } {
-        set ni_id_exists_p 1 [db_0or1row ni_id_exists_q "select ni_id from hf_network_interfaces where instance_id =:instance_id and ni_id = :ni_id_q"]
+        set ni_id_exists_p 1 [db_0or1row ni_id_exists_q {
+            select ni_id 
+            from hf_network_interfaces 
+            where instance_id=:instance_id 
+            and ni_id=:ni_id_q } ]
     }
     return $ni_id_exists_p
 }
@@ -288,7 +296,10 @@ ad_proc -private hf_f_id_of_sub_f_id {
 } {
     upvar 1 instance_id instance_id
     set f_id ""
-    db_0or1row hf_sub_asset_map_f_id_of_sub_f_id "select f_id from hf_sub_asset_map where sub_f_id=:sub_f_id"
+    db_0or1row hf_sub_asset_map_f_id_of_sub_f_id {
+        select f_id 
+        from hf_sub_asset_map 
+        where sub_f_id=:sub_f_id }
     return $f_id
 }
 
@@ -303,14 +314,12 @@ ad_proc -private hf_sub_f_id_current_q {
     @return  1 if true, otherwise returns 0.
 } {
     upvar 1 instance_id instance_id
-    set active_q 0
-    set trashed_p 0
     set current_p [db_0or1row hf_sub_f_id_current_q { 
         select f_id from hf_sub_asset_map 
         where sub_f_id=:sub_f_id 
         and trashed_p='0'
         and instance_id=:instance_id } ]
-    if { 1$current_p } {
+    if { !$current_p } {
         ns_log Notice "hf_sub_f_id_current_q: not current. \
  sub_f_id '{$sub_f_id}' instance_id '${instance_id}'"
     }
@@ -318,21 +327,45 @@ ad_proc -private hf_sub_f_id_current_q {
 
 }
 
-ad_proc -private hf_sub_f_id_of_f_id_if_untrashed { 
-    f_id
+ad_proc -private hf_sub_asset {
+    sub_f_id
 } {
-    Returns sub_f_id if f_id exists and is untrashed, else returns 0
+    Returns a list of values from hf_sub_asset_map in order of hf_sub_asset_map_keys, or empty list if not found.
+} {
+    set sam0_list [db_list_of_lists hf_sub_asset_map_read "select [hf_sub_asset_map_keys ","] from hf_sub_asset_map where sub_f_id=:sub_f_id and instance_id=:instance_id"]
+    set sam_list [lindex $sam0_list 0]
+    return $sam_list
+}
 
-    @param f_id      The f_id to check.
+ad_proc -private hf_sub_f_id_current { 
+    sub_f_id
+} {
+    Returns current sub_f_id if sub_f_id references current or trashed sub_f_id, else returns 0. This assumes hf_sub_asset_map.sub_label has not changed between revisions.
 
-    @return sub_f_id if f_id exists and untrashed, otherwise 0.
+    @param sub_f_id      The sub_f_id to check.
+
+    @return sub_f_id one sub_f_id exists and untrashed, otherwise 0.
 } {
     upvar 1 instance_id instance_id
+    set sub_f_id_orig $sub_f_id
     set sub_f_id 0
-    set exists_p [db_0or1row hf_f_id_of_sub_f_id_tr { select sub_f_id from hf_sub_asset_map 
-        where f_id=:f_id and instance_id=:instance_id and trashed_p='0' } ]
-    ns_log Notice "hf_sub_f_id_of_f_id_if_untrashed: not found. sub_f_id '{$sub_f_id}' instance_id '${instance_id}'"
-    
+    set sam_list [hf_sub_asset $sub_f_id_orig]
+    if { [llength $sam_list] > 0 } {
+        qf_list_to_vars $sam_list [hf_sub_asset_map_keys]
+        set exists_p [db_0or1row hf_f_id_of_sub_f_id_tr { 
+            select sub_f_id 
+            from hf_sub_asset_map 
+            where f_id=:f_id
+            and sub_label=:sub_label
+            and sub_type_id=:sub_type_id
+            and attribute_p=:attribute_p
+            and trashed_p='0'
+            and instance_id=:instance_id } ]
+        if { !$exists_p } {
+            ns_log Notice "hf_sub_f_id_current: not found. \
+ sub_f_id '{$sub_f_id}' instance_id '${instance_id}'"
+        }
+    }
     return $sub_f_id
 }
 
@@ -478,7 +511,11 @@ ad_proc -private hf_up_write {
 
     if { $success_p } {
 
-        set up_exists_p [db_0or1row ua_id_exists_p "select ua_id as ua_id_db from hf_ua where ua_id=:ua_id and instance_id=:instance_id"]
+        set up_exists_p [db_0or1row ua_id_exists_p {
+            select ua_id as ua_id_db 
+            from hf_ua 
+            where ua_id=:ua_id 
+            and instance_id=:instance_id } ]
         set vk_list [list ]
         foreach {k v} [hf_key] {
             lappend vk_list $v
@@ -527,7 +564,15 @@ ad_proc -private hf_up_of_ua_id {
     }
 
     if { $success_p && $allowed_p } {
-        set success_p [db_0or1row hf_up_of_ua_id "select details from hf_up where instance_id=:instance_id and up_id in (select up_id from hf_ua_up_map where ua_id=:ua_id and instance_id=:instance_id"]
+        set success_p [db_0or1row hf_up_of_ua_id {
+            select details 
+            from hf_up 
+            where instance_id=:instance_id 
+            and up_id in (
+                          select up_id 
+                          from hf_ua_up_map 
+                          where ua_id=:ua_id 
+                          and instance_id=:instance_id ) } ]
         if { $success_p } {
             set hfk_list [hf_key]
             set up [string map $hfk_list $details]
@@ -544,7 +589,7 @@ ad_proc -private hf_key {
     Returns key value list. Creates first if it doesn't exist.
 } {
     if { $key eq "" } {
-        if { ![db_0or1row "select fk from hf_sched_params"]} {
+        if { ![db_0or1row { select fk from hf_sched_params } ] } {
             set fk [ad_generate_random_string 32]
             db_dml hf_fk_cr { insert into hf_sched_params fk values (:fk) }
         }
