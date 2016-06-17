@@ -258,29 +258,73 @@ if { $form_posted_p } {
         if { $write_p || $admin_p } {
             # allowed
 
-            # Cases to consider, depending on vars:
-            #    asset_type_id f_id sub_f_id
-            set f_id [hf_f_id_of_asset_id $asset_id]
-            set sub_id_valid_p 0
-            if { $sub_f_id ne "" } {
-                set sub_id_valid_p [hf_sub_f_id_current_q $sub_f_id]
-                if { $sub_id_valid_p } {
+            # validate for cases
 
+            # Cases to consider, depending on vars:
+            #   asset_type_id   f_id   sub_f_id
+            set asset_type_id_p 0
+            set asset_id_p 0
+            set sub_asset_id_p 0
+            set sub_f_id_is_primary_p 0
+
+            # determine asset_id_p
+            set f_id_of_asset_id ""
+            if { $asset_id ne "" } {
+                set f_id_of_asset_id [hf_f_id_of_asset_id $asset_id]
+            }
+            if { $f_id_of_asset_id eq "" } {
+                set asset_id ""
+            } else {
+                set asset_id_p 1
+            }
+
+            # determine sub_asset_id_p
+            set sub_list [hf_sub_asset $sub_f_id $f_id]
+            qf_lists_to_array sub_arr $sub_list [hf_sub_asset_keys]
+            if { $sub_arr(trashed_p) } {
+                # sub_f_id is not current 
+                # do not use.
+                set sub_f_id ""
+            }
+            if { $sub_arr(trashed_p) == 0 } {
+                if { $f_id ne "" && $sub_arr(f_id) eq $f_id } {
+                    set sub_asset_id_p 1
+                } else {
+                    set f_id ""
+                    set sub_f_id ""
                 }
             }
-            set f_id_of_sub_f_id [hf_sub_f_id_of_f_id_if_untrashed $f_id]
+
+            # determine sub_is_primary_p
+            if { $sub_asset_id_p && $asset_id_p } {
+                set sub_f_id_primary [hf_asst_primary_attr $asset_id]
+                if { $sub_f_id_primary eq $sub_f_id } {
+                    set sub_is_primary_p 1
+                }
+            }
+
+            # determine asset_type_id_p
+            if { $sub_asset_id_p == 0 && $asset_id_p == 0 } {
+                if { $asset_type_id in [hf_asset_type_id_list] } {
+                    set asset_type_id_p 1
+                }
+            }
 
             #         
             # 0. asset_type_id:
-            #    Edit new combo asset and primary attribute
+            #    New combo asset and primary attribute of asset_type_id
+
             # 1. asset_id/f_id:
             #    Edit asset
-            # 3. asset_id/f_id,primary sub_asset_id/f_id:
-            #    Edit combo asset and attribute 
-            # 2. sub_asset_id/sub_f_id, asset_type_id:
+
+            # 2. asset_id/f_id,primary sub_asset_id/f_id:
+            #    Edit combo existing asset and attribute 
+
+            # 3. sub_asset_id/sub_f_id
             #    Edit attribute
-            # 4. asset_id/f_id and asset_type_id supplied.
-            #    Edit new attribute
+
+            # 4. asset_id/f_id and asset_type_id
+            #    New attribute of asset_id
             # 
             # In the case where an asset has multiple attributes of same 
             # type, the sort_order determines primary, lowest number first.

@@ -329,18 +329,25 @@ ad_proc -private hf_sub_f_id_current_q {
 
 ad_proc -private hf_sub_asset {
     sub_f_id
+    {f_id ""}
 } {
-    Returns a list of values from hf_sub_asset_map in order of hf_sub_asset_map_keys, or empty list if not found.
+    Returns a list of values from hf_sub_asset_map in order of hf_sub_asset_map_keys, or empty list if not found. If f_id is supplied, scopes to f_id.
 } {
-    set sam0_list [db_list_of_lists hf_sub_asset_map_read "select [hf_sub_asset_map_keys ","] from hf_sub_asset_map where sub_f_id=:sub_f_id and instance_id=:instance_id"]
+    if { [qf_is_natural_number $f_id] } {
+        set xtra_sql "and f_id=:f_id "
+    } else {
+        set xtra_sql ""
+    }
+    set sam0_list [db_list_of_lists hf_sub_asset_map_read "select [hf_sub_asset_map_keys ","] from hf_sub_asset_map where sub_f_id=:sub_f_id ${extra_sql}and instance_id=:instance_id"]
     set sam_list [lindex $sam0_list 0]
     return $sam_list
 }
 
 ad_proc -private hf_sub_f_id_current { 
     sub_f_id
+    {f_id ""}
 } {
-    Returns current sub_f_id if sub_f_id references current or trashed sub_f_id, else returns 0. This assumes hf_sub_asset_map.sub_label has not changed between revisions.
+    Returns current sub_f_id if sub_f_id references current or trashed sub_f_id, else returns 0. This assumes hf_sub_asset_map.sub_label has not changed between revisions.  If f_id is supplied, also confirms sub_f_id is dependent on f_id.
 
     @param sub_f_id      The sub_f_id to check.
 
@@ -349,7 +356,7 @@ ad_proc -private hf_sub_f_id_current {
     upvar 1 instance_id instance_id
     set sub_f_id_orig $sub_f_id
     set sub_f_id 0
-    set sam_list [hf_sub_asset $sub_f_id_orig]
+    set sam_list [hf_sub_asset $sub_f_id_orig $f_id]
     if { [llength $sam_list] > 0 } {
         qf_list_to_vars $sam_list [hf_sub_asset_map_keys]
         set exists_p [db_0or1row hf_f_id_of_sub_f_id_tr { 
