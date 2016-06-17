@@ -35,6 +35,7 @@ ad_proc -private hf_asset_primary_attr {
     the primary attributed is the one with the lowest sub_sort_order.
 } {
     upvar 1 instance_id instance_id
+
     set sub_f_id ""
     set f_id [hf_f_id_of_asset_id $asset_id]
     db_0or1row hf_sub_asset_id_prime_get {select sub_f_id 

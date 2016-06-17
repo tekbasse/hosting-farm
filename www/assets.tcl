@@ -325,13 +325,10 @@ if { $form_posted_p } {
 
             # 4. asset_id/f_id and asset_type_id
             #    New attribute of asset_id
-            # 
-            # In the case where an asset has multiple attributes of same 
-            # type, the sort_order determines primary, lowest number first.
-            # Default to most specific case.
             # If asset and non primary attribute exist, just
             # edit the attribute.
 
+            # Default to most specific case.
 
         } elseif { $read_p } {
             set mode "v"
@@ -453,14 +450,14 @@ set include_assets_p 0
 set include_attrs_p 0
 set include_asset_p 0
 set include_attr_p 0
+set url "assets"
 
 switch -exact -- $mode {
     l {
         if { $read_p } {
             if { $redirect_before_v_p } {
-                set url "assets"
-                ns_log Notice "hosting-farm/assets.tcl(587): redirecting to url $url for clean url view"
-                ad_returnredirect "$url?mode=l"
+                ns_log Notice "hosting-farm/assets.tcl(587): redirecting to url ${url} for clean url view"
+                ad_returnredirect "${url}?mode=l"
                 ad_script_abort
             }
             set include_assets_p 1
@@ -481,35 +478,21 @@ switch -exact -- $mode {
             #  edit...... edit/form mode of current context
             # If context already exists, use most recent/active case
             # for default values.
-            if { $sub_f_id ne "" } {
-                # attribute
-                set type "attr"
-                # could still be asset.. must rule out
-                # check hf_sub_assets_map.attribute_p
-            } elseif { $f_id ne "" } {
-                # asset
-                set type "asset"
-            } else {
-                set type ""
-                # nothing to edit?
-            }
             ns_log Notice "hosting-farm/assets.tcl mode = edit"
             set cancel_link_html "<a hrer=\"list?mode=l\">#acs-kernel.common_Cancel#</a>"
 
-            # for existing pages, add f_id
             set conn_package_url [ad_conn package_url]
             set post_url [file join $conn_package_url $url]
 
-            append title "${page_name} -  #q-wiki.edit#"
+            append title "${title} -  #q-wiki.edit#"
 
-
-            qf_form action $post_url method post id 20130309 hash_check 1
+            qf_form action $post_url method post id 20160616 hash_check 1
             qf_input type hidden value w name mode
             qf_input type hidden value v name next_mode
-            qf_input type hidden value $page_flags name page_flags
-            qf_input type hidden value $page_f_id name page_f_id
-            #        qf_input type hidden value $asset_id name asset_id label ""
-            qf_append html "<h3>Q-Wiki #acs-templating.Page# #q-wiki.edit#</h3>"
+
+            qf_input type hidden value $asset_id name asset_id
+
+            qf_append html "<h3>#acs-templating.Page# #q-wiki.edit#</h3>"
             qf_append html "<div style=\"width: 70%; text-align: right;\">"
             set page_name_unquoted [qf_unquote $page_name]
             qf_input type text value $page_name_unquoted name page_name label "#acs-subsite.Name#:" size 40 maxlength 40
@@ -544,7 +527,7 @@ switch -exact -- $mode {
             # if $url is different than ad_conn url stem, 303/305 redirect to asset_id's primary url
             
             if { $redirect_before_v_p } {
-                ns_log Notice "hosting-farm/assets.tcl(835): redirecting to url $url for clean url view"
+                ns_log Notice "hosting-farm/assets.tcl(835): redirecting to url ${url} for clean url view"
                 ad_returnredirect $url
                 ad_script_abort
             }
