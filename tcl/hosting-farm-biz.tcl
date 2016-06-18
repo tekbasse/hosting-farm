@@ -29,12 +29,14 @@ ad_proc -public hf_constructor_a {
     asset_attr: Combination of asset and one attribute.
     asset_primary_attr:  This is the asset with its primary attribute.
     attr_only: This is an attribute record without corresponding asset.
-    none: If lowest bar, asset_type_id, is not available.
+    If asset_type_id, is not available, and nothing qualifies,
+    a_arr_name is populated with hf_asset defaults and 
+    empty string for asset_type_id.
 
     If arg1 is "default" and arg2 is one of the states,
     then constructor will fill missing data to fit state.
     If existing asset_type_id is unavailable, then asset_type_id will
-    be set to the value supplied with third argument of hf_constructor_a.
+    be set to value supplied with third argument of hf_constructor_a.
 
     If arg1 is "force" and arg2 is one of the states, 
     then constructor  will analyze existing state, 
@@ -112,6 +114,26 @@ ad_proc -public hf_constructor_a {
     }
 
     # Default to most specific case.
+    set state "asset_only"
+    if { $sub_f_id_primary_p } {
+        set state "asset_primary_attr"
+    } elseif { $sub_asset_id_p && $asset_id_p } {
+        set state "asset_attr"
+    } elseif { $sub_asset_id_p } {
+        set state "attr_only" 
+    } elseif { $asset_id_p } {
+        set state "asset_only"
+        # but wait, if $asset_type_id_p, then maybe create
+        # an attr for it..?
+    } elseif { $asset_type_id_p } {
+        # to create a blank asset_primary_attr?
+        ##code
+        # this is awkward. 
+        # should this create a blank asset_primary_attr
+        # or a new blank attr?
+        
+        set state "asset_attr" 
+    } 
 
     return $state
 }
