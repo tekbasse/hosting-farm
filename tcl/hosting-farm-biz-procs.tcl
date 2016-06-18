@@ -9,17 +9,13 @@ ad_library {
     @project home: http://github.com/tekbasse/hosting-farm
     @address: po box 20, Marylhurst, OR 97036-0020 usa
     @email: tekbasse@yahoo.com
-
-
 }
-
-
 
 ad_proc -public hf_constructor_a {
     a_arr_name
     {arg1 ""}
     {arg2 ""}
-    {asset_type_id ""}
+    {arg3 ""}
 } {
     Examines available asset and attr references and asset_type_id.
     Returns state of hf object from user perspective:
@@ -34,18 +30,18 @@ ad_proc -public hf_constructor_a {
     empty string for asset_type_id.
 
     If arg1 is "default" and arg2 is one of the states,
-    then constructor will fill missing data to fit state.
+    then if no state is determined that includes attr or asset, then
+    constructor will fill missing data to fit arg2 state.
     If existing asset_type_id is unavailable, then asset_type_id will
-    be set to value supplied with third argument of hf_constructor_a.
+    be set to value supplied by arg3
 
     If arg1 is "force" and arg2 is one of the states, 
     then constructor  will analyze existing state, 
     and force state accordingly by
     either adding missing or defaults, or unset related info
-    and return force_state as the state. If asset_type_id is set,
-    state will be forced to supplied asset_type_id instead of
+    and return force_state as the state. If arg3 is set to an asset_type_id,
+    state will be forced to the arg3 asset_type_id instead of
     any existing asset_type_id.
-    
 
 } {
     upvar 1 $a_arr_name an_arr
@@ -54,6 +50,7 @@ ad_proc -public hf_constructor_a {
     upvar 1 f_id f_id
     upvar 1 sub_f_id sub_f_id
     upvar 1 asset_type_id asset_type_id
+
 
     # This is a paradigm of combining an asset and/or attribute
     # Consider creating an hf_constructor_b etc. if you
@@ -71,6 +68,8 @@ ad_proc -public hf_constructor_a {
     set sub_f_id_is_primary_p 0
     set asset_id_supplied_p 0
     set sub_f_id_supplied_p 0
+    set state_forced_p 0
+    set asset_type_id_forced_p 0
     
     # determine asset_id_p
     set f_id_of_asset_id ""
@@ -120,7 +119,7 @@ ad_proc -public hf_constructor_a {
     }
 
     # Default to most specific case.
-    set state "asset_only"
+    set state ""
     if { $sub_f_id_primary_p } {
         set state "asset_primary_attr"
     } elseif { $sub_asset_id_p && $asset_id_p } {
@@ -148,7 +147,30 @@ ad_proc -public hf_constructor_a {
             # create a blank asset_primary_attr
             set state "asset_primary_attr"
         }
-    } 
+    } else {
+        if { $arg1 eq "default" } {
+            set asset_type_id $arg3
+            if { $state eq "" } {
+                set state $arg2
+            }
+        } 
+        # provide default default
+        if { $state eq "" } {
+            set state "attr_only"
+        }
+    }
+
+    if { $arg1 eq "force" } {
+        if { $state ne $arg2 } {
+            set state $arg2
+            set state_forced_p 1
+        }
+        if { $asset_type_id ne $arg3 } {
+            set asset_type_id $arg3
+            set asset_type_id_forced_p 1
+        }
+    }
+
     if { [string match "*asset*" $state] } {
         ##code
         hf_asset_defaults
