@@ -149,6 +149,17 @@ ad_proc -public hf_constructor_a {
             set state "asset_primary_attr"
         }
     } 
-
+    if { [string match "*asset*" $state] } {
+        ##code
+        hf_asset_defaults
+    }
+    if { [string match "*attr*" $state] } {
+        ##code
+        switch -- $asset_type_id {
+            dc {
+                hf_dc_defaults
+            }
+        }
+    }
     return $state
 }
