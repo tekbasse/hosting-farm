@@ -69,10 +69,13 @@ ad_proc -public hf_constructor_a {
     set asset_id_p 0
     set sub_asset_id_p 0
     set sub_f_id_is_primary_p 0
-
+    set asset_id_supplied_p 0
+    set sub_f_id_supplied_p 0
+    
     # determine asset_id_p
     set f_id_of_asset_id ""
     if { $asset_id ne "" } {
+        set asset_id_supplied_p 1
         set f_id_of_asset_id [hf_f_id_of_asset_id $asset_id]
     }
     if { $f_id_of_asset_id eq "" } {
@@ -82,19 +85,22 @@ ad_proc -public hf_constructor_a {
     }
 
     # determine sub_asset_id_p
-    set sub_list [hf_sub_asset $sub_f_id $f_id]
-    qf_lists_to_array sub_arr $sub_list [hf_sub_asset_keys]
-    if { $sub_arr(trashed_p) } {
-        # sub_f_id is not current 
-        # do not use.
-        set sub_f_id ""
-    }
-    if { $sub_arr(trashed_p) == 0 } {
-        if { $f_id ne "" && $sub_arr(f_id) eq $f_id } {
-            set sub_asset_id_p 1
-        } else {
-            set f_id ""
+    if { $sub_f_id ne "" } {
+        set sub_f_id_supplied_p 1
+        set sub_list [hf_sub_asset $sub_f_id $f_id]
+        qf_lists_to_array sub_arr $sub_list [hf_sub_asset_keys]
+        if { $sub_arr(trashed_p) } {
+            # sub_f_id is not current 
+            # do not use.
             set sub_f_id ""
+        }
+        if { $sub_arr(trashed_p) == 0 } {
+            if { $f_id ne "" && $sub_arr(f_id) eq $f_id } {
+                set sub_asset_id_p 1
+            } else {
+                set f_id ""
+                set sub_f_id ""
+            }
         }
     }
 
@@ -122,17 +128,26 @@ ad_proc -public hf_constructor_a {
     } elseif { $sub_asset_id_p } {
         set state "attr_only" 
     } elseif { $asset_id_p } {
-        set state "asset_only"
-        # but wait, if $asset_type_id_p, then maybe create
-        # an attr for it..?
+        # see *_supplied_p vars for intention.
+        if { $sub_f_id_supplied_p && $asset_type_id_p } {
+            # assume there was a problem with sub_f_id
+            # offer a new attribute of same type
+            set state "asset_attr"
+        } else {
+            set state "asset_only"
+        }
     } elseif { $asset_type_id_p } {
-        # to create a blank asset_primary_attr?
-        ##code
-        # this is awkward. 
-        # should this create a blank asset_primary_attr
-        # or a new blank attr?
-        
-        set state "asset_attr" 
+        # see *_supplied_p vars for intention.
+        if { $asset_id_supplied_p && $sub_f_id_supplied_p } {
+            set state "asset_attr"
+        } elseif { $sub_f_id_supplied_p } {
+            set state "attr_only"
+        } elseif { $asset_id_supplied_p } {
+            set state "asset_only"
+        } else {
+            # create a blank asset_primary_attr
+            set state "asset_primary_attr"
+        }
     } 
 
     return $state
