@@ -76,7 +76,8 @@ if { $form_posted_p } {
              sub_asset_id \
              sub_f_id ]
     # x,y elements in input_arr holds position of image-based submit
-    array unset input_arr
+    array unset input_arr x
+    array unset input_arr y
 
     # Validate input
 
@@ -257,10 +258,9 @@ if { $form_posted_p } {
     if { $mode eq "e" } {
         if { $write_p || $admin_p } {
             # allowed
+            # copy everything. Only obj keys pass constructor.
+            array set ob_arr [array get input_arr]
 
-            hf_constructor_a input_arr
-
-            #         
             # 0. asset_type_id:
             #    New combo asset and primary attribute of asset_type_id
             
@@ -277,6 +277,11 @@ if { $form_posted_p } {
             #    New attribute of asset_id
             # If asset and non primary attribute exist, just
             # edit the attribute.
+
+            hf_constructor_a obj_arr
+            foreach key [array names obj_arr] {
+                set obj_arr(${key}) [qf_unquote $obj_arr(${key}) ]
+            }
             
         } elseif { $read_p } {
             set mode "v"
