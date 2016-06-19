@@ -68,8 +68,8 @@ ad_proc -public hf_constructor_a {
     set sub_f_id_is_primary_p 0
     set asset_id_supplied_p 0
     set sub_f_id_supplied_p 0
-    set state_forced_p 0
-    set asset_type_id_forced_p 0
+    # set state_forced_p 0
+    # set asset_type_id_forced_p 0
     
     # determine asset_id_p
     set f_id_of_asset_id ""
@@ -115,11 +115,15 @@ ad_proc -public hf_constructor_a {
     if { $sub_asset_id_p == 0 && $asset_id_p == 0 } {
         if { $asset_type_id ne "" } {
             set asset_type_id_p 1
+        } else {
+            set asset_type_id ""
         }
     }
 
     # Default to most specific case.
     set state ""
+    set state_old $state
+
     if { $sub_f_id_primary_p } {
         set state "asset_primary_attr"
     } elseif { $sub_asset_id_p && $asset_id_p } {
@@ -149,6 +153,7 @@ ad_proc -public hf_constructor_a {
         }
     } else {
         if { $arg1 eq "default" } {
+            ns_log Notice "hf_constructor_a.156: using default arg2 '${arg2}' arg3 '${arg3}'"
             set asset_type_id $arg3
             if { $state eq "" } {
                 set state $arg2
@@ -157,31 +162,45 @@ ad_proc -public hf_constructor_a {
         # provide default default
         if { $state eq "" } {
             set state "attr_only"
+            ns_log Notice "hf_constructor_a.164: using default default"
         }
     }
 
     if { $arg1 eq "force" } {
         if { $state ne $arg2 } {
+            set state_old $state
             set state $arg2
-            set state_forced_p 1
+            # set state_forced_p 1
         }
         if { $asset_type_id ne $arg3 } {
+            set asset_type_id_old $asset_type_id
             set asset_type_id $arg3
-            set asset_type_id_forced_p 1
+            # set asset_type_id_forced_p 1
         }
-    }
+    } 
 
+    # fill array, track keys for removing dangler keys
+    set keys_list [list ]
     if { [string match "*asset*" $state] } {
-        ##code
-        hf_asset_defaults
+        hf_asset_defaults an_arr
+        set keys_list [set_union $keys_list [hf_asset_keys]]
     }
     if { [string match "*attr*" $state] } {
-        ##code
-        switch -- $asset_type_id {
-            dc {
-                hf_dc_defaults
-            }
+        if { $asset_type_id in [hf_asset_type_id_list] } {
+            # substitution avoids a long switch
+            hf_${asset_type_id}_defaults an_arr
+            set keys_list [set_union $keys_list [hf_${asset_type_id}_keys]]
+        } else {
+            ns_log Warning "hf_constructor_a.193: unknown asset_type_id '${asset_type_id}'"
+            ad_script_abort
         }
+    }
+    # Remove any unconstructed keys
+    # Is this a neurotic/paranoid feature, or expected housekeeping?
+    set arr_keys_list [array names an_arr]
+    set_difference_named_v arr_keys_list $keys_list
+    foreach arr_key $arr_keys_list {
+        array unset an_arr $arr_key
     }
     return $state
 }
