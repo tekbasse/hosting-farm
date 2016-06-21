@@ -24,10 +24,114 @@
   <msg key="See_asset_configuration_for_details">See asset configuration for details</msg>
   <msg key="Server_farm">Server Farm</msg>
   <msg key="Software_as_a_Service">Software as a Service</msg>
+  <msg key="software_as_a_service_def">(SAAS)</msg>
   <msg key="VH">VH</msg>
   <msg key="VM">VM</msg>
   <msg key="Virtual_Host">Virtual Host</msg>
+  <msg key="virtual_host_def">(VH)</msg>
   <msg key="Virtual_Machine">Virtual Machine</msg>
+  <msg key="virtual_machine_def">(VM)</msg>
   <msg key="passed_alert_threshold">passed alert threshold</msg>
   <msg key="server_farm">server farm</msg>
+  <msg key=""></msg>
+  hf_assets.last_modified
+  last_modified_def 
+  created
+  created_def
+  qal_product_id
+  qal_customer_id
+  label
+  label_def One word reference aka a name, sku, or readable id. Must be unique. might be domain, machine name etc
+  name
+  name_def A title or pretty version of label. Spaces allowed.
+  template_id
+  template_id_def  If a template, this is the original f_id reference.
+  f_id F_ID
+  f_id_def Asset internal reference.
+  templated_p_def Answers question. Is this asset originally derived from a template?
+  template_p_def Is this asset a template?
+  time_start_def Became/becomes active
+  time_stop_def Time expires.
+  op_status Operational status
+  op_status_def
+  trashed_p_def Is this item trashed?
+  flags_def Custom flags
+  monitor_p
+  monitor_p_def Actively monitor asset?
+  publish_p_def  Publish publishable info about this asset?
+  triage_priority_def Triage priority in case of limited resource allocation.
+
+  type_id_def See asset_type_id
+  asset_type_id An asset or attribute type: vm vh dc hw ss ip etc.
+
+  hf_asset_type_features
+  feature_type_def Short name for feature
+  description_def A one line description.
+
+  hf_ns_records
+  active_p_def Answers question. Is this active?
+  name_record_def A domain name.
+  time_created_def When record was created.
+  time_trashed_def When record was trashed.
+  hf_data_centers
+  affix_def Short reference for data center
+  description_def one line description (change to name)
+  
+  hf_hw
+  system_name_def hw system name
+  backup_sys
+  description_def one line description (change to name)
+  details_def detail info
+
+  hf_vm
+  domain_name_def A domain name. First one of a VM is primary domain name.
+  type_id_def (change to server_type)
+  resource_path_def resource pathname
+  mount_union_def TBD
+
+  hf_ni
+  os_dev_ref_def Operating System Device Reference
+  bia_mac_address_def Burned In Address (MAC address)
+  ul_mac_address_def Universal/Local programmed (non_OUI) MAC address
+  ipv4_addr_range_def IPV4 Address Range
+  ipv6_addr_range_def IPV6 Address Range
+
+  hf_ip
+  ipv4_addr_def IPV4 Address
+  ipv6_addr_def IPV6 Address
+  ipv4_status_def Status of IPV4 interface represented as an integer. 0 down. 1 up.
+  ipv6_status_def Status of IPV6 interface represented as an integer. 0 down. 1 up.
+
+  hf_os
+  brand_def Brandname
+  version_def Version reference
+  kernel_def Kernel reference
+  oprhaned_p Answers question. Is this no longer officially supported?
+  requires_upgrade_p_def Answers question. Does this need an upgrade?
+
+  hf_vm_quotas
+  plan_id_def Unique plan identifier
+  description_def (change to name)
+  base_storage_def Maximum quantity measured at base rate. See storage_unit for units of quantity.
+  base_traffic_def Maximum quantity measured at base rate. See traffic_unit for units of quantity.
+  base_memory_def Maximum quantity measured at base_rate. See memory_unit for units of quantity.
+  base_sku_def Reference to pricing sku for minimum price of plan_id.
+  over_storage_sku_def Reference to sku for pricing over base storage rate of plan_id.
+  over_traffic_sku_def Reference to sku for pricing over base traffic rate of plan_id.
+  over_memory_sku_def Reference to sku for pricing over base memory rate of plan_id.
+  storage_unit_def The unit used for measuring storage.
+  traffic_unit_def The unit used for measuring traffic.
+  memory_unit_def The unit used for measuuring memory.
+  qemu_memory_def TBD
+  status_id_def Status of plan (change to plan_status)
+  vm_type_def TBD  (values are 1 or 2..)
+  max_domain_def Maximum domains assignable to one of this plan.
+  private_vps TBD.
+
+  hf_vhosts
+  
+  
+
+  
+  
 </message_catalog>
