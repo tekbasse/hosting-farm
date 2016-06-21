@@ -230,7 +230,7 @@ ad_proc -private hf_vm_quota_keys {
 } {
     Returns an ordered list of keys for hf_vm_quotas
 } {
-    set keys_list [list instance_id plan_id description base_storage base_traffic base_memory base_sku over_storage_sku over_traffic_sku over_memory_sku storage_unit traffic_unit memory_unit qemu_memory status_id vm_type max_domain private_vps time_trashed time_created]
+    set keys_list [list instance_id plan_id description base_storage base_traffic base_memory base_sku over_storage_sku over_traffic_sku over_memory_sku storage_unit traffic_unit memory_unit vmm_memory status_id vm_type max_domain private_vps time_trashed time_created]
     set keys_list [set_union $keys_list [hf_sub_asset_map_keys]]
     set keys [hf_keys_by $keys_list $separator]
     return $keys

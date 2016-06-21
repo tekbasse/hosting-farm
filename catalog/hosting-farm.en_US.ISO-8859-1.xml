@@ -75,7 +75,7 @@
   <msg key="feature_type">Feature type</msg>
   <msg key="feature_type_def">A reference for feature description</msg>
   <msg key="description">Description</msg>
-  <msg key="description_def">A one line description of up to about 65 characters.</msg>
+  <msg key="description_def">A one line description.</msg>
   <msg key="active_p">Active?</msg>
   <msg key="active_p_def">Answers question. Is this active?</msg>
   <msg key="name_record_def">A domain name.</msg>
@@ -125,29 +125,114 @@
   <nsg key="requires_upgrade_p">Upgrade?</msg>
   <msg key="requires_upgrade_p_def">Answers question. Does this need an upgrade?</msg>
   <nsg key="plan_id">Plan id</msg>
-  <msg key="plan_id_def">Plan identifier"></msg>
-  <msg key="description_def">(change to name)"></msg>
-  <msg key="base_storage_def">Maximum quantity measured at base rate. See storage_unit for units of quantity."></msg>
-  <msg key="base_traffic_def">Maximum quantity measured at base rate. See traffic_unit for units of quantity."></msg>
-  <msg key="base_memory_def">Maximum quantity measured at base_rate. See memory_unit for units of quantity."></msg>
-  <msg key="base_sku_def">Reference to pricing sku for minimum price of plan_id."></msg>
-  <msg key="over_storage_sku_def">Reference to sku for pricing over base storage rate of plan_id."></msg>
-  <msg key="over_traffic_sku_def">Reference to sku for pricing over base traffic rate of plan_id."></msg>
-  <msg key="over_memory_sku_def">Reference to sku for pricing over base memory rate of plan_id."></msg>
-  <msg key="storage_unit_def">The unit used for measuring storage."></msg>
-  <msg key="traffic_unit_def">The unit used for measuring traffic."></msg>
-  <msg key="memory_unit_def">The unit used for measuuring memory."></msg>
-  <msg key="qemu_memory_def">TBD"></msg>
-  <msg key="status_id_def">Status of plan (change to plan_status)"></msg>
-  <msg key="vm_type_def">TBD  (values are 1 or 2..)"></msg>
-  <msg key="max_domain_def">Maximum domains assignable to one of this plan."></msg>
-  <msg key="private_vps TBD."></msg>
-  <msg key=""></msg>
-  <msg key="hf_vhosts"></msg>
-  <msg key=""></msg>
-  <msg key=""></msg>
-  <msg key=""></msg>
-  <msg key=""></msg>
-  <msg key=""></msg>
-  <msg key="</message_catalog>"></msg>
-  <msg key="
+  <msg key="plan_id_def">Plan identifier</msg>
+  <nsg key="base_storage">Storage (base)</msg>
+  <msg key="base_storage_def">Maximum quantity measured at base rate. See storage_unit for units of quantity.</msg>
+  <msg key="base_traffic">Traffic (base)</msg>
+  <msg key="base_traffic_def">Maximum quantity measured at base rate. See traffic_unit for units of quantity.</msg>
+  <nsg key="base_memory">Memory (base)</msg>
+  <msg key="base_memory_def">Maximum quantity measured at base_rate. See memory_unit for units of quantity.</msg>
+  <msg key="base_sku">Base SKU</msg>
+  <msg key="base_sku_def">SKU reference for minimum price of plan_id.</msg>
+  <msg key="over_storage_sku">Extra Storage SKU</msg>
+  <msg key="over_storage_sku_def">SKU reference for pricing over base storage rate of plan_id.</msg>
+  <msg key="over_traffic_sku">Extra Traffic SKU</msg>
+  <msg key="over_traffic_sku_def">SKU reference for pricing over base traffic rate of plan_id.</msg>
+  <msg key="over_memory_sku">Extra Memory SKU</msg>
+  <msg key="over_memory_sku_def">SKU reference for pricing over base memory rate of plan_id.</msg>
+  <msg key="storage_unit">Storage unit</msg>
+  <msg key="storage_unit_def">The unit used to measure quantity of storage.</msg>
+  <msg key="traffic_unit">Traffic unit</msg>
+  <msg key="traffic_unit_def">The unit used for measuring quantity of traffic.</msg>
+  <msg key="memory_unit">Memory unit</msg>
+  <msg key="memory_unit_def">The unit used for measuuring quantity of memory.</msg>
+  <msg key="vmm_memory">VMM mem</msg>
+  <msg key="vmm_memory_def">Memory allocated for Virtual machine monitor (VMM)</msg>
+  <msg key="status_id">Status id</msg>
+  <msg key="status_id_def">Identifer indicating status of plan</msg>
+  <msg key="vm_type">VM type</msg>
+  <msg key="vm_type_def">Virtual Machine or virtualization type</msg>
+  <msg key="max_domain">Max Domains</msg>
+  <msg key="max_domain_def">Maximum domains assignable to one of this plan.</msg>
+  <msg key="private_vps">Private VPS</msg>
+  <msg key="private_vps_def">If this is an unpublished VPS, then subtype reference</msg>
+
+  <msg key="server_name">Server name</msg>
+  <msg key="server_name_def">SAAS server name</msg>
+  <msg key="service_name">Service name</msg>
+  <msg key="service_name_def">SAAS service name</msg>
+  <msg key="daemon_ref">Daemon ref</msg>
+  <msg key="protocol">Protocol</msg>
+  <msg key="protocol_def">Protocol of service: HTTP, HTTPS, FTP etc.</msg>
+  <msg key="port">Port</msg>
+  <msg key="port_def">Port number of service</msg>
+  <msg key="ss_type">SS type</msg>
+  <msg key="ss_type_def">Type of software as service</msg>
+  <msg key="ss_subtype">Subtype</msg>
+  <msg key="ss_subtype_def">Subtype of software as service</msg>
+  <msg key="ss_undersubtype">Undersubtype</msg>
+  <msg key="ss_undersubtype_def">Undersubtype of software as service</msg>
+  <msg key="ss_ultrasubtype">Ultrasubtype</msg>
+  <msg key="ss_ultrasubtype_def">Ultrasubtype of software as service</msg>
+  <msg key="config_uri">Config URI</msg>
+  <msg key="config_uri_def">Configuration Universal Resource Identifier</msg>
+  <msg key="memory_bytes">Memory in bytes.</msg>
+  <msg key="connection_type">Connection type</msg>
+  <msg key="monitor_id">Monitor id</msg>
+  <msg key="monitor_id_def">Identifier of a monitor.</msg>
+  <msg key="analysis_id">Analysis id</msg>
+  <msg key="analysis_id_def">Identifier of a monitor analysis.</msg>
+report_id
+reported_by
+report_time
+health
+report (details)
+significant_change
+analysis_id_p0
+analysis_id_p1
+health_p0
+health_p1
+health_percentile
+expected_health
+expected_percentile
+sample_count
+range_min
+range_max
+health_max
+health_min
+health_average
+health_median
+distribution_id
+x_pos
+cumulative_pct
+delta_x
+monitor_y
+report_id_def
+reported_by_def
+report_time_def
+health_def
+report (details)_def
+significant_change_def
+analysis_id_p0_def
+analysis_id_p1_def
+health_p0_def
+health_p1_def
+health_percentile_def
+expected_health_def
+expected_percentile_def
+sample_count_def
+range_min_def
+range_max_def
+health_max_def
+health_min_def
+health_average_def
+health_median_def
+distribution_id_def
+x_pos_def
+cumulative_pct_def
+delta_x_def
+monitor_y_def
+asset_template_id
+asset_template_id_def (see hf_calls)
+  </message_catalog>
+
