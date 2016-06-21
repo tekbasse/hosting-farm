@@ -115,7 +115,18 @@ ad_proc -private hf_asset_type_keys {
 } {
     Returns an ordered list of keys for hf_asset_type
 } {
-    set keys_list [list as set_type_id feature_id label feature_type publish_p title description from from hf_asset_type_features]
+    # see also hf_asset_type_feature_keys.
+    set keys_list [list instance_id id label name halt_proc start_proc details]
+    set keys [hf_keys_by $keys_list $separator]
+    return $keys
+}
+
+
+ad_proc -private hf_asset_type_feature_keys {
+} {
+    Returns an ordered list of keys for hf_asset_type_features
+} {
+    set keys_list [list asset_type_id feature_id label feature_type publish_p name details]
     set keys [hf_keys_by $keys_list $separator]
     return $keys
 }

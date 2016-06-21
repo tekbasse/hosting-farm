@@ -131,7 +131,7 @@ drop index hf_network_interfaces_instance_id_idx;
 
 DROP TABLE hf_network_interfaces;
 
-drop index hf_virtual_machines_type_id_idx;
+drop index hf_virtual_machines_server_type_idx;
 -- drop index hf_virtual_machines_ns_id_idx;
 -- drop index hf_virtual_machines_ni_id_idx;
 -- drop index hf_virtual_machines_ip_id_idx;

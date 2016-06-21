@@ -36,11 +36,11 @@ CREATE TABLE hf_asset_type (
    -- a user readable reference id
    label                   varchar(40),
    -- aka one_line_description
-   title                   varchar(85),
+   name                   varchar(65),
    -- length of *_proc limited by hf_sched_proc_stack.proc_name
    halt_proc               varchar(40),
    start_proc              varchar(40),
-   description             text
+   details             text
 );
 
 create index hf_asset_type_instance_id_idx on hf_asset_type (instance_id);
@@ -77,7 +77,8 @@ CREATE TABLE hf_assets (
     --        hw hardware
     --        vm virtual machine
     --        vh virtual host
-    --        hs hosted service etc. (using ss, because hs sounds like hf and looks like ns..)
+    --        hs hosted service etc. 
+    --         using ss, because hs sounds like hf and looks like ns.
     --        ss saas/sw as a service
     --        ns custom domain name service records
     --        ot other
@@ -317,7 +318,7 @@ CREATE TABLE hf_virtual_machines (
     os_id         varchar(19) not null DEFAULT '',
     -- from database_server.type_id
     --      server.server_type
-    type_id       varchar(19) not null DEFAULT '',
+    server_type       varchar(19) not null DEFAULT '',
     -- was vm_template.path
     resource_path varchar(300),
     -- was vm_template.mount_union
@@ -334,7 +335,7 @@ create index hf_virtual_machines_domain_name_idx on hf_virtual_machines (domain_
 -- create index hf_virtual_machines_ip_id_idx on hf_virtual_machines (ip_id);
 -- create index hf_virtual_machines_ni_id_idx on hf_virtual_machines (ni_id);
 -- create index hf_virtual_machines_ns_id_idx on hf_virtual_machines (ns_id);
-create index hf_virtual_machines_type_id_idx on hf_virtual_machines (type_id);
+create index hf_virtual_machines_server_type_idx on hf_virtual_machines (server_type);
 
 CREATE TABLE hf_network_interfaces (
     instance_id        integer,
