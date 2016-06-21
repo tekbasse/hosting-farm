@@ -419,6 +419,7 @@ CREATE TABLE hf_vm_quotas (
   storage_unit       integer not null,
   traffic_unit       integer not null,
   memory_unit        varchar(19) not null DEFAULT '',
+  -- was QEMU_memory
   vmm_memory         varchar(19) not null DEFAULT '',
   status_id          varchar(19) not null DEFAULT '',
   -- shows as 1 or 2 (means?)
