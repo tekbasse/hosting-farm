@@ -156,7 +156,7 @@
   <msg key="orphaned_p">Orphaned?</msg>
   <msg key="os_dev_ref">Dev(OS)</msg>
   <msg key="os_dev_ref_def">Operating System Device Reference</msg>
-  <msg key="os_id">OS Id</msg>
+  <msg key="os_id">OS id</msg>
   <msg key="os_id_def">Operating system identifier</msg>
   <msg key="ot">OT</msg>
   <msg key="over_memory_sku">Extra Memory SKU</msg>
@@ -180,9 +180,9 @@
   <msg key="protocol_def">Protocol of service: HTTP, HTTPS, FTP etc.</msg>
   <msg key="publish_p">Publish?</msg>
   <msg key="publish_p_def">Answers question: Publish publishable info about this?</msg>
-  <msg key="qal_customer_id">Customer Id</msg>
+  <msg key="qal_customer_id">Customer id</msg>
   <msg key="qal_customer_id_def">A customer's identifier (integer)</msg>
-  <msg key="qal_product_id">Product Id</msg>
+  <msg key="qal_product_id">Product id</msg>
   <msg key="qal_product_id_def">A product's identifier</msg>
   <msg key="range_max">Max range</msg>
   <msg key="range_max_def">Maximum value in a range of sample values</msg>
@@ -237,7 +237,7 @@
   <msg key="sub_type_id_def">Asset_type_id of an asset or attribute that is part of another asset.</msg>
   <msg key="system_name">System name</msg>
   <msg key="system_name_def">Name of hardware system</msg>
-  <msg key="template_id">Template Id</msg>
+  <msg key="template_id">Template id</msg>
   <msg key="template_id_def">The original template's identifier (f_id).</msg>
   <msg key="template_p">Template?</msg>
   <msg key="template_p_def">Is this asset a template?</msg>

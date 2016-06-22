@@ -5,8 +5,8 @@
 <h1>Data model</h1>
 <p>This is an overview of the primary data model.  Additional detail is buried in code comments.</p>
 
-<h2><a name="asset">#hosting-farm.assets#</a></h2>
-<p>#hosting-farm.asset_def#</p>
+<h2><a name="asset">hf_assets</a></h2>
+<p>hf_assets</p>
 @hf_asset_html;noquote@
 @hf_asset_x_html;noquote@
 

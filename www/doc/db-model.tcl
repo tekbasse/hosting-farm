@@ -13,7 +13,7 @@ foreach type $type_list {
         asset {
             set table_name hf_assets
             set keys_list [hf_asset_keys]
-            append $var2 "Revisions is managed using table hf_asset_rev_map."
+            append $var2 "Revisions are managed using table hf_asset_rev_map."
         }
         dc {
             set table_name hf_data_centers
