@@ -8,6 +8,7 @@ foreach type $type_list {
     set var hf_${type}_html
     # name a variable for html comments and extras
     set var2 hf_${type}_x_html
+    set $var2 ""
     switch -- $type {
         asset {
             set table_name hf_assets
