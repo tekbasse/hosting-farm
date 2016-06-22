@@ -134,3 +134,28 @@ ad_proc -private hf_list_filter_by_visible {
     }
     return $filtered_list
 }
+
+ad_proc -private hf_key_hidden_q {
+    fieldname
+    {asset_type_id ""}
+} {
+    Returns 1 if fieldname should be hidden from end users
+    such as in UI forms and views.
+
+    If asset_type_id is included, checks for specific case, otherwise
+    only considers the general case.
+} {
+    set hide_p 0
+    set hidden_list [list instance_id ip_id monitor_id ni_id os_id plan_id qal_customer_id qal_product_id report_id role_id ss_id status_id sub_f_id sub_type_id template_id type_id ua_id up_id user_id vh_id vm_id]
+    if { $fieldname in $hidden_list } {
+        set hide_p 1
+    } 
+    # There are no special cases for asset_type_id right now.
+    # Yet, special cases are expected.
+    switch -- $fieldname {
+        default {
+            # not a special case.
+        }
+    }
+    return $hide_p
+}
