@@ -1,13 +1,13 @@
 set title "Hosting Farm Database Model and field definitions"
 set context [list [list index "Documentation"] $title]
 
-set type_list [list asset asset_rev_map asset_type asset_type_feature sub_asset_map dc hw vm vm_quota vh ss monitor ip ni ns os ua ]
+set type_list [list asset asset_type asset_type_feature sub_asset_map dc hw vm vm_quota vh ss monitor ip ni ns os ua asset_rev_map]
 set table_attribute_list [list style "border: 1px;"]
 foreach type $type_list {
     # name a variable for html output
-    set var ${type}_html
+    set var hf_${type}_html
     # name a variable for html comments and extras
-    set var2 ${type}b_html
+    set var2 hf_${type}_x_html
     switch -- $type {
         asset {
             set table_name hf_assets
@@ -60,7 +60,7 @@ foreach type $type_list {
         }
         sub_asset_map {
             set table_name hf_sub_asset_map
-            set keys_list [hf_asset_map_keys]
+            set keys_list [hf_sub_asset_map_keys]
             append var2 "This tables manages revisioning for attribute tables.  Attribute types consist of dc, hw, vm, vh, ss, ip, ni, ns, and os."
         }
         vm_quota {
@@ -95,6 +95,6 @@ foreach type $type_list {
     }
     set $var [qss_list_of_lists_to_html_table $table_lists $table_attribute_list]
     if { [llength $hidden_keys_list] > 0 } {
-        set append $var2 "Following are hidden from most user interfacing: [join $user_keys_list ", "]"
+        append $var2 "Following are hidden from most user interfacing: [join $user_keys_list ", "]"
     }
 }

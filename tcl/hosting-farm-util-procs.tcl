@@ -23,7 +23,7 @@ ad_proc -private hf_peek_pop_stack {
 
 ad_proc -private hf_keys_by {
     keys_list
-    separator
+    {separator ""}
 } {
     if { $separator ne ""} {
         set keys ""

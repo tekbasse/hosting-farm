@@ -5,50 +5,93 @@
 <h1>Data model</h1>
 <p>This is an overview of the primary data model.  Additional detail is buried in code comments.</p>
 
-<h2><a name="assets">#hosting-farm.assets#</a></h2>
+<h2><a name="asset">#hosting-farm.assets#</a></h2>
 <p>#hosting-farm.asset_def#</p>
-@hf_assets_html;noquote@
-@hf_assets_comments_html;noquote@
+@hf_asset_html;noquote@
+@hf_asset_x_html;noquote@
 
-<h2><a name="p1">#accounts-finance.scenario_p1#</a> *</h2>
-<p>#accounts-finance.scenario_p1_def#</p>
-@p1_html;noquote@
-@p1b_html;noquote@
+<h2><a name="asset_rev_map">#hosting-farm.asset_rev_maps#</a></h2>
+<p>#hosting-farm.asset_rev_map_def#</p>
+@hf_asset_rev_map_html;noquote@
+@hf_asset_rev_map_x_html;noquote@
 
-<h2><a name="p2">#accounts-finance.task_network_p2#</a> *</h2>
-<p>#accounts-finance.task_network_p2_def#</p>
-@p2_html;noquote@
-@p2b_html;noquote@
+<h2><a name="asset_type">#hosting-farm.asset_types#</a></h2>
+<p>#hosting-farm.asset_type_def#</p>
+@hf_asset_type_html;noquote@
+@hf_asset_type_x_html;noquote@
 
-<h2><a name="p3">#accounts-finance.task_types_p3#</a></h2>
-<p>#accounts-finance.task_types_p3_def#</p>
-@p3_html;noquote@
-@p3b_html;noquote@
+<h2><a name="asset_type_feature">#hosting-farm.asset_type_feature#</a></h2>
+<p>#hosting-farm.asset_type_feature_def#</p>
+@hf_asset_type_feature_html;noquote@
+@hf_asset_type_feature_x_html;noquote@
 
-<h2><a name="p4">#accounts-finance.report_table_p4#</a></h2>
-<p>#accounts-finance.report_table_p4_def#</p>
-@p4_html;noquote@
-@p4b_html;noquote@
+<h2><a name="sub_asset_map">#hosting-farm.sub_asset_map#</a></h2>
+<p>#hosting-farm.sub_asset_map_def#</p>
+@hf_sub_asset_map_html;noquote@
+@hf_sub_asset_map_x_html;noquote@
 
-<h2><a name="p5">#accounts-finance.report_table_p5#</a></h2>
-<p>#accounts-finance.report_table_p5_def#</p>
-@p5_html;noquote@
-@p5b_html;noquote@
+<h2><a name="dc">#hosting-farm.dc#</a></h2>
+<p>#hosting-farm.dc_def#</p>
+@hf_dc_html;noquote@
+@hf_dc_x_html;noquote@
 
-<h2><a name="p6">#accounts-finance.report_table_p6#</a></h2>
-<p>#accounts-finance.report_table_p6_def#</p>
-@p6_html;noquote@
-@p6b_html;noquote@
+<h2><a name="hw">#hosting-farm.hw#</a></h2>
+<p>#hosting-farm.hw_def#</p>
+@hf_hw_html;noquote@
+@hf_hw_x_html;noquote@
 
-<h2><a name="dc">#accounts-finance.distribution_curve_dc#</a></h2>
-<p>#accounts-finance.distribution_curve_dc_def#</p>
-@dc_html;noquote@
-@dcb_html;noquote@
-<hr>
-<p>* = #accounts-finance.required#</p>
-<p>#accounts-finance.unrecognized_refs#</p>
+<h2><a name="vm">#hosting-farm.vm#</a></h2>
+<p>#hosting-farm.vm_def#</p>
+@hf_vm_html;noquote@
+@hf_vm_x_html;noquote@
 
-<h2><a name="iev">#accounts-finance.index_equation_variables#</a></h2>
-<p>#accounts-finance.index_equation_variables_def#</p>
-@eq_vars_html;noquote@
+<h2><a name="vm_quota">#hosting-farm.vm_quota#</a></h2>
+<p>#hosting-farm.vm_quota_def#</p>
+@hf_vm_quota_html;noquote@
+@hf_vm_quota_x_html;noquote@
+
+<h2><a name="vh">#hosting-farm.vh#</a></h2>
+<p>#hosting-farm.vh_def#</p>
+@hf_vh_html;noquote@
+@hf_vh_x_html;noquote@
+
+<h2><a name="ss">#hosting-farm.ss#</a></h2>
+<p>#hosting-farm.ss_def#</p>
+@hf_ss_html;noquote@
+@hf_ss_x_html;noquote@
+
+<h2><a name="monitor">#hosting-farm.monitor#</a></h2>
+<p>#hosting-farm.monitor_def#</p>
+@hf_monitor_html;noquote@
+@hf_monitor_x_html;noquote@
+
+<h2><a name="ip">#hosting-farm.ip#</a></h2>
+<p>#hosting-farm.ip_def#</p>
+@hf_ip_html;noquote@
+@hf_ip_x_html;noquote@
+
+
+<h2><a name="ni">#hosting-farm.ni#</a></h2>
+<p>#hosting-farm.ni_def#</p>
+@hf_ni_html;noquote@
+@hf_ni_x_html;noquote@
+
+
+<h2><a name="ns">#hosting-farm.ns#</a></h2>
+<p>#hosting-farm.ns_def#</p>
+@hf_ns_html;noquote@
+@hf_ns_x_html;noquote@
+
+
+<h2><a name="os">#hosting-farm.os#</a></h2>
+<p>#hosting-farm.os_def#</p>
+@hf_os_html;noquote@
+@hf_os_x_html;noquote@
+
+
+<h2><a name="ua">#hosting-farm.ua#</a></h2>
+<p>#hosting-farm.ua_def#</p>
+@hf_ua_html;noquote@
+@hf_ua_x_html;noquote@
+
 
