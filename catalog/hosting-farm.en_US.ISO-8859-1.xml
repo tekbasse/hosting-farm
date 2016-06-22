@@ -4,7 +4,12 @@
   <msg key="Alerts_can_be_customized">Alerts can be customized</msg>
   <msg key="Asset">Asset</msg>
   <msg key="Asset_Monitor">Asset monitor</msg>
+  <msg key="Asset_def">Something of value that is tracked.</msg>
+  <msg key="Attribute">Attribute</msg>
+  <msg key="Attribute_def">Properties of an asset.</msg>
+  <msg key="Data_Model">Data Model</msg>
   <msg key="Data_center">Data center</msg>
+  <msg key="Glossary">Glossary</msg>
   <msg key="Hardware">Hardware</msg>
   <msg key="Health_percentile">Health percentile</msg>
   <msg key="Health_score">Health score</msg>
@@ -12,6 +17,8 @@
   <msg key="Name_service">Name service</msg>
   <msg key="Other">Other</msg>
   <msg key="Percentile">Percentile</msg>
+  <msg key="Primary_attribute">Primary attribute</msg>
+  <msg key="Primary_attribute_def">Principle attribute record of an asset.</msg>
   <msg key="Projected">Projected</msg>
   <msg key="Quota">Quota</msg>
   <msg key="SAAS">SAAS</msg>
