@@ -48,6 +48,7 @@ array set input_arr \
          next_mode "" \
          page_title $title \
          reset "" \
+         state "" \
          sub_asset_id "" \
          sub_f_id "" \
          submit "" ]
@@ -73,6 +74,7 @@ if { $form_posted_p } {
              mode \
              next_mode \
              page_title \
+             state \
              sub_asset_id \
              sub_f_id ]
     # x,y elements in input_arr holds position of image-based submit
@@ -277,11 +279,8 @@ if { $form_posted_p } {
             #    New attribute of asset_id
             # If asset and non primary attribute exist, just
             # edit the attribute.
-
+            # set include_view_one_p 1
             hf_constructor_a obj_arr
-            foreach key [array names obj_arr] {
-                set obj_arr(${key}) [qf_unquote $obj_arr(${key}) ]
-            }
             
         } elseif { $read_p } {
             set mode "v"
@@ -296,6 +295,14 @@ if { $form_posted_p } {
     if { $mode eq "a" } {
         if { $create_p || $admin_p } {
             # allowed
+            if { $state in [list asset_attr attr_only asset_only asset_primary_attr] && $asset_type_id ne "" } {
+                hf_constructor_a obj_arr force $state $asset_type_id
+            } else {
+                ns_log Notice "hosting-farm/assets.tcl.301: incomplete new \
+ asset request. state '${state}' asset_type_id '${asset_type_id}'"
+                set mode "l"
+                set next_mode ""
+            }
         } elseif { $read_p } {
             set mode "v"
         } else {
@@ -331,7 +338,7 @@ if { $form_posted_p } {
     }
     if { !$validated_p } {
         ns_log Notice "hosting-farm/assets.tcl(287): \
- mode '${mode} next_mode '${next_mode}' validated_p '${validated_p}'"
+ validated_p '${validated_p}' mode '${mode} next_mode '${next_mode}'"
     }
 
     # ACTIONS
@@ -346,7 +353,6 @@ if { $form_posted_p } {
         if { $mode eq "a" } {
 
         }
-
 
         if { $mode eq "t" } {
             # choose the most specific reference only
@@ -413,7 +419,7 @@ switch -exact -- $mode {
                 ad_returnredirect "${url}?mode=l"
                 ad_script_abort
             }
-            set include_assets_p 1
+            set include_view_one_p 1
             set asset_ids_list [hf_asset_ids_for_user $user_id]
             set assets_lists [hf_assets_read $asset_ids_list]
         } 
@@ -432,6 +438,12 @@ switch -exact -- $mode {
             # If context already exists, use most recent/active case
             # for default values.
             ns_log Notice "hosting-farm/assets.tcl mode = edit"
+
+            foreach key [array names obj_arr] {
+                set obj_arr(${key}) [qf_unquote $obj_arr(${key}) ]
+            }
+
+
             set cancel_link_html "<a hrer=\"list?mode=l\">#acs-kernel.common_Cancel#</a>"
 
             set conn_package_url [ad_conn package_url]

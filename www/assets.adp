@@ -14,17 +14,11 @@
 </ul>
 </if>
 
-<if @include_assets_p@ not nil>
-  <include src="/packages/hosting-farm/lib/assets" &assets_lists=assets_lists>
+<if @include_view_multiple_p@ not nil>
+  <include src="/packages/hosting-farm/lib/view-multiple" &assets_lists=assets_lists>
 </if>
-<if @include_asset_p@ not nil>
-  <include src="/packages/hosting-farm/lib/asset" &asset_arr=asset_arr>
-</if>
-<if @include_attrs_p@ not nil>
-  <include src="/packages/hosting-farm/lib/attrs" &attrs_lists=attrs_lists>
-</if>
-<if @include_attr_p@ not nil>
-  <include src="/packages/hosting-farm/lib/attr" &attr_arr=attr_arr>
+<if @include_view_one_p@ not nil>
+  <include src="/packages/hosting-farm/lib/view-one" &asset_arr=obj_arr>
 </if>
 
 <if @form_html@ not nil>
