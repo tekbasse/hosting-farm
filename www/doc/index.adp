@@ -19,43 +19,21 @@ email: tekbasse@yahoo.com</pre>
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    along with this program.  If not, see 
+    <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.
 </pre>
-<p><a href="http://dfcb.github.io/extra-strength-responsive-grids/">Extra Strength Responsive Grids</a> parts copyright 2013 by John Polacek of <a href="http://opensource.draftfcb.net/">Draftfcb Open Source</a> under Dual MIT & GPL license.
-</p>
-<h3>introduction</h3>
 <p>
-Hosting Farm is a virtual hosting operations management package for use with OpenACS.
-It is initially designed for a hosting farm using freebsd jails.
+<a href="http://dfcb.github.io/extra-strength-responsive-grids/">Extra Strength Responsive Grids</a>
+ parts copyright 2013 by John Polacek of 
+<a href="http://opensource.draftfcb.net/">Draftfcb Open Source</a> under Dual MIT & GPL license.
 </p>
-<p>
-This is primarily a web interface for a hosting-farm system made by one hosting farm company for system admins and their customers. 
-</p>
-
-<h3>features</h3>
-<p>A consistent, secure, small-device friendly UI for local, custom services, with an easy crossover to other standard hosted solutions (such as horde, maia etc). </p>
-<p>Works with OpenACS on linux and FreeBSD. Should also work with OpenACS MacOS, or MSWindows systems with limited changes. Submissions to address any compatibility issues are welcome.</p>
-<p>Programmed in TCL with TCL API to a Postgresql database. Can be ported to Oracle.. and integrate with perl scripts.</p>
-<p>OpenACS is a highly scalable platform with many plug-in and built-in features for community-based services, including mature implementations of internationalization, localization, permissions, forum, file-storage, wiki, custom page templating, and notifications.</p>
-<p>Admin and user access via http/https.</p>
-<p>Avoid pitfalls of Plesk/CPanel and other existing web-based admin panels, such as expressed at <a href="http://www.anchor.com.au/hosting/development/we_hate_plesk_and_cpanel">http://www.anchor.com.au/hosting/development/we_hate_plesk_and_cpanel</a></p>
-
-<h3>first release features (planned)</h3>
-<p>flexible UI for quick web app development. -done</p>
-<p>user DNS zone editing</p>
-<p>UI for one click (web-based) installers</p>
-<p>A conspicuous alert when system needs user attention (contract expiring, service down etc)</p>
-<p>use quotas with alerts</p>
-<p>storage usage, memory usage and traffic tracking.</p>
-<p>switchable, configurable automated log monitoring and alarms</p>
-<p>billing - general invoicing utility for handling initial orders, recurring billing, and quota overages.</p>
-<p>Support operations on multiple servers, data centers, and custom configured equipment.</p>
-<p>reseller service features</p>
-<p>customer managed custom administrator permissions</p>
-<p>One click installers</p>
-<p>ticket tracker with built-in streamlining for outages/disrutions that deal with multiple/bulk sets of clients (via separate OpenACS package)</p>
-<p>social feedback mechanisms (via separate OpenACS package)</p>
-<h3>additional features (planned)</h3>
-<p>marketing / lead performance metrics (via separate OpenACS package) that imports openacs.log statistical session activity</p>
-
-
+<h3>Contents</h3>
+<ul>
+<li>
+<a href="intro">introduction</a>
+</li><li>
+<a href="data-model">data model</a>
+</li><li>
+<a href="glossary">glossary</a>
+</li>
+</ul>
