@@ -455,6 +455,15 @@ switch -exact -- $mode {
             qf_input type hidden value w name mode
             qf_input type hidden value v name next_mode
 
+            foreach {key val} [array get obj_arr] {
+                if { [hf_key_hidden_q } {
+                    qf_input type hidden value $val name $key
+                } else {
+                    qf_append html "<br>"
+                    set val_unquoted [qf_unquote $val]
+                    qf_input type text value $val_unquoted name $key label "#hosting-farm.${key}#:" size 40 maxlength 80
+            }
+
             qf_input type hidden value $asset_id name asset_id
 
             qf_append html "<h3>#acs-templating.Page# #q-wiki.edit#</h3>"
