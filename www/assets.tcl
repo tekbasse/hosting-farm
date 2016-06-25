@@ -419,7 +419,7 @@ switch -exact -- $mode {
                 ad_returnredirect "${url}?mode=l"
                 ad_script_abort
             }
-            set include_view_one_p 1
+            set include_assets_p 1
             set asset_ids_list [hf_asset_ids_for_user $user_id]
             set assets_lists [hf_assets_read $asset_ids_list]
         } 
@@ -454,42 +454,24 @@ switch -exact -- $mode {
             qf_form action $post_url method post id 20160616 hash_check 1
             qf_input type hidden value w name mode
             qf_input type hidden value v name next_mode
+            qf_append html "<div style=\"width: 70%; text-align: right;\">"
 
             foreach {key val} [array get obj_arr] {
-                if { [hf_key_hidden_q } {
+                if { [hf_key_hidden_q $key] } {
                     qf_input type hidden value $val name $key
                 } else {
                     qf_append html "<br>"
                     set val_unquoted [qf_unquote $val]
                     qf_input type text value $val_unquoted name $key label "#hosting-farm.${key}#:" size 40 maxlength 80
+                }
             }
 
-            qf_input type hidden value $asset_id name asset_id
-
-            qf_append html "<h3>#acs-templating.Page# #q-wiki.edit#</h3>"
-            qf_append html "<div style=\"width: 70%; text-align: right;\">"
-            set page_name_unquoted [qf_unquote $page_name]
-            qf_input type text value $page_name_unquoted name page_name label "#acs-subsite.Name#:" size 40 maxlength 40
-            qf_append html "<br>"
-            set page_title_unquoted [qf_unquote $page_title]
-            qf_input type text value $page_title_unquoted name page_title label "#acs-kernel.common_Title#:" size 40 maxlength 80
-            qf_append html "<br>"
-            set description_unquoted [qf_unquote $description]
-            qf_textarea value $description_unquoted cols 40 rows 1 name description label "#acs-subsite.Description#:"
-            qf_append html "<br>"
-            set page_comments_unquoted [qf_unquote $page_comments]
-            qf_textarea value $page_comments_unquoted cols 40 rows 3 name page_comments label "#acs-subsite.Comment#:"
-            qf_append html "<br>"
-            set page_contents_unquoted [qf_unquote $page_contents]
-            qf_textarea value $page_contents_unquoted cols $columns_max rows $rows_max name page_contents label "#notifications.Contents#:"
-            qf_append html "<br>"
-            set keywords_unquoted [qf_unquote $keywords]
-            qf_input type text value $keywords_unquoted name keywords label "#q-wiki.Keywords#:" size 40 maxlength 80
             qf_append html "</div>"
             qf_input type submit value "#acs-kernel.common_Save#"
             qf_append html " &nbsp; &nbsp; &nbsp; ${cancel_link_html}"
             qf_close
             set form_html [qf_read]
+
         } else {
             lappend user_message_list "#q-wiki.Edit_operation_did_not_succeed# #q-wiki.You_don_t_have_permission#"
             util_user_message -message [lindex $user_message_list end]
@@ -499,7 +481,6 @@ switch -exact -- $mode {
         #  view page(s) (standard, html page document/report)
         if { $read_p } {
             # if $url is different than ad_conn url stem, 303/305 redirect to asset_id's primary url
-            
             if { $redirect_before_v_p } {
                 ns_log Notice "hosting-farm/assets.tcl(835): redirecting to url ${url} for clean url view"
                 ad_returnredirect $url
@@ -509,44 +490,16 @@ switch -exact -- $mode {
 
             lappend menu_list [list #q-wiki.index# "index?mode=l"]
 
-            # get page info
-            if { $asset_id eq "" } {
-                # cannot use previous $asset_id_from_url, because it might be modified from an ACTION
-                # Get it again.
-                set asset_id_from_url [qw_asset_id_from_url $url $package_id]
-                set page_list [qw_page_read $asset_id_from_url $package_id $user_id ]
-            } else {
-                set page_list [qw_page_read $asset_id $package_id $user_id ]
-            }
-
             if { $create_p } {
-                if { $asset_id_from_url ne "" || $asset_id ne "" } {
+                if { $admin_p } {
                     lappend menu_list [list #q-wiki.revisions# "${url}?mode=r"]
                 } 
                 lappend menu_list [list #q-wiki.edit# "${url}?mode=e" ]
             }
             
-            if { [llength $page_list] > 1 } {
-                set page_title [lindex $page_list 1]
-                set keywords [lindex $page_list 2]
-                set description [lindex $page_list 3]
-                set page_contents [lindex $page_list 11]
-                set trashed_p [lindex $page_list 6]
-                set f_id [lindex $page_list 4]
-                # trashed pages cannot be viewed by public, but can be viewed with permission
-                
-                if { $keywords ne "" } {
-		    template::head::add_meta -name keywords -content $keywords
-                }
-                if { $description ne "" } {
-                    template::head::add_meta -name description -content $description
-                }
-                set title $page_title
-                # page_contents_filtered
-                set page_contents_unquoted [ad_unquotehtml $page_contents]
-                set page_main_code [template::adp_compile -string $page_contents_unquoted]
-                set page_main_code_html [template::adp_eval page_main_code]
-            }
+            set title $page_title
+            set include_view_one_p 1
+
         } else {
             # no permission to read page. This should not happen.
             ns_log Warning "hosting-farm/assets.tcl:(619) user did not get expected 404 error when not able to read page."
@@ -554,9 +507,8 @@ switch -exact -- $mode {
     }
     w {
         #  save.....  (write) asset_id 
-        # should already have been handled above
-        ns_log Warning "hosting-farm/assets.tcl(575): mode = save/write THIS SHOULD NOT BE CALLED."
-        # it's called in validation section.
+        # should already have been handled above and switched to another mode.
+        ns_log Warning "hosting-farm/assets.tcl(575): mode = save/write THIS SHOULD NOT BE CALLED HERE."
     }
     default {
         # return 404 not found or not validated (permission or other issue)
@@ -577,8 +529,7 @@ switch -exact -- $mode {
 #}
 
 set menu_html ""
-set validated_p_exists [info exists validated_p]
-if { $validated_p_exists && $validated_p || !$validated_p_exists } {
+if { $form_posted_p && $validated_p || !$form_posted_p } {
     foreach item_list $menu_list {
         set menu_label [lindex $item_list 0]
         set menu_url [lindex $item_list 1]
