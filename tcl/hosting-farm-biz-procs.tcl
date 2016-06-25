@@ -198,7 +198,7 @@ ad_proc -public hf_constructor_a {
         }
     }
     # Remove any unconstructed keys
-    # Is this a neurotic/paranoid feature, or expected housekeeping?
+    # For the sake a neurotic/paranoid security feature, and/or expected housekeeping
     set arr_keys_list [array names an_arr]
     set_difference_named_v arr_keys_list $keys_list
     foreach arr_key $arr_keys_list {
