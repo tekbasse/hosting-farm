@@ -187,9 +187,11 @@ ad_proc -public hf_constructor_a {
     }
     if { [string match "*attr*" $state] } {
         if { $asset_type_id in [hf_asset_type_id_list] } {
-            # substitution avoids a long switch
+            # substitution in command avoids a long switch
             hf_${asset_type_id}_defaults an_arr
             set keys_list [set_union $keys_list [hf_${asset_type_id}_keys]]
+            hf_sub_asset_map_defaults an_arr
+            set keys_list [set_union $keys_list [hf_sub_asset_keys]]
         } else {
             ns_log Warning "hf_constructor_a.193: unknown asset_type_id '${asset_type_id}'"
             ad_script_abort
