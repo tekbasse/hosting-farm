@@ -497,7 +497,7 @@ switch -exact -- $mode {
                 lappend menu_list [list #q-wiki.edit# "${url}?mode=e" ]
             }
             
-            set title $page_title
+            set title "#hosting-farm.Asset#"
             set include_view_one_p 1
 
         } else {

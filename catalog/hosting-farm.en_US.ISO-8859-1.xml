@@ -3,9 +3,11 @@
   <msg key="Alert">Alert</msg>
   <msg key="Alerts_can_be_customized">Alerts can be customized</msg>
   <msg key="Asset">Asset</msg>
+  <msg key="Assets">Assets</msg>
   <msg key="Asset_Monitor">Asset monitor</msg>
   <msg key="Asset_def">Something of value that is tracked.</msg>
   <msg key="Attribute">Attribute</msg>
+  <msg key="Attributes">Attributes</msg>
   <msg key="Attribute_def">Properties of an asset.</msg>
   <msg key="Data_Model">Data Model</msg>
   <msg key="Data_center">Data center</msg>
