@@ -12,7 +12,7 @@
 # Initial permissions
 set user_id [ad_conn user_id]
 set instance_id [ad_conn package_id]
-set read_p [permission:permission_p \
+set read_p [permission::permission_p \
                 -party_id $user_id \
                 -object_id $instance_id \
                 -privilege read]
@@ -45,7 +45,7 @@ array set input_arr \
          customer_id "" \
          f_id "" \
          mode "v" \
-         next_mode "" \
+         mode_next "" \
          page_title $title \
          reset "" \
          state "" \
@@ -72,7 +72,7 @@ if { $form_posted_p } {
              customer_id \
              f_id \
              mode \
-             next_mode \
+             mode_next \
              page_title \
              state \
              sub_asset_id \
@@ -87,21 +87,21 @@ if { $form_posted_p } {
     # options include    d, D, l, r, t, e, "", w, v, a
     if { [string length $mode] != 1 } {
         set mode "v"
-        set next_mode ""
+        set mode_next ""
     }
-    if { [string length $next_mode] > 1 } {
-        set next_mode ""
+    if { [string length $mode_next] > 1 } {
+        set mode_next ""
     }
     if { [string first $mode "Ddtwvaelr"] == -1 } {
         set mode "v"
 
     } elseif { [string first $mode "dt"] > -1 \
-                   && [string first $next_mode "lrv"] == -1 } {
-        set next_mode "v"
+                   && [string first $mode_next "lrv"] == -1 } {
+        set mode_next "v"
     }
 
     ns_log Notice "hosting-farm/www/assets.tcl(115): \
- mode '${mode} next_mode ${next_mode}"
+ mode '${mode} mode_next ${mode_next}"
 
     set validated_p 0
     # Cleanse data, verify values for consistency
@@ -165,7 +165,7 @@ if { $form_posted_p } {
     set admin_p [hf_ui_go_ahead_q admin "" "" 0]
     if { $admin_p } {
         # check package admin for extras
-        set pkg_admin_p [permission:permission_p \
+        set pkg_admin_p [permission::permission_p \
                              -party_id $user_id \
                              -object_id $instance_id \
                              -privilege admin]
@@ -224,7 +224,7 @@ if { $form_posted_p } {
             }
         } else {
             set mode ""
-            set next_mode ""
+            set mode_next ""
             set validated_p 0
             ns_log Warning "hosting-farm/assets.tcl(215): \
  write denied for '${user_id}'."
@@ -301,7 +301,7 @@ if { $form_posted_p } {
                 ns_log Notice "hosting-farm/assets.tcl.301: incomplete new \
  asset request. state '${state}' asset_type_id '${asset_type_id}'"
                 set mode "l"
-                set next_mode ""
+                set mode_next ""
             }
         } elseif { $read_p } {
             set mode "v"
@@ -318,7 +318,7 @@ if { $form_posted_p } {
             # allowed
         } else {
             set mode ""
-            set next_mode ""
+            set mode_next ""
             ns_log Warning "hosting-farm/assets.tcl(268): \
  mode 'l' denied for '${user_id}'."
             set validated_p 0
@@ -330,7 +330,7 @@ if { $form_posted_p } {
             # allowed
         } else {
             set mode ""
-            set next_mode ""
+            set mode_next ""
             set validated 0
             ns_log Warning "hosting-farm/assets.tcl(280): \
  mode 'v' denied for '${user_id}'."
@@ -338,14 +338,14 @@ if { $form_posted_p } {
     }
     if { !$validated_p } {
         ns_log Notice "hosting-farm/assets.tcl(287): \
- validated_p '${validated_p}' mode '${mode} next_mode '${next_mode}'"
+ validated_p '${validated_p}' mode '${mode} mode_next '${mode_next}'"
     }
 
     # ACTIONS
  
     if { $validated_p } {
         ns_log Notice "hosting-farm/assets.tcl(300): ACTION \
- mode '${mode} next_mode '${next_mode}' validated_p '${validated_p}'"
+ mode '${mode} mode_next '${mode_next}' validated_p '${validated_p}'"
 
         # execute process using validated input
         # Using IF instead of SWITCH to allow mode to be modified successively
@@ -367,14 +367,14 @@ if { $form_posted_p } {
                 ns_log Warning "hosting-farm/assets.tcl(331): \
  trash requested without an expected reference"
             }
-            set mode $next_mode
-            set next_mode ""
+            set mode $mode_next
+            set mode_next ""
         }
 
         if { $mode eq "w" } {
             if { $write_p } {
                 # ad-unquotehtml values before posting to db
-                set mode $next_mode
+                set mode $mode_next
                 
             } else {
                 # does not have permission to write
@@ -388,12 +388,12 @@ if { $form_posted_p } {
                 }
             }
             # end section of write
-            set next_mode ""
+            set mode_next ""
         }
     }
 } else {
-    # form not posted
-
+    # form not posted. Get defaults.
+    template::util::array_to_vars input_arr
 }
 
 
@@ -453,7 +453,7 @@ switch -exact -- $mode {
 
             qf_form action $post_url method post id 20160616 hash_check 1
             qf_input type hidden value w name mode
-            qf_input type hidden value v name next_mode
+            qf_input type hidden value v name mode_next
             qf_append html "<div style=\"width: 70%; text-align: right;\">"
 
             foreach {key val} [array get obj_arr] {
