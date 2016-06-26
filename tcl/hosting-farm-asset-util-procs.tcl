@@ -365,7 +365,7 @@ ad_proc -private hf_asset_rev_map_update {
     if { [hf_f_id_exists_q $f_id] } {
         ns_log Notice "hf_asset_rev_map_update: update label '${label}' asset_id '${asset_id}' trashed_p '${trashed_p}' instance_id '${instance_id}'"
         db_dml hf_asset_label_update { update hf_asset_rev_map
-            set asset_id=:asset_id and label=:label where f_id=:f_id and instanece_id=:instance_id }
+            set asset_id=:asset_id and label=:label where f_id=:f_id and instance_id=:instance_id }
     } else {
         ns_log Notice "hf_asset_rev_map_update: create label '${label}' asset_id '${asset_id}' trashed_p '${trashed_p}' instance_id '${instance_id}'"
         db_dml hf_asset_label_create { insert into hf_asset_rev_map

@@ -285,6 +285,7 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                 set ss_nsd_name [ns_info name]
                 set nowts [dt_systime -gmt 1]
 
+
                 array set os_arr [list \
                                       instance_id $instance_id \
                                       label $label \
@@ -313,38 +314,36 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                 set ss_id [hf_ss_write ss_arr]
                 unset ss_arr
 
-                ##code procs for returning an array with defaults for use with creating test cases etc.
-
                 # problem server tests
                 set nowts [dt_systime -gmt 1]
 
                 # make an asset of type ss
+                set label [hf_domain_example]
                 array set ss_arr [list \
-                                      label "ProblemSS" \
+                                      label $label \
                                       name "Problem SS" \
                                       asset_type_id "ss" \
                                       instance_id $instance_id \
-                                      user_id $sysowner_user_id \
-                                      content "A demo problem service"\
-                                      comments "Demo/ss system test case"]
-                set ss_arr(f_id) [hf_asset_write ss_arr]
+                                      user_id $sysowner_user_id]
+                set ss_arr(f_id) [hf_asset_create ss_arr]
 
                 # make a bad bot service
+                set server_name [hf_domain_example]
                 array set ss_arr [list instance_id $instance_id \
-                                      server_name $name \
-                                      service_name "badbot" \
+                                      server_name $server_name \
+                                      service_name "badbot@" \
                                       daemon_ref "/usr/local/badbot" \
                                       protocol "http" \
                                       port [randomRange 50000] \
                                       ss_type "maybe bad" \
                                       config_uri "/dev/null" ]
-                set ss_id [hf_ss_write ss_arr]
+                set ss_id [hf_ss_create ss_arr]
                 
                 array set asset_arr [list \
 ##code check table elements here.. is name,title correct? or should be label,name..
                                          asset_type_id "vm" \
-                                         name "problemVM" \
-                                         title "Problem VM" \
+                                         label "problemVM" \
+                                         name "Problem VM" \
                                          description "Demo/vm test" \
                                          user_id $yssowner_user_id ]
                 set asset_id [hf_asset_create asset_arr]
