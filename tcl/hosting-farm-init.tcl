@@ -211,7 +211,7 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
     # This is in a loop so that one db query handles both cases.
     while { $as_types_lists_len == 0 && $db_read_count < 2 } {
         incr db_read_count
-        set as_types_lists [db_list_of_lists get_all_as_types_defaults "select id,label,title from hf_asset_type limit 2"]
+        set as_types_lists [db_list_of_lists get_all_as_types_defaults "select id,label,name from hf_asset_type limit 2"]
         set as_types_lists_len [llength $as_types_lists]
         if { $as_types_lists_len == 0 } {
             # This is the first run of the first instance. 
@@ -228,16 +228,16 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
             foreach def_as_type_list $ast_d_lists {
                 set asset_type_id [lindex $def_as_type_list 0]
                 set label [lindex $def_as_type_list 1]
-                set title [lindex $def_as_type_list 2]
+                set name [lindex $def_as_type_list 2]
                 db_dml default_as_types_cr {
                     insert into hf_asset_type
-                    (id,label,title)
-                    values (:asset_type_id,:label,:title)
+                    (id,label,name)
+                    values (:asset_type_id,:label,:name)
                 }
                 db_dml default_as_types_cr_i {
                     insert into hf_asset_type
-                    (id,label,title,instance_id)
-                    values (:asset_type_id,:label,:title,:instance_id)
+                    (id,label,name,instance_id)
+                    values (:asset_type_id,:label,:name,:instance_id)
                 }
 
             }
@@ -313,7 +313,7 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                 set ss_id [hf_ss_write ss_arr]
                 unset ss_arr
 
-                ## code procs for returning an array with defaults for use with creating test cases etc.
+                ##code procs for returning an array with defaults for use with creating test cases etc.
 
                 # problem server tests
                 set nowts [dt_systime -gmt 1]
@@ -341,6 +341,7 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                 set ss_id [hf_ss_write ss_arr]
                 
                 array set asset_arr [list \
+##code check table elements here.. is name,title correct? or should be label,name..
                                          asset_type_id "vm" \
                                          name "problemVM" \
                                          title "Problem VM" \
