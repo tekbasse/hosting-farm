@@ -51,7 +51,7 @@ create index hf_asset_type_label_idx on hf_asset_type (label);
 -- a contract applies to an asset that is not a template.
 
 -- Clarification about nomentclature:
--- Naming convention is:    label, name , description
+-- Naming convention is:    label, name, description
 -- This is conistent with OpenACS way.
 -- Old way was:             name,  title, description
 
@@ -82,12 +82,12 @@ CREATE TABLE hf_assets (
     --        ss saas/sw as a service
     --        ns custom domain name service records
     --        ot other
-    asset_type_id   varchar(24) not null DEFAULT '',
+    asset_type_id   varchar(24),
     -- for mapping to ledger and sales attributes, and role-based permissions 
     -- such as pricing, period length, etc
     -- null is same as company_summary.is_exempt=true
-    qal_product_id  varchar(19) not null DEFAULT '',
-    qal_customer_id varchar(19) not null DEFAULT '',
+    qal_product_id  varchar(19),
+    qal_customer_id varchar(19),
     -- A user readable reference.
     -- One word reference aka a name, sku or readable id.
     -- Must be unique within one instance_id.
@@ -102,36 +102,36 @@ CREATE TABLE hf_assets (
     -- see server.templated
     -- set to one if this asset is derived from a template
     -- should only be 1 when template_p eq 0
-    templated_p     varchar(1) not null DEFAULT '0',
+    templated_p     varchar(1) DEFAULT '0',
 
     -- replacing vm_template with more general asset templating
     -- template means this is an archetype asset. copy it to create new asset of same type
-    template_p      varchar(1) not null DEFAULT '0',
+    template_p      varchar(1) DEFAULT '0',
     -- becomes/became active
     time_start      timestamptz,
     -- expires/expired on
     time_stop       timestamptz,
-    -- ua_id           varchar(19) not null DEFAULT '',
+    -- ua_id           varchar(19),
     -- status aka vm_to_configure, on,off etc.
     -- use with qal_product_id for vm_to_configure.plan_id
     -- and qal_customer_id for vm_to_configure.company_id
     op_status       varchar(20),
     -- for use with monitoring.
-    trashed_p       varchar(1) not null DEFAULT '0',
+    trashed_p       varchar(1) DEFAULT '0',
     -- last trashed by
-    trashed_by      varchar(19) not null DEFAULT '',
+    trashed_by      varchar(19),
     -- possible future asset analyzing
-    popularity      varchar(19) not null DEFAULT '',
+    popularity      varchar(19),
     -- built-in customization flags
     flags       varchar(12),
-    monitor_p       varchar(1) not null DEFAULT '0',
+    monitor_p       varchar(1) DEFAULT '0',
     -- mainly for promoting clients by linking to their website
     -- was table.advert_link
     -- If 1, provide a link to page 'label' of local implementation of q-wiki
     -- that implements q-wiki with hf_permissions_p
-    publish_p      varchar(1) not null DEFAULT '0',
+    publish_p      varchar(1) DEFAULT '0',
     -- when monitoring, higher value is higher priority for alerts, alert reponses
-    triage_priority varchar(19) not null DEFAULT ''
+    triage_priority varchar(19) 
 );
 
 create index hf_assets_asset_id_idx on hf_assets (asset_id);
@@ -160,7 +160,7 @@ CREATE TABLE hf_asset_rev_map (
        -- aka revision_id
        -- points to an hf_assets.asset_id
        asset_id    integer not null,
-       trashed_p   varchar(1) not null DEFAULT '0'
+       trashed_p   varchar(1) DEFAULT '0'
 
 );
 
@@ -193,12 +193,12 @@ CREATE TABLE hf_sub_asset_map (
     sub_label       varchar(65),
     -- Answers question: is sub asset an attribute?
     -- An alternate question, is sub asset an asset? but that may be confusing.
-    attribute_p     varchar(1) not null DEFAULT '1',
+    attribute_p     varchar(1) DEFAULT '1',
     -- subtype trashed? ie mapping trashed_p
     -- Trash a sub_type_id and create a new one
     -- to provide attribute level revisioning.
     -- Trash a sub_type_id to remove a sub asset from an asset.
-    trashed_p   varchar(1) not null DEFAULT '0'
+    trashed_p   varchar(1) DEFAULT '0'
 );
 
 create index hf_sub_asset_map_instance_id_idx on hf_sub_asset_map (instance_id);
@@ -213,15 +213,15 @@ create index hf_sub_asset_map_trashed_p_idx on hf_sub_asset_map (trashed_p);
 CREATE TABLE hf_asset_type_features (
     instance_id          integer,
     -- feature.id
-    id                   integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+    id                   integer unique DEFAULT nextval ( 'hf_id_seq' ),
     -- hf_asset_type.id
-    asset_type_id        varchar(24) not null DEFAULT '',
+    asset_type_id        varchar(24),
     -- null
     -- s
     label                varchar(40),
     -- aka feature.short_name
     feature_type         varchar(12),
-    publish_p            varchar(1) not null DEFAULT '0',
+    publish_p            varchar(1) DEFAULT '0',
     -- aka feature.name or one_line_description
     title                varchar(85),
     description          text
@@ -236,9 +236,9 @@ create index hf_asset_type_features_label_idx on hf_asset_type_features (label);
 CREATE TABLE hf_ns_records (
        instance_id integer,
        -- ns_id
-       id          integer not null DEFAULT nextval ( 'hf_id_seq' ),
+       id          integer DEFAULT nextval ( 'hf_id_seq' ),
        -- should be validated before allowed to go live.
-       active_p    integer not null DEFAULT '0',
+       active_p    integer DEFAULT '0',
        -- DNS records to be added to domain name service
        -- These are to be auto built by UI and system widgets 
        -- using availabe data. Or custom text edited as needed.
@@ -260,7 +260,7 @@ CREATE TABLE hf_ns_records (
        name_record    text,
        user_id        integer,
        time_trashed   timestamptz,
-       time_created   timestamptz not null DEFAULT now()
+       time_created   timestamptz DEFAULT now()
 );
 
 create index hf_ns_records_instance_id_idx on hf_ns_records (instance_id);
@@ -269,13 +269,13 @@ create index hf_ns_records_active_p_idx on hf_ns_records (active_p);
 
 CREATE TABLE hf_data_centers (
     instance_id integer,
-    dc_id       integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+    dc_id       integer unique DEFAULT nextval ( 'hf_id_seq' ),
     -- was datacenter.short_code
     affix       varchar(20),
     description varchar(80),
     details     text,
     time_trashed   timestamptz,
-    time_created   timestamptz not null DEFAULT now()
+    time_created   timestamptz DEFAULT now()
 );
 
 create index hf_data_centers_instance_id_idx on hf_data_centers (instance_id);
@@ -285,17 +285,17 @@ create index hf_data_centers_affix_idx on hf_data_centers (affix);
 
 CREATE TABLE hf_hardware (
     instance_id integer,
-    hw_id       integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+    hw_id       integer unique DEFAULT nextval ( 'hf_id_seq' ),
     -- following aka backup_config.server_name backup_server
     system_name varchar(200),
     backup_sys  varchar(200),
     -- network interface id, this is the remote console (primary only, if more than one)
-    -- ni_id       varchar(19) not null DEFAULT '',
-    os_id       varchar(19) not null DEFAULT '',
+    -- ni_id       varchar(19),
+    os_id       varchar(19),
     description varchar(200),
     details     text,
     time_trashed   timestamptz,
-    time_created   timestamptz not null DEFAULT now()
+    time_created   timestamptz DEFAULT now()
 );
 
 create index hf_hardware_instance_id_idx on hf_hardware (instance_id);
@@ -304,21 +304,21 @@ create index hf_hardware_hw_id_idx on hf_hardware (hw_id);
 
 CREATE TABLE hf_virtual_machines (
     instance_id   integer,
-    vm_id         integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+    vm_id         integer unique DEFAULT nextval ( 'hf_id_seq' ),
     domain_name   varchar(300),
-    -- ip_id         varchar(19) not null DEFAULT '',
+    -- ip_id         varchar(19),
     -- network interface id. This is duplicate of hf_assets.ni_id. Ideally, see hf_assets only.
     -- If there is more than one ns_id, create an hf_vm_ni_map
     -- Leaving this here for now, because 60+ cases of ni_id in hosting-farm-procs ATM.
     -- It is more important to write to both places the same and get project to first release.
     -- Remove later.
-    -- ni_id         varchar(19) not null DEFAULT '',
+    -- ni_id         varchar(19),
     -- DNS record id
-    -- ns_id         varchar(19) not null DEFAULT '',
-    os_id         varchar(19) not null DEFAULT '',
+    -- ns_id         varchar(19),
+    os_id         varchar(19),
     -- from database_server.type_id
     --      server.server_type
-    server_type       varchar(19) not null DEFAULT '',
+    server_type       varchar(19),
     -- was vm_template.path
     resource_path varchar(300),
     -- was vm_template.mount_union
@@ -326,7 +326,7 @@ CREATE TABLE hf_virtual_machines (
     -- vm_feature table goes here if casual, or see hf_asset_feature_map
     details       text,
     time_trashed   timestamptz,
-    time_created   timestamptz not null DEFAULT now()
+    time_created   timestamptz DEFAULT now()
 );
 
 create index hf_virtual_machines_vm_instance_id_idx on hf_virtual_machines (instance_id);
@@ -350,7 +350,7 @@ CREATE TABLE hf_network_interfaces (
     ipv4_addr_range    varchar(20),
     ipv6_addr_range    varchar(50),
     time_trashed   timestamptz,
-    time_created   timestamptz not null DEFAULT now()
+    time_created   timestamptz DEFAULT now()
 );
 
 create index hf_network_interfaces_instance_id_idx on hf_network_interfaces (instance_id);
@@ -366,7 +366,7 @@ CREATE TABLE hf_ip_addresses (
     -- 0 down, 1 up
     ipv6_status  integer,
     time_trashed   timestamptz,
-    time_created   timestamptz not null DEFAULT now()
+    time_created   timestamptz DEFAULT now()
 );
 
 create index hf_ip_addresses_instance_id_idx on hf_ip_addresses (instance_id);
@@ -382,11 +382,11 @@ CREATE TABLE hf_operating_systems (
     brand               varchar(80),
     version             varchar(300),
     kernel              varchar(300),
-    orphaned_p          varchar(1) not null DEFAULT '0',
-    requires_upgrade_p  varchar(1) not null DEFAULT '0',
+    orphaned_p          varchar(1) DEFAULT '0',
+    requires_upgrade_p  varchar(1) DEFAULT '0',
     description         text,
     time_trashed   timestamptz,
-    time_created   timestamptz not null DEFAULT now()
+    time_created   timestamptz DEFAULT now()
 );
 
 create index hf_operating_systems_instance_id_idx on hf_operating_systems (instance_id);
@@ -410,7 +410,7 @@ CREATE TABLE hf_vm_quotas (
   description        varchar(40) not null,
   base_storage       integer not null,
   base_traffic       integer not null,
-  base_memory        varchar(19) not null DEFAULT '',
+  base_memory        varchar(19),
   base_sku           varchar(40) not null,
   over_storage_sku   varchar(40) not null,
   over_traffic_sku   varchar(40) not null,
@@ -418,18 +418,18 @@ CREATE TABLE hf_vm_quotas (
   -- unit is amount per quantity of one sku
   storage_unit       integer not null,
   traffic_unit       integer not null,
-  memory_unit        varchar(19) not null DEFAULT '',
+  memory_unit        varchar(19),
   -- was QEMU_memory
-  vmm_memory         varchar(19) not null DEFAULT '',
-  status_id          varchar(19) not null DEFAULT '',
+  vmm_memory         varchar(19),
+  status_id          varchar(19),
   -- shows as 1 or 2 (means?)
-  vm_type            varchar(19) not null DEFAULT '',
+  vm_type            varchar(19),
   -- was vm_group (0 to 3) means?
-  max_domain         varchar(19) not null DEFAULT '',
+  max_domain         varchar(19),
   private_vps        varchar(1),
   -- plan.high_end is ambiguous and isn't differentiated from private_vps, so ignoring.
   time_trashed   timestamptz,
-  time_created   timestamptz not null DEFAULT now()
+  time_created   timestamptz DEFAULT now()
 );
 
 create index hf_vm_quotas_instance_id_idx on hf_vm_quotas (instance_id);
@@ -446,7 +446,7 @@ CREATE TABLE hf_vhosts (
     domain_name varchar(200),
     details     text,
     time_trashed   timestamptz,
-    time_created   timestamptz not null DEFAULT now()
+    time_created   timestamptz DEFAULT now()
 );
 
 create index hf_vhosts_instance_id_idx on hf_vhosts (instance_id); 
@@ -468,7 +468,7 @@ CREATE TABLE hf_services (
     protocol        varchar(40),
     port            varchar(40),
   -- was database_user_id
-    -- ua_id           varchar(19) not null DEFAULT '',
+    -- ua_id           varchar(19),
     -- from database_server.type_id 
     -- type can be: db, protocol, generic daemon etc.    port integer,
     ss_type         varchar(24),
@@ -480,11 +480,11 @@ CREATE TABLE hf_services (
     ss_ultrasubtype varchar(24),
     config_uri      varchar(300),
     -- following from database_memory_detail
-    memory_bytes    varchar(19) not null DEFAULT '',
+    memory_bytes    varchar(19),
     --runtime is part of hf_assets start or monitor_log
     details         text,
     time_trashed   timestamptz,
-    time_created   timestamptz not null DEFAULT now()
+    time_created   timestamptz DEFAULT now()
 );
 
 create index hf_services_instance_id_idx on hf_services (instance_id);
@@ -533,9 +533,9 @@ CREATE TABLE hf_monitor_config_n_control (
     monitor_id                integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     asset_id                  integer not null,
     label                     varchar(200) not null,
-    active_p                  varchar(1) not null DEFAULT '0',
+    active_p                  varchar(1) DEFAULT '0',
     -- log args into hf_beat_stack.proc_args?
-    log_args_p                varchar(1) not null DEFAULT '0',
+    log_args_p                varchar(1) DEFAULT '0',
     -- number of portions to use in frequency distribution curve
     portions_count            integer not null,
     -- allow some control over how the distribution curves are represented:
@@ -547,13 +547,13 @@ CREATE TABLE hf_monitor_config_n_control (
     -- 0% rarely triggers, 100% triggers on most everything.
     health_percentile_trigger numeric,
     -- the health_value matching health_percentile_trigger
-    health_threshold          varchar(19) not null DEFAULT '',
+    health_threshold          varchar(19),
     -- If privilege specified, all users with permission of type privilege get notified.
     alert_by_privilege     varchar(12),
     -- If not null, alerts are sent to specified user(s) of specified role
     alert_by_role varchar(300),
     time_trashed   timestamptz,
-    time_created   timestamptz not null DEFAULT now()
+    time_created   timestamptz DEFAULT now()
 );
 
 create index hf_monitor_config_n_control_instance_id_idx on hf_monitor_config_n_control (instance_id);
@@ -576,7 +576,7 @@ CREATE TABLE hf_monitor_log (
     -- 10000 nominal, allows for variable performance issues
     -- Ideal health index should be in range of 0 to 20000.
     -- health = numeric summary indicator determined by hf_procs
-    health               varchar(19) not null DEFAULT '',
+    health               varchar(19),
     -- latest report from monitoring
     report text,
     -- sysadmins can log significant changes to asset, such as sw updates
@@ -596,18 +596,18 @@ CREATE TABLE hf_monitor_status (
     monitor_id                 integer unique not null,
     asset_id                   varchar(19) not null DEFAULT '',
     --  analysis_id at p0
-    analysis_id_p0             varchar(19) not null DEFAULT '',
+    analysis_id_p0             varchar(19),
     -- most recent analysis_id ie at p1
-    analysis_id_p1             varchar(19) not null DEFAULT '',
+    analysis_id_p1             varchar(19),
     -- health at p0
-    health_p0                  varchar(19) not null DEFAULT '',
+    health_p0                  varchar(19),
     -- for calculating differential, p1 is always 1, just as p0 is 0
     -- health at p1
-    health_p1                  varchar(19) not null DEFAULT '',
-    health_percentile          varchar(19) not null DEFAULT '',
+    health_p1                  varchar(19),
+    health_percentile          varchar(19),
     -- 
-    expected_health            varchar(19) not null DEFAULT '',
-    expected_percentile        varchar(19) not null DEFAULT ''
+    expected_health            varchar(19),
+    expected_percentile        varchar(19) 
 );
 
 create index hf_monitor_status_instance_id_idx on hf_monitor_status (instance_id);
@@ -623,13 +623,13 @@ CREATE TABLE hf_monitor_statistics (
     monitor_id      integer not null,
     -- same as hf_monitor_status.analysis_id_p1
     analysis_id     bigint not null,
-    sample_count    varchar(19) not null DEFAULT '',
+    sample_count    varchar(19),
     -- range_min is minimum value of hf_monitor_log.report_id used.
-    range_min       varchar(19) not null DEFAULT '',
+    range_min       varchar(19),
     -- range_max is current hf_monitor_log.report_id
-    range_max       varchar(19) not null DEFAULT '',
-    health_max      varchar(19) not null DEFAULT '',
-    health_min      varchar(19) not null DEFAULT '',
+    range_max       varchar(19),
+    health_max      varchar(19),
+    health_min      varchar(19),
     health_average  numeric,
     health_median   numeric,
     -- first and pre-last n-tiles are more stable versions of range min/max
@@ -703,9 +703,9 @@ CREATE TABLE hf_calls (
     proc_name varchar(40) not null,
     -- in order of increasing specificity to allow for system-wide exceptions
     -- of calling another proc for a more specific asset
-    asset_type_id varchar(24) not null DEFAULT '',
-    asset_template_id varchar(19) not null DEFAULT '',
-    asset_id varchar(19) not null DEFAULT ''
+    asset_type_id varchar(24),
+    asset_template_id varchar(19),
+    asset_id varchar(19) 
     -- permissions always uses asset_id
 );
 
