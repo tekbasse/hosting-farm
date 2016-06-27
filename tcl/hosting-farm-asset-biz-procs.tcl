@@ -79,7 +79,7 @@ ad_proc -public hf_asset_write {
     set write_p [hf_ui_go_ahead_q write f_id "" 0]
     set new_asset_id ""
     if { $write_p } {
-        set asset_exists_p [hf_f_id_exists $f_id]
+        set asset_exists_p [hf_f_id_exists_q $f_id]
         if { $asset_exists_p } {
             set old_asset_id $asset_id
             set asset_id [db_nextval hf_id_seq]
