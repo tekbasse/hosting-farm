@@ -369,8 +369,8 @@ ad_proc -private hf_asset_rev_map_update {
     } else {
         ns_log Notice "hf_asset_rev_map_update: create label '${label}' asset_id '${asset_id}' trashed_p '${trashed_p}' instance_id '${instance_id}'"
         db_dml hf_asset_label_create { insert into hf_asset_rev_map
-            ( label, asset_id, trashed_p, instance_id )
-            values ( :label, :asset_id, :trashed_p, :instance_id ) }
+            (label,asset_id,f_id,trashed_p,instance_id)
+            values (:label,:asset_id,:f_id,:trashed_p,:instance_id) }
     }
     return 1
 }
