@@ -181,7 +181,7 @@ drop index hf_assets_user_id_idx;
 drop index hf_assets_template_id_idx;
 drop index hf_assets_instance_id_idx;
 drop index hf_assets_f_id_idx;
-drop index hf_assets_id_idx;
+drop index hf_assets_asset_id_idx;
 
 DROP TABLE hf_assets;
 

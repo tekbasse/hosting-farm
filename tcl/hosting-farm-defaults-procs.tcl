@@ -44,13 +44,14 @@ ad_proc -private hf_asset_defaults {
                    flags "" \
                    template_id "" \
                    f_id "" ]
-
+    set asset_list [list ]
     foreach {key value} $asset {
+        lappend asset_list $key
         if { ![info exists asset_arr(${key}) ] } {
             set asset_arr(${key}) $value
         }
     }
-    if { [llength [set_difference_named_v asset [hf_asset_keys]]] > 0 } {
+    if { [llength [set_difference_named_v asset_list [hf_asset_keys]]] > 0 } {
         ns_log Warning "hf_asset_defaults: Update this proc. \
 It is out of sync with hf_asset_keys"
     }
@@ -111,12 +112,14 @@ ad_proc -private hf_ss_defaults {
                 details "" \
                 time_trashed "" \
                 time_created $nowts]
+    set ss_list [list ]
     foreach {key value} $ss {
+        lappend ss_list $key
         if { ![info exists ss_arr(${key}) ] } {
             set ss_arr(${key}) $value
         }
     }
-    if { [llength [set_difference_named_v ss [hf_ss_keys]]] > 0 } {
+    if { [llength [set_difference_named_v ss_list [hf_ss_keys]]] > 0 } {
         ns_log Warning "hf_ss_defaults: Update this proc. \
 It is out of sync with hf_ss_keys"
     }
@@ -144,13 +147,15 @@ ad_proc -private hf_monitor_configs_defaults {
                              health_threshold "" \
                              interval_s "" \
                              alert_by_privilege "" \
-                             alert_by_role "" \
+                             alert_by_role ""]
+    set monitor_configs_list [list ]
     foreach {key value} $monitor_configs {
+        lappend monitor_configs_list $key
         if { ![info exists monitor_configs_arr(${key}) ] } {
             set monitor_configs_arr(${key}) $value
         }
     }
-    if { [llength [set_difference_named_v monitor_configs \
+    if { [llength [set_difference_named_v monitor_configs_list \
                        [hf_monitor_configs_keys]]] > 0 } {
         ns_log Warning "hf_monitor_configs_defaults: Update this proc. \
 It is out of sync with hf_monitor_configs_keys"
@@ -179,12 +184,14 @@ ad_proc -private hf_os_defaults {
                 description "" \
                 time_trashed "" \
                 time_created $nowts]
+    set os_list [list ]
     foreach {key value} $os {
+        lappend os_list $key
         if { ![info exists os_arr(${key}) ] } {
             set os_arr(${key}) $value
         }
     }
-    if { [llength [set_difference_named_v os [hf_os_keys]]] > 0 } {
+    if { [llength [set_difference_named_v os_list [hf_os_keys]]] > 0 } {
         ns_log Warning "hf_os_defaults: Update this proc. \
 It is out of sync with hf_os_keys"
     }
@@ -221,12 +228,14 @@ ad_proc -private hf_vm_quota_defaults {
                       private_vps "" \
                       time_trashed "" \
                       time_created $nowts]
+    set vm_quota_list [list ]
     foreach {key value} $vm_quota {
+        lappend vm_quota_list $key
         if { ![info exists vm_quota_arr(${key}) ] } {
             set vm_quota_arr(${key}) $value
         }
     }
-    if { [llength [set_difference_named_v vm_quota [hf_vm_quota_keys]]] > 0 } {
+    if { [llength [set_difference_named_v vm_quota_list [hf_vm_quota_keys]]] > 0 } {
         ns_log Warning "hf_vm_quota_defaults: Update this proc. \
 It is out of sync with hf_vm_quota_keys"
     }
@@ -254,7 +263,9 @@ ad_proc -private hf_vm_defaults {
                 details "" \
                 time_trashed "" \
                 time_created $nowts]
+    set vm_list [list ]
     foreach {key value} $vm {
+        lappend vm_list $key
         if { ![info exists vm_arr(${key}) ] } {
             set vm_arr(${key}) $value
         }
@@ -282,12 +293,14 @@ ad_proc -private hf_vh_defaults {
                 details "" \
                 time_trashed "" \
                 time_created $nowts]
+    set vh_list [list ]
     foreach {key value} $vh {
+        lappend vh_list $key
         if { ![info exists vh_arr(${key}) ] } {
             set vh_arr(${key}) $value
         }
     }
-    if { [llength [set_difference_named_v vh [hf_vh_keys]]] > 0 } {
+    if { [llength [set_difference_named_v vh_list [hf_vh_keys]]] > 0 } {
         ns_log Warning "hf_vh_defaults: Update this proc. \
 It is out of sync with hf_vh_keys"
     }
@@ -312,12 +325,14 @@ ad_proc -private hf_dc_defaults {
                 details "" \
                 time_trashed "" \
                 time_created $nowts]
+    set dc_list [list ]
     foreach {key value} $dc {
+        lappend dc_list $key
         if { ![info exists dc_arr(${key}) ] } {
             set dc_arr(${key}) $value
         }
     }
-    if { [llength [set_difference_named_v dc [hf_dc_keys]]] > 0 } {
+    if { [llength [set_difference_named_v dc_list [hf_dc_keys]]] > 0 } {
         ns_log Warning "hf_dc_defaults: Update this proc. \
 It is out of sync with hf_dc_keys"
     }
@@ -344,12 +359,14 @@ ad_proc -private hf_hw_defaults {
                 details "" \
                 time_trashed "" \
                 time_created $nowts]
+    set hw_list [list ]
     foreach {key value} $hw {
+        lappend hw_list $key
         if { ![info exists hw_arr(${key}) ] } {
             set hw_arr(${key}) $value
         }
     }
-    if { [llength [set_difference_named_v hw [hf_hw_keys]]] > 0 } {
+    if { [llength [set_difference_named_v hw_list [hf_hw_keys]]] > 0 } {
         ns_log Warning "hf_hw_defaults: Update this proc. \
 It is out of sync with hf_hw_keys"
     }
@@ -374,12 +391,14 @@ ad_proc -private hf_ip_defaults {
                 ipv6_status "" \
                 time_trashed "" \
                 time_created $nowts]
+    set ip_list [list ]
     foreach {key value} $ip {
+        lappend ip_list $key
         if { ![info exists ip_arr(${key}) ] } {
             set ip_arr(${key}) $value
         }
     }
-    if { [llength [set_difference_named_v ip [hf_ip_keys]]] > 0 } {
+    if { [llength [set_difference_named_v ip_list [hf_ip_keys]]] > 0 } {
         ns_log Warning "hf_ip_defaults: Update this proc. \
 It is out of sync with hf_ip_keys"
     }
@@ -405,12 +424,14 @@ ad_proc -private hf_ni_defaults {
                 ipv6_addr_range "" \
                 time_trashed "" \
                 time_created $nowts]
+    set ni_list [list ]
     foreach {key value} $ni {
+        lappend ni_list $key
         if { ![info exists ni_arr(${key}) ] } {
             set ni_arr(${key}) $value
         }
     }
-    if { [llength [set_difference_named_v ni [hf_ni_keys]]] > 0 } {
+    if { [llength [set_difference_named_v ni_list [hf_ni_keys]]] > 0 } {
         ns_log Warning "hf_ni_defaults: Update this proc. \
 It is out of sync with hf_ni_keys"
     }
@@ -433,12 +454,14 @@ ad_proc -private hf_ns_defaults {
                 name_record "" \
                 time_trashed "" \
                 time_created $nowts]
+    set ns_list [list ]
     foreach {key value} $ns {
+        lappend ns_list $key
         if { ![info exists ns_arr(${key}) ] } {
             set ns_arr(${key}) $value
         }
     }
-    if { [llength [set_difference_named_v ns [hf_ns_keys]]] > 0 } {
+    if { [llength [set_difference_named_v ns_list [hf_ns_keys]]] > 0 } {
         ns_log Warning "hf_ns_defaults: Update this proc. \
 It is out of sync with hf_ns_keys"
     }

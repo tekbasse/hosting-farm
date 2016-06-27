@@ -63,7 +63,7 @@ CREATE TABLE hf_assets (
     instance_id    integer,
     -- An asset_id. See hf_asset_label_map.asset_id
     -- A revision of hf_asset_label_map.f_id
-    id             integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+    asset_id             integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- following 3 fields are similar in use to q-wiki template mapping
     -- f_id is similar usage as template_id in q-wiki
     -- f_id is fixed for all revisions of an asset
@@ -97,7 +97,7 @@ CREATE TABLE hf_assets (
     label           varchar(65),
     -- A pretty version of label, spaces allowed etc
     name           varchar(65),
-    -- If this is a copy of a template, is original template hf_assets.id
+    -- If this is a copy of a template, is original template hf_assets.asset_id
     template_id     integer,
     -- see server.templated
     -- set to one if this asset is derived from a template
@@ -134,7 +134,7 @@ CREATE TABLE hf_assets (
     triage_priority varchar(19) not null DEFAULT ''
 );
 
-create index hf_assets_id_idx on hf_assets (id);
+create index hf_assets_asset_id_idx on hf_assets (asset_id);
 create index hf_assets_f_id_idx on hf_assets (f_id);
 create index hf_assets_instance_id_idx on hf_assets (instance_id);
 create index hf_assets_template_id_idx on hf_assets (template_id);
@@ -158,7 +158,7 @@ CREATE TABLE hf_asset_rev_map (
        -- Unique for an instance_id
        f_id       integer not null,
        -- aka revision_id
-       -- points to an hf_assets.id
+       -- points to an hf_assets.asset_id
        asset_id    integer not null,
        trashed_p   varchar(1) not null DEFAULT '0'
 
