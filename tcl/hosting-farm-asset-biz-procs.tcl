@@ -48,10 +48,6 @@ ad_proc -public hf_asset_create {
             db_dml hf_asset_create "insert into hf_assets
                 ([hf_asset_keys ","])
             values ([hf_asset_keys ",:"])" 
-            db_dml hf_asset_label_update { update hf_asset_rev_map
-                set asset_id=:asset_id, label=:label
-                where f_id=:f_id and instance_id=:instance_id
-            }
             hf_asset_rev_map_update $label $f_id $asset_id $trashed_p
             ns_log Notice "hf_asset_create: hf_asset_create id '$asset_id' \
 f_id '$f_id' label '$label' instance_id '$instance_id' user_id '$user_id'"
