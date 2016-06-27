@@ -543,7 +543,7 @@ ad_proc -private hf_vh_write {
     set attribute_p "1"
 
     qf_array_to_vars arr_name [hf_vh_keys]
-    set new_vh_id ""
+    set vh_id_new ""
     set status -1
     if { $vh_id ne "" } {
         # existing attribute
@@ -597,7 +597,7 @@ ad_proc -private hf_dc_write {
     set attribute_p "1"
 
     qf_array_to_vars arr_name [hf_dc_keys]
-    set new_dc_id ""
+    set dc_id_new ""
     set status -1
     if { $dc_id ne "" } {
         # existing attribute
@@ -651,7 +651,7 @@ ad_proc -private hf_hw_write {
     set attribute_p "1"
 
     qf_array_to_vars arr_name [hf_hw_keys]
-    set new_hw_id ""
+    set hw_id_new ""
     set status -1
     if { $hw_id ne "" } {
         # existing attribute
@@ -704,7 +704,7 @@ ad_proc -private hf_vm_write {
     set attribute_p "1"
 
     qf_array_to_vars arr_name [hf_vm_keys]
-    set new_vm_id ""
+    set vm_id_new ""
     set status -1
     if { $vm_id ne "" } {
         # existing attribute
@@ -757,7 +757,7 @@ ad_proc -private hf_ss_write {
     set attribute_p "1"
 
     qf_array_to_vars arr_name [hf_ss_keys]
-    set new_ss_id ""
+    set ss_id_new ""
     set status -1
     if { $ss_id ne "" } {
         # existing attribute
@@ -810,7 +810,7 @@ ad_proc -private hf_ip_write {
     set attribute_p "1"
 
     qf_array_to_vars arr_name [hf_ip_keys]
-    set new_ip_id ""
+    set ip_id_new ""
     set status -1
     if { $ip_id ne "" } {
         # existing attribute
@@ -863,7 +863,7 @@ ad_proc -private hf_ni_write {
     set attribute_p "1"
 
     qf_array_to_vars arr_name [hf_ni_keys]
-    set new_ni_id ""
+    set ni_id_new ""
     set status -1
     if { $ni_id ne "" } {
         # existing attribute
@@ -916,7 +916,7 @@ ad_proc -private hf_os_write {
     set attribute_p "1"
 
     qf_array_to_vars arr_name [hf_os_keys]
-    set new_os_id ""
+    set os_id_new ""
     set status -1
     if { $os_id ne "" } {
         # existing attribute
@@ -969,7 +969,7 @@ ad_proc -private hf_ns_write {
     set attribute_p "1"
 
     qf_array_to_vars arr_name [hf_ns_keys]
-    set new_ns_id ""
+    set ns_id_new ""
     set status -1
     if { $ns_id ne "" } {
         # existing attribute
