@@ -321,7 +321,7 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                 set randlabel [hf_domain_example]
                 array set ss_arr [list \
                                       label $randlabel \
-                                      name "Problem SS" \
+                                      name "$randlabel problem SS" \
                                       asset_type_id "ss" \
                                       instance_id $instance_id \
                                       user_id $sysowner_user_id]
@@ -344,7 +344,7 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                 array set asset_arr [list \
                                          asset_type_id "vm" \
                                          label $randlabel \
-                                         name "${label} gone bad" \
+                                         name "${randlabel} problem" \
                                          user_id $sysowner_user_id ]
                 set asset_id [hf_asset_create asset_arr]
 
@@ -359,32 +359,33 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                 set randlabel [hf_domain_example]
                 array set asset_arr [list \
                                          asset_type_id "vh" \
-                                         name "problemVH" \
-                                         title "Problem VH" \
-                                         description "Demo/vh test" \
+                                         label $randlabel \
+                                         name "${randlabel} problem VH" \
                                          user_id $sysowner_user_id ]
                 set asset_id [hf_asset_create asset_arr]
                 set vh_domain [hf_domain_example ""]
                 array set asset_arr [list \
                                          domain_name $vh_domain]
                 set vh_id [hf_vh_write asset_arr ]
-
-
                 array set asset_arr [list \
-                                         name_record "problem NS record for $vh_domain" \
+                                         name_record "/* problem NS record for $vh_domain */" \
                                          active_p "1"]
                 set ns_id [hf_ns_write asset_arr]
 
-
+                # make a bad dc
                 array unset asset_arr
+                set randlabel [hf_domain_example]
                 array set asset_arr [list \
                                          asset_type_id "dc" \
-                                         name "problemDC" \
-                                         title "Problem DC" \
-                                         description "Demo/dc test" \
+                                         label $randlabel \
+                                         name "${randlabel} problem DC" \
                                          user_id $sysowner_user_id ]
                 set dc_id [hf_dc_write asset_arr ]
-
+                array set asset_arr [list \
+                                         affix [ad_generate_random_string] \
+                                         description "maybe problem DC" \
+                                         details "This is for checking monitor simulations"]
+                set dc_id [hf_dc_write asset_arr]
             }
         }
     }
