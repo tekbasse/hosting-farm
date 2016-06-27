@@ -20,6 +20,7 @@ ad_library {
 #  in each case, add ecds-pagination bar when displaying. 
 #  defaults to all allowed by user permissions
 
+
 ad_proc -private hf_asset_primary_attr {
     asset_id
 } {
@@ -246,6 +247,17 @@ ad_proc -private hf_ss_keys {
     Returns an ordered list of keys for hf_services
 } {
     set keys_list [list instance_id ss_id server_name service_name daemon_ref protocol port ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details time_trashed time_created] 
+    set keys_list [set_union $keys_list [hf_sub_asset_map_keys]]
+    set keys [hf_keys_by $keys_list $separator]
+    return $keys
+}
+
+ad_proc -private hf_sub_asset_keys {
+    {separator ""}
+} {
+    Returns an ordered list of keys for hf_sub_asset_map.
+} {
+    set keys_list [list instance_id f_id type_id sub_f_id sub_type_id sub_sort_order sub_label attribute_p trashed_p]
     set keys_list [set_union $keys_list [hf_sub_asset_map_keys]]
     set keys [hf_keys_by $keys_list $separator]
     return $keys
