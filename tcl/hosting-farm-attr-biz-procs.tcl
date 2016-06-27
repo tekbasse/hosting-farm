@@ -911,7 +911,7 @@ ad_proc -private hf_os_write {
 } {
     # requires f_id
     upvar 1 $os_arr_name arr_name
-
+    upvar 1 instance_id instance_id
     hf_os_defaults arr_name
     set attribute_p "1"
 
@@ -964,7 +964,7 @@ ad_proc -private hf_ns_write {
 } {
     # requires f_id
     upvar 1 $ns_arr_name arr_name
-
+    upvar 1 instance_id instance_id
     hf_ns_defaults arr_name
     set attribute_p "1"
 
@@ -1017,6 +1017,7 @@ ad_proc -private hf_vm_quota_write {
     Otherwise empty string is returned.
 } {
     upvar 1 $vm_quota_arr_name arr_name
+    upvar 1 instance_id instance_id
     hf_vm_quota_defaults arr_name
     qf_array_to_vars $arr_name [hf_vm_quota_keys]
 
