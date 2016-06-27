@@ -571,6 +571,13 @@ attribute does not exist. vh_id '${vh_id} f_id '${f_id}'"
                 set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
                 set time_created $nowts
                 set sub_type_id "vh"
+                if { $type_id eq "" } {
+                    if { [info exists asset_type_id] } {
+                        set type_id $asset_type_id
+                    } else {
+                        set type_id [hf_asset_type_id_of_asset_id $f_id]
+                    }
+                }
                 db_dml vh_sub_asset_map_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }
@@ -625,7 +632,14 @@ attribute does not exist. dc_id '${dc_id} f_id '${f_id}'"
                 set dc_id $dc_id_new
                 set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
                 set time_created $nowts
-                set sub_type_id "vh"
+                set sub_type_id "dc"
+                if { $type_id eq "" } {
+                    if { [info exists asset_type_id] } {
+                        set type_id $asset_type_id
+                    } else {
+                        set type_id [hf_asset_type_id_of_asset_id $f_id]
+                    }
+                }
                 db_dml dc_sub_asset_map_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }
@@ -680,7 +694,14 @@ attribute does not exist. hw_id '${hw_id} f_id '${f_id}'"
                 set hw_id $hw_id_new
                 set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
                 set time_created $nowts
-                set sub_type_id "vh"
+                set sub_type_id "vw"
+                if { $type_id eq "" } {
+                    if { [info exists asset_type_id] } {
+                        set type_id $asset_type_id
+                    } else {
+                        set type_id [hf_asset_type_id_of_asset_id $f_id]
+                    }
+                }
                 db_dml hw_sub_asset_map_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }
@@ -734,7 +755,14 @@ ad_proc -private hf_vm_write {
                 set vm_id $vm_id_new
                 set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
                 set time_created $nowts
-                set sub_type_id "vh"
+                set sub_type_id "vm"
+                if { $type_id eq "" } {
+                    if { [info exists asset_type_id] } {
+                        set type_id $asset_type_id
+                    } else {
+                        set type_id [hf_asset_type_id_of_asset_id $f_id]
+                    }
+                }
                 db_dml vm_sub_asset_map_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }
@@ -788,7 +816,14 @@ attribute does not exist. ss_id '${ss_id} f_id '${f_id}'"
                 set ss_id $ss_id_new
                 set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
                 set time_created $nowts
-                set sub_type_id "vh"
+                set sub_type_id "ss"
+                if { $type_id eq "" } {
+                    if { [info exists asset_type_id] } {
+                        set type_id $asset_type_id
+                    } else {
+                        set type_id [hf_asset_type_id_of_asset_id $f_id]
+                    }
+                }
                 db_dml ss_sub_asset_map_create "insert into hf_sub_asset_map \
  ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }
@@ -842,7 +877,14 @@ attribute does not exist. ip_id '${ip_id} f_id '${f_id}'"
                 set ip_id $ip_id_new
                 set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
                 set time_created $nowts
-                set sub_type_id "vh"
+                set sub_type_id "ip"
+                if { $type_id eq "" } {
+                    if { [info exists asset_type_id] } {
+                        set type_id $asset_type_id
+                    } else {
+                        set type_id [hf_asset_type_id_of_asset_id $f_id]
+                    }
+                }
                 db_dml ip_sub_asset_map_create "insert into hf_sub_asset_map \
  ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }
@@ -896,7 +938,14 @@ attribute does not exist. ni_id '${ni_id} f_id '${f_id}'"
                 set ni_id $ni_id_new
                 set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
                 set time_created $nowts
-                set sub_type_id "vh"
+                set sub_type_id "ni"
+                if { $type_id eq "" } {
+                    if { [info exists asset_type_id] } {
+                        set type_id $asset_type_id
+                    } else {
+                        set type_id [hf_asset_type_id_of_asset_id $f_id]
+                    }
+                }
                 db_dml ni_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }
             # record revision/new
@@ -950,7 +999,14 @@ attribute does not exist. os_id '${os_id} f_id '${f_id}'"
                 set os_id $os_id_new
                 set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
                 set time_created $nowts
-                set sub_type_id "vh"
+                set sub_type_id "os"
+                if { $type_id eq "" } {
+                    if { [info exists asset_type_id] } {
+                        set type_id $asset_type_id
+                    } else {
+                        set type_id [hf_asset_type_id_of_asset_id $f_id]
+                    }
+                }
                 db_dml os_sub_asset_map_create "insert into hf_sub_asset_map \
  ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }
@@ -1004,7 +1060,14 @@ attribute does not exist. ns_id '${ns_id} f_id '${f_id}'"
                 set ns_id $ns_id_new
                 set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
                 set time_created $nowts
-                set sub_type_id "vh"
+                set sub_type_id "ns"
+                if { $type_id eq "" } {
+                    if { [info exists asset_type_id] } {
+                        set type_id $asset_type_id
+                    } else {
+                        set type_id [hf_asset_type_id_of_asset_id $f_id]
+                    }
+                }
                 db_dml ns_sub_asset_map_create "insert into hf_sub_asset_map \
  ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
             }

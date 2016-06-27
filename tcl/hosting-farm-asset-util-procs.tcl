@@ -187,6 +187,25 @@ ad_proc -private hf_label_of_asset_id {
     return $label
 }
 
+
+ad_proc -private hf_asset_type_id_of_asset_id {
+    asset_id
+} {
+    @param asset_id  
+
+    @return asset_type_id of asset with asset_id, or empty string if not exists.
+} {
+    upvar 1 instance_id instance_id
+    set asset_type_id ""
+    set exists_p [db_0or1row hf_asset_type_id_of_asset_id { select asset_type_id from hf_assets 
+        where asset_id=:asset_id and instance_id=:instance_id } ]
+    if { !$exists_p } {
+        ns_log Notice "hf_asset_type_id_of_asset_id: asset_type_id does not exist for asset_id '${asset_id}' instance_id '${instance_id}'"
+    }
+    return $asset_type_id
+}
+
+
 ad_proc -private hf_asset_id_of_label {
     label
 } {
