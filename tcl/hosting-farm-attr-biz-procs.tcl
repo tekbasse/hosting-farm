@@ -542,7 +542,7 @@ ad_proc -private hf_vh_write {
     hf_vh_defaults arr_name
     set attribute_p "1"
 
-    qf_array_to_vars $arr_name [hf_vh_keys]
+    qf_array_to_vars arr_name [hf_vh_keys]
     set new_vh_id ""
     set status -1
     if { $vh_id ne "" } {
@@ -596,7 +596,7 @@ ad_proc -private hf_dc_write {
     hf_dc_defaults arr_name
     set attribute_p "1"
 
-    qf_array_to_vars $arr_name [hf_dc_keys]
+    qf_array_to_vars arr_name [hf_dc_keys]
     set new_dc_id ""
     set status -1
     if { $dc_id ne "" } {
@@ -650,7 +650,7 @@ ad_proc -private hf_hw_write {
     hf_hw_defaults arr_name
     set attribute_p "1"
 
-    qf_array_to_vars $arr_name [hf_hw_keys]
+    qf_array_to_vars arr_name [hf_hw_keys]
     set new_hw_id ""
     set status -1
     if { $hw_id ne "" } {
@@ -703,7 +703,7 @@ ad_proc -private hf_vm_write {
     hf_vm_defaults arr_name
     set attribute_p "1"
 
-    qf_array_to_vars $arr_name [hf_vm_keys]
+    qf_array_to_vars arr_name [hf_vm_keys]
     set new_vm_id ""
     set status -1
     if { $vm_id ne "" } {
@@ -756,7 +756,7 @@ ad_proc -private hf_ss_write {
     hf_ss_defaults arr_name
     set attribute_p "1"
 
-    qf_array_to_vars $arr_name [hf_ss_keys]
+    qf_array_to_vars arr_name [hf_ss_keys]
     set new_ss_id ""
     set status -1
     if { $ss_id ne "" } {
@@ -809,7 +809,7 @@ ad_proc -private hf_ip_write {
     hf_ip_defaults arr_name
     set attribute_p "1"
 
-    qf_array_to_vars $arr_name [hf_ip_keys]
+    qf_array_to_vars arr_name [hf_ip_keys]
     set new_ip_id ""
     set status -1
     if { $ip_id ne "" } {
@@ -862,7 +862,7 @@ ad_proc -private hf_ni_write {
     hf_ni_defaults arr_name
     set attribute_p "1"
 
-    qf_array_to_vars $arr_name [hf_ni_keys]
+    qf_array_to_vars arr_name [hf_ni_keys]
     set new_ni_id ""
     set status -1
     if { $ni_id ne "" } {
@@ -915,7 +915,7 @@ ad_proc -private hf_os_write {
     hf_os_defaults arr_name
     set attribute_p "1"
 
-    qf_array_to_vars $arr_name [hf_os_keys]
+    qf_array_to_vars arr_name [hf_os_keys]
     set new_os_id ""
     set status -1
     if { $os_id ne "" } {
@@ -968,7 +968,7 @@ ad_proc -private hf_ns_write {
     hf_ns_defaults arr_name
     set attribute_p "1"
 
-    qf_array_to_vars $arr_name [hf_ns_keys]
+    qf_array_to_vars arr_name [hf_ns_keys]
     set new_ns_id ""
     set status -1
     if { $ns_id ne "" } {
@@ -1019,7 +1019,7 @@ ad_proc -private hf_vm_quota_write {
     upvar 1 $vm_quota_arr_name arr_name
     upvar 1 instance_id instance_id
     hf_vm_quota_defaults arr_name
-    qf_array_to_vars $arr_name [hf_vm_quota_keys]
+    qf_array_to_vars arr_name [hf_vm_quota_keys]
 
     if { $plan_id ne "" } {
         set exists_p [db_0or1row hf_vm_quota_read_ck {
