@@ -38,7 +38,7 @@ ad_proc -public hf_customer_ids_for_user {
         set user_id [ad_conn user_id]
     }
     #qal_customer_id defined by qal_customer.id accounts-ledger/sql/postgresql/entities-channels-create.sql
-    set qal_customer_ids_list [db_list qal_customer_ids_get "select qal_customer_id from hf_user_roles_map where instance_id =:instance_id and user_id =:user_id"]
+    set qal_customer_ids_list [db_list qal_customer_ids_get "select qal_customer_id from hf_user_roles_map where instance_id=:instance_id and user_id=:user_id"]
     return $qal_customer_ids_list
 }
 
@@ -63,7 +63,7 @@ ad_proc -public hf_active_asset_ids_for_customer {
     set read_p [hf_permission_p $user_id $customer_id assets read $instance_id]
     set asset_ids_list [list ]
     if { $read_p } {
-        set asset_ids_list [db_list asset_ids_for_customer_get "select id from hf_assets where instance_id =:instance_id and qal_customer_id =:customer_id and time_stop > current_timestamp and not (trashed_p = '1') and id in ( select asset_id from hf_asset_label_map where instance_id =:instance_id ) order by last_modified desc"]
+        set asset_ids_list [db_list asset_ids_for_customer_get "select id from hf_assets where instance_id=:instance_id and qal_customer_id=:customer_id and time_stop > current_timestamp and not (trashed_p = '1') and id in ( select asset_id from hf_asset_label_map where instance_id=:instance_id ) order by last_modified desc"]
     }
     return $asset_ids_list
 }
@@ -84,7 +84,7 @@ ad_proc -private hf_property_id {
     set read_p [hf_permission_p $this_user_id $customer_id permissions_properties read $instance_id]
     set exists_p 0
     if { $read_p } {
-        set exists_p [db_0or1row hf_property_id_read "select id from hf_property where instance_id =:instance_id and asset_type_id =:asset_type_id"]
+        set exists_p [db_0or1row hf_property_id_read "select id from hf_property where instance_id=:instance_id and asset_type_id=:asset_type_id"]
     }
     return $exists_p
 }
@@ -143,7 +143,7 @@ ad_proc -private hf_property_delete {
         set exists_p [expr { [hf_property_id $asset_type_id $customer_id $instance_id] > -1 } ]
         if { $exists_p } {
             # delete property
-            db_dml hf_property_delete "delete from hf_property where instance_id =:instance_id and id =:property_id"
+            db_dml hf_property_delete "delete from hf_property where instance_id=:instance_id and id=:property_id"
             set return_val 1
         } 
     } 
@@ -171,12 +171,12 @@ ad_proc -private hf_property_write {
         if { $write_p } {
             # vet input data
             if { [string length [string trim $title]] > 0 && [string length $asset_type_id] > 0 } {
-                set exists_p [db_0or1row hf_property_ck2 "select id from hf_property where instance_id =:instance_id and id =:property_id"]
+                set exists_p [db_0or1row hf_property_ck2 "select id from hf_property where instance_id=:instance_id and id=:property_id"]
                 if { $exists_p } {
                     # update property
                     db_dml hf_property_update {update hf_property 
-                        set title =:title, asset_type_id =:asset_type_id 
-                        where instance_id =:instance_id and property_id =:property_id}
+                        set title=:title, asset_type_id=:asset_type_id 
+                        where instance_id=:instance_id and property_id=:property_id}
                 } else {
                     # create property
                     db_dml hf_property_create {insert into hf_property
@@ -209,7 +209,7 @@ ad_proc -private hf_property_read {
         
         if { $read_p } {
             # use db_list_of_lists to get info, then pop the record out of the list of lists .. to a list.
-            set hf_properties_lists [db_list_of_lists "hf_property_set_read" "select id, title from hf_property where instance_id =:instance_id and asset_type_id =:asset_type_id "]
+            set hf_properties_lists [db_list_of_lists "hf_property_set_read" "select id, title from hf_property where instance_id=:instance_id and asset_type_id=:asset_type_id "]
             set return_list [lindex $hf_properties_lists 0]
         }
     }
@@ -233,7 +233,7 @@ ad_proc -private hf_customer_privileges_this_user {
         set read_p [hf_permission_p $user_id $customer_id permissions_privileges read $instance_id]
         set assigned_roles_list [list ]
         if { $read_p } {
-            set assigned_roles_list [db_list hf_user_roles_customer_read "select hf_role_id from hf_user_roles_map where instance_id =:instance_id and qal_customer_id =:customer_id and user_id =:user_id"]
+            set assigned_roles_list [db_list hf_user_roles_customer_read "select hf_role_id from hf_user_roles_map where instance_id=:instance_id and qal_customer_id=:customer_id and user_id=:user_id"]
         }
     }
     return $assigned_roles_list
@@ -254,7 +254,7 @@ ad_proc -private hf_customer_privileges {
         set this_user_id [ad_conn user_id]
         set read_p [hf_permission_p $this_user_id $customer_id permissions_privileges read $instance_id]
         if { $admin_p } {
-            set assigned_roles_list [db_list_of_lists hf_roles_customer_read "select user_id, hf_role_id from hf_user_roles_map where instance_id =:instance_id and qal_customer_id =:customer_id"]
+            set assigned_roles_list [db_list_of_lists hf_roles_customer_read "select user_id, hf_role_id from hf_user_roles_map where instance_id=:instance_id and qal_customer_id=:customer_id"]
         }
     }
     return $assigned_roles_list
@@ -276,7 +276,7 @@ ad_proc -private hf_privilege_exists_q {
     set read_p [hf_permission_p $this_user_id $customer_id perimssions_roles read $instance_id]
     set exists_p 0
     if { $read_p } {
-        set exists_p [db_0or1row hf_privilege_exists_p "select hf_role_id from hf_user_roles_map where instance_id =:instance_id and qal_customer_id =:customer_id and hf_role_id =:role_id and user_id =:user_id"]
+        set exists_p [db_0or1row hf_privilege_exists_p "select hf_role_id from hf_user_roles_map where instance_id=:instance_id and qal_customer_id=:customer_id and hf_role_id=:role_id and user_id=:user_id"]
     }
     return $exists_p
 }
@@ -296,9 +296,9 @@ ad_proc -private hf_roles_of_user {
         set user_id [ad_conn user_id]
     }
     if { $customer_id eq "" } {
-        set roles_list [db_list hf_roles_of_user "select distinct on (label) label from hf_role where instance_id=:instance_id and id in (select hf_role_id from hf_user_roles_map where instance_id =:instance_id and user_id =:user_id)"] 
+        set roles_list [db_list hf_roles_of_user "select distinct on (label) label from hf_role where instance_id=:instance_id and id in (select hf_role_id from hf_user_roles_map where instance_id=:instance_id and user_id=:user_id)"] 
     } elseif { [qf_is_natural_number $customer_id] } {
-        set roles_list [db_list hf_roles_of_user "select distinct on (label) label from hf_role where instance_id=:instance_id and id in (select hf_role_id from hf_user_roles_map where instance_id =:instance_id and user_id =:user_id and customer_id=:customer_id)"]
+        set roles_list [db_list hf_roles_of_user "select distinct on (label) label from hf_role where instance_id=:instance_id and id in (select hf_role_id from hf_user_roles_map where instance_id=:instance_id and user_id=:user_id and customer_id=:customer_id)"]
     } 
     return $roles_list
 }
@@ -350,7 +350,7 @@ ad_proc -private hf_privilege_delete {
     # does this user have permission?
     set delete_p [hf_permission_p $this_user_id $customer_id permissions_privileges delete $instance_id]
     if { $delete_p } {
-        db_dml hf_privilege_delete { delete from hf_user_roles_map where instance_id =:instance_id and customer_id =:customer_id and user_id =:user_id and role_id =:role_id }
+        db_dml hf_privilege_delete { delete from hf_user_roles_map where instance_id=:instance_id and customer_id=:customer_id and user_id=:user_id and role_id=:role_id }
     }
     return $delete_p
 }
@@ -408,7 +408,7 @@ ad_proc -private hf_role_delete {
     if { $delete_p } {
         set exists_p [hf_role_id_exists_q $role_id $instance_id]
         if { $exists_p } {
-            db_dml hf_role_delete {delete from hf_role where instance_id =:instance_id and id =:role_id}
+            db_dml hf_role_delete {delete from hf_role where instance_id=:instance_id and id=:role_id}
             set return_val 1
         } 
     }
@@ -440,7 +440,7 @@ ad_proc -private hf_role_write {
             if { $exists_p } {
                 # update role
                 db_dml hf_role_update {update hf_role
-                    set label =:label and title =:title and description =:description where instance_id =:instance_id and id =:role_id}
+                    set label=:label, title=:title, description=:description where instance_id=:instance_id and id=:role_id}
                 set return_val 1
             } else {
                 # create role
@@ -471,7 +471,7 @@ ad_proc -private hf_role_id_of_label {
     set read_p [hf_permission_p $this_user_id $customer_id permissions_roles read $instance_id]
     set id ""
     if { $read_p } {
-        db_0or1row hf_role_id_get "select id from hf_role where instance_id =:instance_id and label =:label"
+        db_0or1row hf_role_id_get "select id from hf_role where instance_id=:instance_id and label=:label"
     }
     return $id
 }
@@ -490,7 +490,7 @@ ad_proc -private hf_role_id_exists_q {
 #    set this_user_id [ad_conn user_id]
 #    set read_p [hf_permission_p $this_user_id $role_id permissions_roles read $instance_id]
     set exists_p 0
-    set exists_p [db_0or1row hf_role_id_exists_q "select label from hf_role where instance_id =:instance_id and id =:role_id"]
+    set exists_p [db_0or1row hf_role_id_exists_q "select label from hf_role where instance_id=:instance_id and id=:role_id"]
     return $exists_p
 }
 
@@ -510,7 +510,7 @@ ad_proc -private hf_role_read {
     set read_p [hf_permission_p $this_user_id $customer_id permissions_roles read $instance_id]
     set role_list [list ]
     if { $read_p } {
-        set role_list [db_list_of_lists hf_role_read "select label,title,description from hf_role where instance_id =:instance_id and id =:id"]
+        set role_list [db_list_of_lists hf_role_read "select label,title,description from hf_role where instance_id=:instance_id and id=:id"]
         set role_list [lindex $role_list 0]
     }
     return $role_list
@@ -531,7 +531,7 @@ ad_proc -private hf_roles {
 
     set role_list [list ]
     if { $read_p } {
-        set role_list [db_list_of_lists hf_roles_read "select label,title,description from hf_role where instance_id =:instance_id"]
+        set role_list [db_list_of_lists hf_roles_read "select label,title,description from hf_role where instance_id=:instance_id"]
     }
     return $role_list
 }
@@ -595,11 +595,11 @@ ad_proc -private hf_permission_p {
         # insert a call to a customer_id-to-customer_id map that can return multiple customer_ids, to handle a hierarcy of customer_ids
         # for cases where a large organization has multiple departments.  Right now, treating them as separate customers is adequate.
 
-        set role_ids_list [db_list hf_user_roles_for_customer_get "select hf_role_id from hf_user_roles_map where instance_id =:instance_id and qal_customer_id =:customer_id and user_id =:user_id"]
+        set role_ids_list [db_list hf_user_roles_for_customer_get "select hf_role_id from hf_user_roles_map where instance_id=:instance_id and qal_customer_id=:customer_id and user_id=:user_id"]
         if { [llength $roles_id_list] > 0 } {
-            set property_id_exists_p [db_0or1row hf_property_id_exist_p "select id as property_id from hf_property where instance_id =:instance_id and asset_type_id =:property_label"]
+            set property_id_exists_p [db_0or1row hf_property_id_exist_p "select id as property_id from hf_property where instance_id=:instance_id and asset_type_id=:property_label"]
             if { $property_id_exists_p } {
-                set allowed_p [db_0or1row hf_property_role_privilege_ck "select privilege from hf_property_role_privilege_map where instance_id =:instance_id and property_id =:property_id and privilege =:privilege and role_id in ([template::util::tcl_to_sql_list $roles_id_list])"]
+                set allowed_p [db_0or1row hf_property_role_privilege_ck "select privilege from hf_property_role_privilege_map where instance_id=:instance_id and property_id=:property_id and privilege=:privilege and role_id in ([template::util::tcl_to_sql_list $roles_id_list])"]
             }
         }
     }    

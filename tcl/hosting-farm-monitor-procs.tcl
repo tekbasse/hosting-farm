@@ -268,7 +268,7 @@ ad_proc -public hf_beat_log_alert_q {
     if { $last_viewed ne "" } {
         # last_modified ne "", so update
         db_dml hf_beat_log_viewed_update { 
-            update hf_beat_log_viewed "set last_viewed = :nowts where instance_id = :instance_id and user_id = :user_id"
+            update hf_beat_log_viewed "set last_viewed=:nowts where instance_id=:instance_id and user_id=:user_id"
         }
     } else {
         # first case, insert
@@ -311,7 +311,7 @@ ad_proc -private hf::monitor::check {
         #set cycle_time [expr { int( 5 * 60 ) } ]
         set cycle_time [expr { int( 60 ) } ]
         # cycle_time varies with active monitors at time of start
-        db_1row hf_active_assets_count { select count(monitor_id) as monitor_count from hf_monitor_config_n_control where active_p = '1' }
+        db_1row hf_active_assets_count { select count(monitor_id) as monitor_count from hf_monitor_config_n_control where active_p='1' }
         if { $monitor_count > 0 } {
             set cycle_time [expr { int( $cycle_time / $monitor_count ) + 1 } ] 
         } 
@@ -427,7 +427,7 @@ ad_proc -private ::hf::monitor::do {
                             # tell the system I am working on it.
                             set success_p 1
                             db_dml hf_beat_stack_started {
-                                update hf_beat_stack set started_time =:nowts, last_started_clock_s =:start_sec where id =:id
+                                update hf_beat_stack set started_time=:nowts, last_started_clock_s=:start_sec where id=:id
                             }
                             
                             #ns_log Notice "hf::monitor::do.69: id $id to Eval: '${proc_list}' list len [llength $proc_list]."
@@ -441,7 +441,7 @@ ad_proc -private ::hf::monitor::do {
                                 set nowts [dt_systime -gmt 1]
                                 set success_p 0
                                 db_dml hf_beat_stack_write {
-                                    update hf_beat_stack set proc_out =:this_err_text, completed_time=:nowts where id = :id 
+                                    update hf_beat_stack set proc_out=:this_err_text, completed_time=:nowts where id=:id 
                                 } 
                                 # inform user of error
                                 set scenario_tid [lindex [lindex $args_lists 0] 0]
@@ -453,7 +453,7 @@ ad_proc -private ::hf::monitor::do {
                                 set nowts [dt_systime -gmt 1]
                                 set success_p 1
                                 db_dml hf_beat_stack_write {
-                                    update hf_beat_stack set proc_out =:calc_value, completed_time=:nowts, process_seconds=:dur_sec where id = :id 
+                                    update hf_beat_stack set proc_out=:calc_value, completed_time=:nowts, process_seconds=:dur_sec where id=:id 
                                 }
                                 ns_log Notice "hf::monitor::do.83: id $id completed in circa ${dur_sec} seconds."
                             }

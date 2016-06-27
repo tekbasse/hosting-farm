@@ -106,7 +106,7 @@ ad_proc -private hf::schedule::do {
                         # tell the system I am working on it.
                         set success_p 1
                         db_dml hf_sched_proc_stack_started {
-                            update hf_sched_proc_stack set started_time =:nowts where id =:id
+                            update hf_sched_proc_stack set started_time=:nowts where id=:id
                         }
                         
                         set proc_list [list $proc_name]
@@ -122,7 +122,7 @@ ad_proc -private hf::schedule::do {
                             set nowts [dt_systime -gmt 1]
                             set success_p 0
                             db_dml hf_sched_proc_stack_write {
-                                update hf_sched_proc_stack set proc_out =:this_err_text, completed_time=:nowts where id = :id 
+                                update hf_sched_proc_stack set proc_out=:this_err_text, completed_time=:nowts where id=:id 
                             } 
                             # inform user of error
                             set scenario_tid [lindex [lindex $args_lists 0] 0]
@@ -134,7 +134,7 @@ ad_proc -private hf::schedule::do {
                             set nowts [dt_systime -gmt 1]
                             set success_p 1
                             db_dml hf_sched_proc_stack_write {
-                                update hf_sched_proc_stack set proc_out =:calc_value, completed_time=:nowts, process_seconds=:dur_sec where id = :id 
+                                update hf_sched_proc_stack set proc_out=:calc_value, completed_time=:nowts, process_seconds=:dur_sec where id =:id 
                             }
                             ns_log Notice "hf::schedule::do.83: id $id completed in circa ${dur_sec} seconds."
                         }
@@ -263,7 +263,7 @@ ad_proc -private hf::schedule::read {
     set admin_p [permission::permission_p -party_id $session_user_id -object_id $session_package_id -privilege admin]
     set process_stats_list [list ]
     if { $admin_p || ($session_user_id eq $user_id && ( $session_package_id eq $instance_id || $session_user_id eq $session_package_id ) ) } {
-        set process_stats_list [db_list_of_lists hf_sched_proc_stack_read { select id,proc_name,proc_args,proc_out,user_id,instance_id, priority, order_time, started_time, completed_time, process_seconds from hf_sched_proc_stack where id =:sched_id and user_id=:user_id and instance_id=:instance_id } ]
+        set process_stats_list [db_list_of_lists hf_sched_proc_stack_read { select id,proc_name,proc_args,proc_out,user_id,instance_id, priority, order_time, started_time, completed_time, process_seconds from hf_sched_proc_stack where id=:sched_id and user_id=:user_id and instance_id=:instance_id } ]
     }
     return $process_stats_list
 }

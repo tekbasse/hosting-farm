@@ -63,7 +63,7 @@ CREATE TABLE hf_assets (
     instance_id    integer,
     -- An asset_id. See hf_asset_label_map.asset_id
     -- A revision of hf_asset_label_map.f_id
-    asset_id             integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
+    asset_id       integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- following 3 fields are similar in use to q-wiki template mapping
     -- f_id is similar usage as template_id in q-wiki
     -- f_id is fixed for all revisions of an asset
