@@ -410,7 +410,7 @@ ad_proc -private hf_asset_subassets {
     Returns a list of untrashed f_id of direct subassets of asset.
 } {
     upvar 1 instance_id instance_id
-    set asset_id_list [db_list hf_subassets_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:f_id and instance_id=:instance_id and and attribute_p!='1' and trashed_p!='1'"]
+    set asset_id_list [db_list hf_subassets_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:f_id and instance_id=:instance_id and attribute_p!='1' and trashed_p!='1'"]
     return $asset_id_list
 }
 
@@ -442,7 +442,7 @@ ad_proc -private hf_asset_subassets_cascade {
     set q_count 0
     while { $current_id_list_len > 0 } {
         foreach s_id $current_id_list {
-            set new_list [db_list hf_subassets_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and instance_id=:instance_id and and attribute_p!='1' and trashed_p!='1'"]
+            set new_list [db_list hf_subassets_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and instance_id=:instance_id and attribute_p!='1' and trashed_p!='1'"]
             foreach sb_id $new_list {
                 lappend next_id_list $sb_id
                 lappend final_id_list $s_id
@@ -470,7 +470,7 @@ ad_proc -private hf_asset_subassets_count {
     set q_count 0
     while { $current_id_list_len > 0 } {
         foreach s_id $current_id_list {
-            set new_list [db_list hf_subassets_all_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and instance_id=:instance_id and and attribute_p!='1'"]
+            set new_list [db_list hf_subassets_all_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and instance_id=:instance_id and attribute_p!='1'"]
             foreach sb_id $new_list {
                 lappend next_id_list $sb_id
                 lappend final_id_list $s_id
@@ -526,7 +526,7 @@ ad_proc -private hf_asset_attributes_cascade {
     set q_count 0
     while { $current_id_list_len > 0 } {
         foreach s_id $current_id_list {
-            set new_list [db_list hf_attributes_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and instance_id=:instance_id and and attribute_p='1' and trashed_p!='1'"]
+            set new_list [db_list hf_attributes_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and instance_id=:instance_id and attribute_p='1' and trashed_p!='1'"]
             foreach sb_id $new_list {
                 lappend next_id_list $sb_id
                 lappend final_id_list $s_id
