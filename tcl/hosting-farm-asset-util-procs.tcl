@@ -409,6 +409,7 @@ ad_proc -private hf_asset_subassets {
 } {
     Returns a list of untrashed f_id of direct subassets of asset.
 } {
+    upvar 1 instance_id instance_id
     set asset_id_list [db_list hf_subassets_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:f_id and instance_id=:instance_id and and attribute_p!='1' and trashed_p!='1'"]
     return $asset_id_list
 }
@@ -419,6 +420,7 @@ ad_proc -private hf_asset_subassets_by_type {
 } {
     Returns a list of f_id of untrashed, direct subassets of asset that are of type asset_type_id.
 } {
+    upvar 1 instance_id instance_id
     set asset_id_list [db_list hf_subassets_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:f_id and sub_type_id=:asset_type_id and instance_id=:instance_id and attribute_p!='1' and trashed_p!='1'"]
     return $asset_id_list
 }
@@ -430,6 +432,7 @@ ad_proc -private hf_asset_subassets_cascade {
 } {
     Returns a list of untrashed f_id of subassets.
 } {
+    upvar 1 instance_id instance_id
     set current_id_list [list $f_id]
     # to search for more.
     set next_id_list [list ]
@@ -457,6 +460,7 @@ ad_proc -private hf_asset_subassets_count {
     Returns count of all subassets and trashed revisions of f_id.
     This is useful for creating a chronological sort order
 } {
+    upvar 1 instance_id instance_id
     set current_id_list [list $f_id]
     # to search for more.
     set next_id_list [list ]
@@ -485,6 +489,7 @@ ad_proc -private hf_asset_subassets_by_type_cascade {
 } {
     Returns a list of f_id of untrashed, subassets that are of type asset_type_id.
 } {
+    upvar 1 instance_id instance_id
     set current_id_list [list $f_id]
     # to search for more.
     set next_id_list [list ]
@@ -511,6 +516,7 @@ ad_proc -private hf_asset_attributes_cascade {
 } {
     Returns a list of untrashed f_id of attributes.
 } {
+    upvar 1 instance_id instance_id
     set current_id_list [list $f_id]
     # to search for more.
     set next_id_list [list ]
@@ -538,6 +544,7 @@ ad_proc -private hf_asset_attributes_by_type_cascade {
 } {
     Returns a list of f_id of untrashed, attributes that are of type asset_type_id.
 } {
+    upvar 1 instance_id instance_id
     set current_id_list [list $f_id]
     # to search for more.
     set next_id_list [list ]
