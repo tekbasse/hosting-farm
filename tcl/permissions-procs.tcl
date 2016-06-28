@@ -536,18 +536,7 @@ ad_proc -private hf_roles {
 } {
     Returns roles as a list, with each list item consisting of label, title, and description as a list, or an empty list if no roles exist.
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    # check permissions
-    set user_id [ad_conn user_id]
-    set read_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege read]
-
-    set role_list [list ]
-    if { $read_p } {
-        set role_list [db_list_of_lists hf_roles_read "select label,title,description from hf_role where instance_id=:instance_id"]
-    }
+    set role_list [db_list_of_lists hf_roles_read "select label,title,description from hf_role where instance_id=:instance_id"]
     return $role_list
 }
 

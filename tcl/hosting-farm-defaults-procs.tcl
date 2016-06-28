@@ -585,6 +585,8 @@ ad_proc -private hf_privilege_init {
     set props_larr(site) [list non_assets published]
     # perimissions_* are for special cases where tech admins need access to set special case permissions.
 
+    set roles_lists [db_list_of_lists hf_roles_n { select id,label,title,description from hf_role where instance_id=:instance_id } ]
+    set props_lists [db_list_of_lists hf_property_n { select asset_type_id,id from hf_property where instance_id=:instance_id } ]
     foreach role_list $roles_lists {
         set role_id [lindex $role_list 0]
         set role_label [lindex $role_list 1]
