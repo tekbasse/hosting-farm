@@ -267,16 +267,20 @@ ad_proc -private hf_ni_read {
 
 
 ad_proc -private hf_os_read {
-    {os_id_list ""}
+    os_id_list
 } {
+    @param os_id_list  One or more os_id.  If no os_id is passed, returns an empty list.
+
     @return records from hf_operating_systems as a list of lists. 
 
     @see hf_os_keys for list order
 } {
     upvar 1 instance_id instance_id
-    upvar 1 user_id user_id
-    set os_id_filtered_list [hf_list_filter_by_natural_number $os_id_list]
-    set rows_list [db_list_of_lists hf_os_detail_get "select [hf_os_keys ","] from hf_operating_systems where instance_id =:instance_id and os_id in ([template::util::tcl_to_sql_list $os_id_filtered_list]) and time_trashed=NULL"]
+    set return_list [list ]
+    if { $os_id_list ne "" } {
+        set os_id_filtered_list [hf_list_filter_by_natural_number $os_id_list]
+        set rows_list [db_list_of_lists hf_os_detail_get "select [hf_os_keys ","] from hf_operating_systems where instance_id =:instance_id and os_id in ([template::util::tcl_to_sql_list $os_id_filtered_list]) and time_trashed=NULL"]
+    }
     return $return_list
 }
 

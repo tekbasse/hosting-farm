@@ -560,6 +560,7 @@ ad_proc -private hf_vh_write {
     set vh_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id vh $attribute_p]
     if { $vh_id_new ne "" } {
         # record revision/new
+        set vh_id $vh_id_new
         db_dml vh_asset_create "insert into hf_vhosts \
  ([hf_vh_keys ","]) values ([hf_vh_keys ",:"])"
     }
@@ -599,6 +600,7 @@ ad_proc -private hf_dc_write {
     set dc_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id dc $attribute_p]
     if { $dc_id_new ne "" } {
         # record revision/new
+        set dc_id $dc_id_new
         db_dml dc_asset_create "insert into hf_data_centers \
  ([hf_dc_keys ","]) values ([hf_dc_keys ",:"])"
     }
@@ -638,6 +640,7 @@ ad_proc -private hf_hw_write {
     set hw_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id hw $attribute_p]
     if { $hw_id_new ne "" } {
         # record revision/new
+        set hw_id $hw_id_new
         db_dml hw_asset_create "insert into hf_hardware \
  ([hf_hw_keys ","]) values ([hf_hw_keys ",:"])"
     }
@@ -676,6 +679,7 @@ ad_proc -private hf_vm_write {
     set vm_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id vm $attribute_p]
     if { $vm_id_new ne "" } {
         # record revision/new
+        set vm_id $vm_id_new
         db_dml vm_asset_create "insert into hf_virtual_machines \
  ([hf_vm_keys ","]) values ([hf_vm_keys ",:"])"
     }
@@ -714,6 +718,7 @@ ad_proc -private hf_ss_write {
     set ss_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id ss $attribute_p]
     if { $ss_id_new ne "" } {
         # record revision/new
+        set ss_id $ss_id_new
         db_dml ss_asset_create "insert into hf_services \
  ([hf_ss_keys ","]) values ([hf_ss_keys ",:"])"
     }
@@ -752,6 +757,7 @@ ad_proc -private hf_ip_write {
     set ip_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id ip $attribute_p]
     if { $ip_id_new ne "" } {
         # record revision/new
+        set ip_id $ip_id_new
         db_dml ip_asset_create "insert into hf_ip_addresses \
  ([hf_ip_keys ","]) values ([hf_ip_keys ",:"])"
     }
@@ -790,6 +796,7 @@ ad_proc -private hf_ni_write {
     set ni_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id ni $attribute_p]
     if { $ni_id_new ne "" } {
         # record revision/new
+        set ns_id $ni_id_new
         db_dml ni_asset_create "insert into hf_network_interfaces ([hf_ni_keys ","]) values ([hf_ni_keys ",:"])"
     }
     return $ni_id_new
@@ -859,6 +866,7 @@ ad_proc -private hf_ns_write {
     set ns_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
     if { $ns_id_new ne "" } {
         # record revision/new
+        set ns_id $ns_id_new
         db_dml ns_asset_create "insert into hf_ns_records \
  ([hf_ns_keys ","]) values ([hf_ns_keys ",:"])"
     }
