@@ -436,6 +436,67 @@ ad_proc -private hf_sub_f_id_of_label {
     return $sub_f_id
 }
 
+ad_proc -private hf_sub_asset_map_update {
+    f_id
+    asset_type_id
+    sub_label
+    sub_f_id
+    sub_asset_type_id
+    {attribute_p "1"}
+} {
+    Updates or creates a new map record.
+
+    @return sub_f_id_new Returns a new sub_f_id to assign to new attribute record. Otherwise returns an empty string if unsuccessful.
+} {
+    upvar 1 instance_id instance_id
+    # Actually always creates a record. Trashes any that already exist for same label and f_id.
+    set trashed_p 0
+    set sub_f_id ""
+    set f_id_exists_p 0
+    set sub_f_id_exists_p 0
+    if { $sub_f_id ne "" } {
+        # Is this an existing attribute?
+        set f_id_ck [hf_f_id_of_sub_f_id $sub_f_id]
+        if { $f_id eq $f_id_ck } {
+            set f_id_exists_p 1
+            set sub_f_id_exists_p 1
+        } else {
+            ns_log Warning "hf_ss_write.435: denied. \
+attribute does not exist. ss_id '${ss_id} f_id '${f_id}'"
+        }
+    } 
+    if { !$sub_f_id_exists_p && $sub_asset_type_id eq "" } {
+        # no way to determine attribute type
+        # quit processing here
+    } else {
+        if { !$f_id_exists_p } {
+            set f_id_exists_p [hf_f_id_exists_q $f_id]
+            # This is first version of sub_f_id. f_id still required.
+        }
+        if { $f_id_exists_p } {
+            set sub_f_id_new [db_nextval hf_id_seq]
+            set nowts [dt_systime -gmt 1]
+            if { $sub_f_id_exists_p } {
+                db_dml ss_sub_asset_map_update { update hf_sub_asset_map
+                    set sub_f_id=:sub_f_id_new where f_id=:f_id }
+            } else {
+                set sub_f_id $sub_f_id_new
+                set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
+                set time_created $nowts
+                # translate api conventions to internal map refs
+                set sub_type_id $sub_asset_type_id
+                set type_id $asset_type_id
+                if { $type_id eq "" } {
+                    set type_id [hf_asset_type_id_of_asset_id $f_id]
+                }
+                db_dml ss_sub_asset_map_create "insert into hf_sub_asset_map \
+ ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
+            }
+        }
+    }
+    return $sub_f_id_new
+}
+
 ad_proc -private hf_up_id_of_ua_id {
     ua_list
 } {

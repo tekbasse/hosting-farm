@@ -544,45 +544,22 @@ ad_proc -private hf_vh_write {
     set attribute_p "1"
 
     qf_array_to_vars arr_name [hf_vh_keys]
-    set vh_id_new ""
-    set status -1
-    if { $vh_id ne "" } {
-        # existing attribute
-        set f_id_ck [hf_f_id_of_sub_f_id $vh_id]
-        if { $f_id eq $f_id_ck } {
-            set status 0
-        } else {
-            ns_log Warning "hf_vh_write.435: denied. \
-attribute does not exist. vh_id '${vh_id} f_id '${f_id}'"
-        }
-    } elseif { [hf_f_id_exists_q $f_id] } {
-        set status 1
+    qf_array_to_vars arr_name [hf_sub_asset_map_keys]
+    if { $type_id eq "" } {
+        set type_id $asset_type_id
     }
-    if { $status > -1 } {
-        # insert attribute in hf_vhosts 
-        set vh_id_new [db_nextval hf_id_seq]
-        set nowts [dt_systime -gmt 1]
-        db_transaction {
-            if { $status == 0 } {
-                db_dml vh_sub_asset_map_update { update hf_sub_asset_map
-                    set sub_f_id=:vh_id_new where f_id=:f_id }
-            } else {
-                set vh_id $vh_id_new
-                set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
-                set time_created $nowts
-                set sub_type_id "vh"
-                if { $type_id eq "" } {
-                    if { [info exists asset_type_id] } {
-                        set type_id $asset_type_id
-                    } else {
-                        set type_id [hf_asset_type_id_of_asset_id $f_id]
-                    }
-                }
-                db_dml vh_sub_asset_map_cr "insert into hf_sub_asset_map \
- ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
-            }
-            # record revision/new
-            db_dml vh_asset_create "insert into hf_vhosts \
+    if { $sub_label eq "" } {
+        if { $label ne "" && $sub_type_id eq $type_id } {
+            set sub_label $label
+        } else {
+            set sub_label $sub_type_id
+        }
+        append sub_label [hf_asset_subassets_count $f_id]
+    }
+    set vh_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
+    if { $vh_id_new ne "" } {
+        # record revision/new
+        db_dml vh_asset_create "insert into hf_vhosts \
  ([hf_vh_keys ","]) values ([hf_vh_keys ",:")"
         }
     }
@@ -606,47 +583,23 @@ ad_proc -private hf_dc_write {
     set attribute_p "1"
 
     qf_array_to_vars arr_name [hf_dc_keys]
-    set dc_id_new ""
-    set status -1
-    if { $dc_id ne "" } {
-        # existing attribute
-        set f_id_ck [hf_f_id_of_sub_f_id $dc_id]
-        if { $f_id eq $f_id_ck } {
-            set status 0
-        } else {
-            ns_log Warning "hf_dc_write.435: denied. \
-attribute does not exist. dc_id '${dc_id} f_id '${f_id}'"
-        }
-    } elseif { [hf_f_id_exists_q $f_id] } {
-        set status 1
+    qf_array_to_vars arr_name [hf_sub_asset_map_keys]
+    if { $type_id eq "" } {
+        set type_id $asset_type_id
     }
-    if { $status > -1 } {
-        # insert attribute in hf_data_centers
-        set dc_id_new [db_nextval hf_id_seq]
-        set nowts [dt_systime -gmt 1]
-        db_transaction {
-            if { $status == 0 } {
-                db_dml dc_sub_asset_map_update { update hf_sub_asset_map
-                    set sub_f_id=:dc_id_new where f_id=:f_id }
-            } else {
-                set dc_id $dc_id_new
-                set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
-                set time_created $nowts
-                set sub_type_id "dc"
-                if { $type_id eq "" } {
-                    if { [info exists asset_type_id] } {
-                        set type_id $asset_type_id
-                    } else {
-                        set type_id [hf_asset_type_id_of_asset_id $f_id]
-                    }
-                }
-                db_dml dc_sub_asset_map_cr "insert into hf_sub_asset_map \
- ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
-            }
-            # record revision/new
-            db_dml dc_asset_create "insert into hf_data_centers \
- ([hf_dc_keys ","]) values ([hf_dc_keys ",:")"
+    if { $sub_label eq "" } {
+        if { $label ne "" && $sub_type_id eq $type_id } {
+            set sub_label $label
+        } else {
+            set sub_label $sub_type_id
         }
+        append sub_label [hf_asset_subassets_count $f_id]
+    }
+    set dc_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
+    if { $dc_id_new ne "" } {
+        # record revision/new
+        db_dml dc_asset_create "insert into hf_data_centers \
+ ([hf_dc_keys ","]) values ([hf_dc_keys ",:")"
     }
     return $dc_id_new
 }
@@ -668,47 +621,23 @@ ad_proc -private hf_hw_write {
     set attribute_p "1"
 
     qf_array_to_vars arr_name [hf_hw_keys]
-    set hw_id_new ""
-    set status -1
-    if { $hw_id ne "" } {
-        # existing attribute
-        set f_id_ck [hf_f_id_of_sub_f_id $hw_id]
-        if { $f_id eq $f_id_ck } {
-            set status 0
-        } else {
-            ns_log Warning "hf_hw_write.435: denied. \
-attribute does not exist. hw_id '${hw_id} f_id '${f_id}'"
-        }
-    } elseif { [hf_f_id_exists_q $f_id] } {
-        set status 1
+    qf_array_to_vars arr_name [hf_sub_asset_map_keys]
+    if { $type_id eq "" } {
+        set type_id $asset_type_id
     }
-    if { $status > -1 } {
-        # insert attribute in hf_hardware
-        set hw_id_new [db_nextval hf_id_seq]
-        set nowts [dt_systime -gmt 1]
-        db_transaction {
-            if { $status == 0 } {
-                db_dml hw_sub_asset_map_update { update hf_sub_asset_map
-                    set sub_f_id=:hw_id_new where f_id=:f_id }
-            } else {
-                set hw_id $hw_id_new
-                set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
-                set time_created $nowts
-                set sub_type_id "vw"
-                if { $type_id eq "" } {
-                    if { [info exists asset_type_id] } {
-                        set type_id $asset_type_id
-                    } else {
-                        set type_id [hf_asset_type_id_of_asset_id $f_id]
-                    }
-                }
-                db_dml hw_sub_asset_map_cr "insert into hf_sub_asset_map \
- ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
-            }
-            # record revision/new
-            db_dml hw_asset_create "insert into hf_hardware \
- ([hf_hw_keys ","]) values ([hf_hw_keys ",:")"
+    if { $sub_label eq "" } {
+        if { $label ne "" && $sub_type_id eq $type_id } {
+            set sub_label $label
+        } else {
+            set sub_label $sub_type_id
         }
+        append sub_label [hf_asset_subassets_count $f_id]
+    }
+    set hw_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
+    if { $hw_id_new ne "" } {
+        # record revision/new
+        db_dml hw_asset_create "insert into hf_hardware \
+ ([hf_hw_keys ","]) values ([hf_hw_keys ",:")"
     }
     return $hw_id_new
 }
@@ -729,47 +658,23 @@ ad_proc -private hf_vm_write {
     set attribute_p "1"
 
     qf_array_to_vars arr_name [hf_vm_keys]
-    set vm_id_new ""
-    set status -1
-    if { $vm_id ne "" } {
-        # existing attribute
-        set f_id_ck [hf_f_id_of_sub_f_id $vm_id]
-        if { $f_id eq $f_id_ck } {
-            set status 0
-        } else {
-            ns_log Warning "hf_vm_write.435: denied. \
- attribute does not exist. vm_id '${vm_id} f_id '${f_id}'"
-        }
-    } elseif { [hf_f_id_exists_q $f_id] } {
-        set status 1
+    qf_array_to_vars arr_name [hf_sub_asset_map_keys]
+    if { $type_id eq "" } {
+        set type_id $asset_type_id
     }
-    if { $status > -1 } {
-        # insert attribute in hf_virtual_machines
-        set vm_id_new [db_nextval hf_id_seq]
-        set nowts [dt_systime -gmt 1]
-        db_transaction {
-            if { $status == 0 } {
-                db_dml vm_sub_asset_map_update { update hf_sub_asset_map
-                    set sub_f_id=:vm_id_new where f_id=:f_id }
-            } else {
-                set vm_id $vm_id_new
-                set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
-                set time_created $nowts
-                set sub_type_id "vm"
-                if { $type_id eq "" } {
-                    if { [info exists asset_type_id] } {
-                        set type_id $asset_type_id
-                    } else {
-                        set type_id [hf_asset_type_id_of_asset_id $f_id]
-                    }
-                }
-                db_dml vm_sub_asset_map_cr "insert into hf_sub_asset_map \
- ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
-            }
-            # record revision/new
-            db_dml vm_asset_create "insert into hf_virtual_machines \
- ([hf_vm_keys ","]) values ([hf_vm_keys ",:")"
+    if { $sub_label eq "" } {
+        if { $label ne "" && $sub_type_id eq $type_id } {
+            set sub_label $label
+        } else {
+            set sub_label $sub_type_id
         }
+        append sub_label [hf_asset_subassets_count $f_id]
+    }
+    set vm_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
+    if { $vm_id_new ne "" } {
+        # record revision/new
+        db_dml vm_asset_create "insert into hf_virtual_machines \
+ ([hf_vm_keys ","]) values ([hf_vm_keys ",:")"
     }
     return $vm_id_new
 }
@@ -790,47 +695,23 @@ ad_proc -private hf_ss_write {
     set attribute_p "1"
 
     qf_array_to_vars arr_name [hf_ss_keys]
-    set ss_id_new ""
-    set status -1
-    if { $ss_id ne "" } {
-        # existing attribute
-        set f_id_ck [hf_f_id_of_sub_f_id $ss_id]
-        if { $f_id eq $f_id_ck } {
-            set status 0
-        } else {
-            ns_log Warning "hf_ss_write.435: denied. \
-attribute does not exist. ss_id '${ss_id} f_id '${f_id}'"
-        }
-    } elseif { [hf_f_id_exists_q $f_id] } {
-        set status 1
+    qf_array_to_vars arr_name [hf_sub_asset_map_keys]
+    if { $type_id eq "" } {
+        set type_id $asset_type_id
     }
-    if { $status > -1 } {
-        # insert attribute in hf_services
-        set ss_id_new [db_nextval hf_id_seq]
-        set nowts [dt_systime -gmt 1]
-        db_transaction {
-            if { $status == 0 } {
-                db_dml ss_sub_asset_map_update { update hf_sub_asset_map
-                    set sub_f_id=:ss_id_new where f_id=:f_id }
-            } else {
-                set ss_id $ss_id_new
-                set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
-                set time_created $nowts
-                set sub_type_id "ss"
-                if { $type_id eq "" } {
-                    if { [info exists asset_type_id] } {
-                        set type_id $asset_type_id
-                    } else {
-                        set type_id [hf_asset_type_id_of_asset_id $f_id]
-                    }
-                }
-                db_dml ss_sub_asset_map_create "insert into hf_sub_asset_map \
- ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
-            }
-            # record revision/new
-            db_dml ss_asset_create "insert into hf_services \
- ([hf_ss_keys ","]) values ([hf_ss_keys ",:")"
+    if { $sub_label eq "" } {
+        if { $label ne "" && $sub_type_id eq $type_id } {
+            set sub_label $label
+        } else {
+            set sub_label $sub_type_id
         }
+        append sub_label [hf_asset_subassets_count $f_id]
+    }
+    set ss_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
+    if { $ss_id_new ne "" } {
+        # record revision/new
+        db_dml ss_asset_create "insert into hf_services \
+ ([hf_ss_keys ","]) values ([hf_ss_keys ",:")"
     }
     return $ss_id_new
 }
@@ -851,47 +732,23 @@ ad_proc -private hf_ip_write {
     set attribute_p "1"
 
     qf_array_to_vars arr_name [hf_ip_keys]
-    set ip_id_new ""
-    set status -1
-    if { $ip_id ne "" } {
-        # existing attribute
-        set f_id_ck [hf_f_id_of_sub_f_id $ip_id]
-        if { $f_id eq $f_id_ck } {
-            set status 0
-        } else {
-            ns_log Warning "hf_ip_write.435: denied. \
-attribute does not exist. ip_id '${ip_id} f_id '${f_id}'"
-        }
-    } elseif { [hf_f_id_exists_q $f_id] } {
-        set status 1
+    qf_array_to_vars arr_name [hf_sub_asset_map_keys]
+    if { $type_id eq "" } {
+        set type_id $asset_type_id
     }
-    if { $status > -1 } {
-        # insert attribute in hf_ip_addresses
-        set ip_id_new [db_nextval hf_id_seq]
-        set nowts [dt_systime -gmt 1]
-        db_transaction {
-            if { $status == 0 } {
-                db_dml ip_sub_asset_map_update { update hf_sub_asset_map
-                    set sub_f_id=:ip_id_new where f_id=:f_id }
-            } else {
-                set ip_id $ip_id_new
-                set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
-                set time_created $nowts
-                set sub_type_id "ip"
-                if { $type_id eq "" } {
-                    if { [info exists asset_type_id] } {
-                        set type_id $asset_type_id
-                    } else {
-                        set type_id [hf_asset_type_id_of_asset_id $f_id]
-                    }
-                }
-                db_dml ip_sub_asset_map_create "insert into hf_sub_asset_map \
- ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
-            }
-            # record revision/new
-            db_dml ip_asset_create "insert into hf_ip_addresses \
- ([hf_ip_keys ","]) values ([hf_ip_keys ",:")"
+    if { $sub_label eq "" } {
+        if { $label ne "" && $sub_type_id eq $type_id } {
+            set sub_label $label
+        } else {
+            set sub_label $sub_type_id
         }
+        append sub_label [hf_asset_subassets_count $f_id]
+    }
+    set ip_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
+    if { $ip_id_new ne "" } {
+        # record revision/new
+        db_dml ip_asset_create "insert into hf_ip_addresses \
+ ([hf_ip_keys ","]) values ([hf_ip_keys ",:")"
     }
     return $ip_id_new
 }
@@ -912,45 +769,22 @@ ad_proc -private hf_ni_write {
     set attribute_p "1"
 
     qf_array_to_vars arr_name [hf_ni_keys]
-    set ni_id_new ""
-    set status -1
-    if { $ni_id ne "" } {
-        # existing attribute
-        set f_id_ck [hf_f_id_of_sub_f_id $ni_id]
-        if { $f_id eq $f_id_ck } {
-            set status 0
-        } else {
-            ns_log Warning "hf_ni_write.435: denied. \
-attribute does not exist. ni_id '${ni_id} f_id '${f_id}'"
-        }
-    } elseif { [hf_f_id_exists_q $f_id] } {
-        set status 1
+    qf_array_to_vars arr_name [hf_sub_asset_map_keys]
+    if { $type_id eq "" } {
+        set type_id $asset_type_id
     }
-    if { $status > -1 } {
-        # insert attribute in hf_network_interfaces
-        set ni_id_new [db_nextval hf_id_seq]
-        set nowts [dt_systime -gmt 1]
-        db_transaction {
-            if { $status == 0 } {
-                db_dml ni_sub_asset_map_update { update hf_sub_asset_map
-                    set sub_f_id=:ni_id_new where f_id=:f_id }
-            } else {
-                set ni_id $ni_id_new
-                set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
-                set time_created $nowts
-                set sub_type_id "ni"
-                if { $type_id eq "" } {
-                    if { [info exists asset_type_id] } {
-                        set type_id $asset_type_id
-                    } else {
-                        set type_id [hf_asset_type_id_of_asset_id $f_id]
-                    }
-                }
-                db_dml ni_sub_asset_map_create "insert into hf_sub_asset_map ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
-            }
-            # record revision/new
-            db_dml ni_asset_create "insert into hf_network_interfaces ([hf_ni_keys ","]) values ([hf_ni_keys ",:")"
+    if { $sub_label eq "" } {
+        if { $label ne "" && $sub_type_id eq $type_id } {
+            set sub_label $label
+        } else {
+            set sub_label $sub_type_id
         }
+        append sub_label [hf_asset_subassets_count $f_id]
+    }
+    set ni_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
+    if { $ni_id_new ne "" } {
+        # record revision/new
+        db_dml ni_asset_create "insert into hf_network_interfaces ([hf_ni_keys ","]) values ([hf_ni_keys ",:")"
     }
     return $ni_id_new
 }
@@ -973,47 +807,23 @@ ad_proc -private hf_os_write {
     set attribute_p "1"
 
     qf_array_to_vars arr_name [hf_os_keys]
-    set os_id_new ""
-    set status -1
-    if { $os_id ne "" } {
-        # existing attribute
-        set f_id_ck [hf_f_id_of_sub_f_id $os_id]
-        if { $f_id eq $f_id_ck } {
-            set status 0
-        } else {
-            ns_log Warning "hf_os_write.435: denied. \
-attribute does not exist. os_id '${os_id} f_id '${f_id}'"
-        }
-    } elseif { [hf_f_id_exists_q $f_id] } {
-        set status 1
+    qf_array_to_vars arr_name [hf_sub_asset_map_keys]
+    if { $type_id eq "" } {
+        set type_id $asset_type_id
     }
-    if { $status > -1 } {
-        # insert attribute in hf_operating_systems
-        set os_id_new [db_nextval hf_id_seq]
-        set nowts [dt_systime -gmt 1]
-        db_transaction {
-            if { $status == 0 } {
-                db_dml os_sub_asset_map_update { update hf_sub_asset_map
-                    set sub_f_id=:os_id_new where f_id=:f_id }
-            } else {
-                set os_id $os_id_new
-                set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
-                set time_created $nowts
-                set sub_type_id "os"
-                if { $type_id eq "" } {
-                    if { [info exists asset_type_id] } {
-                        set type_id $asset_type_id
-                    } else {
-                        set type_id [hf_asset_type_id_of_asset_id $f_id]
-                    }
-                }
-                db_dml os_sub_asset_map_create "insert into hf_sub_asset_map \
- ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
-            }
-            # record revision/new
-            db_dml os_asset_create "insert into hf_operating_systems \
- ([hf_os_keys ","]) values ([hf_os_keys ",:")"
+    if { $sub_label eq "" } {
+        if { $label ne "" && $sub_type_id eq $type_id } {
+            set sub_label $label
+        } else {
+            set sub_label $sub_type_id
         }
+        append sub_label [hf_asset_subassets_count $f_id]
+    }
+    set os_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
+    if { $os_id_new ne "" } {
+        # record revision/new
+        db_dml os_asset_create "insert into hf_operating_systems \
+ ([hf_os_keys ","]) values ([hf_os_keys ",:")"
     }
     return $os_id_new
 }
@@ -1034,47 +844,23 @@ ad_proc -private hf_ns_write {
     set attribute_p "1"
 
     qf_array_to_vars arr_name [hf_ns_keys]
-    set ns_id_new ""
-    set status -1
-    if { $ns_id ne "" } {
-        # existing attribute
-        set f_id_ck [hf_f_id_of_sub_f_id $ns_id]
-        if { $f_id eq $f_id_ck } {
-            set status 0
-        } else {
-            ns_log Warning "hf_ns_write.435: denied. \
-attribute does not exist. ns_id '${ns_id} f_id '${f_id}'"
-        }
-    } elseif { [hf_f_id_exists_q $f_id] } {
-        set status 1
+    qf_array_to_vars arr_name [hf_sub_asset_map_keys]
+    if { $type_id eq "" } {
+        set type_id $asset_type_id
     }
-    if { $status > -1 } {
-        # insert attribute in hf_ns_records
-        set ns_id_new [db_nextval hf_id_seq]
-        set nowts [dt_systime -gmt 1]
-        db_transaction {
-            if { $status == 0 } {
-                db_dml ns_sub_asset_map_update { update hf_sub_asset_map
-                    set sub_f_id=:ns_id_new where f_id=:f_id }
-            } else {
-                set ns_id $ns_id_new
-                set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
-                set time_created $nowts
-                set sub_type_id "ns"
-                if { $type_id eq "" } {
-                    if { [info exists asset_type_id] } {
-                        set type_id $asset_type_id
-                    } else {
-                        set type_id [hf_asset_type_id_of_asset_id $f_id]
-                    }
-                }
-                db_dml ns_sub_asset_map_create "insert into hf_sub_asset_map \
- ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
-            }
-            # record revision/new
-            db_dml ns_asset_create "insert into hf_ns_records \
- ([hf_ns_keys ","]) values ([hf_ns_keys ",:")"
+    if { $sub_label eq "" } {
+        if { $label ne "" && $sub_type_id eq $type_id } {
+            set sub_label $label
+        } else {
+            set sub_label $sub_type_id
         }
+        append sub_label [hf_asset_subassets_count $f_id]
+    }
+    set ns_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
+    if { $ns_id_new ne "" } {
+        # record revision/new
+        db_dml ns_asset_create "insert into hf_ns_records \
+ ([hf_ns_keys ","]) values ([hf_ns_keys ",:")"
     }
     return $ns_id_new
 }
