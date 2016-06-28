@@ -3,12 +3,12 @@
   <msg key="Alert">Alert</msg>
   <msg key="Alerts_can_be_customized">Alerts can be customized</msg>
   <msg key="Asset">Asset</msg>
-  <msg key="Assets">Assets</msg>
   <msg key="Asset_Monitor">Asset monitor</msg>
   <msg key="Asset_def">Something of value that is tracked.</msg>
+  <msg key="Assets">Assets</msg>
   <msg key="Attribute">Attribute</msg>
-  <msg key="Attributes">Attributes</msg>
   <msg key="Attribute_def">Properties of an asset.</msg>
+  <msg key="Attributes">Attributes</msg>
   <msg key="Data_Model">Data Model</msg>
   <msg key="Data_center">Data center</msg>
   <msg key="Glossary">Glossary</msg>
@@ -186,6 +186,7 @@
   <msg key="os_dev_ref_def">Operating System Device Reference</msg>
   <msg key="os_id">OS id</msg>
   <msg key="os_id_def">Operating system identifier</msg>
+  <msg key="ot">OT</msg>
   <msg key="ot">OT</msg>
   <msg key="over_memory_sku">Extra Memory SKU</msg>
   <msg key="over_memory_sku_def">SKU reference for pricing over base memory rate of plan_id.</msg>

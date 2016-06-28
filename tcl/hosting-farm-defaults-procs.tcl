@@ -646,12 +646,12 @@ ad_proc -private hf_asset_type_id_init {
     set ast_d_lists \
         [list \
              [list ss "#hosting-farm.SAAS#" "#hosting-farm.Software_as_a_service#"] \
-             [list dc "#hosting-farm.DC#" "#hosting-farm.Data_Center#"] \
-             [list hw "#hosting-farm.HW#" "#hosting-farm.Hardware#"] \
-             [list vm "#hosting-farm.VM#" "#hosting-farm.Virtual_Machine#"] \
-             [list vh "#hosting-farm.VH#" "#hosting-farm.Virtual_Host#"] \
-             [list ns "#hosting-farm.NS#" "#hosting-farm.Name_Service#"] \
-             [list ot "#hosting-farm.OT#" "#hosting-farm.Other#"] ]
+             [list dc "#hosting-farm.dc#" "#hosting-farm.Data_center#"] \
+             [list hw "#hosting-farm.hw#" "#hosting-farm.Hardware#"] \
+             [list vm "#hosting-farm.vm#" "#hosting-farm.Virtual_machine#"] \
+             [list vh "#hosting-farm.vh#" "#hosting-farm.Virtual_host#"] \
+             [list ns "#hosting-farm.ns#" "#hosting-farm.Name_service#"] \
+             [list ot "#hosting-farm.ot#" "#hosting-farm.Other#"] ]
     foreach def_as_type_list $ast_d_lists {
         set asset_type_id [lindex $def_as_type_list 0]
         set label [lindex $def_as_type_list 1]
