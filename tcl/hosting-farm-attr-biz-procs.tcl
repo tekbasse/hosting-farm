@@ -561,7 +561,7 @@ ad_proc -private hf_vh_write {
     if { $vh_id_new ne "" } {
         # record revision/new
         db_dml vh_asset_create "insert into hf_vhosts \
- ([hf_vh_keys ","]) values ([hf_vh_keys ",:")"
+ ([hf_vh_keys ","]) values ([hf_vh_keys ",:"])"
     }
     return $vh_id_new
 }
@@ -600,7 +600,7 @@ ad_proc -private hf_dc_write {
     if { $dc_id_new ne "" } {
         # record revision/new
         db_dml dc_asset_create "insert into hf_data_centers \
- ([hf_dc_keys ","]) values ([hf_dc_keys ",:")"
+ ([hf_dc_keys ","]) values ([hf_dc_keys ",:"])"
     }
     return $dc_id_new
 }
@@ -639,7 +639,7 @@ ad_proc -private hf_hw_write {
     if { $hw_id_new ne "" } {
         # record revision/new
         db_dml hw_asset_create "insert into hf_hardware \
- ([hf_hw_keys ","]) values ([hf_hw_keys ",:")"
+ ([hf_hw_keys ","]) values ([hf_hw_keys ",:"])"
     }
     return $hw_id_new
 }
@@ -677,7 +677,7 @@ ad_proc -private hf_vm_write {
     if { $vm_id_new ne "" } {
         # record revision/new
         db_dml vm_asset_create "insert into hf_virtual_machines \
- ([hf_vm_keys ","]) values ([hf_vm_keys ",:")"
+ ([hf_vm_keys ","]) values ([hf_vm_keys ",:"])"
     }
     return $vm_id_new
 }
@@ -715,7 +715,7 @@ ad_proc -private hf_ss_write {
     if { $ss_id_new ne "" } {
         # record revision/new
         db_dml ss_asset_create "insert into hf_services \
- ([hf_ss_keys ","]) values ([hf_ss_keys ",:")"
+ ([hf_ss_keys ","]) values ([hf_ss_keys ",:"])"
     }
     return $ss_id_new
 }
@@ -753,7 +753,7 @@ ad_proc -private hf_ip_write {
     if { $ip_id_new ne "" } {
         # record revision/new
         db_dml ip_asset_create "insert into hf_ip_addresses \
- ([hf_ip_keys ","]) values ([hf_ip_keys ",:")"
+ ([hf_ip_keys ","]) values ([hf_ip_keys ",:"])"
     }
     return $ip_id_new
 }
@@ -790,7 +790,7 @@ ad_proc -private hf_ni_write {
     set ni_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id ni $attribute_p]
     if { $ni_id_new ne "" } {
         # record revision/new
-        db_dml ni_asset_create "insert into hf_network_interfaces ([hf_ni_keys ","]) values ([hf_ni_keys ",:")"
+        db_dml ni_asset_create "insert into hf_network_interfaces ([hf_ni_keys ","]) values ([hf_ni_keys ",:"])"
     }
     return $ni_id_new
 }
@@ -822,7 +822,7 @@ ad_proc -private hf_os_write {
         # record revision/new
         set time_created $nowts
         db_dml hf_os_create "insert into hf_operating_systems \
- ([hf_os_keys ","]) values ([hf_os_keys ",:")"
+ ([hf_os_keys ","]) values ([hf_os_keys ",:"])"
     }
     return $os_id
 }
@@ -860,7 +860,7 @@ ad_proc -private hf_ns_write {
     if { $ns_id_new ne "" } {
         # record revision/new
         db_dml ns_asset_create "insert into hf_ns_records \
- ([hf_ns_keys ","]) values ([hf_ns_keys ",:")"
+ ([hf_ns_keys ","]) values ([hf_ns_keys ",:"])"
     }
     return $ns_id_new
 }
@@ -903,7 +903,7 @@ ad_proc -private hf_vm_quota_write {
             set plan_id [db_nextval hf_id_seq]
         }
         db_dml hf_vm_quota_create "insert into hf_vm_quotas \
- ([hf_vm_quota_keys ","]) values ([hf_vm_quota_keys ",:")"
+ ([hf_vm_quota_keys ","]) values ([hf_vm_quota_keys ",:"])"
     }
     return $plan_id
 }
