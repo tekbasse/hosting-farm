@@ -561,7 +561,6 @@ ad_proc -private hf_vh_write {
         # record revision/new
         db_dml vh_asset_create "insert into hf_vhosts \
  ([hf_vh_keys ","]) values ([hf_vh_keys ",:")"
-        }
     }
     return $vh_id_new
 }
