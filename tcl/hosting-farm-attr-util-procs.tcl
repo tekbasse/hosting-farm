@@ -14,7 +14,7 @@ ad_library {
 
 # following defined in permissions-procs.tcl
 # hf_customer_ids_for_user
-# hf_active_asset_ids_for_customer 
+# hf_active_asset_ids_of_customer 
 
 # API for various asset attributes
 #  in each case, add ecds-pagination bar when displaying. 

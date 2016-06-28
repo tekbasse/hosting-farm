@@ -43,7 +43,7 @@ ad_proc -public hf_customer_ids_for_user {
 }
 
 
-ad_proc -public hf_active_asset_ids_for_customer {
+ad_proc -public hf_active_asset_ids_of_customer {
     customer_id
     {instance_id ""}
 } {
@@ -73,7 +73,22 @@ ad_proc -private hf_property_id {
     {customer_id ""}
     {instance_id ""} 
 } {
-    Returns property id or -1 if doesn't exist.
+    Returns the property_id of an asset_type_id.
+    By default, asset_type_id is either a standard asset_type_id, or 
+    one of the additional ones hard coded in the hosting-farm API:
+    main_contact_record
+    admin_contact_record
+    tech_contact_record
+    permissions_properties
+    permissions_roles
+    permissions_privileges
+    non_assets
+    published
+    assets
+ 
+    @param asset_type_id
+
+    @return property_id or -1 if doesn't exist.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -217,11 +232,11 @@ ad_proc -private hf_property_read {
 }
 
 
-ad_proc -private hf_customer_privileges_this_user {
+ad_proc -private hf_customer_roles_of_user {
     {customer_id ""}
     {instance_id ""}
 } {
-    Lists customer roles assigned to user for customer_id
+    Lists roles assigned to user for customer_id
 } {
     set assigned_roles_list [list ]
     if { $customer_id ne "" } {
@@ -239,7 +254,7 @@ ad_proc -private hf_customer_privileges_this_user {
     return $assigned_roles_list
 }
 
-ad_proc -private hf_customer_privileges {
+ad_proc -private hf_users_roles_of_customer {
     {customer_id ""}
     {instance_id ""}
 } {
@@ -260,7 +275,7 @@ ad_proc -private hf_customer_privileges {
     return $assigned_roles_list
 }
 
-ad_proc -private hf_privilege_exists_q {
+ad_proc -private hf_user_role_exists_q {
     user_id
     role_id
     {customer_id ""}
@@ -304,11 +319,11 @@ ad_proc -private hf_roles_of_user {
 }
 
 
-ad_proc -private hf_privilege_create {
-    instance_id
+ad_proc -private hf_user_role_add {
     customer_id
     user_id
     role_id
+    {instance_id ""}
 } {
     Create a privilege ie assign a customer's role to a user. Returns 1 if succeeds.
 } {
@@ -334,7 +349,7 @@ ad_proc -private hf_privilege_create {
     return $create_p
 }
 
-ad_proc -private hf_privilege_delete {
+ad_proc -private hf_user_role_delete {
     customer_id
     user_id
     role_id
@@ -605,3 +620,4 @@ ad_proc -private hf_permission_p {
     }    
     return $allowed_p
 }
+
