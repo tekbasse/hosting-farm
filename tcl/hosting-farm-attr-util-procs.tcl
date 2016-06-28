@@ -305,7 +305,6 @@ ad_proc -private hf_os_keys {
     Returns an ordered list of keys for hf_operating_systems
 } {
     set keys_list [list instance_id os_id label brand version kernel orphaned_p requires_upgrade_p description time_trashed time_created]
-    set keys_list [set_union $keys_list [hf_sub_asset_map_keys]]
     set keys [hf_keys_by $keys_list $separator]
     return $keys
 }

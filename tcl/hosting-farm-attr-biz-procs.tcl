@@ -557,7 +557,7 @@ ad_proc -private hf_vh_write {
         }
         append sub_label [hf_asset_subassets_count $f_id]
     }
-    set vh_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
+    set vh_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id vh $attribute_p]
     if { $vh_id_new ne "" } {
         # record revision/new
         db_dml vh_asset_create "insert into hf_vhosts \
@@ -596,7 +596,7 @@ ad_proc -private hf_dc_write {
         }
         append sub_label [hf_asset_subassets_count $f_id]
     }
-    set dc_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
+    set dc_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id dc $attribute_p]
     if { $dc_id_new ne "" } {
         # record revision/new
         db_dml dc_asset_create "insert into hf_data_centers \
@@ -635,7 +635,7 @@ ad_proc -private hf_hw_write {
         }
         append sub_label [hf_asset_subassets_count $f_id]
     }
-    set hw_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
+    set hw_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id hw $attribute_p]
     if { $hw_id_new ne "" } {
         # record revision/new
         db_dml hw_asset_create "insert into hf_hardware \
@@ -673,7 +673,7 @@ ad_proc -private hf_vm_write {
         }
         append sub_label [hf_asset_subassets_count $f_id]
     }
-    set vm_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
+    set vm_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id vm $attribute_p]
     if { $vm_id_new ne "" } {
         # record revision/new
         db_dml vm_asset_create "insert into hf_virtual_machines \
@@ -711,7 +711,7 @@ ad_proc -private hf_ss_write {
         }
         append sub_label [hf_asset_subassets_count $f_id]
     }
-    set ss_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
+    set ss_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id ss $attribute_p]
     if { $ss_id_new ne "" } {
         # record revision/new
         db_dml ss_asset_create "insert into hf_services \
@@ -749,7 +749,7 @@ ad_proc -private hf_ip_write {
         }
         append sub_label [hf_asset_subassets_count $f_id]
     }
-    set ip_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
+    set ip_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id ip $attribute_p]
     if { $ip_id_new ne "" } {
         # record revision/new
         db_dml ip_asset_create "insert into hf_ip_addresses \
@@ -787,7 +787,7 @@ ad_proc -private hf_ni_write {
         }
         append sub_label [hf_asset_subassets_count $f_id]
     }
-    set ni_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
+    set ni_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id ni $attribute_p]
     if { $ni_id_new ne "" } {
         # record revision/new
         db_dml ni_asset_create "insert into hf_network_interfaces ([hf_ni_keys ","]) values ([hf_ni_keys ",:")"
@@ -800,39 +800,31 @@ ad_proc -private hf_ni_write {
 ad_proc -private hf_os_write {
     os_arr_name
 } {
-    Writes a new revision to an existing hf_operating_systems record.
+    Writes an hf_operating_systems record.
     If os_id is empty, creates a new hf_operating_systems record.
-    A new sub_f_id is returned if successful.
     Otherwise empty string is returned.
 } {
-    # requires f_id
     upvar 1 $os_arr_name arr_name
     upvar 1 instance_id instance_id
 
     hf_os_defaults arr_name
-    set attribute_p "1"
-
     qf_array_to_vars arr_name [hf_os_keys]
-    qf_array_to_vars arr_name [hf_sub_asset_map_keys]
-    qf_array_to_vars arr_name [list asset_type_id label]
-    if { $type_id eq "" } {
-        set type_id $asset_type_id
-    }
-    if { $sub_label eq "" } {
-        if { $label ne "" && $sub_type_id eq $type_id } {
-            set sub_label $label
-        } else {
-            set sub_label $sub_type_id
+    set os_list [hf_os_read $os_id]
+    db_transaction {
+        set nowts [dt_systime -gmt 1]
+        if { [llength $os_list ] > 2 } {
+            # existing record, update status first
+            db_dml hf_os_update {update hf_operating_systems 
+                set time_trashed=:nowts 
+                where os_id=:os_id }
         }
-        append sub_label [hf_asset_subassets_count $f_id]
-    }
-    set os_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
-    if { $os_id_new ne "" } {
+        set os_id [db_nextval hf_id_seq]
         # record revision/new
-        db_dml os_asset_create "insert into hf_operating_systems \
+        set time_created $nowts
+        db_dml hf_os_create "insert into hf_operating_systems \
  ([hf_os_keys ","]) values ([hf_os_keys ",:")"
     }
-    return $os_id_new
+    return $os_id
 }
 
 ad_proc -private hf_ns_write {
