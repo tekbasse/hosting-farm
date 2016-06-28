@@ -69,7 +69,7 @@ ad_proc -private hf_sub_asset_map_defaults {
     upvar 1 $array_name sam_arr
     upvar 1 instance_id instance_id
     set nowts [dt_systime -gmt 1]
-
+    
     set sam_list [list f_id "" \
                       type_id "" \
                       sub_f_id "" \
@@ -78,7 +78,7 @@ ad_proc -private hf_sub_asset_map_defaults {
                       sub_label "" \
                       attribute_p $attribute_p \
                       trashed_p "0" ]
-    foreach {key value} $sam {
+    foreach {key value} $sam_list {
         if { ![info exists sam_arr(${key}) ] } {
             set sam_arr(${key}) $value
         }
