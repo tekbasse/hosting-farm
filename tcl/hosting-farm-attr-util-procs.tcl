@@ -450,6 +450,7 @@ ad_proc -private hf_sub_asset_map_update {
 } {
     upvar 1 instance_id instance_id
     # Actually always creates a record. Trashes any that already exist for same label and f_id.
+    set sub_f_id_new ""
     set trashed_p 0
     set sub_f_id ""
     set f_id_exists_p 0
@@ -461,13 +462,14 @@ ad_proc -private hf_sub_asset_map_update {
             set f_id_exists_p 1
             set sub_f_id_exists_p 1
         } else {
-            ns_log Warning "hf_ss_write.435: denied. \
-attribute does not exist. ss_id '${ss_id} f_id '${f_id}'"
+            ns_log Warning "hf_sub_asset_map_update.465: denied. \
+ attribute does not exist. fid '${f_id} f_id_ck '${f_id_ck}'"
         }
     } 
     if { !$sub_f_id_exists_p && $sub_asset_type_id eq "" } {
-        # no way to determine attribute type
-        # quit processing here
+        ns_log Warning "hf_sub_asset_map_update.470: denied. \
+ attribute does not exist. and sub_asset_type_id eq ''"
+
     } else {
         if { !$f_id_exists_p } {
             set f_id_exists_p [hf_f_id_exists_q $f_id]

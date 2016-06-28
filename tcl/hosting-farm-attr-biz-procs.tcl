@@ -545,6 +545,7 @@ ad_proc -private hf_vh_write {
 
     qf_array_to_vars arr_name [hf_vh_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
+    af_array_to_vars arr_name [list asset_type_id label]
     if { $type_id eq "" } {
         set type_id $asset_type_id
     }
@@ -583,6 +584,7 @@ ad_proc -private hf_dc_write {
 
     qf_array_to_vars arr_name [hf_dc_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
+    af_array_to_vars arr_name [list asset_type_id label]
     if { $type_id eq "" } {
         set type_id $asset_type_id
     }
@@ -621,6 +623,7 @@ ad_proc -private hf_hw_write {
 
     qf_array_to_vars arr_name [hf_hw_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
+    af_array_to_vars arr_name [list asset_type_id label]
     if { $type_id eq "" } {
         set type_id $asset_type_id
     }
@@ -658,6 +661,7 @@ ad_proc -private hf_vm_write {
 
     qf_array_to_vars arr_name [hf_vm_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
+    af_array_to_vars arr_name [list asset_type_id label]
     if { $type_id eq "" } {
         set type_id $asset_type_id
     }
@@ -695,6 +699,7 @@ ad_proc -private hf_ss_write {
 
     qf_array_to_vars arr_name [hf_ss_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
+    af_array_to_vars arr_name [list asset_type_id label]
     if { $type_id eq "" } {
         set type_id $asset_type_id
     }
@@ -732,6 +737,7 @@ ad_proc -private hf_ip_write {
 
     qf_array_to_vars arr_name [hf_ip_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
+    af_array_to_vars arr_name [list asset_type_id label]
     if { $type_id eq "" } {
         set type_id $asset_type_id
     }
@@ -769,6 +775,7 @@ ad_proc -private hf_ni_write {
 
     qf_array_to_vars arr_name [hf_ni_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
+    af_array_to_vars arr_name [list asset_type_id label]
     if { $type_id eq "" } {
         set type_id $asset_type_id
     }
@@ -807,6 +814,7 @@ ad_proc -private hf_os_write {
 
     qf_array_to_vars arr_name [hf_os_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
+    af_array_to_vars arr_name [list asset_type_id label]
     if { $type_id eq "" } {
         set type_id $asset_type_id
     }
@@ -844,6 +852,7 @@ ad_proc -private hf_ns_write {
 
     qf_array_to_vars arr_name [hf_ns_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
+    af_array_to_vars arr_name [list asset_type_id label]
     if { $type_id eq "" } {
         set type_id $asset_type_id
     }
