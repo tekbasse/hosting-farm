@@ -855,7 +855,7 @@ ad_proc -private hf_ns_write {
         }
         append sub_label [hf_asset_subassets_count $f_id]
     }
-    set ns_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
+    set ns_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id ns $attribute_p]
     if { $ns_id_new ne "" } {
         # record revision/new
         set ns_id $ns_id_new
