@@ -541,8 +541,7 @@ ad_proc -private hf_vh_write {
     upvar 1 instance_id instance_id
 
     hf_vh_defaults arr_name
-    set attribute_p "1"
-
+    hf_sub_asset_map_defaults arr_name
     qf_array_to_vars arr_name [hf_vh_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
     qf_array_to_vars arr_name [list asset_type_id label]
@@ -581,8 +580,7 @@ ad_proc -private hf_dc_write {
     upvar 1 instance_id instance_id
 
     hf_dc_defaults arr_name
-    set attribute_p "1"
-
+    hf_sub_asset_map_defaults arr_name
     qf_array_to_vars arr_name [hf_dc_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
     qf_array_to_vars arr_name [list asset_type_id label]
@@ -621,8 +619,7 @@ ad_proc -private hf_hw_write {
     upvar 1 instance_id instance_id
 
     hf_hw_defaults arr_name
-    set attribute_p "1"
-
+    hf_sub_asset_map_defaults arr_name
     qf_array_to_vars arr_name [hf_hw_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
     qf_array_to_vars arr_name [list asset_type_id label]
@@ -660,8 +657,7 @@ ad_proc -private hf_vm_write {
     upvar 1 instance_id instance_id
 
     hf_vm_defaults arr_name
-    set attribute_p "1"
-
+    hf_sub_asset_map_defaults arr_name
     qf_array_to_vars arr_name [hf_vm_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
     qf_array_to_vars arr_name [list asset_type_id label]
@@ -699,8 +695,7 @@ ad_proc -private hf_ss_write {
     upvar 1 instance_id instance_id
     
     hf_ss_defaults arr_name
-    set attribute_p "1"
-
+    hf_sub_asset_map_defaults arr_name
     qf_array_to_vars arr_name [hf_ss_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
     qf_array_to_vars arr_name [list asset_type_id label]
@@ -738,8 +733,7 @@ ad_proc -private hf_ip_write {
     upvar 1 instance_id instance_id
 
     hf_ip_defaults arr_name
-    set attribute_p "1"
-
+    hf_sub_asset_map_defaults arr_name
     qf_array_to_vars arr_name [hf_ip_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
     qf_array_to_vars arr_name [list asset_type_id label]
@@ -777,8 +771,7 @@ ad_proc -private hf_ni_write {
     upvar 1 instance_id instance_id
 
     hf_ni_defaults arr_name
-    set attribute_p "1"
-
+    hf_sub_asset_map_defaults arr_name
     qf_array_to_vars arr_name [hf_ni_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
     qf_array_to_vars arr_name [list asset_type_id label]
@@ -847,8 +840,7 @@ ad_proc -private hf_ns_write {
     upvar 1 instance_id instance_id
 
     hf_ns_defaults arr_name
-    set attribute_p "1"
-
+    hf_sub_asset_map_defaults arr_name
     qf_array_to_vars arr_name [hf_ns_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
     qf_array_to_vars arr_name [list asset_type_id label]

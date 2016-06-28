@@ -291,7 +291,7 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                                       brand $system_type2 \
                                       version $system_type \
                                       kernel $kernel ]
-                set os_arr(os_id) [hf_os_write os_arr]
+                set os_id [hf_os_write os_arr]
 
                 # Make an asset of type ss
 
@@ -299,9 +299,7 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                                       label $label \
                                       name $name \
                                       asset_type_id "ss" \
-                                      user_id $sysowner_user_id \
-                                      content "Demo service"\
-                                      comments "Demo/ss system test case"]
+                                      user_id $sysowner_user_id ]
                 set ss_arr(f_id) [hf_asset_write ss_arr]
                 # set attribute (fid) is 
                 array set ss_arr [list \
@@ -336,7 +334,7 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                                       port [randomRange 50000] \
                                       ss_type "maybe bad" \
                                       config_uri "/dev/null" ]
-                set ss_id [hf_ss_write ss_arr]
+                set ss_arr(ss_id) [hf_ss_write ss_arr]
 
 
                 # make a bad vm
@@ -346,11 +344,11 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                                          label $randlabel \
                                          name "${randlabel} problem" \
                                          user_id $sysowner_user_id ]
-                set asset_id [hf_asset_create asset_arr]
+                set asset_arr(fid) [hf_asset_create asset_arr]
 
                 array set asset_arr [list \
                                          domain_name $randlabel \
-                                         os_id $os_arr(os_id) ]
+                                         os_id $os_id ]
                 set vm_id [hf_vm_write asset_arr ]
 
                 # make a bad vh
@@ -362,15 +360,15 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                                          label $randlabel \
                                          name "${randlabel} problem VH" \
                                          user_id $sysowner_user_id ]
-                set asset_id [hf_asset_create asset_arr]
+                set asset_arr(f_id) [hf_asset_create asset_arr]
                 set vh_domain [hf_domain_example ""]
                 array set asset_arr [list \
                                          domain_name $vh_domain]
-                set vh_id [hf_vh_write asset_arr ]
+                set asset_arr(vh_id) [hf_vh_write asset_arr ]
                 array set asset_arr [list \
                                          name_record "/* problem NS record for $vh_domain */" \
                                          active_p "1"]
-                set ns_id [hf_ns_write asset_arr]
+                set asset_arr(ns_id) [hf_ns_write asset_arr]
 
                 # make a bad dc
                 array unset asset_arr
@@ -380,7 +378,7 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
                                          label $randlabel \
                                          name "${randlabel} problem DC" \
                                          user_id $sysowner_user_id ]
-                set dc_id [hf_dc_write asset_arr ]
+                set asset_arr(f_id) [hf_asset_create asset_arr ]
                 array set asset_arr [list \
                                          affix [ad_generate_random_string] \
                                          description "maybe problem DC" \

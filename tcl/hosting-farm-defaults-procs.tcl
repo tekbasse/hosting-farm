@@ -270,7 +270,7 @@ ad_proc -private hf_vm_defaults {
             set vm_arr(${key}) $value
         }
     }
-    if { [llength [set_difference_named_v vm [hf_vm_keys]]] > 0 } {
+    if { [llength [set_difference_named_v vm_list [hf_vm_keys]]] > 0 } {
         ns_log Warning "hf_vm_defaults: Update this proc. \
 It is out of sync with hf_vm_keys"
     }
