@@ -291,7 +291,7 @@ ad_proc -private hf_user_role_exists_q {
     set read_p [hf_permission_p $this_user_id $customer_id perimssions_roles read $instance_id]
     set exists_p 0
     if { $read_p } {
-        set exists_p [db_0or1row hf_privilege_exists_p "select hf_role_id from hf_user_roles_map where instance_id=:instance_id and qal_customer_id=:customer_id and hf_role_id=:role_id and user_id=:user_id"]
+        set exists_p [db_0or1row hf_user_role_exists_q "select hf_role_id from hf_user_roles_map where instance_id=:instance_id and qal_customer_id=:customer_id and hf_role_id=:role_id and user_id=:user_id"]
     }
     return $exists_p
 }
@@ -337,7 +337,7 @@ ad_proc -private hf_user_role_add {
     
     if { $create_p } {
         # does permission already exist?
-        set exists_p [hf_privilege_exists_q $user_id $role_id $customer_id $instance_id]
+        set exists_p [hf_user_role_exists_q $user_id $role_id $customer_id $instance_id]
         if { $exists_p } {
             # db update is redundant
         } else {
@@ -472,22 +472,12 @@ ad_proc -private hf_role_write {
 
 ad_proc -private hf_role_id_of_label {
     label
-    {customer_id ""}
     {instance_id ""} 
 } {
     Returns role_id from label or empty string if role doesn't exist.
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    # check permissions
-    set this_user_id [ad_conn user_id]
-    set read_p [hf_permission_p $this_user_id $customer_id permissions_roles read $instance_id]
     set id ""
-    if { $read_p } {
-        db_0or1row hf_role_id_get "select id from hf_role where instance_id=:instance_id and label=:label"
-    }
+    db_0or1row hf_role_id_get "select id from hf_role where instance_id=:instance_id and label=:label"
     return $id
 }
 

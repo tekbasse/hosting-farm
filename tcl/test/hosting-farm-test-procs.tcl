@@ -40,23 +40,23 @@ aa_register_case -cats {api smoke} permissions_check {
             unset role
             unset roles_lists
             
-            # Case 1: A user with sysadmin rights
+            # Case 1: A user with sysadmin rights and not customer
             set sysowner_user_id [party::get_by_email -email [ad_system_owner]]
 
 
 
-            # Case 2: A user registered to site, but not customer
+            # Case 2: A user registered to site and not customer
             array set u_site_arr [auth:create_user -email "test1@${domain}" ]
             if { $u_site_arr(creation_status) ne "ok" } {
                 # Could not create user
-                error "Could not create test user with u_site_arr=[array get u_site_arr]"
+                error "Could not create test user u_site_arr=[array get u_site_arr]"
             } else {
                 set site_user_id $u_site_arr(user_id)
             }
             array set u_site_arr [auth:create_user -email "test1@${domain}" ]
             if { $u_site_arr(creation_status) ne "ok" } {
                 # Could not create user
-                error "Could not create test user with u_site_arr=[array get u_site_arr]"
+                error "Could not create test user u_site_arr=[array get u_site_arr]"
             } else {
                 set site_user_id $u_site_arr(user_id)
             }
@@ -67,73 +67,91 @@ aa_register_case -cats {api smoke} permissions_check {
             array set u_mnp_arr [auth:create_user -email "test1@${domain}" ]
             if { $u_mnp_arr(creation_status) ne "ok" } {
                 # Could not create user
-                error "Could not create test user with u_mnp_arr=[array get u_mnp_arr]"
+                error "Could not create test user u_mnp_arr=[array get u_mnp_arr]"
             } else {
                 set mnp_user_id $u_mnp_arr(user_id)
             }
             array set u_mnp_arr [auth:create_user -email "test1@${domain}" ]
             if { $u_mnp_arr(creation_status) ne "ok" } {
                 # Could not create user
-                error "Could not create test user with u_mnp_arr=[array get u_mnp_arr]"
+                error "Could not create test user u_mnp_arr=[array get u_mnp_arr]"
             } else {
                 set mnp_user_id $u_mnp_arr(user_id)
             }
-
-
+            # Create customer records
+            set customer_id 3
+            foreach role $roles_list {
+                hf_user_role_add $customer_id $mnp_user_id [hf_role_id_of_label $role $instance_id] $instance_id
+            }
 
             # Case 4: A customer with desparate user roles
-            # Make each user with one different role
+            # Make each user one different role
+            set c4_uid_list [list ]
             foreach role $roles_list {
                 array set u_${role}_arr [auth:create_user -email "test1@${domain}" ]
                 if { $u_${role}_arr(creation_status) ne "ok" } {
                     # Could not create user
-                    error "Could not create test user with u_${role}_arr=[array get u_${role}_arr]"
+                    error "Could not create test user u_${role}_arr=[array get u_${role}_arr]"
                 } else {
                     set ${role}_user_id $u_${role}_arr(user_id)
                 }
                 array set u_${role}_arr [auth:create_user -email "test1@${domain}" ]
                 if { $u_${role}_arr(creation_status) ne "ok" } {
                     # Could not create user
-                    error "Could not create test user with u_${role}_arr=[array get u_${role}_arr]"
+                    error "Could not create test user u_${role}_arr=[array get u_${role}_arr]"
                 } else {
                     set u_${role}_user_id $u_${role}_arr(user_id)
+                    lappend c4_uid_list $u_${role}_arr(usre_id)
                 }
-
             }
-            # Create customer record
+            # Create customer records
+            set customer_id 4
+            foreach role $roles_list {
+                hf_user_role_add $customer_id $u${role}_user_id [hf_role_id_of_label $role $instance_id] $instance_id
+            }
 
 
 
-            # Case 5: A customer with duplicate and changing user roles
+            # Case 5: A customer with some duplicate and changing user roles
+            set c5_uid_list [list ]
             foreach role $roles_list {
                 array set m_${role}_arr [auth:create_user -email "test1@${domain}" ]
                 if { $m_${role}_arr(creation_status) ne "ok" } {
                     # Could not create user
-                    error "Could not create test user with m_${role}_arr=[array get m_${role}_arr]"
+                    error "Could not create test user m_${role}_arr=[array get m_${role}_arr]"
                 } else {
                     set ${role}_user_id $m_${role}_arr(user_id)
                 }
                 array set m_${role}_arr [auth:create_user -email "test1@${domain}" ]
                 if { $m_${role}_arr(creation_status) ne "ok" } {
                     # Could not create user
-                    error "Could not create test user with m_${role}_arr=[array get m_${role}_arr]"
+                    error "Could not create test user m_${role}_arr=[array get m_${role}_arr]"
                 } else {
-                    set m_${role}_user_id $m_${role}_arr(user_id)
+                    set mui(${role}) $m_${role}_arr(user_id)
+                    lappend c5_uid_list $u_${role}_arr(usre_id)
                 }
 
             }
-            # Create customer record
+            # Create customer records
+            set customer_id 5
+            set roles_list_len [llength $roles_list_len]
+            foreach role $roles_list {
+                hf_user_role_add $customer_id $mui(${role}) [hf_role_id_of_label $role $instance_id] $instance_id
+                set u_role [lindex $roles_list [randomRange $roles_list_len]]
+                hf_user_role_add $customer_id $mui(${role}) [hf_role_id_of_label $u_role $instance_id] $instance_id
+            }
 
 
 
-        } \
-        -teardown_code {
-            # 
-            acs_user::delete -user_id $user1_arr(user_id) -permanent
 
-        }
-            #aa_true "Test for .." $passed_p
-            #aa_equals "Test for .." $test_value $expected_value
-            
+} \
+    -teardown_code {
+        # 
+        acs_user::delete -user_id $user1_arr(user_id) -permanent
+
+    }
+#aa_true "Test for .." $passed_p
+#aa_equals "Test for .." $test_value $expected_value
+
 
 }
