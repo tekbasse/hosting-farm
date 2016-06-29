@@ -34,6 +34,8 @@ unset roles_lists
 # then pass using bit math: table value & privilege_request_value
 # 
 # initialize table
+append content "<table>"
+set role_prev ""
 foreach role $roles_list {
     # at_id = asset_type_id
     foreach at_id $asset_type_ids_list {
@@ -63,8 +65,18 @@ foreach role $roles_list {
             }
         }
         if { $priv_val > 0 } {
-            append content "${role},${at_id} ${priv_val} \ <br>"
+            #append content "${role},${at_id} ${priv_val} \ <br>"
+            if { $role eq $role_prev } {
+                append content "<tr><td>&nbsp;</td><td>${at_id}</td><td>[join $priv_list ","]</td></tr>"
+            } else {
+                append content "<tr><td>${role}</td><td>${at_id}</td><td>[join $priv_list ","]</td></tr>"
+            }
+            set role_prev $role
         }
     }
+
+
+
 }
 
+append content "</table>"
