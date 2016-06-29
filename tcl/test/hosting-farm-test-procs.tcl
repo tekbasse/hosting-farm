@@ -84,6 +84,7 @@ aa_register_case -cats {api smoke} permissions_check {
                 hf_user_role_add $customer_id $mnp_user_id [hf_role_id_of_label $role $instance_id] $instance_id
             }
 
+
             # Case 4: A customer with desparate user roles
             # Make each user one different role
             set c4_uid_list [list ]
@@ -100,19 +101,22 @@ aa_register_case -cats {api smoke} permissions_check {
                     # Could not create user
                     error "Could not create test user u_${role}_arr=[array get u_${role}_arr]"
                 } else {
-                    set u_${role}_user_id $u_${role}_arr(user_id)
-                    lappend c4_uid_list $u_${role}_arr(usre_id)
+                    set c4ui(${role}) $u_(${role})_arr(user_id)
+                    lappend c4_uid_list $c4ui(${role})
                 }
             }
             # Create customer records
             set customer_id 4
             foreach role $roles_list {
-                hf_user_role_add $customer_id $u${role}_user_id [hf_role_id_of_label $role $instance_id] $instance_id
+                hf_user_role_add $customer_id $c4ui(${role}) [hf_role_id_of_label $role $instance_id] $instance_id
             }
+            # Check each user against each asset_type_ids_list, 
+            # Max of three from each list should be able to admin?
+            # Max of six users from each list should be able to write?
+            # max of nine users from each list should be able to read?  How many roles? users?
 
 
-
-            # Case 5: A customer with some duplicate and changing user roles
+            # Case 5: A customer with some random duplicates
             set c5_uid_list [list ]
             foreach role $roles_list {
                 array set m_${role}_arr [auth:create_user -email "test1@${domain}" ]
@@ -127,7 +131,7 @@ aa_register_case -cats {api smoke} permissions_check {
                     # Could not create user
                     error "Could not create test user m_${role}_arr=[array get m_${role}_arr]"
                 } else {
-                    set mui(${role}) $m_${role}_arr(user_id)
+                    set c5ui${role}) $m_${role}_arr(user_id)
                     lappend c5_uid_list $u_${role}_arr(usre_id)
                 }
 
@@ -136,12 +140,13 @@ aa_register_case -cats {api smoke} permissions_check {
             set customer_id 5
             set roles_list_len [llength $roles_list_len]
             foreach role $roles_list {
-                hf_user_role_add $customer_id $mui(${role}) [hf_role_id_of_label $role $instance_id] $instance_id
+                hf_user_role_add $customer_id $c5ui${role}) [hf_role_id_of_label $role $instance_id] $instance_id
                 set u_role [lindex $roles_list [randomRange $roles_list_len]]
-                hf_user_role_add $customer_id $mui(${role}) [hf_role_id_of_label $u_role $instance_id] $instance_id
+                hf_user_role_add $customer_id $c5ui${role}) [hf_role_id_of_label $u_role $instance_id] $instance_id
             }
 
-
+            # Case 6: Case 4 with some random role changes.
+            set customer_id 4
 
 
 } \
