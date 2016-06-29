@@ -91,7 +91,7 @@ ad_proc -private hf_property_id {
 } {
     set id ""
     db_0or1row hf_property_id_read "select id from hf_property where instance_id=:instance_id and asset_type_id=:asset_type_id"
-    return $exists_p
+    return $id
 }
 
 ad_proc -private hf_property_create {
