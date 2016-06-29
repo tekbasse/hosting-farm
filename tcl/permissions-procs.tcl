@@ -70,7 +70,6 @@ ad_proc -public hf_active_asset_ids_of_customer {
 
 ad_proc -private hf_property_id {
     asset_type_id
-    {customer_id ""}
     {instance_id ""} 
 } {
     Returns the property_id of an asset_type_id.
@@ -90,17 +89,8 @@ ad_proc -private hf_property_id {
 
     @return property_id or -1 if doesn't exist.
 } {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    # check permissions
-    set this_user_id [ad_conn user_id]
-    set read_p [hf_permission_p $this_user_id $customer_id permissions_properties read $instance_id]
-    set exists_p 0
-    if { $read_p } {
-        set exists_p [db_0or1row hf_property_id_read "select id from hf_property where instance_id=:instance_id and asset_type_id=:asset_type_id"]
-    }
+    set id ""
+    db_0or1row hf_property_id_read "select id from hf_property where instance_id=:instance_id and asset_type_id=:asset_type_id"
     return $exists_p
 }
 
@@ -126,7 +116,7 @@ ad_proc -private hf_property_create {
         if { $create_p } {
             # vet input data
             if { [string length [string trim $title]] > 0 && [string length $asset_type_id] > 0 } {
-                set exists_p [expr { [hf_property_id $asset_type_id $customer_id $instance_id] > -1 } ]
+                set exists_p [expr { [hf_property_id $asset_type_id $instance_id] > -1 } ]
                 if { !$exists_p } {
                     # create property
                     db_dml hf_property_create {insert into hf_property
@@ -155,7 +145,7 @@ ad_proc -private hf_property_delete {
     set delete_p [hf_permission_p $this_user_id $customer_id permissions_properties delete $instance_id]
     set return_val 0
     if { $delete_p } {
-        set exists_p [expr { [hf_property_id $asset_type_id $customer_id $instance_id] > -1 } ]
+        set exists_p [expr { [hf_property_id $asset_type_id $instance_id] > -1 } ]
         if { $exists_p } {
             # delete property
             db_dml hf_property_delete "delete from hf_property where instance_id=:instance_id and id=:property_id"
@@ -600,3 +590,16 @@ ad_proc -private hf_permission_p {
     return $allowed_p
 }
 
+ad_proc -private hf_pkg_admin_required  {
+} {
+    Requires user to have package admin permission, or redirects to register page.
+} {
+    set user_id [ad_conn user_id]
+    set package_id [ad_conn package_id]
+    set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
+    if { !$admin_p } {
+        ad_redirect_for_registration
+        ad_script_abort
+    }
+    return $admin_p
+}

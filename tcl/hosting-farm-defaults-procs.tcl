@@ -475,40 +475,42 @@ ad_proc -private hf_roles_init {
 } {
     # role is <division>_<role_level> where role_level are privileges.
     # r_d_lists is abbrev for role_defaults_list
-    set r_d_lists \
-        [list \
-             [list main_admin "Main Admin" "Primary administrator"] \
-             [list main_manager "Main Manager" "Primary manager"] \
-             [list main_staff "Main Staff" "Main monitor"] \
-             [list technical_admin "Technical Admin" "Primary technical administrator"] \
-             [list technical_manager "Technical Manager" "Oversees daily technical operations"] \
-             [list technical_staff "Technical Staff" "Monitors asset performance etc"] \
-             [list billing_admin "Billing Admin" "Primary billing administrator"] \
-             [list billing_manager "Billing Manager" "Oversees daily billing operations"] \
+    if { [llength [hf_roles $instance_id] ] === 0 } { 
+        set r_d_lists \
+            [list \
+                 [list main_admin "Main Admin" "Primary administrator"] \
+                 [list main_manager "Main Manager" "Primary manager"] \
+                 [list main_staff "Main Staff" "Main monitor"] \
+                 [list technical_admin "Technical Admin" "Primary technical administrator"] \
+                 [list technical_manager "Technical Manager" "Oversees daily technical operations"] \
+                 [list technical_staff "Technical Staff" "Monitors asset performance etc"] \
+                 [list billing_admin "Billing Admin" "Primary billing administrator"] \
+                 [list billing_manager "Billing Manager" "Oversees daily billing operations"] \
              [list billing_staff "Billing Staff" "Monitors billing, bookkeeping etc."] \
-             [list site_developer "Site Developer" "Builds websites etc"] ]
-    
-    # admin to have admin permissions, 
-    # manager to have read/write permissions, 
-    # staff to have read permissions
-    foreach def_role_list $r_d_lists {
-        # No need for instance_id since these are system defaults
-        set label [lindex $def_role_list 0]
-        set title [lindex $def_role_list 1]
-        set description [lindex $def_role_list 2]
-        db_dml default_roles_cr {
-            insert into hf_role
-            (label,title,description)
-            values (:label,:title,:description)
+                 [list site_developer "Site Developer" "Builds websites etc"] ]
+        
+        # admin to have admin permissions, 
+        # manager to have read/write permissions, 
+        # staff to have read permissions
+        foreach def_role_list $r_d_lists {
+            # No need for instance_id since these are system defaults
+            set label [lindex $def_role_list 0]
+            set title [lindex $def_role_list 1]
+            set description [lindex $def_role_list 2]
+            db_dml default_roles_cr {
+                insert into hf_role
+                (label,title,description)
+                values (:label,:title,:description)
+            }
+            db_dml default_roles_cr_i {
+                insert into hf_role
+                (label,title,description,instance_id)
+                values (:label,:title,:description,:instance_id)
+                
+            }
         }
-        db_dml default_roles_cr_i {
-            insert into hf_role
-            (label,title,description,instance_id)
-            values (:label,:title,:description,:instance_id)
-            
-        }
+        return 1
     }
-    return 1
 }
 
 
@@ -522,37 +524,40 @@ ad_proc -private hf_property_init {
     # but maybe we give it special permissions 
     # or other asset-like qualities for now.
     # p_d_lists is abbrev for props_defaults_lists
-    set p_d_lists \
-        [list \
-             [list main_contact_record "Main Contact Record"] \
-             [list admin_contact_record "Administrative Contact Record"] \
-             [list tech_contact_record "Technical Contact Record"] \
-             [list permissions_properties "Permissions properties"] \
-             [list permissions_roles "Permissions roles"] \
-             [list permissions_privileges "Permissions privileges"] \
-             [list non_assets "non-assets ie customer records etc."] \
-             [list published "World viewable"] \
-             [list assets "Assets"] \
-             [list ss "Asset: Software as a service"] \
-             [list dc "Asset: Data center"] \
-             [list hw "Asset: Hardware"] \
-             [list vm "Asset: Virtual machine"] \
-             [list vh "Asset: Virtual host"] \
-             [list ns "Asset property: Domain name record"] \
-             [list ot "Asset: other"] ]
-    foreach def_prop_list $p_d_lists {
-        set asset_type_id [lindex $def_prop_list 0]
-        set title [lindex $def_prop_list 1]
-        db_dml default_props_cr {
-            insert into hf_property
-            (asset_type_id,title)
-            values (:asset_type_id,:title)
-        }
-
-        db_dml default_props_cr_i {
-            insert into hf_property
-            (asset_type_id,title,instance_id)
-            values (:asset_type_id,:title,:instance_id)
+    set exists_p [db_0or1row hf_property_exists_q "select id from hf_property where instance_id=:instance_id limit 1"]
+    if { !$exists_p } {
+        set p_d_lists \
+            [list \
+                 [list main_contact_record "Main Contact Record"] \
+                 [list admin_contact_record "Administrative Contact Record"] \
+                 [list tech_contact_record "Technical Contact Record"] \
+                 [list permissions_properties "Permissions properties"] \
+                 [list permissions_roles "Permissions roles"] \
+                 [list permissions_privileges "Permissions privileges"] \
+                 [list non_assets "non-assets ie customer records etc."] \
+                 [list published "World viewable"] \
+                 [list assets "Assets"] \
+                 [list ss "Asset: Software as a service"] \
+                 [list dc "Asset: Data center"] \
+                 [list hw "Asset: Hardware"] \
+                 [list vm "Asset: Virtual machine"] \
+                 [list vh "Asset: Virtual host"] \
+                 [list ns "Asset property: Domain name record"] \
+                 [list ot "Asset: other"] ]
+        foreach def_prop_list $p_d_lists {
+            set asset_type_id [lindex $def_prop_list 0]
+            set title [lindex $def_prop_list 1]
+            db_dml default_props_cr {
+                insert into hf_property
+                (asset_type_id,title)
+                values (:asset_type_id,:title)
+            }
+            
+            db_dml default_props_cr_i {
+                insert into hf_property
+                (asset_type_id,title,instance_id)
+                values (:asset_type_id,:title,:instance_id)
+            }
         }
     }
     return 1
@@ -572,64 +577,67 @@ ad_proc -private hf_privilege_init {
     # techs to have write privileges on tech stuff, 
     # admins to have write privileges on contact stuff
     # write includes trash, admin includes create where appropriate
-    set privs_larr(admin) [list "create" "read" "write" "admin"]
-    set privs_larr(developer) [list "create" "read" "write"]
-    set privs_larr(manager) [list "read" "write"]
-    set privs_larr(staff) [list "read"]
-
-    set division_types_list [list tech billing main site]
-    set props_larr(tech) [list tech_contact_record assets non_assets published ss dc hw vm vh ns ot]
-    set props_larr(billing) [list admin_contact_record non_assets published]
-    #set props_larr(main)  is in all general cases, 
-    set props_larr(main) [list main_contact_record admin_contact_record non_assets tech_contact_record assets non_assets published]
-    set props_larr(site) [list non_assets published]
-    # perimissions_* are for special cases where tech admins need access to set special case permissions.
-
-    set roles_lists [db_list_of_lists hf_roles_n { select id,label,title,description from hf_role where instance_id=:instance_id } ]
-    set props_lists [db_list_of_lists hf_property_n { select asset_type_id,id from hf_property where instance_id=:instance_id } ]
-    foreach role_list $roles_lists {
-        set role_id [lindex $role_list 0]
-        set role_label [lindex $role_list 1]
-        set u_idx [string first "_" $role_label]
-        incr u_idx
-        set role_level [string range $role_label $u_idx end]
-        set division [string range $role_label 0 $u_idx-2]
-        if { $division eq "technical" } {
-            # division abbreviates technical
-            set division "tech"
-        }
-        foreach prop_list $props_lists {
-            set asset_type_id [lindex $prop_list 0]
-            set property_id [lindex $prop_list 1]
-            # For each role_id and property_id create privileges
-            # Privileges are base on 
-            #     $privs_larr($role) and props_larr(asset_type_id)
-            # For example, 
-            #     $privs_larr(manager) = list read write
-            #     $props_larr(billing) = admin_contact_record non_assets published
-
-            if { [lsearch $props_larr($division) $asset_type_id ] > -1 } {
-                # This division has privileges.
-                # Add privileges for the role_id
-                if { $role_level ne "" } {
-                    foreach priv $privs_larr($role_level) {
-                        set exists_p [db_0or1row default_privileges_check { select property_id as test from hf_property_role_privilege_map where property_id=:property_id and role_id=:role_id and privilege=:priv } ]
-                        if { !$exists_p } {
-                            db_dml default_privileges_cr {
-                                insert into hf_property_role_privilege_map
-                                (property_id,role_id,privilege)
-                                values (:property_id,:role_id,:priv)
+    set exists_p [db_0or1row hf_property_role_privilege_map_exists_q "select property_id from hf_property-role_privilege_map where instance_id=:instance_id"]
+    if { !$exists_p } {
+        set privs_larr(admin) [list "create" "read" "write" "admin"]
+        set privs_larr(developer) [list "create" "read" "write"]
+        set privs_larr(manager) [list "read" "write"]
+        set privs_larr(staff) [list "read"]
+        
+        set division_types_list [list tech billing main site]
+        set props_larr(tech) [list tech_contact_record assets non_assets published ss dc hw vm vh ns ot]
+        set props_larr(billing) [list admin_contact_record non_assets published]
+        #set props_larr(main)  is in all general cases, 
+        set props_larr(main) [list main_contact_record admin_contact_record non_assets tech_contact_record assets non_assets published]
+        set props_larr(site) [list non_assets published]
+        # perimissions_* are for special cases where tech admins need access to set special case permissions.
+        
+        set roles_lists [db_list_of_lists hf_roles_n { select id,label,title,description from hf_role where instance_id=:instance_id } ]
+        set props_lists [db_list_of_lists hf_property_n { select asset_type_id,id from hf_property where instance_id=:instance_id } ]
+        foreach role_list $roles_lists {
+            set role_id [lindex $role_list 0]
+            set role_label [lindex $role_list 1]
+            set u_idx [string first "_" $role_label]
+            incr u_idx
+            set role_level [string range $role_label $u_idx end]
+            set division [string range $role_label 0 $u_idx-2]
+            if { $division eq "technical" } {
+                # division abbreviates technical
+                set division "tech"
+            }
+            foreach prop_list $props_lists {
+                set asset_type_id [lindex $prop_list 0]
+                set property_id [lindex $prop_list 1]
+                # For each role_id and property_id create privileges
+                # Privileges are base on 
+                #     $privs_larr($role) and props_larr(asset_type_id)
+                # For example, 
+                #     $privs_larr(manager) = list read write
+                #     $props_larr(billing) = admin_contact_record non_assets published
+                
+                if { [lsearch $props_larr($division) $asset_type_id ] > -1 } {
+                    # This division has privileges.
+                    # Add privileges for the role_id
+                    if { $role_level ne "" } {
+                        foreach priv $privs_larr($role_level) {
+                            set exists_p [db_0or1row default_privileges_check { select property_id as test from hf_property_role_privilege_map where property_id=:property_id and role_id=:role_id and privilege=:priv } ]
+                            if { !$exists_p } {
+                                db_dml default_privileges_cr {
+                                    insert into hf_property_role_privilege_map
+                                    (property_id,role_id,privilege)
+                                    values (:property_id,:role_id,:priv)
+                                }
+                                db_dml default_privileges_cr_i {
+                                    insert into hf_property_role_privilege_map
+                                    (property_id,role_id,privilege,instance_id)
+                                    values (:property_id,:role_id,:priv,:instance_id)
+                                }
                             }
-                            db_dml default_privileges_cr_i {
-                                insert into hf_property_role_privilege_map
-                                (property_id,role_id,privilege,instance_id)
-                                values (:property_id,:role_id,:priv,:instance_id)
-                            }
+                            ns_log Notice "hosting-farm/tcl/hosting-farm-init.tcl.127: Added privilege '${priv}' to role '${division}' role_id '${role_id}' role_label '${role_label}'"
                         }
-                        ns_log Notice "hosting-farm/tcl/hosting-farm-init.tcl.127: Added privilege '${priv}' to role '${division}' role_id '${role_id}' role_label '${role_label}'"
+                    } else {
+                        ns_log Notice "hosting-farm/tcl/hosting-farm-init.tcl.130: No role_level (admin/manager/staff) for role_id '${role_id}' role_label '${role_label}'"
                     }
-                } else {
-                    ns_log Notice "hosting-farm/tcl/hosting-farm-init.tcl.130: No role_level (admin/manager/staff) for role_id '${role_id}' role_label '${role_label}'"
                 }
             }
         }
@@ -643,30 +651,31 @@ ad_proc -private hf_asset_type_id_init {
 } {
     Initialize permissions asset_type_ids for a hosting-farm instance
 } {
-    set ast_d_lists \
-        [list \
-             [list ss "#hosting-farm.SAAS#" "#hosting-farm.Software_as_a_service#"] \
-             [list dc "#hosting-farm.dc#" "#hosting-farm.Data_center#"] \
-             [list hw "#hosting-farm.hw#" "#hosting-farm.Hardware#"] \
-             [list vm "#hosting-farm.vm#" "#hosting-farm.Virtual_machine#"] \
-             [list vh "#hosting-farm.vh#" "#hosting-farm.Virtual_host#"] \
-             [list ns "#hosting-farm.ns#" "#hosting-farm.Name_service#"] \
-             [list ot "#hosting-farm.ot#" "#hosting-farm.Other#"] ]
-    foreach def_as_type_list $ast_d_lists {
-        set asset_type_id [lindex $def_as_type_list 0]
-        set label [lindex $def_as_type_list 1]
-        set name [lindex $def_as_type_list 2]
-        db_dml default_as_types_cr {
-            insert into hf_asset_type
-            (id,label,name)
-            values (:asset_type_id,:label,:name)
+    if { [llength [hf_asset_type_id_list] ] == 0 } {
+        set ast_d_lists \
+            [list \
+                 [list ss "#hosting-farm.SAAS#" "#hosting-farm.Software_as_a_service#"] \
+                 [list dc "#hosting-farm.dc#" "#hosting-farm.Data_center#"] \
+                 [list hw "#hosting-farm.hw#" "#hosting-farm.Hardware#"] \
+                 [list vm "#hosting-farm.vm#" "#hosting-farm.Virtual_machine#"] \
+                 [list vh "#hosting-farm.vh#" "#hosting-farm.Virtual_host#"] \
+                 [list ns "#hosting-farm.ns#" "#hosting-farm.Name_service#"] \
+                 [list ot "#hosting-farm.ot#" "#hosting-farm.Other#"] ]
+        foreach def_as_type_list $ast_d_lists {
+            set asset_type_id [lindex $def_as_type_list 0]
+            set label [lindex $def_as_type_list 1]
+            set name [lindex $def_as_type_list 2]
+            db_dml default_as_types_cr {
+                insert into hf_asset_type
+                (id,label,name)
+                values (:asset_type_id,:label,:name)
+            }
+            db_dml default_as_types_cr_i {
+                insert into hf_asset_type
+                (id,label,name,instance_id)
+                values (:asset_type_id,:label,:name,:instance_id)
+            }
         }
-        db_dml default_as_types_cr_i {
-            insert into hf_asset_type
-            (id,label,name,instance_id)
-            values (:asset_type_id,:label,:name,:instance_id)
-        }
-        
     }
     return 1
 }
