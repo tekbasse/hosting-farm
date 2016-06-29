@@ -39,6 +39,55 @@ aa_register_case -cats {api smoke} permissions_check {
             unset role_id
             unset role
             unset roles_lists
+
+            # create a lookup truth table of permissions
+            # hf_asset_type_ids_list vs roles_list
+            # with value being 1 read, 2 create, 4 write, 8 delete, 16 admin
+            # which results in these values, based on existing assignments:
+            # 0,1,3,7,15,31
+            # with this table, if user has same role, customer_id, 
+            # then pass using bit math: table value & privilege_request_value
+            # 
+            # initialize table
+            foreach role $roles_list {
+                # at_id = asset_type_id
+                foreach at_id $asset_type_ids_list {
+                    # 0 is default, no privilege
+                    set priv_arr(${role},${at_id})  0
+                }
+            }
+            # Manually add each entry. This is necessary to avoid duplicating 
+            # a code/logic error.
+            # asset_type_ids_list:
+            #   main_contact_record
+            #   admin_contact_record
+            #   tech_contact_record
+            #   permissions_properties
+            #   permissions_roles
+            #   permissions_privileges
+            #   non_assets
+            #   published
+            #   assets
+            #   ss
+            #   dc
+            #   hw
+            #   vm
+            #   vh
+            #   ns
+            #   ot
+            # roles_list
+            #   site_developer
+            #   billing_staff
+            #   billing_manager
+            #   billing_admin
+            #   technical_staff
+            #   technical_manager
+            #   technical_admin
+            #   main_staff
+            #   main_manager
+            #   main_admin
+
+
             
             # Case 1: A user with sysadmin rights and not customer
             set sysowner_user_id [party::get_by_email -email [ad_system_owner]]
