@@ -32,7 +32,7 @@ aa_register_case -cats {api smoke} permissions_check {
             foreach role_list $roles_lists {
                 set role [lindex $role_list 0]
                 append roles_list $role
-                set role_id [hf_role_id_of_label $role "" $instance_id]
+                set role_id [hf_role_id_of_label $role $instance_id]
                 set role_id_arr(${role}) $role_id
             }
             # keep namespace clean to help prevent bugs in test code
