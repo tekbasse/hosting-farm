@@ -58,37 +58,77 @@ aa_register_case -cats {api smoke} permissions_check {
             }
             # Manually add each entry. This is necessary to avoid duplicating 
             # a code/logic error.
-            # asset_type_ids_list:
-            #   main_contact_record
-            #   admin_contact_record
-            #   tech_contact_record
-            #   permissions_properties
-            #   permissions_roles
-            #   permissions_privileges
-            #   non_assets
-            #   published
-            #   assets
-            #   ss
-            #   dc
-            #   hw
-            #   vm
-            #   vh
-            #   ns
-            #   ot
-            # roles_list
-            #   site_developer
-            #   billing_staff
-            #   billing_manager
-            #   billing_admin
-            #   technical_staff
-            #   technical_manager
-            #   technical_admin
-            #   main_staff
-            #   main_manager
-            #   main_admin
+            array set rp_map_arr [list \
+                                      site_developer,non_assets 7   \
+                                      site_developer,published 7   \
+                                      billing_staff,admin_contact_record 1   \
+                                      billing_staff,non_assets 1   \
+                                      billing_staff,published 1   \
+                                      billing_manager,admin_contact_record 5   \
+                                      billing_manager,non_assets 5   \
+                                      billing_manager,published 5   \
+                                      billing_admin,admin_contact_record 23   \
+                                      billing_admin,non_assets 23   \
+                                      billing_admin,published 23   \
+                                      technical_staff,assets 1   \
+                                      technical_staff,dc 1   \
+                                      technical_staff,hw 1   \
+                                      technical_staff,non_assets 1   \
+                                      technical_staff,ns 1   \
+                                      technical_staff,ot 1   \
+                                      technical_staff,published 1   \
+                                      technical_staff,ss 1   \
+                                      technical_staff,tech_contact_record 1   \
+                                      technical_staff,vh 1   \
+                                      technical_staff,vm 1   \
+                                      technical_manager,assets 5   \
+                                      technical_manager,dc 5   \
+                                      technical_manager,hw 5   \
+                                      technical_manager,non_assets 5   \
+                                      technical_manager,ns 5   \
+                                      technical_manager,ot 5   \
+                                      technical_manager,published 5   \
+                                      technical_manager,ss 5   \
+                                      technical_manager,tech_contact_record 5   \
+                                      technical_manager,vh 5   \
+                                      technical_manager,vm 5   \
+                                      technical_admin,assets 23   \
+                                      technical_admin,dc 23   \
+                                      technical_admin,hw 23   \
+                                      technical_admin,non_assets 23   \
+                                      technical_admin,ns 23   \
+                                      technical_admin,ot 23   \
+                                      technical_admin,published 23   \
+                                      technical_admin,ss 23   \
+                                      technical_admin,tech_contact_record 23   \
+                                      technical_admin,vh 23   \
+                                      technical_admin,vm 23   \
+                                      main_staff,admin_contact_record 1   \
+                                      main_staff,assets 1   \
+                                      main_staff,main_contact_record 1   \
+                                      main_staff,non_assets 1   \
+                                      main_staff,published 1   \
+                                      main_staff,tech_contact_record 1   \
+                                      main_manager,admin_contact_record 5   \
+                                      main_manager,assets 5   \
+                                      main_manager,main_contact_record 5   \
+                                      main_manager,non_assets 5   \
+                                      main_manager,published 5   \
+                                      main_manager,tech_contact_record 5   \
+                                      main_admin,admin_contact_record 23   \
+                                      main_admin,assets 23   \
+                                      main_admin,main_contact_record 23   \
+                                      main_admin,non_assets 23   \
+                                      main_admin,published 23   \
+                                      main_admin,tech_contact_record 23 ]
+            set i_rp_list [array names rp_map_arr]
+            foreach i $i_rp_list {
+                set priv_arr(${i}) $rp_map_arr(${i})
+            }
+            # setup initializations for privilege check
+            array set rpv_arr read [list 1 create 2 write 4 delete 8 admin 16]
 
 
-            
             # Case 1: A user with sysadmin rights and not customer
             set sysowner_user_id [party::get_by_email -email [ad_system_owner]]
 
