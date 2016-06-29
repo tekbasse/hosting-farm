@@ -53,7 +53,7 @@ aa_register_case -cats {api smoke} permissions_check {
                 # at_id = asset_type_id
                 foreach at_id $asset_type_ids_list {
                     # 0 is default, no privilege
-                    set priv_arr(${role},${at_id})  0
+                    set priv_arr(${role},${at_id}) 0
                 }
             }
             # Manually add each entry. This is necessary to avoid duplicating 
@@ -126,12 +126,27 @@ aa_register_case -cats {api smoke} permissions_check {
                 set priv_arr(${i}) $rp_map_arr(${i})
             }
             # setup initializations for privilege check
-            array set rpv_arr read [list 1 create 2 write 4 delete 8 admin 16]
-
+            array set rpv_arr [list read 1 create 2 write 4 delete 8 admin 16]
+            set rpn_list [array names rpv_arr]
 
             # Case 1: A user with sysadmin rights and not customer
             set sysowner_user_id [party::get_by_email -email [ad_system_owner]]
-
+            # Case process
+            # Loop through each subcase
+            foreach role $roles_list {
+                # at_id = asset_type_id
+                foreach at_id $asset_type_ids_list {
+                    foreach rpn $rpn_list {
+                        set hp_allowed_p [hf_permission_p $sysown_user_id $customer_id $at_id $rpn $instance_id]
+                        if { [expr { $rpv_arr(${rpn}) & $priv_arr(${role},${at_id}) } ] > 0 } {
+                            set rp_allowed_p 1
+                        } else {
+                            set rp_allowed_p 0
+                        }
+                        aa_equals "sysadmin ${role} ${at_id} ${rpn} is " $hp_allowed $rp_allowed
+                    }
+                }
+            }
 
 
             # Case 2: A user registered to site and not customer
