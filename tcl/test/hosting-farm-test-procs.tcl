@@ -15,7 +15,7 @@ aa_register_case -cats {api smoke} permissions_check {
             # Yet, users must have read access permissions or test fails
             # Some tests will fail (predictably) in a hardened system
 
-            set instance_id [ad_con package_id]
+            set instance_id [ad_conn package_id]
             hf_roles_init $instance_id
             hf_property_init $instance_id
             hf_privilege_init $instance_id
@@ -133,17 +133,14 @@ aa_register_case -cats {api smoke} permissions_check {
             set sysowner_user_id [party::get_by_email -email [ad_system_owner]]
             # Case process
             # Loop through each subcase
+            set rp_allowed_p 1
             foreach role $roles_list {
                 # at_id = asset_type_id
                 foreach at_id $asset_type_ids_list {
                     foreach rpn $rpn_list {
                         set hp_allowed_p [hf_permission_p $sysown_user_id $customer_id $at_id $rpn $instance_id]
-                        if { [expr { $rpv_arr(${rpn}) & $priv_arr(${role},${at_id}) } ] > 0 } {
-                            set rp_allowed_p 1
-                        } else {
-                            set rp_allowed_p 0
-                        }
-                        aa_equals "sysadmin ${role} ${at_id} ${rpn} is " $hp_allowed $rp_allowed
+                        # syaadmin should be 1 for all tests
+                        aa_equals "C1 sysadmin ${role} ${at_id} ${rpn} is " $hp_allowed $rp_allowed_p
                     }
                 }
             }
@@ -163,6 +160,25 @@ aa_register_case -cats {api smoke} permissions_check {
                 error "Could not create test user u_site_arr=[array get u_site_arr]"
             } else {
                 set site_user_id $u_site_arr(user_id)
+            }
+            # Case process
+            # Loop through each subcase
+            set rp_allowed_p 0
+            foreach role $roles_list {
+                # at_id = asset_type_id
+                foreach at_id $asset_type_ids_list {
+                    foreach rpn $rpn_list {
+                        set hp_allowed_p [hf_permission_p $site_user_id $customer_id $at_id $rpn $instance_id]
+                        if { [expr { $rpv_arr(${rpn}) & $priv_arr(${role},${at_id}) } ] > 0 } {
+                            set rp_allowed_p 1
+                        } else {
+                            set rp_allowed_p 0
+                        }
+                        # site_user should be 0 for all tests
+                        # User has no roles.
+                        aa_equals "C2 site_user ${role} ${at_id} ${rpn} is " $hp_allowed $rp_allowed_p
+                    }
+                }
             }
 
 
@@ -187,6 +203,22 @@ aa_register_case -cats {api smoke} permissions_check {
             foreach role $roles_list {
                 hf_user_role_add $customer_id $mnp_user_id [hf_role_id_of_label $role $instance_id] $instance_id
             }
+            # Case process
+            # Loop through each subcase
+            set rp_allowed_p 1
+            foreach role $roles_list {
+                # at_id = asset_type_id
+                foreach at_id $asset_type_ids_list {
+                    foreach rpn $rpn_list {
+                        set hp_allowed_p [hf_permission_p $mnp_user_id $customer_id $at_id $rpn $instance_id]
+                        # mnp_user should be 1 for all tests
+                        # Because user has all roles.
+                        aa_equals "C3 mnp_user ${role} ${at_id} ${rpn} is " $hp_allowed $rp_allowed_p
+                    }
+                }
+            }
+
+
 
 
             # Case 4: A customer with desparate user roles
@@ -218,6 +250,26 @@ aa_register_case -cats {api smoke} permissions_check {
             # Max of three from each list should be able to admin?
             # Max of six users from each list should be able to write?
             # max of nine users from each list should be able to read?  How many roles? users?
+            # Case process
+            # Loop through each subcase
+            foreach c4uid $c4_uid_list {
+                foreach role $roles_list {
+                    # at_id = asset_type_id
+                    foreach at_id $asset_type_ids_list {
+                        foreach rpn $rpn_list {
+                            set hp_allowed_p [hf_permission_p $c4id $customer_id $at_id $rpn $instance_id]
+                            if { $c4ui(${role}) eq $c4uid && [expr { $rpv_arr(${rpn}) & $priv_arr(${role},${at_id}) } ] > 0 } {
+                                set rp_allowed_p 1
+                            } else {
+                                set rp_allowed_p 0
+                            }
+                            # test privilege against role when c4id = crui(role), otherwise 0
+                            aa_equals "C4 uid:${c4uid} ${role} ${at_id} ${rpn} is " $hp_allowed $rp_allowed_p
+                        }
+                    }
+                }
+            }
+
 
 
             # Case 5: A customer with some random duplicates
@@ -235,32 +287,86 @@ aa_register_case -cats {api smoke} permissions_check {
                     # Could not create user
                     error "Could not create test user m_${role}_arr=[array get m_${role}_arr]"
                 } else {
-                    set c5ui${role}) $m_${role}_arr(user_id)
+                    set c5ui(${role}) $m_${role}_arr(user_id)
                     lappend c5_uid_list $u_${role}_arr(usre_id)
                 }
-
             }
             # Create customer records
             set customer_id 5
             set roles_list_len [llength $roles_list_len]
+            # uwr_larr = users with role, each key contains list of user_ids assigned role.
             foreach role $roles_list {
-                hf_user_role_add $customer_id $c5ui${role}) [hf_role_id_of_label $role $instance_id] $instance_id
+                # make sure every role is assigned to a user
+                hf_user_role_add $customer_id $c5ui(${role}) [hf_role_id_of_label $role $instance_id] $instance_id
+                lappend uwr_larr($role) $c5ui(${role})
+                # assign a randome role to same user.
                 set u_role [lindex $roles_list [randomRange $roles_list_len]]
-                hf_user_role_add $customer_id $c5ui${role}) [hf_role_id_of_label $u_role $instance_id] $instance_id
+                hf_user_role_add $customer_id $c5ui(${role}) [hf_role_id_of_label $u_role $instance_id] $instance_id
+                lappend uwr_larr(${role}) $c5ui(${u_role})
+            }
+            # Case process
+            # Loop through each subcase
+            foreach c5uid $c5_uid_list {
+                foreach role $roles_list {
+                    # at_id = asset_type_id
+                    foreach at_id $asset_type_ids_list {
+                        foreach rpn $rpn_list {
+                            set hp_allowed_p [hf_permission_p $c5id $customer_id $at_id $rpn $instance_id]
+                            if { $c5uid in $uwr_larr(${role}) && [expr { $rpv_arr(${rpn}) & $priv_arr(${role},${at_id}) } ] > 0 } {
+                                set rp_allowed_p 1
+                            } else {
+                                set rp_allowed_p 0
+                            }
+                            # test privilege against role when c5id = crui(role), otherwise 0
+                            aa_equals "C5 uid:${c5uid} ${role} ${at_id} ${rpn} is " $hp_allowed $rp_allowed_p
+                        }
+                    }
+                }
             }
 
-            # Case 6: Case 4 with some random role changes.
-            set customer_id 4
+            # Case 6: Case 5 with some random role deletes, so that only one user per role
+            set customer_id 5
+            foreach role $roles_list {
+                set t_list $uwr_larr(${role})
+                set t_len [llength $t_list]
+                while { $t_len > 1 } {
+                    set i [randomRange $t_len]
+                    set i_uid [lindex $t_list $i]
+                    hf_user_role_delete $customer_id $i_uid [hf_role_id_of_label $role $instance_id] $instance_id
+                    set t_list [lreplace $t_list $i $i]
+                    incr t_len -1
+                }
+                set uwr_larr(${role})
+            }
+            # Case process
+            # Loop through each subcase
+            foreach c5uid $c5_uid_list {
+                foreach role $roles_list {
+                    # at_id = asset_type_id
+                    foreach at_id $asset_type_ids_list {
+                        foreach rpn $rpn_list {
+                            set hp_allowed_p [hf_permission_p $c5id $customer_id $at_id $rpn $instance_id]
+                            if { $c5uid in $uwr_larr(${role}) && [expr { $rpv_arr(${rpn}) & $priv_arr(${role},${at_id}) } ] > 0 } {
+                                set rp_allowed_p 1
+                            } else {
+                                set rp_allowed_p 0
+                            }
+                            # test privilege against role when c5id = crui(role), otherwise 0
+                            aa_equals "C6 c5uid:${c5uid} ${role} ${at_id} ${rpn} is " $hp_allowed $rp_allowed_p
+                        }
+                    }
+                }
+            }
+            
 
+        } \
+        -teardown_code {
+            # 
+            acs_user::delete -user_id $user1_arr(user_id) -permanent
 
-} \
-    -teardown_code {
-        # 
-        acs_user::delete -user_id $user1_arr(user_id) -permanent
-
-    }
-#aa_true "Test for .." $passed_p
-#aa_equals "Test for .." $test_value $expected_value
+        }
+    #aa_true "Test for .." $passed_p
+    #aa_equals "Test for .." $test_value $expected_value
 
 
 }

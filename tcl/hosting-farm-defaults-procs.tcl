@@ -475,7 +475,7 @@ ad_proc -private hf_roles_init {
 } {
     # role is <division>_<role_level> where role_level are privileges.
     # r_d_lists is abbrev for role_defaults_list
-    if { [llength [hf_roles $instance_id] ] === 0 } { 
+    if { [llength [hf_roles $instance_id] ] == 0 } { 
         set r_d_lists \
             [list \
                  [list main_admin "Main Admin" "Primary administrator"] \
