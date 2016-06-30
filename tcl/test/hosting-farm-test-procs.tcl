@@ -162,7 +162,7 @@ aa_register_case -cats {api smoke} permissions_check {
             incr z
             set email "test${z}@${domain}"
 
-            array set u_site_arr [auth::create_user -email $email ]
+            array set u_site_arr [auth::create_user -first_names [join [qal_namelur] " "] -last_name [qal_namelur 1] -email $email ]
             if { $u_site_arr(creation_status) ne "ok" } {
                 # Could not create user
                 ns_log Warning "Could not create test user u_site_arr=[array get u_site_arr]"
@@ -195,7 +195,7 @@ aa_register_case -cats {api smoke} permissions_check {
             incr z
             set email "test${z}@${domain}"
 
-            array set u_mnp_arr [auth::create_user -email $email ]
+            array set u_mnp_arr [auth::create_user -first_names [join [qal_namelur] " "] -last_name [qal_namelur 1] -email $email ]
             if { $u_mnp_arr(creation_status) ne "ok" } {
                 # Could not create user
                 ns_log Warning "Could not create test user u_mnp_arr=[array get u_mnp_arr]"
@@ -205,7 +205,7 @@ aa_register_case -cats {api smoke} permissions_check {
             incr z
             set email "test${z}@${domain}"
 
-            array set u_mnp_arr [auth::create_user -email $email ]
+            array set u_mnp_arr [auth::create_user -first_names [join [qal_namelur] " "] -last_name [qal_namelur 1] -email $email ]
             if { $u_mnp_arr(creation_status) ne "ok" } {
                 # Could not create user
                 ns_log Warning "Could not create test user u_mnp_arr=[array get u_mnp_arr]"
@@ -242,22 +242,22 @@ aa_register_case -cats {api smoke} permissions_check {
                 incr z
                 set email "test${z}@${domain}"
 
-                array set u_${role}_arr [auth::create_user -email $email ]
-                if { $u_${role}_arr(creation_status) ne "ok" } {
+                array set u_arr(${role}) [auth::create_user -first_names [join [qal_namelur] " "] -last_name [qal_namelur 1] -email $email ]
+                if { $u_arr(${role})(creation_status) ne "ok" } {
                     # Could not create user
-                    ns_log Warning "Could not create test user u_${role}_arr=[array get u_${role}_arr]"
+                    ns_log Warning "Could not create test user u_arr(${role})=[array get u_arr(${role})]"
                 } else {
-                    set ${role}_user_id $u_${role}_arr(user_id)
+                    set ${role}_user_id $u_arr(${role})(user_id)
                 }
                 incr z
                 set email "test${z}@${domain}"
 
-                array set u_${role}_arr [auth::create_user -email $email ]
-                if { $u_${role}_arr(creation_status) ne "ok" } {
+                array set u_arr(${role}) [auth::create_user -first_names [join [qal_namelur] " "] -last_name [qal_namelur 1] -email $email ]
+                if { $u_arr(${role})(creation_status) ne "ok" } {
                     # Could not create user
-                    ns_log Warning "Could not create test user u_${role}_arr=[array get u_${role}_arr]"
+                    ns_log Warning "Could not create test user u_arr(${role})=[array get u_arr(${role})]"
                 } else {
-                    set c4ui(${role}) $u_(${role})_arr(user_id)
+                    set c4ui(${role}) $u_arr(${role})(user_id)
                     lappend c4_uid_list $c4ui(${role})
                 }
             }
@@ -298,7 +298,7 @@ aa_register_case -cats {api smoke} permissions_check {
                 incr z
                 set email "test${z}@${domain}"
 
-                array set m_${role}_arr [auth::create_user -email $email ]
+                array set m_${role}_arr [auth::create_user -first_names [join [qal_namelur] " "] -last_name [qal_namelur 1] -email $email ]
                 if { $m_${role}_arr(creation_status) ne "ok" } {
                     # Could not create user
                     ns_log Warning "Could not create test user m_${role}_arr=[array get m_${role}_arr]"
@@ -308,7 +308,7 @@ aa_register_case -cats {api smoke} permissions_check {
                 incr z
                 set email "test${z}@${domain}"
 
-                array set m_${role}_arr [auth::create_user -email $email ]
+                array set m_${role}_arr [auth::create_user -first_names [join [qal_namelur] " "] -last_name [qal_namelur 1] -email $email ]
                 if { $m_${role}_arr(creation_status) ne "ok" } {
                     # Could not create user
                     ns_log Warning "Could not create test user m_${role}_arr=[array get m_${role}_arr]"
