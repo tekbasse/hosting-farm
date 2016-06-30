@@ -31,7 +31,7 @@ aa_register_case -cats {api smoke} permissions_check {
             set roles_list [list ]
             foreach role_list $roles_lists {
                 set role [lindex $role_list 0]
-                append roles_list $role
+                lappend roles_list $role
                 set role_id [hf_role_id_of_label $role $instance_id]
                 set role_id_arr(${role}) $role_id
             }
@@ -138,23 +138,26 @@ aa_register_case -cats {api smoke} permissions_check {
                 # at_id = asset_type_id
                 foreach at_id $asset_type_ids_list {
                     foreach rpn $rpn_list {
-                        set hp_allowed_p [hf_permission_p $sysown_user_id $customer_id $at_id $rpn $instance_id]
+                        set customer_id [randomRange 4]
+                        incr customer_id
+                        set hp_allowed_p [hf_permission_p $sysowner_user_id $customer_id $at_id $rpn $instance_id]
                         # syaadmin should be 1 for all tests
-                        aa_equals "C1 sysadmin ${role} ${at_id} ${rpn} is " $hp_allowed $rp_allowed_p
+                        aa_equals "C1 sysadmin ${role} ${at_id} ${rpn} is " $hp_allowed_p $rp_allowed_p
                     }
                 }
             }
 
 
             # Case 2: A user registered to site and not customer
-            array set u_site_arr [auth:create_user -email "test1@${domain}" ]
+            set domain hf_domain_example
+            array set u_site_arr [auth::create_user -email "test1@${domain}" ]
             if { $u_site_arr(creation_status) ne "ok" } {
                 # Could not create user
                 error "Could not create test user u_site_arr=[array get u_site_arr]"
             } else {
                 set site_user_id $u_site_arr(user_id)
             }
-            array set u_site_arr [auth:create_user -email "test1@${domain}" ]
+            array set u_site_arr [auth::create_user -email "test1@${domain}" ]
             if { $u_site_arr(creation_status) ne "ok" } {
                 # Could not create user
                 error "Could not create test user u_site_arr=[array get u_site_arr]"
@@ -176,7 +179,7 @@ aa_register_case -cats {api smoke} permissions_check {
                         }
                         # site_user should be 0 for all tests
                         # User has no roles.
-                        aa_equals "C2 site_user ${role} ${at_id} ${rpn} is " $hp_allowed $rp_allowed_p
+                        aa_equals "C2 site_user ${role} ${at_id} ${rpn} is " $hp_allowed_p $rp_allowed_p
                     }
                 }
             }
@@ -184,14 +187,14 @@ aa_register_case -cats {api smoke} permissions_check {
 
 
             # Case 3: A customer with single user
-            array set u_mnp_arr [auth:create_user -email "test1@${domain}" ]
+            array set u_mnp_arr [auth::create_user -email "test1@${domain}" ]
             if { $u_mnp_arr(creation_status) ne "ok" } {
                 # Could not create user
                 error "Could not create test user u_mnp_arr=[array get u_mnp_arr]"
             } else {
                 set mnp_user_id $u_mnp_arr(user_id)
             }
-            array set u_mnp_arr [auth:create_user -email "test1@${domain}" ]
+            array set u_mnp_arr [auth::create_user -email "test1@${domain}" ]
             if { $u_mnp_arr(creation_status) ne "ok" } {
                 # Could not create user
                 error "Could not create test user u_mnp_arr=[array get u_mnp_arr]"
@@ -213,7 +216,7 @@ aa_register_case -cats {api smoke} permissions_check {
                         set hp_allowed_p [hf_permission_p $mnp_user_id $customer_id $at_id $rpn $instance_id]
                         # mnp_user should be 1 for all tests
                         # Because user has all roles.
-                        aa_equals "C3 mnp_user ${role} ${at_id} ${rpn} is " $hp_allowed $rp_allowed_p
+                        aa_equals "C3 mnp_user ${role} ${at_id} ${rpn} is " $hp_allowed_p $rp_allowed_p
                     }
                 }
             }
@@ -225,14 +228,14 @@ aa_register_case -cats {api smoke} permissions_check {
             # Make each user one different role
             set c4_uid_list [list ]
             foreach role $roles_list {
-                array set u_${role}_arr [auth:create_user -email "test1@${domain}" ]
+                array set u_${role}_arr [auth::create_user -email "test1@${domain}" ]
                 if { $u_${role}_arr(creation_status) ne "ok" } {
                     # Could not create user
                     error "Could not create test user u_${role}_arr=[array get u_${role}_arr]"
                 } else {
                     set ${role}_user_id $u_${role}_arr(user_id)
                 }
-                array set u_${role}_arr [auth:create_user -email "test1@${domain}" ]
+                array set u_${role}_arr [auth::create_user -email "test1@${domain}" ]
                 if { $u_${role}_arr(creation_status) ne "ok" } {
                     # Could not create user
                     error "Could not create test user u_${role}_arr=[array get u_${role}_arr]"
@@ -264,7 +267,7 @@ aa_register_case -cats {api smoke} permissions_check {
                                 set rp_allowed_p 0
                             }
                             # test privilege against role when c4id = crui(role), otherwise 0
-                            aa_equals "C4 uid:${c4uid} ${role} ${at_id} ${rpn} is " $hp_allowed $rp_allowed_p
+                            aa_equals "C4 uid:${c4uid} ${role} ${at_id} ${rpn} is " $hp_allowed_p $rp_allowed_p
                         }
                     }
                 }
@@ -275,14 +278,14 @@ aa_register_case -cats {api smoke} permissions_check {
             # Case 5: A customer with some random duplicates
             set c5_uid_list [list ]
             foreach role $roles_list {
-                array set m_${role}_arr [auth:create_user -email "test1@${domain}" ]
+                array set m_${role}_arr [auth::create_user -email "test1@${domain}" ]
                 if { $m_${role}_arr(creation_status) ne "ok" } {
                     # Could not create user
                     error "Could not create test user m_${role}_arr=[array get m_${role}_arr]"
                 } else {
                     set ${role}_user_id $m_${role}_arr(user_id)
                 }
-                array set m_${role}_arr [auth:create_user -email "test1@${domain}" ]
+                array set m_${role}_arr [auth::create_user -email "test1@${domain}" ]
                 if { $m_${role}_arr(creation_status) ne "ok" } {
                     # Could not create user
                     error "Could not create test user m_${role}_arr=[array get m_${role}_arr]"
@@ -318,7 +321,7 @@ aa_register_case -cats {api smoke} permissions_check {
                                 set rp_allowed_p 0
                             }
                             # test privilege against role when c5id = crui(role), otherwise 0
-                            aa_equals "C5 uid:${c5uid} ${role} ${at_id} ${rpn} is " $hp_allowed $rp_allowed_p
+                            aa_equals "C5 uid:${c5uid} ${role} ${at_id} ${rpn} is " $hp_allowed_p $rp_allowed_p
                         }
                     }
                 }
@@ -352,7 +355,7 @@ aa_register_case -cats {api smoke} permissions_check {
                                 set rp_allowed_p 0
                             }
                             # test privilege against role when c5id = crui(role), otherwise 0
-                            aa_equals "C6 c5uid:${c5uid} ${role} ${at_id} ${rpn} is " $hp_allowed $rp_allowed_p
+                            aa_equals "C6 c5uid:${c5uid} ${role} ${at_id} ${rpn} is " $hp_allowed_p $rp_allowed_p
                         }
                     }
                 }

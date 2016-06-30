@@ -580,10 +580,10 @@ ad_proc -private hf_permission_p {
         # for cases where a large organization has multiple departments.  Right now, treating them as separate customers is adequate.
 
         set role_ids_list [db_list hf_user_roles_for_customer_get "select hf_role_id from hf_user_roles_map where instance_id=:instance_id and qal_customer_id=:customer_id and user_id=:user_id"]
-        if { [llength $roles_id_list] > 0 } {
+        if { [llength $role_ids_list] > 0 } {
             set property_id_exists_p [db_0or1row hf_property_id_exist_p "select id as property_id from hf_property where instance_id=:instance_id and asset_type_id=:property_label"]
             if { $property_id_exists_p } {
-                set allowed_p [db_0or1row hf_property_role_privilege_ck "select privilege from hf_property_role_privilege_map where instance_id=:instance_id and property_id=:property_id and privilege=:privilege and role_id in ([template::util::tcl_to_sql_list $roles_id_list])"]
+                set allowed_p [db_0or1row hf_property_role_privilege_ck "select privilege from hf_property_role_privilege_map where instance_id=:instance_id and property_id=:property_id and privilege=:privilege and role_id in ([template::util::tcl_to_sql_list $role_ids_list])"]
             }
         }
     }    
