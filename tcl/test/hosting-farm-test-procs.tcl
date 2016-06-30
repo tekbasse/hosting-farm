@@ -7,8 +7,8 @@ aa_register_case -cats {api smoke} permissions_check {
     Test hf_permissions_p proc for all cases
 } {
     aa_run_with_teardown \
+        -rollback \
         -test_code {
-            #        -rollback \
             ns_log Notice "aa_register_case.13: Begin test permissions_check"
             # Use default permissions provided by tcl/hosting-farm-init.tcl
             # Yet, users must have read access permissions or test fails
@@ -286,11 +286,6 @@ aa_register_case -cats {api smoke} permissions_check {
                 foreach at_id $asset_type_ids_list {
                     foreach rpn $rpn_list {
                         set hp_allowed_p [hf_permission_p $site_user_id $customer_id $at_id $rpn $instance_id]
-                        if { [expr { $rpv_arr(${rpn}) & $priv_arr(${role},${at_id}) } ] > 0 } {
-                            set rp_allowed_p 1
-                        } else {
-                            set rp_allowed_p 0
-                        }
                         # site_user should be 0 for all tests
                         # User has no roles.
                         aa_equals "C2 site uid:${site_user_id} ${role} ${at_id} ${rpn} is " $hp_allowed_p $rp_allowed_p
