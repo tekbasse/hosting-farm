@@ -130,7 +130,14 @@ aa_register_case -cats {api smoke} permissions_check {
             set rpn_list [array names rpv_arr]
 
             # Case 1: A user with sysadmin rights and not customer
-            set sysowner_user_id [party::get_by_email -email [ad_system_owner]]
+            set sysowner_email [ad_system_owner]
+            set sysowner_user_id [party::get_by_email -email $sysowner_email]
+            set i [string first "@" $sysowner_email]
+            if { $i > -1 } {
+                set domain [string range $sysowner_email $i+1 end]
+            } else {
+                set domain [hf_domain_example]
+            }
             # Case process
             # Loop through each subcase
             set rp_allowed_p 1
@@ -149,7 +156,7 @@ aa_register_case -cats {api smoke} permissions_check {
 
 
             # Case 2: A user registered to site and not customer
-            set domain "dekka.com"
+
             set z [clock seconds]
             set email "test${z}@${domain}"
             array set u_site_arr [auth::create_user -first_names [join [qal_namelur] " "] -last_name [qal_namelur 1] -email $email ]
@@ -219,14 +226,18 @@ aa_register_case -cats {api smoke} permissions_check {
             }
             # Case process
             # Loop through each subcase
-            set rp_allowed_p 1
             foreach role $roles_list {
                 # at_id = asset_type_id
                 foreach at_id $asset_type_ids_list {
                     foreach rpn $rpn_list {
                         set hp_allowed_p [hf_permission_p $mnp_user_id $customer_id $at_id $rpn $instance_id]
-                        # mnp_user should be 1 for all tests
+                        # mnp_user should be 1 for all tests except delete
                         # Because user has all roles.
+                        if { $rpn eq "delete" } {
+                            set rp_allowed_p 0
+                        } else {
+                            set rp_allowed_p 1
+                        }
                         aa_equals "C3 mnp_user ${role} ${at_id} ${rpn} is " $hp_allowed_p $rp_allowed_p
                     }
                 }
@@ -241,25 +252,16 @@ aa_register_case -cats {api smoke} permissions_check {
             foreach role $roles_list {
                 incr z
                 set email "test${z}@${domain}"
-
-                array set u_arr(${role}) [auth::create_user -first_names [join [qal_namelur] " "] -last_name [qal_namelur 1] -email $email ]
-                if { $u_arr(${role})(creation_status) ne "ok" } {
+                set arr1_name u1_${role}_arr
+                array set $arr1_name [auth::create_user -first_names [join [qal_namelur] " "] -last_name [qal_namelur 1] -email $email ]
+                if { [lindex [array get $arr1_name creation_status] 1] ne "ok" } {
                     # Could not create user
-                    ns_log Warning "Could not create test user u_arr(${role})=[array get u_arr(${role})]"
+                    ns_log Warning "Could not create test user u_${role}_arr=[array get u_${role}_arr]"
                 } else {
-                    set ${role}_user_id $u_arr(${role})(user_id)
+                    set c4ui(${role}) [set u1_${role}_arr(user_id) ]
                 }
                 incr z
                 set email "test${z}@${domain}"
-
-                array set u_arr(${role}) [auth::create_user -first_names [join [qal_namelur] " "] -last_name [qal_namelur 1] -email $email ]
-                if { $u_arr(${role})(creation_status) ne "ok" } {
-                    # Could not create user
-                    ns_log Warning "Could not create test user u_arr(${role})=[array get u_arr(${role})]"
-                } else {
-                    set c4ui(${role}) $u_arr(${role})(user_id)
-                    lappend c4_uid_list $c4ui(${role})
-                }
             }
             # Create customer records
             set customer_id 4
@@ -297,38 +299,27 @@ aa_register_case -cats {api smoke} permissions_check {
             foreach role $roles_list {
                 incr z
                 set email "test${z}@${domain}"
-
-                array set m_${role}_arr [auth::create_user -first_names [join [qal_namelur] " "] -last_name [qal_namelur 1] -email $email ]
-                if { $m_${role}_arr(creation_status) ne "ok" } {
+                set arrm_name m_${role}_arr
+                array set $arrm_name [auth::create_user -first_names [join [qal_namelur] " "] -last_name [qal_namelur 1] -email $email ]
+                if { [lindex [array get $arrm_name creation_status] 1] ne "ok" } {
                     # Could not create user
                     ns_log Warning "Could not create test user m_${role}_arr=[array get m_${role}_arr]"
                 } else {
-                    set ${role}_user_id $m_${role}_arr(user_id)
-                }
-                incr z
-                set email "test${z}@${domain}"
-
-                array set m_${role}_arr [auth::create_user -first_names [join [qal_namelur] " "] -last_name [qal_namelur 1] -email $email ]
-                if { $m_${role}_arr(creation_status) ne "ok" } {
-                    # Could not create user
-                    ns_log Warning "Could not create test user m_${role}_arr=[array get m_${role}_arr]"
-                } else {
-                    set c5ui(${role}) $m_${role}_arr(user_id)
-                    lappend c5_uid_list $u_${role}_arr(usre_id)
+                    set c5ui_arr(${role}) [set m_${role}_arr(user_id) ]
                 }
             }
             # Create customer records
             set customer_id 5
-            set roles_list_len [llength $roles_list_len]
+            set roles_list_len_1 [llength $roles_list]
             # uwr_larr = users with role, each key contains list of user_ids assigned role.
             foreach role $roles_list {
                 # make sure every role is assigned to a user
-                hf_user_role_add $customer_id $c5ui(${role}) [hf_role_id_of_label $role $instance_id] $instance_id
-                lappend uwr_larr($role) $c5ui(${role})
-                # assign a randome role to same user.
-                set u_role [lindex $roles_list [randomRange $roles_list_len]]
-                hf_user_role_add $customer_id $c5ui(${role}) [hf_role_id_of_label $u_role $instance_id] $instance_id
-                lappend uwr_larr(${role}) $c5ui(${u_role})
+                hf_user_role_add $customer_id $c5ui_arr(${role}) [hf_role_id_of_label $role $instance_id] $instance_id
+                lappend uwr_larr($role) $c5ui_arr(${role})
+                # assign a random role to same user.
+                set u_role [lindex $roles_list [randomRange $roles_list_len_1]]
+                hf_user_role_add $customer_id $c5ui_arr(${role}) [hf_role_id_of_label $u_role $instance_id] $instance_id
+                lappend uwr_larr(${u_role}) $c5ui_arr(${role})
             }
             # Case process
             # Loop through each subcase
@@ -356,11 +347,12 @@ aa_register_case -cats {api smoke} permissions_check {
                 set t_list $uwr_larr(${role})
                 set t_len [llength $t_list]
                 while { $t_len > 1 } {
+                    incr t_len -1
                     set i [randomRange $t_len]
                     set i_uid [lindex $t_list $i]
                     hf_user_role_delete $customer_id $i_uid [hf_role_id_of_label $role $instance_id] $instance_id
                     set t_list [lreplace $t_list $i $i]
-                    incr t_len -1
+
                 }
                 set uwr_larr(${role})
             }
@@ -388,7 +380,7 @@ aa_register_case -cats {api smoke} permissions_check {
         } \
         -teardown_code {
             # 
-            acs_user::delete -user_id $user1_arr(user_id) -permanent
+            #acs_user::delete -user_id $user1_arr(user_id) -permanent
 
         }
     #aa_true "Test for .." $passed_p

@@ -332,7 +332,7 @@ ad_proc -private hf_user_role_add {
             # db update is redundant
         } else {
             db_dml hf_privilege_create { insert into hf_user_roles_map 
-                (instance_id, customer_id, hf_role_id, user_id)
+                (instance_id, qal_customer_id, hf_role_id, user_id)
                 values (:instance_id, :customer_id, :role_id, :user_id) }
         }
     }
@@ -355,7 +355,7 @@ ad_proc -private hf_user_role_delete {
     # does this user have permission?
     set delete_p [hf_permission_p $this_user_id $customer_id permissions_privileges delete $instance_id]
     if { $delete_p } {
-        db_dml hf_privilege_delete { delete from hf_user_roles_map where instance_id=:instance_id and customer_id=:customer_id and user_id=:user_id and role_id=:role_id }
+        db_dml hf_privilege_delete { delete from hf_user_roles_map where instance_id=:instance_id and qal_customer_id=:customer_id and user_id=:user_id and hf_role_id=:role_id }
     }
     return $delete_p
 }
@@ -558,10 +558,12 @@ ad_proc -private hf_permission_p {
     }
     # first, verify that the user has adequate system permission.
     # This needs to work at least for admins, in order to set up hf_permissions.
-    set allowed_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege $privilege]
-    if { $allowed_p && $privilege eq "admin" } {
+    #set allowed_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege $privilege]
+    set allowed_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege read]
+    set admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
+    if { $admin_p } {
         # user is set to go. No need to check further.
-    } elseif { $allowed_p eq "read" && $property_label eq "published" } {
+    } elseif { $allowed_p && $privelege eq "read" && $property_label eq "published" } {
         
         # A generic case is privilege read, property_level published.
         # customer_id is not relevant.

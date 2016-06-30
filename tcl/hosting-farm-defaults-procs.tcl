@@ -579,6 +579,7 @@ ad_proc -private hf_privilege_init {
     # write includes trash, admin includes create where appropriate
     set exists_p [db_0or1row hf_property_role_privilege_map_exists_q "select property_id from hf_property_role_privilege_map where instance_id=:instance_id"]
     if { !$exists_p } {
+        # only package system admin has delete privilege
         set privs_larr(admin) [list "create" "read" "write" "admin"]
         set privs_larr(developer) [list "create" "read" "write"]
         set privs_larr(manager) [list "read" "write"]
