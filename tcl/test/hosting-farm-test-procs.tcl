@@ -150,18 +150,22 @@ aa_register_case -cats {api smoke} permissions_check {
 
             # Case 2: A user registered to site and not customer
             set domain "dekka.com"
-            set z 0
-            array set u_site_arr [auth::create_user -first_names [join [qal_namelur] " "] -last_name [qal_namelur 1] -email "test${z}dekka.com" ]
+            set z [clock seconds]
+            set email "test${z}@${domain}"
+            array set u_site_arr [auth::create_user -first_names [join [qal_namelur] " "] -last_name [qal_namelur 1] -email $email ]
             if { $u_site_arr(creation_status) ne "ok" } {
                 # Could not create user
-                error "Could not create test user u_site_arr=[array get u_site_arr]"
+                ns_log Warning "Could not create test user u_site_arr=[array get u_site_arr]"
             } else {
                 set site_user_id $u_site_arr(user_id)
             }
-            array set u_site_arr [auth::create_user -email "test${z}@${domain}" ]
+            incr z
+            set email "test${z}@${domain}"
+
+            array set u_site_arr [auth::create_user -email $email ]
             if { $u_site_arr(creation_status) ne "ok" } {
                 # Could not create user
-                error "Could not create test user u_site_arr=[array get u_site_arr]"
+                ns_log Warning "Could not create test user u_site_arr=[array get u_site_arr]"
             } else {
                 set site_user_id $u_site_arr(user_id)
             }
@@ -188,17 +192,23 @@ aa_register_case -cats {api smoke} permissions_check {
 
 
             # Case 3: A customer with single user
-            array set u_mnp_arr [auth::create_user -email "test${z}@${domain}" ]
+            incr z
+            set email "test${z}@${domain}"
+
+            array set u_mnp_arr [auth::create_user -email $email ]
             if { $u_mnp_arr(creation_status) ne "ok" } {
                 # Could not create user
-                error "Could not create test user u_mnp_arr=[array get u_mnp_arr]"
+                ns_log Warning "Could not create test user u_mnp_arr=[array get u_mnp_arr]"
             } else {
                 set mnp_user_id $u_mnp_arr(user_id)
             }
-            array set u_mnp_arr [auth::create_user -email "test${z}@${domain}" ]
+            incr z
+            set email "test${z}@${domain}"
+
+            array set u_mnp_arr [auth::create_user -email $email ]
             if { $u_mnp_arr(creation_status) ne "ok" } {
                 # Could not create user
-                error "Could not create test user u_mnp_arr=[array get u_mnp_arr]"
+                ns_log Warning "Could not create test user u_mnp_arr=[array get u_mnp_arr]"
             } else {
                 set mnp_user_id $u_mnp_arr(user_id)
             }
@@ -229,17 +239,23 @@ aa_register_case -cats {api smoke} permissions_check {
             # Make each user one different role
             set c4_uid_list [list ]
             foreach role $roles_list {
-                array set u_${role}_arr [auth::create_user -email "test${z}@${domain}" ]
+                incr z
+                set email "test${z}@${domain}"
+
+                array set u_${role}_arr [auth::create_user -email $email ]
                 if { $u_${role}_arr(creation_status) ne "ok" } {
                     # Could not create user
-                    error "Could not create test user u_${role}_arr=[array get u_${role}_arr]"
+                    ns_log Warning "Could not create test user u_${role}_arr=[array get u_${role}_arr]"
                 } else {
                     set ${role}_user_id $u_${role}_arr(user_id)
                 }
-                array set u_${role}_arr [auth::create_user -email "test${z}@${domain}" ]
+                incr z
+                set email "test${z}@${domain}"
+
+                array set u_${role}_arr [auth::create_user -email $email ]
                 if { $u_${role}_arr(creation_status) ne "ok" } {
                     # Could not create user
-                    error "Could not create test user u_${role}_arr=[array get u_${role}_arr]"
+                    ns_log Warning "Could not create test user u_${role}_arr=[array get u_${role}_arr]"
                 } else {
                     set c4ui(${role}) $u_(${role})_arr(user_id)
                     lappend c4_uid_list $c4ui(${role})
@@ -279,17 +295,23 @@ aa_register_case -cats {api smoke} permissions_check {
             # Case 5: A customer with some random duplicates
             set c5_uid_list [list ]
             foreach role $roles_list {
-                array set m_${role}_arr [auth::create_user -email "test${z}@${domain}" ]
+                incr z
+                set email "test${z}@${domain}"
+
+                array set m_${role}_arr [auth::create_user -email $email ]
                 if { $m_${role}_arr(creation_status) ne "ok" } {
                     # Could not create user
-                    error "Could not create test user m_${role}_arr=[array get m_${role}_arr]"
+                    ns_log Warning "Could not create test user m_${role}_arr=[array get m_${role}_arr]"
                 } else {
                     set ${role}_user_id $m_${role}_arr(user_id)
                 }
-                array set m_${role}_arr [auth::create_user -email "test${z}@${domain}" ]
+                incr z
+                set email "test${z}@${domain}"
+
+                array set m_${role}_arr [auth::create_user -email $email ]
                 if { $m_${role}_arr(creation_status) ne "ok" } {
                     # Could not create user
-                    error "Could not create test user m_${role}_arr=[array get m_${role}_arr]"
+                    ns_log Warning "Could not create test user m_${role}_arr=[array get m_${role}_arr]"
                 } else {
                     set c5ui(${role}) $m_${role}_arr(user_id)
                     lappend c5_uid_list $u_${role}_arr(usre_id)
