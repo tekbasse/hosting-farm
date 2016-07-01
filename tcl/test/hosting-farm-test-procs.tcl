@@ -400,7 +400,6 @@ aa_register_case -cats {api smoke} permissions_check {
             set customer_id 5
             # Loop through each subcase
             foreach c5uid $c5_uid_list {
-                set role $c5urole(${c5uid})
                 # at_id = asset_type_id
                 foreach at_id $asset_type_ids_list {
                     foreach rpn $rpn_list {
@@ -420,7 +419,7 @@ aa_register_case -cats {api smoke} permissions_check {
                             set rp_allowed_p 1
                         }
                         # test privilege against role when c5uid = crui(role), otherwise 0
-                        aa_equals "C6 c5uid:${c5uid} ${role} ${at_id} ${rpn}" $hp_allowed_p $rp_allowed_p
+                        aa_equals "C6 c5uid:${c5uid} [join $c5uwr_larr(${c5uid}) ","] ${at_id} ${rpn}" $hp_allowed_p $rp_allowed_p
                     }
                 }
                 

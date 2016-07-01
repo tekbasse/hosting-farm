@@ -585,13 +585,13 @@ ad_proc -private hf_permission_p {
 
         # select role_id list of user for this customer
         set role_ids_list [db_list hf_user_roles_for_customer_get "select hf_role_id from hf_user_roles_map where instance_id=:instance_id and qal_customer_id=:customer_id and user_id=:user_id"]
-            ns_log Notice "hf_permission_p.575: user_id '${user_id}' customer_id '${customer_id}' role_ids_list '${role_ids_list}'"
+        #    ns_log Notice "hf_permission_p.575: user_id '${user_id}' customer_id '${customer_id}' role_ids_list '${role_ids_list}'"
         if { [llength $role_ids_list] > 0 } {
-            ns_log Notice "hf_permission_p.587: user_id ${user_id} customer_id ${customer_id} property_label ${property_label} role_ids_list '${role_ids_list}'"
+            #    ns_log Notice "hf_permission_p.587: user_id ${user_id} customer_id ${customer_id} property_label ${property_label} role_ids_list '${role_ids_list}'"
             # get the property_id
             set property_id_exists_p [db_0or1row hf_property_id_exist_p "select id as property_id from hf_property where instance_id=:instance_id and asset_type_id=:property_label"]
             if { $property_id_exists_p } {
-                ns_log Notice "hf_permission_p.591: user_id ${user_id} customer_id ${customer_id} property_id '${property_id}' privilege '${privilege}' instance_id '${instance_id}'"
+                # ns_log Notice "hf_permission_p.591: user_id ${user_id} customer_id ${customer_id} property_id '${property_id}' privilege '${privilege}' instance_id '${instance_id}'"
                 # conform at least one of the roles has privilege on property_id
                 set allowed_p [db_0or1row hf_property_role_privilege_ck "select privilege from hf_property_role_privilege_map where instance_id=:instance_id and property_id=:property_id and privilege=:privilege and role_id in ([template::util::tcl_to_sql_list $role_ids_list]) limit 1"]
             }
