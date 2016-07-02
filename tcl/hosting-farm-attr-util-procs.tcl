@@ -515,10 +515,10 @@ ad_proc -private hf_ua_keys {
 ad_proc -private hf_up_ck {
     ua
     up_submitted
-    {connection_type ""}
+    ua_id
     {instance_id ""}
 } {
-    checks submitted against existing. returns 1 if matches, otherwise returns 0.
+    Checks submitted against existing. returns 1 if matches, otherwise returns 0. ua_id is sub_f_id for cases where associated with an asset or attribute.
 } {
     set ck_ok_p 0
     set log_p 1
@@ -547,7 +547,7 @@ ad_proc -private hf_up_ck {
             lappend vkp_list $k
         }
         set upp [string map $vkp_list $up_submitted]
-        set ck_ok_p [db_0or1row hf_ua_ck_up {select ua.ua_id from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and ua.connection_type=:connection_type and ua.details=:sdetail and hm.up_id=up.up_id and up.details=:upp}  ]
+        set ck_ok_p [db_0or1row hf_ua_ck_up {select ua.ua_id from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and ua.ua_id=ua_id and ua.details=:sdetail and hm.up_id=up.up_id and up.details=:upp}  ]
     } else {
         if { [ns_conn isconnected] } {
             set user_id [ad_conn user_id]
