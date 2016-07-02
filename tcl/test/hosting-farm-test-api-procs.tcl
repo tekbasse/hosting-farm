@@ -15,10 +15,11 @@ aa_register_case -cats {api smoke} assets_api_check {
             # Some tests will fail (predictably) in a hardened system
 
             set instance_id [ad_conn package_id]
-            hf_roles_init $instance_id
-            hf_property_init $instance_id
-            hf_privilege_init $instance_id
-            hf_asset_type_id_init $instance_id
+            # We avoid hf_permission_p by using a sysadmin user
+            # hf_roles_init $instance_id
+            # hf_property_init $instance_id
+            # hf_privilege_init $instance_id
+            # hf_asset_type_id_init $instance_id
             
             # Identify and test full range of parameters
             set asset_type_ids_list [db_list hf_property_asset_type_ids_get {
@@ -48,8 +49,60 @@ aa_register_case -cats {api smoke} assets_api_check {
             } else {
                 set domain [hf_domain_example]
             }
+            
+            
 
+            # os inits
+            set z2 1
+            set randlabel [qal_namelur 1 2 "-"]
+            set brand [qal_namelur 1 3 ""]
+            set kernel "${brand}-${z2}"
+            set title [apm_instance_name_from_id $instance_id]
+            set version "${z2}.[randomRange 100].[randomRange 100]"
 
+            # Add an os record
+            array set os_arr [list \
+                                  instance_id $instance_id \
+                                  label $randlabel \
+                                  brand $brand \
+                                  version $version \
+                                  kernel $kernel ]
+            set os_id [hf_os_write os_arr]
+
+            # Add another os record
+            incr z2
+            set randlabel [qal_namelur 1 2 "-"]
+            set brand [qal_namelur 1 3 ""]
+            set kernel "${brand}-${z2}"
+            set title [apm_instance_name_from_id $instance_id]
+            set version "${z2}.[randomRange 100].[randomRange 100]"
+            set randlabel [qal_namelur 1 2 "-"]
+
+            array set os_arr [list \
+                                  instance_id $instance_id \
+                                  label $randlabel \
+                                  brand $brand \
+                                  version $version \
+                                  kernel $kernel ]
+            set os_id [hf_os_write os_arr]
+
+            # Add another os record
+            incr z2
+            set randlabel [qal_namelur 1 2 "-"]
+            set brand [qal_namelur 1 3 ""]
+            set kernel "${brand}-${z2}"
+            set title [apm_instance_name_from_id $instance_id]
+            set version "${z2}.[randomRange 100].[randomRange 100]"
+            set randlabel [qal_namelur 1 2 "-"]
+
+            array set os_arr [list \
+                                  instance_id $instance_id \
+                                  label $randlabel \
+                                  brand $brand \
+                                  version $version \
+                                  kernel $kernel ]
+            set os_id [hf_os_write os_arr]
+            
             # put asset and attr records in key value a_larr(z) array
             # 1 element per asset or attr, referenced by z
 
@@ -69,38 +122,68 @@ aa_register_case -cats {api smoke} assets_api_check {
             # delete everything below a hw
             # verify
 
-            set z 1
+            set z 0
+
             set randlabel [hf_domain_example]
+            set asset_type_id "dc"
             array set asset_arr [list \
-                                     asset_type_id "dc" \
+                                     asset_type_id ${asset_type_id} \
                                      label $randlabel \
-                                     name "${randlabel} test DC $z" \
+                                     name "${randlabel} test ${asset_type_id} $z" \
                                      user_id $sysowner_user_id ]
             set asset_arr(f_id) [hf_asset_create asset_arr ]
             array set asset_arr [list \
-                                     affix [enerate_random_string] \
-                                     description "DC${z}" \
+                                     affix [generate_random_string] \
+                                     description "[string toupper ${asset_type_id}]${z}" \
                                      details "This is for api test"]
-            set asset_arr(dc_id) [hf_dc_write asset_arr]
+            set asset_arr(${asset_type_id}_id) [hf_dc_write asset_arr]
+
             set a_larr(${z}) [array get asset_arr]
             array unset asset_arr
-
             incr z
+
             set randlabel [hf_domain_example]
+            set asset_type_id "dc"
             array set asset_arr [list \
-                                     asset_type_id "dc" \
+                                     asset_type_id ${asset_type_id} \
                                      label $randlabel \
-                                     name "${randlabel} test DC $z" \
+                                     name "${randlabel} test ${asset_type_id} $z" \
                                      user_id $sysowner_user_id ]
             set asset_arr(f_id) [hf_asset_create asset_arr ]
             array set asset_arr [list \
-                                     affix [enerate_random_string] \
-                                     description "DC${z}" \
+                                     affix [generate_random_string] \
+                                     description "[string toupper ${asset_type_id}]${z}" \
                                      details "This is for api test"]
-            set asset_arr(dc_id) [hf_dc_write asset_arr]
-            array unset asset_arr
+            set asset_arr(${asset_type_id}_id) [hf_dc_write asset_arr]
 
+            set a_larr(${z}) [array get asset_arr]
+            array unset asset_arr
             incr z
+
+            set randlabel [qal_namelur 1 5 "-"]
+            set asset_type_id hw
+            array set asset_arr [list \
+                                     asset_type_id ${asset_type_id} \
+                                     label $randlabel \
+                                     name "${randlabel} test ${asset_type_id} $z" \
+                                     user_id $sysowner_user_id ]
+            set asset_arr(f_id) [hf_asset_create asset_arr ]
+            array set asset_arr [list \
+                                     system_name [generate_random_string] \
+                                     backup_sys "c3p0" \
+                                     os_id "" \
+                                     affix  \
+                                     description "[string toupper ${asset_type_id}]${z}" \
+                                     details "This is for api test"]
+            set asset_arr(${asset_type_id}_id) [hf_dc_write asset_arr]
+
+            set a_larr(${z}) [array get asset_arr]
+            array unset asset_arr
+            incr z
+
+
+
+
             
         } \
         -teardown_code {
