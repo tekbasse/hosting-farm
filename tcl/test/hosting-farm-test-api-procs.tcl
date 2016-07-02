@@ -53,56 +53,30 @@ aa_register_case -cats {api smoke} assets_api_check {
             
 
             # os inits
-            set z2 1
-            set randlabel [qal_namelur 1 2 "-"]
-            set brand [qal_namelur 1 3 ""]
-            set kernel "${brand}-${z2}"
-            set title [apm_instance_name_from_id $instance_id]
-            set version "${z2}.[randomRange 100].[randomRange 100]"
+            set z2 0
+            set os_id_list [list ]
+            while { $z2 < 5 } {
+                set randlabel [qal_namelur 1 2 "-"]
+                set brand [qal_namelur 1 3 ""]
+                set kernel "${brand}-${z2}"
+                set title [apm_instance_name_from_id $instance_id]
+                set version "${z2}.[randomRange 100].[randomRange 100]"
+                
+                # Add an os record
+                array set os_arr [list \
+                                      instance_id $instance_id \
+                                      label $randlabel \
+                                      brand $brand \
+                                      version $version \
+                                      kernel $kernel ]
+                set os_arr(os_id) [hf_os_write os_arr]
+                lappend os_id_list $os_arr(os_id)
 
-            # Add an os record
-            array set os_arr [list \
-                                  instance_id $instance_id \
-                                  label $randlabel \
-                                  brand $brand \
-                                  version $version \
-                                  kernel $kernel ]
-            set os_id [hf_os_write os_arr]
-
-            # Add another os record
-            incr z2
-            set randlabel [qal_namelur 1 2 "-"]
-            set brand [qal_namelur 1 3 ""]
-            set kernel "${brand}-${z2}"
-            set title [apm_instance_name_from_id $instance_id]
-            set version "${z2}.[randomRange 100].[randomRange 100]"
-            set randlabel [qal_namelur 1 2 "-"]
-
-            array set os_arr [list \
-                                  instance_id $instance_id \
-                                  label $randlabel \
-                                  brand $brand \
-                                  version $version \
-                                  kernel $kernel ]
-            set os_id [hf_os_write os_arr]
-
-            # Add another os record
-            incr z2
-            set randlabel [qal_namelur 1 2 "-"]
-            set brand [qal_namelur 1 3 ""]
-            set kernel "${brand}-${z2}"
-            set title [apm_instance_name_from_id $instance_id]
-            set version "${z2}.[randomRange 100].[randomRange 100]"
-            set randlabel [qal_namelur 1 2 "-"]
-
-            array set os_arr [list \
-                                  instance_id $instance_id \
-                                  label $randlabel \
-                                  brand $brand \
-                                  version $version \
-                                  kernel $kernel ]
-            set os_id [hf_os_write os_arr]
-            
+                set b_larr(${z2}) [array get os_arr]
+                array unset os_arr
+                incr z2
+            }
+            incr z2 -1
             # put asset and attr records in key value a_larr(z) array
             # 1 element per asset or attr, referenced by z
 
@@ -137,7 +111,7 @@ aa_register_case -cats {api smoke} assets_api_check {
                                      description "[string toupper ${asset_type_id}]${z}" \
                                      details "This is for api test"]
             set asset_arr(${asset_type_id}_id) [hf_dc_write asset_arr]
-
+            lappend type_larr(${asset_type_id}) $z
             set a_larr(${z}) [array get asset_arr]
             array unset asset_arr
             incr z
@@ -155,31 +129,74 @@ aa_register_case -cats {api smoke} assets_api_check {
                                      description "[string toupper ${asset_type_id}]${z}" \
                                      details "This is for api test"]
             set asset_arr(${asset_type_id}_id) [hf_dc_write asset_arr]
-
+            lappend type_larr(${asset_type_id}) $z
             set a_larr(${z}) [array get asset_arr]
             array unset asset_arr
             incr z
+            set z3 0
 
-            set randlabel [qal_namelur 1 5 "-"]
-            set asset_type_id hw
-            array set asset_arr [list \
-                                     asset_type_id ${asset_type_id} \
-                                     label $randlabel \
-                                     name "${randlabel} test ${asset_type_id} $z" \
-                                     user_id $sysowner_user_id ]
-            set asset_arr(f_id) [hf_asset_create asset_arr ]
-            array set asset_arr [list \
-                                     system_name [generate_random_string] \
-                                     backup_sys "c3p0" \
-                                     os_id "" \
-                                     affix  \
-                                     description "[string toupper ${asset_type_id}]${z}" \
-                                     details "This is for api test"]
-            set asset_arr(${asset_type_id}_id) [hf_dc_write asset_arr]
+            while { $z < 15 } {
+                              
 
-            set a_larr(${z}) [array get asset_arr]
-            array unset asset_arr
-            incr z
+                set backup_sys [qal_namelur 1 2 ""]
+                set randlabel "${backup_sys}-[qal_namelur 1 3 "-"]"
+                set asset_type_id "hw"
+                array set asset_arr [list \
+                                         asset_type_id ${asset_type_id} \
+                                         label $randlabel \
+                                         name "${randlabel} test ${asset_type_id} $z" \
+                                         user_id $sysowner_user_id ]
+                set asset_arr(f_id) [hf_asset_create asset_arr ]
+                array set asset_arr [list \
+                                         system_name [generate_random_string] \
+                                         backup_sys $backup_sys \
+                                         os_id [randomRange $z2] \
+                                         description "[string toupper ${asset_type_id}]${z}" \
+                                         details "This is for api test"]
+                set asset_arr(${asset_type_id}_id) [hf_dc_write asset_arr]
+                lappend type_larr(${asset_type_id}) $z
+                set a_larr(${z}) [array get asset_arr]
+
+                # add ip
+                set ipv6_suffix [expr { $z3 + 7334 } ]
+                array set ip_arr [list \
+                                      f_id $asset_arr(f_id) \
+                                      label "eth0" \
+                                      ip_id "" \
+                                      ipv4_addr "198.51.100.${z3}" \
+                                      ipv4_status "active" \
+                                      ipv6_addr "2001:0db8:85a3:0000:0000:8a2e:0370:${ipv6_suffix}" \
+                                      ipv6_status "active"]
+                set ip_arr(ip_id) [hf_ip_write ip_arr]
+                lappend ip_id_list $ip_arr(ip_id)
+
+                set c_larr(${z3}) [array get ip_arr]
+                array unset ip_arr
+                incr z3
+
+                # add ni
+                array set ni_arr [list \
+                                      f_id $asset_arr(f_id) \
+                                      label "NIC-${z3}" \
+                                      os_dev_ref "io1" \
+                                      bia_mac_address "00:1e:52:c6:3e:7a" \
+                                      ul_mac_address "" \
+                                      ipv4_addr_range "198.51.100.0/24" \
+                                      ipv6_addr_range "2001:db8:1234::/48" \
+                set ni_arr(ni_id) [hf_ni_write ni_arr]
+                lappend ni_id_list $ni_arr(ni_id)
+
+                set c_larr(${z3}) [array get ni_arr]
+                array unset ni_arr
+                incr z4
+
+                # add two ua
+                # add a ns
+
+                array unset asset_arr
+                incr z
+
+            }
 
 
 
