@@ -468,6 +468,37 @@ It is out of sync with hf_ns_keys"
     return 1
 }
 
+
+ad_proc -private hf_ua_defaults {
+    array_name
+} {
+    Sets defaults for an hf_network_interfaces record into array_name
+    if element does not yet exist in array. 
+} {
+    upvar 1 $array_name ua_arr
+    upvar 1 instance_id instance_id
+    set ua [list instance_id $instance_id \
+                f_id "" \
+                ua_id "" \
+                ua "" \
+                connection_type "" \
+                pw "" \
+                details]
+    set ua_list [list ]
+    foreach {key value} $ua {
+        lappend ua_list $key
+        if { ![info exists ua_arr(${key}) ] } {
+            set ua_arr(${key}) $value
+        }
+    }
+    if { [llength [set_difference_named_v ua_list [hf_ua_keys]]] > 0 } {
+        ns_log Warning "hf_ua_defaults: Update this proc. \
+It is out of sync with hf_ua_keys"
+    }
+    return 1
+}
+
+
 ad_proc -private hf_roles_init {
     instance_id
 } {

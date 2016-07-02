@@ -515,45 +515,50 @@ ad_proc -private hf_ua_keys {
 ad_proc -private hf_up_ck {
     ua
     up_submitted
-    {connection_type ""}
+    ua_id
     {instance_id ""}
 } {
-    checks submitted against existing. returns 1 if matches, otherwise returns 0.
+    Checks submitted against existing. returns 1 if matches, otherwise returns 0. ua_id is f_id  or sub_f_id for cases where associated with an asset or attribute.
 } {
     set ck_ok_p 0
     set log_p 1
-    if { [hf_are_visible_characters_q $ua ] } {
-        set log_p 0
-        if { ![qf_is_natural_number $instance_id] } {
-            # set instance_id package_id
-            set instance_id [ad_conn package_id]
-            if { $ua eq "" } {
-                set log_p 1
+    if {[qf_is_natural_number $ua_id] } {
+        if { [hf_are_visible_characters_q $ua ] } {
+            set log_p 0
+            if { ![qf_is_natural_number $instance_id] } {
+                # set instance_id package_id
+                set instance_id [ad_conn package_id]
+                if { $ua eq "" } {
+                    set log_p 1
+                }
             }
         }
-    }
-    if { !$log_p } {
-        # validation and limits
-        set connection_type [string range $connection_type 0 23]
-        set vka_list [list ]
-        foreach {k v} [hf_key] {
-            lappend vka_list $v
-            lappend vka_list $k
-        }
-        set sdetail [string map $vka_list $ua]
-        set vkp_list [list ]
-        foreach {k v} [hf_key] {
-            lappend vkp_list $v
-            lappend vkp_list $k
-        }
-        set upp [string map $vkp_list $up_submitted]
-        set ck_ok_p [db_0or1row hf_ua_ck_up {select ua.ua_id from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and ua.connection_type=:connection_type and ua.details=:sdetail and hm.up_id=up.up_id and up.details=:upp}  ]
-    } else {
-        if { [ns_conn isconnected] } {
-            set user_id [ad_conn user_id]
-            ns_log Warning "hf_up_ck(2680): Poor call rejected. submitted ua '${ua}' and '${up_submitted}' for conn '${connection_type}' requested by user_id ${user_id}."
+        if { !$log_p } {
+            # validation and limits
+            set connection_type [string range $connection_type 0 23]
+            set vka_list [list ]
+            foreach {k v} [hf_key] {
+                lappend vka_list $v
+                lappend vka_list $k
+            }
+            set sdetail [string map $vka_list $ua]
+            set vkp_list [list ]
+            foreach {k v} [hf_key] {
+                lappend vkp_list $v
+                lappend vkp_list $k
+            }
+            set upp [string map $vkp_list $up_submitted]
+            # f_id may be asset f_id or ua_id.
+            set f_id_list [hf_asset_attributes_by_type_cascade $ua_id "ua"]
+            lappend ua_id_list $ua_id
+            set ck_ok_p [db_0or1row hf_ua_ck_up {select ua.ua_id from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and ua.ua_id in ([template::util::tcl_to_sql_list $ua_id_list]) and ua.details=:sdetail and hm.up_id=up.up_id and up.details=:upp}  ]
         } else {
-            ns_log Warning "hf_up_ck(2682): Poor call rejected. submitted ua '${ua}' and '${up_submitted}' for conn '${connection_type}' requested by process without a connection."
+            if { [ns_conn isconnected] } {
+                set user_id [ad_conn user_id]
+                ns_log Warning "hf_up_ck(2680): Poor call rejected. submitted ua '${ua}' and '${up_submitted}' for conn '${connection_type}' requested by user_id ${user_id}."
+            } else {
+                ns_log Warning "hf_up_ck(2682): Poor call rejected. submitted ua '${ua}' and '${up_submitted}' for conn '${connection_type}' requested by process without a connection."
+            }
         }
     }
     return $ck_ok_p
