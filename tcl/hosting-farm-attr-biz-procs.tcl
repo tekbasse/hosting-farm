@@ -912,10 +912,12 @@ ad_proc -private hf_ua_write {
     ua
     connection_type
     {ua_id ""}
+    {up ""}
 } {
     writes or creates a ua.
     If ua_id is blank, a new one is created.
     If successful,  ua_id is returned, otherwise 0.
+    If up is nonempty, associates a up with ua.
 } {
     upvar 1 instance_id instance_id
 
@@ -947,6 +949,9 @@ ad_proc -private hf_ua_write {
                         set details=:sdetail, connection_type=:connection_type \
                         where ua_id=:ua_id and instance_id=:instance_id
                 }
+                if { $up ne "" } {
+                    set not_log_p [hf_up_write $ua_id $up $instance_id]
+                }
             }
         }
         if { !$id_exists_p } {
@@ -954,6 +959,9 @@ ad_proc -private hf_ua_write {
             set ua_id [db_nextval hf_id_seq]
             db_dml hf_ua_create "insert into hf_ua ([hf_ua_keys ","]) \
             values ([hf_a_keys ",:"])"
+            if { $up ne "" } {
+                set not_log_p [hf_up_write $ua_id $up $instance_id]
+            }
         }
         if { $log_p } {
             if { [ns_conn isconnected] } {
