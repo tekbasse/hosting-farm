@@ -134,6 +134,8 @@ aa_register_case -cats {api smoke} assets_api_check {
             array unset asset_arr
             incr z
             set z3 0
+            set z4 0
+            set z5 0
 
             while { $z < 15 } {
                               
@@ -204,12 +206,27 @@ aa_register_case -cats {api smoke} assets_api_check {
 
 
                 # add two ua
-                                  
-                set ua_id [hf_ua_write user1 https "" test]
-                lappend ua_larr(${z}) $ua_id
-                set ua_id [hf_ua_write user1 https "" test]
-                lappend ua_larr(${z}) $ua_id
+                array set ua_arr [list \
+                                      f_id $asset_arr(f_id) \
+                                      ua "user1" \
+                                      connection_type "https" \
+                                      ua_id "" \
+                                      up "test" ]
+                set ua_arr(ua_id) [hf_user_add ua_arr]
+                set d_larr(${z5}) [array get ua_arr]
+                incr z5
+                lappend ua_larr(${z}) $ua_arr(ua_id)
+                incr z
 
+                array set ua_arr [list \
+                                      f_id $asset_arr(f_id) \
+                                      ua "user1" \
+                                      connection_type "https" \
+                                      ua_id "" \
+                                      up "test" ]
+                set ua_arr(ua_id) [hf_user_add ua_arr]
+                set d_larr(${z5}) [array get ua_arr]
+                lappend ua_larr(${z}) $ua_arr(ua_id)
 
                 array unset asset_arr
                 incr z

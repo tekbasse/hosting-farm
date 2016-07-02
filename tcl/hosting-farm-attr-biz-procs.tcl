@@ -946,11 +946,10 @@ ad_proc -private hf_user_add {
     }
     # hf_ua_write.  have to expand hf_sub_asset_map_update to here, so hf_ua_write controls db_next_val.
     #set ua_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id ua $attribute_p]
-# following from hf_sub_asset_map_update
+    # following from hf_sub_asset_map_update
     # Actually always creates a record. Trashes any that already exist for same label and f_id.
     set sub_f_id_new ""
     set trashed_p 0
-    set sub_f_id ""
     set f_id_exists_p 0
     set sub_f_id_exists_p 0
     if { $sub_f_id ne "" } {
@@ -960,12 +959,12 @@ ad_proc -private hf_user_add {
             set f_id_exists_p 1
             set sub_f_id_exists_p 1
         } else {
-            ns_log Warning "hf_sub_asset_map_update.465: denied. \
+            ns_log Warning "hf_user_add.963: denied. \
  attribute does not exist. fid '${f_id} f_id_ck '${f_id_ck}'"
         }
     } 
     if { !$sub_f_id_exists_p && $sub_asset_type_id eq "" } {
-        ns_log Warning "hf_sub_asset_map_update.470: denied. \
+        ns_log Warning "hf_user_add.968: denied. \
  attribute does not exist. and sub_asset_type_id eq ''"
 
     } else {
@@ -974,12 +973,17 @@ ad_proc -private hf_user_add {
             # This is first version of sub_f_id. f_id still required.
         }
         if { $f_id_exists_p } {
-            set sub_f_id_new [db_nextval hf_id_seq]
+            set up_success_p 1
+            #set sub_f_id_new [db_nextval hf_id_seq]
+            set sub_f_id_new [hf_ua_write $ua $connection_type $ua_id]
+            if { $up ne "" && $sub_f_id_new ne "" } {
+                set up_success_p [hf_up_write $sub_f_id_new $up $instance_id]
+            }
             set nowts [dt_systime -gmt 1]
-            if { $sub_f_id_exists_p } {
+            if { $sub_f_id_exists_p && $sub_f_id_new ne "" && $up_success_p } {
                 db_dml ss_sub_asset_map_update { update hf_sub_asset_map
                     set sub_f_id=:sub_f_id_new where f_id=:f_id }
-            } else {
+            } elseif { $sub_f_id_new ne "" && $up_success_p } {
                 set sub_f_id $sub_f_id_new
                 set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
                 set time_created $nowts
@@ -991,12 +995,10 @@ ad_proc -private hf_user_add {
                 }
                 db_dml ss_sub_asset_map_create "insert into hf_sub_asset_map \
  ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
-            }
+            } 
         }
     }
     return $sub_f_id_new
-
-    return $ua_id_new
 }
 
 ad_proc -private hf_ua_write {
