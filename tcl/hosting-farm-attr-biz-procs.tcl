@@ -944,10 +944,8 @@ ad_proc -private hf_user_add {
     if { $ua_id eq "" } {
         set ua_id $sub_f_id
     }
-    # hf_ua_write.  have to expand hf_sub_asset_map_update to here, so hf_ua_write controls db_next_val.
-    #set ua_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id ua $attribute_p]
-    # following from hf_sub_asset_map_update
-    # Actually always creates a record. Trashes any that already exist for same label and f_id.
+    # Expanded hf_sub_asset_map_update code to here, 
+    # so hf_ua_write controls db_next_val.
     set sub_f_id_new ""
     set trashed_p 0
     set f_id_exists_p 0
@@ -975,10 +973,7 @@ ad_proc -private hf_user_add {
         if { $f_id_exists_p } {
             set up_success_p 1
             #set sub_f_id_new [db_nextval hf_id_seq]
-            set sub_f_id_new [hf_ua_write $ua $connection_type $ua_id]
-            if { $up ne "" && $sub_f_id_new ne "" } {
-                set up_success_p [hf_up_write $sub_f_id_new $up $instance_id]
-            }
+            set sub_f_id_new [hf_ua_write $ua $connection_type $ua_id $up]
             set nowts [dt_systime -gmt 1]
             if { $sub_f_id_exists_p && $sub_f_id_new ne "" && $up_success_p } {
                 db_dml ss_sub_asset_map_update { update hf_sub_asset_map
