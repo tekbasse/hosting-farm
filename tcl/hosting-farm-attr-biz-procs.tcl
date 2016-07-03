@@ -945,8 +945,9 @@ ad_proc -private hf_user_add {
     if { $ua_id eq "" } {
         set ua_id $sub_f_id
     }
-    # Expanded hf_sub_asset_map_update code to here, 
-    # so hf_ua_write controls db_next_val.
+    # Manually added hf_sub_asset_map_update code at this point
+    # so hf_ua_write controls db_next_val 
+    # and hf_up api handled directly.
     set sub_f_id_new ""
     set trashed_p 0
     set f_id_exists_p 0

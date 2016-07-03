@@ -688,8 +688,14 @@ ad_proc -private hf_ui_go_ahead_q {
                 set proc_customer_id $customer_id
             } else {
                 set customer_id ""
-                set go_ahead 0
-                ns_log Warning "hf_ui_go_ahead_q.650: Could not identify a unique customer_id for user_id '${user_id}'"
+                set admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
+                if { $admin_p } {
+                    # A sys admin doesn't need a customer_id
+                    set go_ahead 1
+                } else {
+                    ns_log Warning "hf_ui_go_ahead_q.650: Could not identify a unique customer_id for user_id '${user_id}'"
+                    set go_ahead 0
+                }
             }
         } else {
             set customer_id [hf_customer_id_of_asset_id $asset_id ]
