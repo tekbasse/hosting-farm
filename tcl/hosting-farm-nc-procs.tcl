@@ -633,11 +633,13 @@ ad_proc -private hf_ua_read {
                 set success_p [db_0or1row hf_ua_id_read "select details as ua, connection_type from hf_ua where instance_id =:instance_id and ua_id=:ua_id" ]
             }
         }
+        set c [hf_chars]
         if { $success_p == 0 && $ua ne "" } {
             # read
             if { $r_pw_p } {
+                set b "%c"
                 set vk_list [list ]
-                foreach {k v} [hf_key 0123456789abcdef] {
+                foreach {k v} [hf_key $c] {
                     lappend vk_list $v
                     lappend vk_list $k
                 }
@@ -650,7 +652,7 @@ ad_proc -private hf_ua_read {
         }
         if { $success_p } {
             if { $details eq "" } {
-                set details [string map [hf_key 0123456789abcdef] $ua]
+                set details [string map [hf_key $c] $ua]
             }
             if { $r_pw_p } {
                 set pw [string map [hf_key] $hfpw]

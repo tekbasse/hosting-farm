@@ -678,11 +678,9 @@ ad_proc -private hf_key {
 } {
     if { $key eq "" } {
         if { ![db_0or1row { select fk from hf_sched_params } ] } {
-            set fk [ad_generate_random_string 32]
+            set fk [hf_chars $key 0]
             db_dml hf_fk_cr { insert into hf_sched_params fk values (:fk) }
         }
-    } else {
-        set fk $key
     }
     set fp [file join [acs_root_dir] hosting-farm [ad_urlencode_path $fk]]
     if { ![file exists $fp] } {
@@ -708,39 +706,32 @@ ad_proc -private hf_key {
 }
 
 ad_proc -private hf_key_create {
-    {characters ""}
+    {chars ""}
 } {
     Returns a list of key value pairs for scrambling a string.
-    Scrambles characters in a string.
-    If characters is blank, uses a printable ascii subset.
+    Scrambles chars in a string.
+    If chars is blank, uses a default set.
 } {
-    if { $characters eq "" } {
-        set characters ""
-        for { set i 48 } { $i < 59 } { incr i } {
-            append characters [format %c $i]
-        }
-        for { set i 60 } { $i < 91 } { incr i } {
-            append characters [format %c $i]
-        }
-        for { set i 97 } { $i < 122 } { incr i } {
-            append characters [format %c $i]
-        }
+    set chars [hf_chars $chars 1]
+    set i 0
+    foreach ii [list 97 4 4 6 6 4 -73 1 8 8 4 4 6 6 4 ] {
+        incr i $ii
+        lappend med_list [format $b $i]
     }
-    set commons_list [list a e i o u y 0 1 2 9 A E I O U Y ]
 
-    set keys_list [lsort -unique [split $characters ""]]
-    # how many commons in keys_list?
-    set commons_count 0
-    foreach common $commons_list {
+    set keys_list [lsort -unique [split $chars ""]]
+    # how many med in keys_list?
+    set med_count 0
+    foreach common $med_list {
         if { [lsearch -exact $keys_list $common] > -1 } {
-            incr commons_count
+            incr med_count
         }
     }
 
     set availables_list $keys_list
     set i 0
     set doubles_list [list ]   
-    while { $i < $commons_count } {
+    while { $i < $med_count } {
         set pos [expr { int( [random] * [llength $availables_list] ) } ]
         lappend doubles_list [lrange $availables_list $pos $pos]
         set availables_list [lreplace $availables_list $pos $pos]
