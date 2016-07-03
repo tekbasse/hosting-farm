@@ -857,6 +857,7 @@ ad_proc -private hf_chars {
     Returns a set if chars is empty string.
 } {
     if { $chars eq "" } {
+        set b "%c"
         if { !$booster_p } {
             for { set i 65} {$i < 127 } {incr i } {
                 regexp -- {[[:alnum:]]} [format $b $i] ii
@@ -870,7 +871,6 @@ ad_proc -private hf_chars {
             }
         } else {
             set c_list [40 6 58 6 91 4 33 0 35 3]
-            set b "%c"
             foreach {c d} $c_list {
                 set d [expr { $c + $d + 1 } ]
                 for {set i $c} { $i < $d } { incr i }  {
