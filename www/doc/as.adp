@@ -1,4 +1,6 @@
-<master src="/packages/hosting-farm/www/doc/responsive-master3">
+<!-- <master src="/packages/hosting-farm/www/doc/responsive-master3"> -->
+<master src="/packages/b-responsive-theme/lib/plain-master">
+
   <property name="title">@title;noquote@</property>
   <property name="context">@context;noquote@</property>
 
