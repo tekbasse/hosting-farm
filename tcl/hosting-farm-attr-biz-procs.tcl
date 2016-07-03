@@ -909,7 +909,7 @@ ad_proc -private hf_vm_quota_write {
 }
 
 ad_proc -private hf_user_add {
-    arr_name
+    array_name
 } {
     @param arr_name The name of the array in the calling environment with elements of following params:
     @param f_id  The asset or attribute to associate user.
@@ -919,7 +919,7 @@ ad_proc -private hf_user_add {
     @param up    (optional) Set if adding a passcode.
 } {
     # requires f_id, ua
-    upvar 1 $ua_arr_name arr_name
+    upvar 1 $array_name arr_name
     upvar 1 instance_id instance_id
 
     hf_ua_defaults arr_name
@@ -930,6 +930,7 @@ ad_proc -private hf_user_add {
     if { $type_id eq "" } {
         set type_id $asset_type_id
     }
+    set sub_asset_type_id "ua"
     if { $sub_label eq "" } {
         set ct ""
         if { $f_id ne "" } {

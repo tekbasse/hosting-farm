@@ -36,20 +36,19 @@ aa_register_case -cats {api smoke} assets_api_check {
                 set role_id_arr(${role}) $role_id
             }
             # keep namespace clean to help prevent bugs in test code
-            unset role_id
-            unset role
-            unset roles_lists
+            #unset role_id
+            #unset role
+            #unset roles_lists
 
             # A user with sysadmin rights and not customer
             set sysowner_email [ad_system_owner]
-            set uid [party::get_by_email -email $sysowner_email]
+            set sysowner_user_id [party::get_by_email -email $sysowner_email]
             set i [string first "@" $sysowner_email]
             if { $i > -1 } {
                 set domain [string range $sysowner_email $i+1 end]
             } else {
                 set domain [hf_domain_example]
             }
-            
             
 
             # os inits
@@ -107,12 +106,13 @@ aa_register_case -cats {api smoke} assets_api_check {
                                      user_id $sysowner_user_id ]
             set asset_arr(f_id) [hf_asset_create asset_arr ]
             array set asset_arr [list \
-                                     affix [generate_random_string] \
+                                     affix [ad_generate_random_string] \
                                      description "[string toupper ${asset_type_id}]${z}" \
                                      details "This is for api test"]
             set asset_arr(${asset_type_id}_id) [hf_dc_write asset_arr]
             lappend type_larr(${asset_type_id}) $z
             set a_larr(${z}) [array get asset_arr]
+            set dci(0) $asset_arr(f_id)
             array unset asset_arr
             incr z
 
@@ -125,12 +125,13 @@ aa_register_case -cats {api smoke} assets_api_check {
                                      user_id $sysowner_user_id ]
             set asset_arr(f_id) [hf_asset_create asset_arr ]
             array set asset_arr [list \
-                                     affix [generate_random_string] \
+                                     affix [ad_generate_random_string] \
                                      description "[string toupper ${asset_type_id}]${z}" \
                                      details "This is for api test"]
             set asset_arr(${asset_type_id}_id) [hf_dc_write asset_arr]
             lappend type_larr(${asset_type_id}) $z
             set a_larr(${z}) [array get asset_arr]
+            set dci(1) $asset_arr(f_id)
             array unset asset_arr
             incr z
             set z3 0
@@ -149,13 +150,16 @@ aa_register_case -cats {api smoke} assets_api_check {
                                          name "${randlabel} test ${asset_type_id} $z" \
                                          user_id $sysowner_user_id ]
                 set asset_arr(f_id) [hf_asset_create asset_arr ]
+                # Add to dc. hf_asset hierarchy is added manually
+                set dc_ref [expr { round( fmod( $z , 2 ) ) } ]
+                hf_sub_asset_map_update $dci(${dc_ref}) dc $randlabel $asset_arr(f_id) hw 0
                 array set asset_arr [list \
-                                         system_name [generate_random_string] \
+                                         system_name [ad_generate_random_string] \
                                          backup_sys $backup_sys \
                                          os_id [randomRange $z2] \
                                          description "[string toupper ${asset_type_id}]${z}" \
                                          details "This is for api test"]
-                set asset_arr(${asset_type_id}_id) [hf_dc_write asset_arr]
+                set asset_arr(${asset_type_id}_id) [hf_hw_write asset_arr]
                 lappend type_larr(${asset_type_id}) $z
                 set a_larr(${z}) [array get asset_arr]
 
@@ -173,7 +177,7 @@ aa_register_case -cats {api smoke} assets_api_check {
                 lappend ip_id_list $ip_arr(ip_id)
 
                 set c_larr(${z3}) [array get ip_arr]
-                array unset ip_arr
+
                 incr z3
 
                 # add ni
@@ -203,7 +207,8 @@ aa_register_case -cats {api smoke} assets_api_check {
                 set c_larr(${z5}) [array get ns_arr]
                 array unset ns_arr
                 incr z5
-
+                # delayed unset ip_arr, so info could be used in ns_arr
+                array unset ip_arr
 
                 # add two ua
                 array set ua_arr [list \
@@ -216,25 +221,38 @@ aa_register_case -cats {api smoke} assets_api_check {
                 set d_larr(${z5}) [array get ua_arr]
                 incr z5
                 lappend ua_larr(${z}) $ua_arr(ua_id)
-                incr z
 
                 array set ua_arr [list \
                                       f_id $asset_arr(f_id) \
-                                      ua "user1" \
+                                      ua "user2" \
                                       connection_type "https" \
                                       ua_id "" \
                                       up "test" ]
                 set ua_arr(ua_id) [hf_user_add ua_arr]
                 set d_larr(${z5}) [array get ua_arr]
                 lappend ua_larr(${z}) $ua_arr(ua_id)
-
+                incr z5
+                
                 array unset asset_arr
                 incr z
 
+
             }
 
+            set dc0_f_id_list [hf_asset_subassets_cascade $dci(0)]
+            set dc0_f_id_list_len [llength $dc0_f_id_list]
+            set dc1_f_id_list [hf_asset_subassets_cascade $dci(1)]
+            set dc1_f_id_list_len [llength $dc1_f_id_list]
+            set asset_tot [expr { $dc0_f_id_list_len + $dc1_f_id_list_len } ]
+            aa_equals "Assets total created" $z $asset_tot
 
-
+            set zn [expr { $z3 + $z4 + $z5 } ]
+            set dc0_sub_f_id_list [hf_asset_attributes_cascade $dci(0)]
+            set dc0_sub_f_id_list_len [llength $dc0_f_id_list]
+            set dc1_sub_f_id_list [hf_asset_attributes_cascade $dci(1)]
+            set dc1_sub_f_id_list_len [llength $dc1_f_id_list]
+            set attr_tot [expr { $dc0_sub_f_id_list_len + $dc1_sub_f_id_list_len } ]
+            aa_equals "Attributes total created" $zn $attr_tot
 
             
         } \
