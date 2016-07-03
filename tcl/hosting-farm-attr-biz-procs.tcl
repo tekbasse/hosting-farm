@@ -737,6 +737,22 @@ ad_proc -private hf_ip_write {
     qf_array_to_vars arr_name [hf_ip_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
     qf_array_to_vars arr_name [list asset_type_id label]
+    if { [string is true -strict $ipv4_status] } {
+        set ipv4_status 1
+    } elseif { [string is false -strict $ipv4_status] } {
+        set ipv4_status 0
+    } else {
+        ns_log Warning "hf_ip_write.743: ipv4_status '${ipv4_status}' not valid. set to '0'."
+        set ipv4_status 0
+    }
+    if { [string is true -strict $ipv6_status] } {
+        set ipv6_status 1
+    } elseif { [string is false -strict $ipv6_status] } {
+        set ipv6_status 0
+    } else {
+        ns_log Warning "hf_ip_write.753: ipv6_status '${ipv6_status}' not valid. set to '0'."
+        set ipv6_status 0
+    }
     if { $type_id eq "" } {
         set type_id $asset_type_id
     }

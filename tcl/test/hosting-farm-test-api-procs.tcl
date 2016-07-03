@@ -172,9 +172,9 @@ aa_register_case -cats {api smoke} assets_api_check {
                                       label "eth0" \
                                       ip_id "" \
                                       ipv4_addr "198.51.100.${z3}" \
-                                      ipv4_status "active" \
+                                      ipv4_status "1" \
                                       ipv6_addr "2001:0db8:85a3:0000:0000:8a2e:0370:${ipv6_suffix}" \
-                                      ipv6_status "active"]
+                                      ipv6_status "1"]
                 set ip_arr(ip_id) [hf_ip_write ip_arr]
                 lappend ip_id_list $ip_arr(ip_id)
 
