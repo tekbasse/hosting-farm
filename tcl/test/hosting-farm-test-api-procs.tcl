@@ -113,6 +113,7 @@ aa_register_case -cats {api smoke} assets_api_check {
             lappend type_larr(${asset_type_id}) $z
             set a_larr(${z}) [array get asset_arr]
             set dci(0) $asset_arr(f_id)
+            ns_log Notice "hosting-farm-test-api-procs.tcl.116: dci(0) '$dci(0)'"
             array unset asset_arr
             incr z
 
@@ -132,6 +133,7 @@ aa_register_case -cats {api smoke} assets_api_check {
             lappend type_larr(${asset_type_id}) $z
             set a_larr(${z}) [array get asset_arr]
             set dci(1) $asset_arr(f_id)
+            ns_log Notice "hosting-farm-test-api-procs.tcl.116: dci(0) '$dci(1)'"
             array unset asset_arr
             incr z
             set z3 0
