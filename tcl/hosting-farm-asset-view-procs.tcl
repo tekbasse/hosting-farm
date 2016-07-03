@@ -56,7 +56,7 @@ ad_proc -public hf_assets_read {
     foreach asset_id $asset_ids_list {
         set read_p [hf_ui_go_ahead_q read "" "" 0]
         if { $read_p } {
-            set rows_lists [db_list_of_lists hf_asset_get "select [hf_asset_keys ","] from hf_assets where id=:asset_id and instance_id=:instance_id " ] 
+            set rows_lists [db_list_of_lists hf_asset_get "select [hf_asset_keys ","] from hf_assets where asset_id=:asset_id and instance_id=:instance_id " ] 
             set row_list [lindex $rows_list 0]
             if { [llength $row_list] > 0 } {
                 lappend return_lists $row_list
@@ -84,7 +84,7 @@ ad_proc -public hf_asset_stats {
     set read_p [hf_ui_go_ahead_q read "" "" 0]
     set return_list [list ]
     if { $read_p } {
-        set return_list_of_lists [db_list_of_lists hf_asset_stats "select [hf_asset_keys ","] from hf_assets where id=:asset_id and instance_id=:instance_id" ] 
+        set return_list_of_lists [db_list_of_lists hf_asset_stats "select [hf_asset_keys ","] from hf_assets where asset_id=:asset_id and instance_id=:instance_id" ] 
         # convert return_lists_of_lists to return_list
         set return_list [lindex $return_list_of_lists 0]
     } 

@@ -128,7 +128,7 @@ ad_proc -private hf_nc_asset_type_id {
     # avoid infinite loop. do not call a permission proc from here.
     upvar 1 instance_id instance_id
     set asset_type_id ""
-    db_0or1row hf_assets_asset_type_id_r "select asset_type_id from hf_assets where instance_id=:instance_id and id=:asset_id"
+    db_0or1row hf_assets_asset_type_id_r "select asset_type_id from hf_assets where instance_id=:instance_id and asset_id=:asset_id"
     return $asset_type_id
 }
 
@@ -208,7 +208,7 @@ ad_proc -private hf_nc_asset_read {
     if { $success_p } {
         # element list
         set as_var_list [list asset_type_id label templated_p template_p flags ns_id ua_id op_status]
-        set as_lists [db_list_of_lists hf_as_prop_get1 "select asset_type_id, label, templated_p, template_p, flags, ns_id, ua_id, op_status from hf_assets where instance_id=:instance_id and id=:asset_id"] 
+        set as_lists [db_list_of_lists hf_as_prop_get1 "select asset_type_id, label, templated_p, template_p, flags, ns_id, ua_id, op_status from hf_assets where instance_id=:instance_id and asset_id=:asset_id"] 
         set as_lists_len [llength $as_var_list]
         if { $as_lists_len > 1 } {
             ns_log Warning "hf_nc_asset_read: multiple assets found with same asset_id '${asset_id}'. This should not happen."

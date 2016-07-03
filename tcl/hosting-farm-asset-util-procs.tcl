@@ -46,7 +46,7 @@ ad_proc -private hf_customer_id_of_asset_id {
     # hf_ui_go_ahead_q read
     set f_id [hf_f_id_of_asset_id $asset_id]
     set customer_id ""
-    db_0or1row hf_customer_id_of_asset_id "select qal_customer_id from hf_assets where instance_id = :instance_id and id=:f_id order by last_modified desc"
+    db_0or1row hf_customer_id_of_asset_id "select qal_customer_id from hf_assets where instance_id = :instance_id and asset_id=:f_id order by last_modified desc"
     return $customer_id
 }
 
@@ -89,7 +89,7 @@ ad_proc -private hf_asset_id_exists_q {
                 set asset_exists_p 1
             }
         } else {
-            set asset_exists_p [db_0or1row hf_asset_get_id {select name from hf_assets where id=:asset_id and instance_id=:instance_id } ]
+            set asset_exists_p [db_0or1row hf_asset_get_id {select name from hf_assets where asset_id=:asset_id and instance_id=:instance_id } ]
         }
     }
     if { !$asset_exists_p } {
@@ -250,7 +250,7 @@ ad_proc -private hf_asset_id_change {
         db_dml hf_asset_id_change { update hf_asset_rev_map
             set asset_id=:asset_id_new where label=:asset_label and instance_id=:instance_id }
         db_dml hf_asset_id_change_active { update hf_assets
-            set last_modified=current_timestamp where id=:asset_id and instance_id=:instance_id }
+            set last_modified=current_timestamp where asset_id=:asset_id and instance_id=:instance_id }
         set success_p 1
     } else {
         ns_log Notice "hf_asset_id_change: no write allowed for asset_id_new '{$asset_id_new}' label '${label}' asset_id '${asset_id}'"
@@ -282,7 +282,7 @@ ad_proc -private hf_f_id_of_asset_id {
 } {
     upvar 1 instance_id instance_id
     set f_id ""
-    db_0or1row hf_asset_get_f_id_of_asset_id { select f_id from hf_assets where instance_id=:instance_id and id=:asset_id }
+    db_0or1row hf_asset_get_f_id_of_asset_id { select f_id from hf_assets where instance_id=:instance_id and asset_id=:asset_id }
     return $f_id
 }
 

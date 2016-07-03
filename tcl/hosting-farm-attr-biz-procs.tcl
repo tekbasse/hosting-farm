@@ -901,7 +901,7 @@ ad_proc -private hf_vm_quota_write {
             select plan_id as plan_id_ck from hf_vm_quotas
             where plan_id=:plan_id
             and instance_id=:instance_id
-            and time_trashed=null } ]
+            and time_trashed is null } ]
     } else {
         set exists_p 0
     }
@@ -913,7 +913,7 @@ ad_proc -private hf_vm_quota_write {
                 set time_trashed=:nowts
                 where plan_id=:plan_id
                 and instance_id=:instance_id
-                and time_trashed=null
+                and time_trashed is null
             }
         } else {
             set plan_id [db_nextval hf_id_seq]
@@ -991,7 +991,7 @@ ad_proc -private hf_user_add {
         if { $f_id_exists_p } {
             set up_success_p 1
             #set sub_f_id_new [db_nextval hf_id_seq]
-            set sub_f_id_new [hf_ua_write $ua $connection_type $ua_id $up]
+            set sub_f_id_new [hf_ua_write $ua $connection_type $ua_id $pw]
             set nowts [dt_systime -gmt 1]
             if { $sub_f_id_exists_p && $sub_f_id_new ne "" && $up_success_p } {
                 db_dml ss_sub_asset_map_update { update hf_sub_asset_map
@@ -1027,7 +1027,7 @@ ad_proc -private hf_ua_write {
 } {
     upvar 1 instance_id instance_id
 
-    hf_ui_go_ahead admin
+    hf_ui_go_ahead_q admin
 
     if { [hf_are_visible_characters $ua ] } {    
         set log_p 0

@@ -1010,7 +1010,7 @@ ad_proc -private hf_monitor_update {
     #    -- latest report from monitoring
     #    report text,
     #    -- sysadmins can log significant changes to asset, such as sw updates
-    #    -- with health=null and/or:
+    #    -- with health is null and/or:
     #    significant_change   varchar(1)
     #    -- Changes mark boundaries for data samples
     #);

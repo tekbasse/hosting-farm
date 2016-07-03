@@ -49,7 +49,7 @@ ad_proc -public hf_asset_create {
                 ([hf_asset_keys ","])
             values ([hf_asset_keys ",:"])" 
             hf_asset_rev_map_update $label $f_id $asset_id $trashed_p
-            ns_log Notice "hf_asset_create: hf_asset_create id '$asset_id' \
+            ns_log Notice "hf_asset_create: hf_asset_create asset_id '$asset_id' \
 f_id '$f_id' label '$label' instance_id '$instance_id' user_id '$user_id'"
         } on_error {
             set asset_id 0
@@ -141,7 +141,7 @@ an asset by deleting current revision trashed_p '${trashed_p}'."
     }
     if { $delete_p && $trashed_p } {
         db_dml hf_asset_rev_delete { delete from hf_assets 
-            where id=:asset_id and \
+            where asset_id=:asset_id and \
             instance_id=:instance_id \
                                          and trashed_p = '1'
         }
@@ -487,9 +487,9 @@ ad_proc -private hf_asset_templates {
     set user_id [ad_conn user_id]
     set customer_ids_list [hf_customer_ids_for_user $user_id]
     if { $inactives_included_p } {
-        set templates_list_of_lists [db_list_of_lists hf_asset_templates_select_all  "select [hf_asset_keys ","] from hf_assets where template_p =:1 and instance_id =:instance_id and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc" ]
+        set templates_list_of_lists [db_list_of_lists hf_asset_templates_select_all  "select [hf_asset_keys ","] from hf_assets where template_p =:1 and instance_id =:instance_id and asset_id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc" ]
     } else {
-        set templates_list_of_lists [db_list_of_lists hf_asset_templates_select "select [hf_asset_keys ","] from hf_assets where template_p =:1 and instance_id=:instance_id and ( time_stop=null or time_stop < current_timestamp ) and ( trashed_p is null or trashed_p <> '1' ) and id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc" ]
+        set templates_list_of_lists [db_list_of_lists hf_asset_templates_select "select [hf_asset_keys ","] from hf_assets where template_p =:1 and instance_id=:instance_id and ( time_stop is null or time_stop < current_timestamp ) and ( trashed_p is null or trashed_p <> '1' ) and asset_id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc" ]
     }
     # build list of ids that meet at least one criteria
     set return_list [list ]
