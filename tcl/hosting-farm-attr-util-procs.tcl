@@ -722,8 +722,8 @@ ad_proc -private hf_key_create {
     set keys_list [lsort -unique [split $chars ""]]
     # how many med in keys_list?
     set med_count 0
-    foreach common $med_list {
-        if { [lsearch -exact $keys_list $common] > -1 } {
+    foreach m $med_list {
+        if { [lsearch -exact $keys_list $m] > -1 } {
             incr med_count
         }
     }
