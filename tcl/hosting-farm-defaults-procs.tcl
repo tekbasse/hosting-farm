@@ -478,7 +478,6 @@ ad_proc -private hf_ua_defaults {
     upvar 1 $array_name ua_arr
     upvar 1 instance_id instance_id
     set ua [list instance_id $instance_id \
-                f_id "" \
                 ua_id "" \
                 ua "" \
                 connection_type "" \
