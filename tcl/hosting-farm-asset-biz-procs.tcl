@@ -547,6 +547,7 @@ ad_proc -private hf_asset_do {
         # Unspecific cases would require all three queries. 
         # This loop is instead of 3 separate trips to the db (queries).
         while { $proc_name eq "" && $counter < $counter_max } {
+            ns_log Notice "hf_asset_do.550: begin while.."
             set choice_list [lindex $template_ids_name_list $counter]
             # a template_ids_name_list row: asset_template_id asset_id proc_name
             set c_asset_template_id [lindex $choice_list 0]

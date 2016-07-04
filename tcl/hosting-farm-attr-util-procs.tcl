@@ -700,6 +700,7 @@ ad_proc -private hf_key {
     set fileId [open $fp r]
     set k ""
     while { ![eof $fileId] } {
+        ns_log Notice "hf_key.703: begin while.."
         gets $fileId line
         append k $line
     }
@@ -737,6 +738,7 @@ ad_proc -private hf_key_create {
     set i 0
     set doubles_list [list ]   
     while { $i < $med_count } {
+        ns_log Notice "hf_key_create.741: begin while.."
         set pos [expr { int( [random] * [llength $availables_list] ) } ]
         lappend doubles_list [lrange $availables_list $pos $pos]
         set availables_list [lreplace $availables_list $pos $pos]

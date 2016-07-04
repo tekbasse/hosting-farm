@@ -453,18 +453,23 @@ ad_proc -private hf_asset_subassets_cascade {
 } {
     upvar 1 instance_id instance_id
     set current_id_list [list $f_id]
-    # to search for more.
-    set next_id_list [list ]
-    # final list
-    set final_id_list [list ]
     set current_id_list_len 1
-    set q_count 0
-    while { $current_id_list_len > 0 } {
+    set final_id_list [list ]
+    set not_error_p 1
+    ns_log Notice "hf_asset_subassets_cascade.463: begin while.."
+    while { $current_id_list_len > 0 && $not_error_p } {
+        set next_id_list [list ]
         foreach s_id $current_id_list {
+            lappend final_id_list $s_id
             set new_list [db_list hf_subassets_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and instance_id=:instance_id and attribute_p!='1' and trashed_p!='1'"]
             foreach sb_id $new_list {
-                lappend next_id_list $sb_id
-                lappend final_id_list $s_id
+                if { $sb_id in $next_id_list || $sb_id in $final_id_list } {
+                    # skip
+                    ns_log Warning "hf_asset_subassets_cascade.467. Branching/hierarchy/looping issue. sb_id $sb_id duplicate. next_id_list '${next_id_list}' final_id_list '${final_id_list}'"
+                    set not_error_p 0
+                } else {
+                    lappend next_id_list $sb_id
+                }
             }
         }
         set current_id_list $next_id_list
@@ -481,24 +486,30 @@ ad_proc -private hf_asset_subassets_count {
 } {
     upvar 1 instance_id instance_id
     set current_id_list [list $f_id]
-    # to search for more.
-    set next_id_list [list ]
-    # final list
-    set final_id_list [list ]
     set current_id_list_len 1
-    set q_count 0
-    while { $current_id_list_len > 0 } {
+    set final_id_list [list ]
+    set not_error_p 1
+    ns_log Notice "hf_asset_subassets_count.492: begin while.."
+    while { $current_id_list_len > 0 && $not_error_p } {
+        set next_id_list [list ]
         foreach s_id $current_id_list {
+            lappend final_id_list $s_id
             set new_list [db_list hf_subassets_all_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and instance_id=:instance_id and attribute_p!='1'"]
             foreach sb_id $new_list {
-                lappend next_id_list $sb_id
-                lappend final_id_list $s_id
+                if { $sb_id in $next_id_list || $sb_id in $final_id_list } {
+                    # skip
+                    ns_log Warning "hf_asset_subassets_count.499. Branching/hierarchy/looping issue. sb_id $sb_id duplicate. next_id_list '${next_id_list}' final_id_list '${final_id_list}'"
+                    set not_error_p 0
+                } else {
+                    lappend next_id_list $sb_id
+                }
             }
         }
         set current_id_list $next_id_list
         set current_id_list_len [llength $current_id_list]
     }
     set count [llength $final_id_list ]
+    return $count
 }
 
 
@@ -510,18 +521,23 @@ ad_proc -private hf_asset_subassets_by_type_cascade {
 } {
     upvar 1 instance_id instance_id
     set current_id_list [list $f_id]
-    # to search for more.
-    set next_id_list [list ]
-    # final list
-    set final_id_list [list ]
     set current_id_list_len 1
-    set q_count 0
-    while { $current_id_list_len > 0 } {
+    set final_id_list [list ]
+    set not_error_p 1
+    ns_log Notice "hf_asset_subassets_by_type_cascade.522: begin while.."
+    while { $current_id_list_len > 0 && $not_error_p } {
+        set next_id_list [list ]
         foreach s_id $current_id_list {
+            lappend final_id_list $s_id
             set new_list [db_list hf_subassets_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and sub_type_id=:asset_type_id and instance_id=:instance_id and attribute_p!='1' and trashed_p!='1'"]
             foreach sb_id $new_list {
-                lappend next_id_list $sb_id
-                lappend final_id_list $s_id
+                if { $sb_id in $next_id_list || $sb_id in $final_id_list } {
+                    # skip
+                    ns_log Warning "hf_asset_subassets_by_type_cascade.538. Branching/hierarchy/looping issue. sb_id $sb_id duplicate. next_id_list '${next_id_list}' final_id_list '${final_id_list}'"
+                    set not_error_p 0
+                } else {
+                    lappend next_id_list $sb_id
+                }
             }
         }
         set current_id_list $next_id_list
@@ -537,18 +553,23 @@ ad_proc -private hf_asset_attributes_cascade {
 } {
     upvar 1 instance_id instance_id
     set current_id_list [list $f_id]
-    # to search for more.
-    set next_id_list [list ]
-    # final list
-    set final_id_list [list ]
     set current_id_list_len 1
-    set q_count 0
-    while { $current_id_list_len > 0 } {
+    set final_id_list [list ]
+    set not_error_p 1
+    ns_log Notice "hf_asset_attributes_cascade.550: begin while.."
+    while { $current_id_list_len > 0 & $not_error_p } {
+        set next_id_list [list ]
         foreach s_id $current_id_list {
+            lappend final_id_list $s_id
             set new_list [db_list hf_attributes_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and instance_id=:instance_id and attribute_p='1' and trashed_p!='1'"]
             foreach sb_id $new_list {
-                lappend next_id_list $sb_id
-                lappend final_id_list $s_id
+                if { $sb_id in $next_id_list || $sb_id in $final_id_list } {
+                    # skip
+                    ns_log Warning "hf_asset_attributes_cascade.570. Branching/hierarchy/looping issue. sb_id $sb_id duplicate. next_id_list '${next_id_list}' final_id_list '${final_id_list}'"
+                    set not_error_p 0
+                } else {
+                    lappend next_id_list $sb_id
+                }
             }
         }
         set current_id_list $next_id_list
@@ -565,18 +586,23 @@ ad_proc -private hf_asset_attributes_by_type_cascade {
 } {
     upvar 1 instance_id instance_id
     set current_id_list [list $f_id]
-    # to search for more.
-    set next_id_list [list ]
-    # final list
-    set final_id_list [list ]
     set current_id_list_len 1
-    set q_count 0
-    while { $current_id_list_len > 0 } {
+    set final_id_list [list ]
+    set not_error_p 1
+    ns_log Notice "hf_asset_attributes_by_type_cascade.579: begin while.."
+    while { $current_id_list_len > 0 & $not_error_p } {
+        set next_id_list [list ]
         foreach s_id $current_id_list {
+            lappend final_id_list $s_id
             set new_list [db_list hf_attributes_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and sub_type_id=:asset_type_id and instance_id=:instance_id and attribute_p='1' and trashed_p!='1'"]
             foreach sb_id $new_list {
-                lappend next_id_list $sb_id
-                lappend final_id_list $s_id
+                if { $sb_id in $next_id_list || $sb_id in $final_id_list } {
+                    # skip
+                    ns_log Warning "hf_asset_attributes_by_type_cascade.605. Branching/hierarchy/looping issue. sb_id $sb_id duplicate. next_id_list '${next_id_list}' final_id_list '${final_id_list}'"
+                    set not_error_p 0
+                } else {
+                    lappend next_id_list $sb_id
+                }
             }
         }
         set current_id_list $next_id_list

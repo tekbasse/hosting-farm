@@ -89,6 +89,7 @@ ad_proc -private hf::schedule::do {
             set bi 0
             # if loop nears cycle_time, quit and let next cycle reprioritize with any new jobs
             while { $bi < $batch_lists_len && $dur_sum < $cycle_time } {
+                ns_log Notice "hf::schedule::do.92. begin while.."
                 set sched_list [lindex $batch_lists $bi]
                 # set proc_list lindex combo from sched_list
                 lassign $sched_list id proc_name user_id instance_id priority order_time started_time

@@ -406,6 +406,7 @@ ad_proc -private ::hf::monitor::do {
                 set bi 0
                 # if loop nears cycle_time, quit and let next cycle reprioritize with any new jobs
                 while { $bi < $batch_lists_len && $dur_sum < $cycle_time } {
+                    ns_log Notice "hf::monitor::do.409: begin while.."
                     set mon_list [lindex $batch_lists $bi]
                     # set proc_list lindex combo from sched_list
                     
@@ -1225,10 +1226,12 @@ ad_proc -public hf_monitor_distribution {
             # pt_i is number of points minus 1, allowing for faster comparison in while statements.
             set pt_i -1
             while { $i < $sample_ct && $pt_i < $points_ct } {
+                ns_log Notice "hf_monitor_distribution.1229 begin while.."
                 set row_list [lindex $raw_lists $i]
                 set sig_change [lindex $row_list 3]
                 set t [lindex $row_list 2]
                 while { $sig_change && $i < $sample_ct } {
+                    ns_log Notice "hf_monitor_distribution.1234 begin while.."
                     incr i
                     set row_list [lindex $raw_lists $i]
                     set sig_change [lindex $row_list 3]
@@ -1242,6 +1245,7 @@ ad_proc -public hf_monitor_distribution {
                 # incr i $sample_pt_rate
                 set dt_s $t
                 while { $dt_s < $sample_s_rate && $i < $sample_ct && $pt_i < $points_ct } {
+                    ns_log Notice "hf_monitor_distribution.1248 begin while.."
                     incr i
                     set row_list [lindex $raw_lists $i]
                     set sig_change [lindex $row_list 3]
@@ -1255,9 +1259,11 @@ ad_proc -public hf_monitor_distribution {
             # All cases included, except by sample_s_rate.
 
             while { $i < $sample_ct } {
+                ns_log Notice "hf_monitor_distribution.1262 begin while.."
                 set row_list [lindex $raw_lists $i]
                 set sig_change [lindex $row_list 3]
                 while { $sig_change && $i < $sample_ct } {
+                    ns_log Notice "hf_monitor_distribution.1266 begin while.."
                     incr i
                     set row_list [lindex $raw_lists $i]
                     set sig_change [lindex $row_list 3]
