@@ -429,11 +429,11 @@ ad_proc -private hf_asset_create_from_asset_template {
                 set ua_id_new ""
                 if { $ua_id ne "" } {
                     set ua_list [hf_ua_read $ua_id ""]
-                    #vars: ua_id ua connection_type instance_id pw details
+                    #vars: ua_id ua connection_type instance_id up details
                     qf_lists_to_vars $ua_list [hf_ua_keys]
                     set ua_id_new [hf_ua_write $ua $connection_type "" $instance_id]
                     if { $ua_id_new > 0 } { 
-                        hf_up_write $ua_id_new $pw $instance_id
+                        hf_up_write $ua_id_new $up $instance_id
                     } else {
                         ns_log Warning "hf_asset_create_from_asset_template.257: Problem creating account for asset_id '${new_asset_id}'"
                     }

@@ -481,7 +481,7 @@ ad_proc -private hf_ua_defaults {
                 ua_id "" \
                 ua "" \
                 connection_type "" \
-                pw "" \
+                up "" \
                 details]
     set ua_list [list ]
     foreach {key value} $ua {
@@ -869,7 +869,7 @@ ad_proc -private hf_chars {
                 append chars [string range $ii $ii]
             }
         } else {
-            set c_list [40 6 58 6 91 4 33 0 35 3]
+            set c_list [list 40 6 58 6 91 4 33 0 35 3]
             foreach {c d} $c_list {
                 set d [expr { $c + $d + 1 } ]
                 for {set i $c} { $i < $d } { incr i }  {

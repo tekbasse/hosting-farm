@@ -991,7 +991,7 @@ ad_proc -private hf_user_add {
         if { $f_id_exists_p } {
             set up_success_p 1
             #set sub_f_id_new [db_nextval hf_id_seq]
-            set sub_f_id_new [hf_ua_write $ua $connection_type $ua_id $pw]
+            set sub_f_id_new [hf_ua_write $ua $connection_type $ua_id $up]
             set nowts [dt_systime -gmt 1]
             if { $sub_f_id_exists_p && $sub_f_id_new ne "" && $up_success_p } {
                 db_dml ss_sub_asset_map_update { update hf_sub_asset_map
@@ -1029,7 +1029,7 @@ ad_proc -private hf_ua_write {
 
     hf_ui_go_ahead_q admin
 
-    if { [hf_are_visible_characters $ua ] } {    
+    if { [hf_are_visible_characters_q $ua ] } {    
         set log_p 0
         set id_exists_p 0
 
@@ -1040,7 +1040,7 @@ ad_proc -private hf_ua_write {
             lappend vk_list $v
             lappend vk_list $k
         }
-        set sdetail [string map $vk_list $details]
+        set sdetail [string map $vk_list $ua]
         if { $ua_id ne "" } {
             # update
             # does ua_id exist?
@@ -1063,8 +1063,8 @@ ad_proc -private hf_ua_write {
         if { !$id_exists_p } {
             # create
             set ua_id [db_nextval hf_id_seq]
-            db_dml hf_ua_create "insert into hf_ua ([hf_ua_keys ","]) \
-            values ([hf_a_keys ",:"])"
+            db_dml hf_ua_create {insert into hf_ua (instance_id,ua_id,details,connection_type) 
+                values (:instance_id,:ua_id,:sdetail,:connection_type)}
             if { $up ne "" } {
                 set not_log_p [hf_up_write $ua_id $up $instance_id]
             }

@@ -596,14 +596,14 @@ ad_proc -private hf_ua_read {
     {ua ""}
     {connection_type ""}
     {instance_id ""}
-    {r_pw_p "0"}
+    {r_up_p "0"}
     {arr_nam "hf_ua_arr"}
 } {
     Reads ua by ua_id or ua
     See hf_ua_ck for access credential checking. hf_ua_read is for admin only.
     Returns 1 if successful, otherwise 0.
     Values returned to calling environment in array hf_ua_arr.
-    if r_pw_p true, includes password.
+    if r_up_p true, includes password.
 } {
     upvar 1 $arr_nam hu_arr
     set success_p [hf_nc_go_ahead ]
@@ -626,17 +626,17 @@ ad_proc -private hf_ua_read {
         # ua_id or ua && conn type
         if { $ua_id ne "" } {
             # read
-            if { $r_pw_p } {
-                set success_p [db_0or1row hf_ua_id_read_w_pw "select ua.details as ua, ua.connection_type, up.details as hfpw from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.ua_id=ua_id and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and hm.up_id=up.up_id"  ]
+            if { $r_up_p } {
+                set success_p [db_0or1row hf_ua_id_read_w_up "select ua.details as ua, ua.connection_type, up.details as hfup from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.ua_id=ua_id and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and hm.up_id=up.up_id"  ]
             } else {
-                set hfpw ""
+                set hfup ""
                 set success_p [db_0or1row hf_ua_id_read "select details as ua, connection_type from hf_ua where instance_id =:instance_id and ua_id=:ua_id" ]
             }
         }
         set c [hf_chars]
         if { $success_p == 0 && $ua ne "" } {
             # read
-            if { $r_pw_p } {
+            if { $r_up_p } {
                 set b "%c"
                 set vk_list [list ]
                 foreach {k v} [hf_key $c] {
@@ -644,9 +644,9 @@ ad_proc -private hf_ua_read {
                     lappend vk_list $k
                 }
                 set ua_ik [string map $vk_list $details]
-                set success_p [db_0or1row hf_ua_read_w_pw "select ua.ua_id, ua.connection_type, up.details as hfpw from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.ua=:ua_ik and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and hm.up_id=up.up_id"  ]
+                set success_p [db_0or1row hf_ua_read_w_up "select ua.ua_id, ua.connection_type, up.details as hfup from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.ua=:ua_ik and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and hm.up_id=up.up_id"  ]
             } else {
-                set hfpw ""
+                set hfup ""
                 set success_p [db_0or1row hf_ua_read "select ua_id, connection_type from hf_ua where instance_id =:instance_id and ua=:ua" ]
             }    
         }
@@ -654,10 +654,10 @@ ad_proc -private hf_ua_read {
             if { $details eq "" } {
                 set details [string map [hf_key $c] $ua]
             }
-            if { $r_pw_p } {
-                set pw [string map [hf_key] $hfpw]
+            if { $r_up_p } {
+                set up [string map [hf_key] $hfup]
             }
-            set i_list [list ua_id ua connection_type instance_id pw details]
+            set i_list [list ua_id ua connection_type instance_id up details]
             foreach i $i_list {
                 set hf_ua_arr($i) [set $i]
             }
@@ -681,11 +681,11 @@ ad_proc -private hf_ss_copy {
     qf_lists_to_vars $ss_list [hf_ss_keys]
     if { $ua_id ne "" } {
         hf_ua_read $ua_id "" "" $instance_id
-        # ua_id ua connection_type instance_id pw details
+        # ua_id ua connection_type instance_id up details
         #hf_ua_write $ua $connection_type "" $instance_id
         template::util::array_to_vars hf_ua_arr
         set ua_id_new [hf_ua_write $ua $connection_type "" $instance_id]
-        hf_up_write $ua_id_new $pw $instance_id
+        hf_up_write $ua_id_new $up $instance_id
     }
     if { $ns_id ne "" } {
         set ns_list [lindex $ns_id_lists [hf_ns_read $ns_id]]
@@ -711,11 +711,11 @@ ad_proc -private hf_ss_copy {
         qf_lists_to_vars $child_ss_list [hf_ss_keys]
         if { $ua_id ne "" } {
             hf_ua_read $ua_id "" "" $instance_id
-            # ua_id ua connection_type instance_id pw details
+            # ua_id ua connection_type instance_id up details
             #hf_ua_write $ua $connection_type "" $instance_id
             template::util::array_to_vars hf_ua_arr
             set ua_id_new [hf_ua_write $ua $connection_type "" $instance_id]
-            hf_up_write $ua_id_new $pw $instance_id
+            hf_up_write $ua_id_new $up $instance_id
         }
         if { $ns_id ne "" } {
             set ns_list [lindex $ns_id_lists [hf_ns_read $ns_id]]
@@ -748,11 +748,11 @@ ad_proc -private hf_vh_copy {
     qf_lists_to_vars $vh_list [hf_vh_keys]
     if { $ua_id ne "" } {
         hf_ua_read $ua_id "" "" $instance_id
-        # ua_id ua connection_type instance_id pw details
+        # ua_id ua connection_type instance_id up details
         #hf_ua_write $ua $connection_type "" $instance_id
         template::util::array_to_vars hf_ua_arr
         set ua_id_new [hf_ua_write $ua $connection_type "" $instance_id]
-        hf_up_write $ua_id_new $pw $instance_id
+        hf_up_write $ua_id_new $up $instance_id
     }
     if { $ns_id ne "" } {
         set ns_list [lindex $ns_id_lists [hf_ns_read $ns_id]]
@@ -762,11 +762,11 @@ ad_proc -private hf_vh_copy {
     set as_ua_id $ua_id
     if { $v_ua_id ne "" } {
         hf_ua_read $v_ua_id "" "" $instance_id
-        # ua_id ua connection_type instance_id pw details
+        # ua_id ua connection_type instance_id up details
         #hf_ua_write $ua $connection_type "" $instance_id
         template::util::array_to_vars hf_ua_arr
         set v_ua_id_new [hf_ua_write $ua $connection_type "" $instance_id]
-        hf_up_write $v_ua_id_new $pw $instance_id
+        hf_up_write $v_ua_id_new $up $instance_id
     }
     if { $v_ns_id ne "" } {
         set v_ns_list [lindex $ns_id_lists [hf_ns_read $v_ns_id]]
@@ -796,11 +796,11 @@ ad_proc -private hf_vm_copy {
     qf_lists_to_vars $vm_list [hf_vm_keys]
     if { $ua_id ne "" } {
         hf_ua_read $ua_id "" "" $instance_id
-        # ua_id ua connection_type instance_id pw details
+        # ua_id ua connection_type instance_id up details
         #hf_ua_write $ua $connection_type "" $instance_id
         template::util::array_to_vars hf_ua_arr
         set ua_id_new [hf_ua_write $ua $connection_type "" $instance_id]
-        hf_up_write $ua_id_new $pw $instance_id
+        hf_up_write $ua_id_new $up $instance_id
     }
     if { $ns_id ne "" } {
         set ns_id ""

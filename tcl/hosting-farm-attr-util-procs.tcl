@@ -506,7 +506,7 @@ ad_proc -private hf_ua_keys {
 } {
     Returns an ordered list of keys for hf_ua
 } {
-    set keys_list [list ua_id ua connection_type instance_id pw details]
+    set keys_list [list ua_id ua connection_type instance_id up details]
     set keys [hf_keys_by $keys_list $separator]
     return $keys
 }
@@ -677,20 +677,21 @@ ad_proc -private hf_key {
     Returns key value list. Creates first if it doesn't exist.
 } {
     if { $key eq "" } {
-        if { ![db_0or1row { select fk from hf_sched_params } ] } {
+        if { ![db_0or1row hf_sched_params_fk_r { select fk from hf_sched_params } ] } {
             set fk [hf_chars $key 0]
             db_dml hf_fk_cr { insert into hf_sched_params fk values (:fk) }
         }
     }
     set fp [file join [acs_root_dir] hosting-farm [ad_urlencode_path $fk]]
     if { ![file exists $fp] } {
-        file mkdir [file path $fp]
+        file mkdir [file dirname $fp]
         set k_list [hf_key_create]
         set k2_list [list ]
         foreach { key value } $k_list {
             lappend k2_list $value
             lappend k2_list $key
         }
+        set fileId [open $fp w]
         puts $fileId [join $k2_list \t]
         close $fileId
     } 
@@ -713,6 +714,8 @@ ad_proc -private hf_key_create {
     If chars is blank, uses a default set.
 } {
     set chars [hf_chars $chars 1]
+    set b "%"
+    append b "c"
     set i 0
     foreach ii [list 97 4 4 6 6 4 -73 1 8 8 4 4 6 6 4 ] {
         incr i $ii
