@@ -251,6 +251,7 @@ aa_register_case -cats {api smoke} assets_api_check {
             set dc1_f_id_list [hf_asset_subassets_cascade $dci(1)]
             set dc1_f_id_list_len [llength $dc1_f_id_list]
             set asset_tot [expr { $dc0_f_id_list_len + $dc1_f_id_list_len } ]
+            ns_log Notice "hosting-farm-test-api-procs.tcl dc0_f_id_list '${dc0_f_id_list}' dc1_f_id_list '${dc1_f_id_list}'"
             aa_equals "Assets total created" $asset_tot $z 
 
             set zn [expr { $z3 + $z4 + $z5 } ]
@@ -259,6 +260,7 @@ aa_register_case -cats {api smoke} assets_api_check {
             set dc1_sub_f_id_list [hf_asset_attributes_cascade $dci(1)]
             set dc1_sub_f_id_list_len [llength $dc1_f_id_list]
             set attr_tot [expr { $dc0_sub_f_id_list_len + $dc1_sub_f_id_list_len } ]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.262: dc0_sub_f_id_list '${dc0_sub_f_id_list}' dc1_sub_f_id_list '${dc1_sub_f_id_list}'"
             aa_equals "Attributes total created" $attr_tot $zn 
 
             
