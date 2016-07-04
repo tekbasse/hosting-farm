@@ -180,7 +180,7 @@ aa_register_case -cats {api smoke} assets_api_check {
                 lappend ip_id_list $ip_arr(ip_id)
 
                 set c_larr(${z3}) [array get ip_arr]
-
+                # delayed unset ip_arr. See below
                 incr z3
 
                 # add ni
@@ -210,6 +210,7 @@ aa_register_case -cats {api smoke} assets_api_check {
                 set c_larr(${z5}) [array get ns_arr]
                 array unset ns_arr
                 incr z5
+
                 # delayed unset ip_arr, so info could be used in ns_arr
                 array unset ip_arr
 
@@ -222,8 +223,9 @@ aa_register_case -cats {api smoke} assets_api_check {
                                       up "test" ]
                 set ua_arr(ua_id) [hf_user_add ua_arr]
                 set d_larr(${z5}) [array get ua_arr]
-                incr z5
                 lappend ua_larr(${z}) $ua_arr(ua_id)
+                array unset ua_arr
+                incr z5
 
                 array set ua_arr [list \
                                       f_id $asset_arr(f_id) \
@@ -234,7 +236,9 @@ aa_register_case -cats {api smoke} assets_api_check {
                 set ua_arr(ua_id) [hf_user_add ua_arr]
                 set d_larr(${z5}) [array get ua_arr]
                 lappend ua_larr(${z}) $ua_arr(ua_id)
+                array unset ua_arr
                 incr z5
+
                 ns_log Notice "hosting-farm-test-api-procs.tcl.237: z ${z}"
                 array unset asset_arr
                 incr z
