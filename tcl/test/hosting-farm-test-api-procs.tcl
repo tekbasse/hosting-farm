@@ -73,6 +73,7 @@ aa_register_case -cats {api smoke} assets_api_check {
 
                 set b_larr(${z2}) [array get os_arr]
                 array unset os_arr
+                ns_log Notice "hosting-farm-test-api-procs.tcl.76: z2 ${z2}"
                 incr z2
             }
             incr z2 -1
@@ -234,7 +235,7 @@ aa_register_case -cats {api smoke} assets_api_check {
                 set d_larr(${z5}) [array get ua_arr]
                 lappend ua_larr(${z}) $ua_arr(ua_id)
                 incr z5
-                
+                ns_log Notice "hosting-farm-test-api-procs.tcl.237: z ${z}"
                 array unset asset_arr
                 incr z
 

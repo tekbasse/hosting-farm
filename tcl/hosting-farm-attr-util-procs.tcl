@@ -583,20 +583,11 @@ ad_proc -private hf_up_write {
         set success_p 0
     }
     if { $up ne "" } {
-        if { ![hf_are_visible_characters_q $details] } {
+        if { ![hf_are_visible_characters_q $up] } {
             set up ""
             set success_p 0
         }
     }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    # ideally, must have admin_p to create
-    # otherwise hf_up_ck must be 1 to update
-    # Not practical to enforce at this level.
-    # maybe could use user_id and instance_id???
-    # Record it in the log.
-
     if { $success_p } {
 
         set up_exists_p [db_0or1row ua_id_exists_p {
@@ -610,10 +601,21 @@ ad_proc -private hf_up_write {
             lappend vk_list $k
         }
         set details [string map $vk_list $up]
+        if { [ns_conn isconnected] } {
+            set user_id [ad_conn user_id]
+        } else {
+            set user_id ""
+        }
+        # ideally, must have admin_p to create
+        # otherwise hf_up_ck must be 1 to update
+        # Not practical to enforce at this level.
+        # maybe could use user_id and instance_id???
+        # Record it in the log.
+        
         if { $up_exists_p } {
             ns_log Notice "hf_ua_write.2991: user_id '${user_id}' changed password for ua_id '${ua_id}' instance_id '${instance_id}'"
             db_dml hf_up_update {
-                update hf_up set details=:details where instance_id=:instance_id and up_id is in (select up_id from hf_ua_up_map where ua_id=:ua_id and instance_id=:instance_id)
+                update hf_up set details=:details where instance_id=:instance_id and up_id in (select up_id from hf_ua_up_map where ua_id=:ua_id and instance_id=:instance_id)
             }
         } else {
             # create
@@ -626,12 +628,12 @@ ad_proc -private hf_up_write {
                 }
                 db_dml hf_up_map_it {
                     insert into hf_ua_up_map (ua_id, up_id, instance_id)
-                    values (:ua_id,:up_id,:instance_id)
+                    values (:ua_id,:new_up_id,:instance_id)
                 }
             }
         }    
     }
-    if { !$success_p } {
+    if { !$success_p & $up ne "" } {
         ns_log Warning "hf_ua_write.3008: failed. Should not happen."
     }
     return $success_p
