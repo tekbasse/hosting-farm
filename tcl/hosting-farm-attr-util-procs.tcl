@@ -510,7 +510,7 @@ ad_proc -private hf_encode {
 } {
     if { $key_list eq "" || [llength $key_list ] < 2 } {
         # other choices: hf_chars 1,  hf_key
-        set key_list [hf_chars]
+        set key_list [hf_key]
     }
     set vka_list [list ]
     foreach {k v} $key_list {
