@@ -850,7 +850,7 @@ ad_proc -private hf_demo_init {
 }
 
 ad_proc -private hf_chars {
-    chars
+    {chars ""}
     {booster_p "1"}
 } {
     Returns a set if chars is empty string.
@@ -858,18 +858,19 @@ ad_proc -private hf_chars {
     if { $chars eq "" } {
         set b "%c"
         if { !$booster_p } {
-            for { set i 65} {$i < 127 } {incr i } {
+            for {set i 65} {$i < 127 } {incr i } {
+                set ii ""
                 regexp -- {[[:alnum:]]} [format $b $i] ii
                 append c $ii
             }
-            set d [length $c]
+            set d [string length $c]
             incr d -1
-            for { set i 0} {$i < 33} { incr i } {
+            for {set i 0} {$i < 38} { incr i } {
                 set ii [randomRange $d] 
-                append chars [string range $ii $ii]
+                append chars [string range $c $ii $ii]
             }
         } else {
-            set c_list [list 40 6 58 6 91 4 33 0 35 3]
+            set c_list [list 40 6 58 6 94 1 33 0 35 3]
             foreach {c d} $c_list {
                 set d [expr { $c + $d + 1 } ]
                 for {set i $c} { $i < $d } { incr i }  {
@@ -877,6 +878,7 @@ ad_proc -private hf_chars {
                 }
             }
             for { set i 65} {$i < 127 } {incr i } {
+                set ii ""
                 regexp -- {[[:alnum:]]} [format $b $i] ii
                 append chars $ii
             }

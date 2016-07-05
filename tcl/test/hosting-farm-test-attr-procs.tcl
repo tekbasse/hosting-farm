@@ -4,7 +4,7 @@ ad_library {
 }
 
 aa_register_case -cats {db smoke} assets_attr_check {
-    Test assets and attributes api
+    Simple detailed test and diagnostics of asset and attribute api
 } {
     aa_run_with_teardown \
         -rollback \
