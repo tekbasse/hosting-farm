@@ -508,8 +508,7 @@ ad_proc -private hf_encode {
     string
     {key_list ""}
 } {
-    upvar 1 instance_id instance_id
-    if { $key_list eq "" } {
+    if { $key_list eq "" || [llength $key_list ] < 2 } {
         # other choices: hf_chars 1,  hf_key
         set key_list [hf_chars]
     }
@@ -526,7 +525,7 @@ ad_proc -private hf_decode {
     string
     {key_list ""}
 } {
-    if { $key_list eq "" } {
+    if { $key_list eq "" || [llength $key_list ] < 2 } {
         set key_list [hf_key]
     }
     set x [string map $key_list $string]
@@ -698,7 +697,7 @@ ad_proc -private hf_key {
         if { ![file exists $file_path] } {
             file mkdir $file_path
         }
-        set k_list [hf_key_create]
+        set k_list [hf_key_create $key]
         set k2_list [list ]
         foreach { key value } $k_list {
             lappend k2_list $value
