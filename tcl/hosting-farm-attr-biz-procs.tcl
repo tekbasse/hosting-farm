@@ -1039,12 +1039,7 @@ ad_proc -private hf_ua_write {
 
         # validation and limits
         set connection_type [string range $connection_type 0 23]
-        set vk_list [list ]
-        foreach {k v} [hf_key] {
-            lappend vk_list $v
-            lappend vk_list $k
-        }
-        set sdetail [string map $vk_list $ua]
+        set sdetail [hf_encode $ua]
         if { $ua_id ne "" } {
             # update
             # does ua_id exist?
@@ -1055,8 +1050,8 @@ ad_proc -private hf_ua_write {
             }
             if { $id_exists_p } {
                 db_dml hf_ua_update {
-                    update hf_ua \
-                        set details=:sdetail, connection_type=:connection_type \
+                    update hf_ua 
+                        set details=:sdetail,connection_type=:connection_type
                         where ua_id=:ua_id and instance_id=:instance_id
                 }
                 if { $up ne "" } {

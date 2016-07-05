@@ -429,7 +429,7 @@ ad_proc -private hf_sub_asset_map_update {
 } {
     upvar 1 instance_id instance_id
     # Actually always creates a record. Trashes any that already exist for same label and f_id.
-    set attribute_p [qf_is_true $attrtribute_p 1]
+    set attribute_p [qf_is_true $attribute_p 1]
     set sub_f_id_new ""
     set trashed_p 0
     set sub_f_id ""
@@ -504,6 +504,34 @@ ad_proc -private hf_ua_keys {
     return $keys
 }
 
+ad_proc -private hf_encode {
+    string
+    {key_list ""}
+} {
+    upvar 1 instance_id instance_id
+    if { $key_list eq "" } {
+        # other choices: hf_chars 1,  hf_key
+        set key_list [hf_chars]
+    }
+    set vka_list [list ]
+    foreach {k v} $key_list {
+        lappend vka_list $v
+        lappend vka_list $k
+    }
+    set x [string map $vka_list $string]
+    return $x
+}
+
+ad_proc -private hf_decode {
+    string
+    {key_list ""}
+} {
+    if { $key_list eq "" } {
+        set key_list [hf_key]
+    }
+    set x [string map $key_list $string]
+    return $x
+}
 
 ad_proc -private hf_up_ck {
     ua
@@ -529,18 +557,8 @@ ad_proc -private hf_up_ck {
         if { !$log_p } {
             # validation and limits
             set connection_type [string range $connection_type 0 23]
-            set vka_list [list ]
-            foreach {k v} [hf_key] {
-                lappend vka_list $v
-                lappend vka_list $k
-            }
-            set sdetail [string map $vka_list $ua]
-            set vkp_list [list ]
-            foreach {k v} [hf_key] {
-                lappend vkp_list $v
-                lappend vkp_list $k
-            }
-            set upp [string map $vkp_list $up_submitted]
+            set sdetail [hf_encode $ua]
+            set uup [hf_encode $up_submitted]
             # f_id may be asset f_id or ua_id.
             set f_id_list [hf_asset_attributes_by_type_cascade $ua_id "ua"]
             lappend ua_id_list $ua_id
@@ -588,12 +606,7 @@ ad_proc -private hf_up_write {
             from hf_ua 
             where ua_id=:ua_id 
             and instance_id=:instance_id } ]
-        set vk_list [list ]
-        foreach {k v} [hf_key] {
-            lappend vk_list $v
-            lappend vk_list $k
-        }
-        set details [string map $vk_list $up]
+        set details [hf_encode $up]
         if { [ns_conn isconnected] } {
             set user_id [ad_conn user_id]
         } else {
@@ -657,8 +670,7 @@ ad_proc -private hf_up_of_ua_id {
                           where ua_id=:ua_id 
                           and instance_id=:instance_id ) } ]
         if { $success_p } {
-            set hfk_list [hf_key]
-            set up [string map $hfk_list $details]
+            set up [hf_decode $details]
         }
     } else {
         ns_log Warning "hf_up_of_ua_id: request denied for user_id '${user_id}' instance_id '${instance_id}' ua_id '${ua_id}' allowed_p ${allowed_p}"
@@ -669,17 +681,23 @@ ad_proc -private hf_up_of_ua_id {
 ad_proc -private hf_key {
     {key ""}
 } {
-    Returns key value list. Creates first if it doesn't exist.
+    Returns key value list. Creates key if it doesn't exist.
 } {
     if { $key eq "" } {
         if { ![db_0or1row hf_sched_params_fk_r { select fk from hf_sched_params } ] } {
             set fk [hf_chars $key 0]
             db_dml hf_fk_cr { insert into hf_sched_params fk values (:fk) }
         }
+    } else {
+        set fk $key
     }
     set fp [file join [acs_root_dir] hosting-farm [ad_urlencode_path $fk]]
     if { ![file exists $fp] } {
-        file mkdir [file dirname $fp]
+        ns_log Notice "hf_key.696: file '${fp}' does not exist. Creating."
+        set file_path [file dirname $fp]
+        if { ![file exists $file_path] } {
+            file mkdir $file_path
+        }
         set k_list [hf_key_create]
         set k2_list [list ]
         foreach { key value } $k_list {
@@ -692,8 +710,8 @@ ad_proc -private hf_key {
     } 
     set fileId [open $fp r]
     set k ""
+    ns_log Notice "hf_key.703: begin while.."
     while { ![eof $fileId] } {
-        ns_log Notice "hf_key.703: begin while.."
         gets $fileId line
         append k $line
     }
@@ -709,7 +727,9 @@ ad_proc -private hf_key_create {
     Scrambles chars in a string.
     If chars is blank, uses a default set.
 } {
-    set chars [hf_chars $chars 1]
+    if { $chars eq "" } {
+        set chars [hf_chars $chars 1]
+    }
     set b "%"
     append b "c"
     set i 0
