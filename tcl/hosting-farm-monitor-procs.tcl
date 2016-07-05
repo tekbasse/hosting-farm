@@ -178,7 +178,7 @@ ad_proc -public hf_beat_log_read {
             
         set entries_lol [db_list_of_lists hf_beat_log_read_old  
             "select id, name, title, log_entry, asset_id, monitor_id, critical_alert_p,confirm_p,confirmed_p, created from hf_beat_log 
-            where instance_id = :instance_id and user_id =:user_id and trashed_p='0' and alert_p='1' and created < :last_viewed order by created desc limit :max_old" ]
+            where instance_id = :instance_id and user_id =:user_id and trashed_p!='1' and alert_p='1' and created < :last_viewed order by created desc limit :max_old" ]
         
         ns_log Notice "hf_beat_log_read.173: last_viewed ${last_viewed}  entries_lol $entries_lol"
 
@@ -241,7 +241,7 @@ ad_proc -public hf_beat_log_alert_q {
         
         set entries_lol [db_list_of_lists hf_beat_log_read_new { 
             select id, name, title, log_entry, asset_id, monitor_id, critical_alert_p,confirm_p,confirmed_p, last_modified from hf_beat_log 
-            where instance_id = :instance_id and user_id =:user_id and trashed_p='0' and alert_p='1' and ( last_modified > :last_viewed or ( confirm_p='1' and confirmed_p='0' ) ) order by last_modified desc } ]
+            where instance_id = :instance_id and user_id =:user_id and trashed_p!='1' and alert_p='1' and ( last_modified > :last_viewed or ( confirm_p='1' and confirmed_p='0' ) ) order by last_modified desc } ]
         
         ns_log Notice "hf_beat_log_read.267: last_viewed ${last_viewed}  entries_lol $entries_lol"
         
@@ -249,7 +249,7 @@ ad_proc -public hf_beat_log_alert_q {
         # same query, but without last_modified > :last_viewed or confirm_p and confirmed_p
         set entries_lol [db_list_of_lists hf_beat_log_read_new0 { 
             select id, name, title, log_entry, asset_id, monitor_id, critical_alert_p,confirm_p,confirmed_p, last_modified from hf_beat_log 
-            where instance_id = :instance_id and user_id =:user_id and trashed_p='0' and alert_p='1' order by last_modified desc } ]
+            where instance_id = :instance_id and user_id =:user_id and trashed_p!='1' and alert_p='1' order by last_modified desc } ]
         
         ns_log Notice "hf_beat_log_read.275: last_viewed ${last_viewed}  entries_lol $entries_lol"
 

@@ -40,7 +40,17 @@ aa_register_case -cats {db smoke} assets_attr_check {
                                      description "[string toupper ${asset_type_id}]0" \
                                      details "This is for api test"]
             set dc_arr(dc_id) [hf_dc_write dc_arr]
+
             ns_log Notice "hosting-farm-test-api-procs.tcl.116: dc array get dc_arr [array get dc_arr]"
+            ns_log Notice "hosting-farm-test-api-procs.tcl.117: hf_asset_read $dc_arr(f_id) [hf_asset_read $dc_arr(f_id)]"
+
+            set q1 "instance_id,label,f_id,asset_id,trashed_p"
+            set q1_list [db_list_of_lists hf_test_hf_asset_rev_map_1 "select $q1 from hf_asset_rev_map "]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.118: hf_asset_rev_map $q1 $q1_list"
+
+            set q2 "instance_id,f_id,type_id,sub_f_id,sub_type_id,sub_sort_order,sub_label,attribute_p,trashed_p"
+            set q2_list [db_list_of_lists hf_test_hf_sub_asset_map_1 "select $q2 from hf_sub_asset_map" ]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.119: hf_sub_asset_map $q2 $q2_list"
 
             # hw
             set backup_sys [qal_namelur 1 2 ""]
@@ -61,6 +71,17 @@ aa_register_case -cats {db smoke} assets_attr_check {
                                      description "[string toupper ${asset_type_id}]0" \
                                      details "This is for api test"]
             set hw_arr(hw_id) [hf_hw_write hw_arr]
+
+            ns_log Notice "hosting-farm-test-api-procs.tcl.126: hw array get hw_arr [array get hw_arr]"
+            ns_log Notice "hosting-farm-test-api-procs.tcl.127: hf_asset_read $hw_arr(f_id) [hf_asset_read $hw_arr(f_id)]"
+
+            set q1 "instance_id,label,f_id,asset_id,trashed_p"
+            set q1_list [db_list_of_lists hf_test_hf_asset_rev_map_1 "select $q1 from hf_asset_rev_map "]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.128: hf_asset_rev_map $q1 $q1_list"
+
+            set q2 "instance_id,f_id,type_id,sub_f_id,sub_type_id,sub_sort_order,sub_label,attribute_p,trashed_p"
+            set q2_list [db_list_of_lists hf_test_hf_sub_asset_map_1 "select $q2 from hf_sub_asset_map" ]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.129: hf_sub_asset_map $q2 $q2_list"
             
             # add two ua
             array set ua1_arr [list \
@@ -71,6 +92,18 @@ aa_register_case -cats {db smoke} assets_attr_check {
                                   up "test" ]
             set ua1_arr(ua_id) [hf_user_add ua1_arr]
 
+            set q2 "instance_id,f_id,type_id,sub_f_id,sub_type_id,sub_sort_order,sub_label,attribute_p,trashed_p"
+            set q2_list [db_list_of_lists hf_test_hf_sub_asset_map_1 "select $q2 from hf_sub_asset_map" ]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.139: hf_sub_asset_map $q2 $q2_list"
+            set q3 "instance_id,ua_id,up_id"
+            set q3_list [db_list_of_lists hf_test_hf_ua_up_map_1 "select $q3 from hf_ua_up_map" ]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.133: hf_ua_up_map $q3 $q3_list"
+            set q4 "instance_id,ua_id,details,connection_type"
+            set q4_list [db_list_of_lists hf_test_hf_ua_1 "select $q4 from hf_ua" ]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.134: hf_ua $q4 $q4_list"
+            set q5 "instance_id,up_id,details"
+            set q5_list [db_list_of_lists hf_test_hf_up_1 "select $q5 from hf_up" ]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.135: hf_up $q5 $q5_list"
 
 
             array set ua2_arr [list \
@@ -79,7 +112,24 @@ aa_register_case -cats {db smoke} assets_attr_check {
                                   connection_type "https" \
                                   ua_id "" \
                                   up "test" ]
+
             set ua2_arr(ua_id) [hf_user_add ua2_arr]
+            set ua1_arr(ua_id) [hf_user_add ua1_arr]
+            set q2 "instance_id,f_id,type_id,sub_f_id,sub_type_id,sub_sort_order,sub_label,attribute_p,trashed_p"
+            set q2_list [db_list_of_lists hf_test_hf_sub_asset_map_1 "select $q2 from hf_sub_asset_map" ]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.149: hf_sub_asset_map $q1 $q1_list"
+            set q2 "instance_id,f_id,type_id,sub_f_id,sub_type_id,sub_sort_order,sub_label,attribute_p,trashed_p"
+            set q2_list [db_list_of_lists hf_test_hf_sub_asset_map_1 "select $q2 from hf_sub_asset_map" ]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.139: hf_sub_asset_map $q1 $q1_list"
+            set q3 "instance_id,ua_id,up_id"
+            set q3_list [db_list_of_lists hf_test_hf_ua_up_map_1 "select $q3 from hf_ua_up_map" ]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.133: hf_ua_up_map $q3 $q3_list"
+            set q4 "instance_id,ua_id,details,connection_type"
+            set q4_list [db_list_of_lists hf_test_hf_ua_1 "select $q4 from hf_ua" ]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.134: hf_ua $q4 $q4_list"
+            set q5 "instance_id,up_id,details"
+            set q5_list [db_list_of_lists hf_test_hf_up_1 "select $q5 from hf_up" ]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.135: hf_up $q5 $q5_list"
 
 
             

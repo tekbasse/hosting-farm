@@ -43,8 +43,8 @@ ad_proc -private hf_asset_primary_attr {
         from hf_sub_asset_map 
         where f_id=:f_id 
         and type_id=sub_type_id
-        and attribute_p='1'
-        and trashed_p='0'
+        and attribute_p!='0'
+        and trashed_p!='1'
         and instance_id=:instance_id
         order by sub_sort_order asc limit 1}
     return $sub_f_id
@@ -130,16 +130,6 @@ ad_proc -private hf_asset_type_feature_keys {
     Returns an ordered list of keys for hf_asset_type_features
 } {
     set keys_list [list asset_type_id feature_id label feature_type publish_p name details]
-    set keys [hf_keys_by $keys_list $separator]
-    return $keys
-}
-
-ad_proc -private hf_sub_asset_map_keys {
-    {separator ""}
-} {
-    Returns an ordered list of keys for hf_sub_asset_map
-} {
-    set keys_list [list f_id type_id sub_f_id sub_type_id sub_sort_order sub_label attribute_p trashed_p]
     set keys [hf_keys_by $keys_list $separator]
     return $keys
 }
@@ -243,7 +233,7 @@ ad_proc -private hf_ss_keys {
     return $keys
 }
 
-ad_proc -private hf_sub_asset_keys {
+ad_proc -private hf_sub_asset_map_keys {
     {separator ""}
 } {
     Returns an ordered list of keys for hf_sub_asset_map.
@@ -331,7 +321,7 @@ ad_proc -private hf_sub_f_id_current_q {
     set current_p [db_0or1row hf_sub_f_id_current_q { 
         select f_id from hf_sub_asset_map 
         where sub_f_id=:sub_f_id 
-        and trashed_p='0'
+        and trashed_p!='1'
         and instance_id=:instance_id } ]
     if { !$current_p } {
         ns_log Notice "hf_sub_f_id_current_q: not current. \
@@ -380,7 +370,7 @@ ad_proc -private hf_sub_f_id_current {
             and sub_label=:sub_label
             and sub_type_id=:sub_type_id
             and attribute_p=:attribute_p
-            and trashed_p='0'
+            and trashed_p!='1'
             and instance_id=:instance_id } ]
         if { !$exists_p } {
             ns_log Notice "hf_sub_f_id_current: not found. \
@@ -439,6 +429,7 @@ ad_proc -private hf_sub_asset_map_update {
 } {
     upvar 1 instance_id instance_id
     # Actually always creates a record. Trashes any that already exist for same label and f_id.
+    set attribute_p [qf_is_true $attrtribute_p 1]
     set sub_f_id_new ""
     set trashed_p 0
     set sub_f_id ""
@@ -477,11 +468,13 @@ ad_proc -private hf_sub_asset_map_update {
                 # translate api conventions to internal map refs
                 set sub_type_id $sub_asset_type_id
                 set type_id $asset_type_id
+                set trashed_p [qf_is_true $trashed_p]
+                
                 if { $type_id eq "" } {
                     set type_id [hf_asset_type_id_of_asset_id $f_id]
                 }
                 db_dml ss_sub_asset_map_create "insert into hf_sub_asset_map \
- ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
+ ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
             }
         }
     }

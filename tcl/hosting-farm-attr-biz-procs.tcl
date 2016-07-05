@@ -764,6 +764,7 @@ ad_proc -private hf_ip_write {
         }
         append sub_label [hf_asset_subassets_count $f_id]
     }
+    set attribute_p [qf_is_true $attribute_p 1]
     set ip_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id ip $attribute_p]
     if { $ip_id_new ne "" } {
         # record revision/new
@@ -871,6 +872,7 @@ ad_proc -private hf_ns_write {
         }
         append sub_label [hf_asset_subassets_count $f_id]
     }
+    set attribute_p [qf_is_true $attribute_p 1]
     set ns_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id ns $attribute_p]
     if { $ns_id_new ne "" } {
         # record revision/new
@@ -1003,11 +1005,13 @@ ad_proc -private hf_user_add {
                 # translate api conventions to internal map refs
                 set sub_type_id $sub_asset_type_id
                 set type_id $asset_type_id
+                set trashed_p [qf_is_true $trashed_p]
+                set attribute_p [qf_is_true $attribute_p 1]
                 if { $type_id eq "" } {
                     set type_id [hf_asset_type_id_of_asset_id $f_id]
                 }
                 db_dml ss_sub_asset_map_create "insert into hf_sub_asset_map \
- ([hf_sub_asset_keys ","]) values ([hf_sub_asset_keys ",:"])"
+ ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
             } 
         }
     }

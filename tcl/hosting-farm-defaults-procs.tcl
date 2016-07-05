@@ -76,7 +76,7 @@ ad_proc -private hf_sub_asset_map_defaults {
                       sub_type_id "" \
                       sub_sort_order "" \
                       sub_label "" \
-                      attribute_p $attribute_p \
+                      attribute_p $attribute_p "1" \
                       trashed_p "0" ]
     foreach {key value} $sam_list {
         if { ![info exists sam_arr(${key}) ] } {

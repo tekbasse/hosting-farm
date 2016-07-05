@@ -87,7 +87,7 @@ ad_proc -public hf_constructor_a {
     if { $sub_f_id ne "" } {
         set sub_f_id_supplied_p 1
         set sub_list [hf_sub_asset $sub_f_id $f_id]
-        qf_lists_to_array sub_arr $sub_list [hf_sub_asset_keys]
+        qf_lists_to_array sub_arr $sub_list [hf_sub_asset_map_keys]
         if { $sub_arr(trashed_p) } {
             # sub_f_id is not current 
             # do not use.
@@ -191,7 +191,7 @@ ad_proc -public hf_constructor_a {
             hf_${asset_type_id}_defaults an_arr
             set keys_list [set_union $keys_list [hf_${asset_type_id}_keys]]
             hf_sub_asset_map_defaults an_arr
-            set keys_list [set_union $keys_list [hf_sub_asset_keys]]
+            set keys_list [set_union $keys_list [hf_sub_asset_map_keys]]
         } else {
             ns_log Warning "hf_constructor_a.193: unknown asset_type_id '${asset_type_id}'"
             ad_script_abort

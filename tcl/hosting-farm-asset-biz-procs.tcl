@@ -44,6 +44,7 @@ ad_proc -public hf_asset_create {
         set nowts [dt_systime -gmt 1]
         set last_modified $nowts
         set created $nowts
+        set trashed_p [qf_is_true $trashed_p]
         db_transaction {
             db_dml hf_asset_create "insert into hf_assets
                 ([hf_asset_keys ","])
@@ -82,6 +83,7 @@ ad_proc -public hf_asset_write {
             set nowts [dt_systime -gmt 1]
             set last_modified $nowts
             set created $nowts
+            set trashed_p [qf_is_true $trashed_p]
             db_transaction {
                 db_dml hf_asset_write "insert into hf_assets
                 ([hf_asset_keys ","])
@@ -302,7 +304,7 @@ ad_proc -public hf_f_id_trash {
             set nowts [dt_systime -gmt 1]
             set last_modified $nowts
             db_transaction {
-                db_dml hf_assets_f_id_trash "update hf_assets set trash_p='1' where f_id=:f_id and instance_id=:instance_id and trashed_p='0'"
+                db_dml hf_assets_f_id_trash "update hf_assets set trash_p='1' where f_id=:f_id and instance_id=:instance_id and trashed_p!='1'"
                 if { [hf_asset_id_current_q $f_id ] } {
                     db_dml hf_asset_rev_map_trash "update hf_asset_rev_map set trashed_p='0' where asset_id=:asset_id and instance_id=:instance_id"
                 }
