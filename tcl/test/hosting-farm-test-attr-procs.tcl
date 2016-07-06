@@ -7,8 +7,8 @@ aa_register_case -cats {db smoke} assets_attr_check {
     Simple detailed test and diagnostics of asset and attribute api
 } {
     aa_run_with_teardown \
-        -rollback \
         -test_code {
+            #        -rollback \
             ns_log Notice "aa_register_case.12: Begin test assets_attr_check"
             # Use default permissions provided by tcl/hosting-farm-init.tcl
             # Yet, users must have read access permissions or test fails

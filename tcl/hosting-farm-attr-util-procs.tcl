@@ -459,8 +459,8 @@ ad_proc -private hf_sub_asset_map_update {
             set sub_f_id_new [db_nextval hf_id_seq]
             set nowts [dt_systime -gmt 1]
             if { $sub_f_id_exists_p } {
-                db_dml ss_sub_asset_map_update { update hf_sub_asset_map
-                    set sub_f_id=:sub_f_id_new where f_id=:f_id }
+                db_dml hf_sub_asset_map_update { update hf_sub_asset_map
+                    set sub_f_id=:sub_f_id_new where f_id=:f_id and sub_f_id=:sub_f_id }
             } else {
                 set sub_f_id $sub_f_id_new
                 set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
@@ -709,7 +709,6 @@ ad_proc -private hf_key {
     } 
     set fileId [open $fp r]
     set k ""
-    ns_log Notice "hf_key.703: begin while.."
     while { ![eof $fileId] } {
         gets $fileId line
         append k $line
