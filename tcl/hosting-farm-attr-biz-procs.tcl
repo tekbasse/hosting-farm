@@ -997,7 +997,7 @@ ad_proc -private hf_user_add {
             set nowts [dt_systime -gmt 1]
             if { $sub_f_id_exists_p && $sub_f_id_new ne "" && $up_success_p } {
                 db_dml ss_sub_asset_map_update { update hf_sub_asset_map
-                    set sub_f_id=:sub_f_id_new where f_id=:f_id }
+                    set sub_f_id=:sub_f_id_new where f_id=:f_id and sub_f_id=:sub_f_id }
             } elseif { $sub_f_id_new ne "" && $up_success_p } {
                 set sub_f_id $sub_f_id_new
                 set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
