@@ -543,7 +543,7 @@ ad_proc -private hf_up_ck {
     set ck_ok_p 0
     set log_p 1
     if {[qf_is_natural_number $ua_id] } {
-        if { [hf_are_visible_characters_q $ua ] } {
+        if { [hf_are_safe_and_visible_characters_q $ua ] } {
             set log_p 0
             if { ![qf_is_natural_number $instance_id] } {
                 # set instance_id package_id
@@ -593,7 +593,7 @@ ad_proc -private hf_up_write {
         set success_p 0
     }
     if { $up ne "" } {
-        if { ![hf_are_visible_characters_q $up] } {
+        if { ![hf_are_safe_and_visible_characters_q $up] } {
             set up ""
             set success_p 0
         }
@@ -605,7 +605,8 @@ ad_proc -private hf_up_write {
             from hf_ua 
             where ua_id=:ua_id 
             and instance_id=:instance_id } ]
-        set details [hf_encode $up]
+        set encode_proc [parameter::get -package_id $instance_id -parameter EncodeProc -default hf_encode]
+        set details [safe_eval [list ${encode_proc} $up]]
         if { [ns_conn isconnected] } {
             set user_id [ad_conn user_id]
         } else {

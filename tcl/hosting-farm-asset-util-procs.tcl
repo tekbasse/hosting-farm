@@ -494,7 +494,7 @@ ad_proc -private hf_asset_subassets_count {
         set next_id_list [list ]
         foreach s_id $current_id_list {
             lappend final_id_list $s_id
-            set new_list [db_list hf_subassets_all_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and instance_id=:instance_id and attribute_p!='1'"]
+            set new_list [db_list hf_subassets_all_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and instance_id=:instance_id and attribute_p!='0'"]
             foreach sb_id $new_list {
                 if { $sb_id in $next_id_list || $sb_id in $final_id_list } {
                     # skip

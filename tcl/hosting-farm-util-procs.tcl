@@ -115,9 +115,26 @@ ad_proc -private hf_natural_number_list_validate {
 ad_proc -private hf_are_visible_characters_q {
     user_input
 } {
+    Verifies that characters are printable.
+} {
     if { [regexp -- {^[[:graph:]]+$} $user_input scratch ] } {
         set visible_p 1
     } else {
+        set visible_p 0
+    }
+    return $visible_p
+}
+
+ad_proc -private hf_are_safe_and_visible_characters_q {
+    user_input
+} {
+    Verifies that characters are printable and safe for use in dynamic arguments, such as eval.
+} {
+    set visible_p [hf_are_visible_characters_q $user_input]
+    if { $visible_p && [string match {*[\[;]*} $user_input] } {
+        # unsafe for safe_eval etc.
+        # Test here for Ui handling 
+        # instead of forcing error per safe_eval
         set visible_p 0
     }
     return $visible_p

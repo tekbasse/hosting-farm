@@ -1039,7 +1039,9 @@ ad_proc -private hf_ua_write {
 
         # validation and limits
         set connection_type [string range $connection_type 0 23]
-        set sdetail [hf_encode $ua]
+
+        set encode_proc [parameter::get -package_id $instance_id -parameter EncodeProc -default hf_encode]
+        set sdetail [safe_eval [list ${encode_proc} $ua]]
         if { $ua_id ne "" } {
             # update
             # does ua_id exist?
