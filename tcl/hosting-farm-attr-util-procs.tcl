@@ -508,6 +508,7 @@ ad_proc -private hf_encode {
     string
     {key_list ""}
 } {
+    upvar 1 instance_id instance_id
     if { $key_list eq "" || [llength $key_list ] < 2 } {
         # other choices: hf_chars 1,  hf_key
         set key_list [hf_key]
@@ -525,6 +526,7 @@ ad_proc -private hf_decode {
     string
     {key_list ""}
 } {
+    upvar 1 instance_id instance_id
     if { $key_list eq "" || [llength $key_list ] < 2 } {
         set key_list [hf_key]
     }
@@ -537,6 +539,7 @@ ad_proc -private hf_mystify {
     string
     {key_list ""}
 } {
+    upvar 1 instance_id instance_id
     if { $key_list eq "" || [llength $key_list ] < 2 } {
         # other choices: hf_chars 1,  hf_key
         set key_list [hf_key "abcdefghijklmnopqrstuvwxyz0123456789_" ]
@@ -554,6 +557,7 @@ ad_proc -private hf_demystify {
     string
     {key_list ""}
 } {
+    upvar 1 instance_id instance_id
     if { $key_list eq "" || [llength $key_list ] < 2 } {
         set key_list [hf_key "abcdefghijklmnopqrstuvwxyz0123456789_" ]
     }
@@ -718,6 +722,7 @@ ad_proc -private hf_key {
 } {
     Returns key value list. Creates key if it doesn't exist.
 } {
+    upvar 1 instance_id instance_id
     if { $key eq "" } {
         if { ![db_0or1row hf_sched_params_fk_r { select fk from hf_sched_params } ] } {
             set fk [hf_chars $key 0]
@@ -725,6 +730,9 @@ ad_proc -private hf_key {
         }
     } else {
         set fk $key
+    }
+    if { [exists_and_not_null instance_id] } {
+        append key [format %x $instance_id]
     }
     set fp [file join [acs_root_dir] hosting-farm [ad_urlencode_path $fk]]
     if { ![file exists $fp] } {
@@ -761,6 +769,7 @@ ad_proc -private hf_key_create {
     Scrambles chars in a string.
     If chars is blank, uses a default set.
 } {
+    upvar 1 instance_id instance_id
     if { $chars eq "" } {
         set chars [hf_chars $chars 1]
     }
