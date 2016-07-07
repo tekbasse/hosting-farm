@@ -538,14 +538,19 @@ ad_proc -private hf_up_ck {
     ua_id
     {instance_id ""}
 } {
-    Checks submitted against existing. returns 1 if matches, otherwise returns 0. ua_id is f_id  or sub_f_id for cases where associated with an asset or attribute.
+    Checks submitted against existing. 
+
+    @param ua_id is f_id  or sub_f_id for cases where associated with an asset or attribute and ua_id is unknown
+
+    @return 1 if matches, otherwise returns 0. 
 } {
     set ck_ok_p 0
     set log_p 1
+    set connected_p [ns_conn isconnected]
     if {[qf_is_natural_number $ua_id] } {
         if { [hf_are_safe_and_visible_characters_q $ua ] } {
             set log_p 0
-            if { ![qf_is_natural_number $instance_id] } {
+            if { ![qf_is_natural_number $instance_id] && $connected_p } {
                 # set instance_id package_id
                 set instance_id [ad_conn package_id]
                 if { $ua eq "" } {
@@ -556,14 +561,15 @@ ad_proc -private hf_up_ck {
         if { !$log_p } {
             # validation and limits
             set connection_type [string range $connection_type 0 23]
-            set sdetail [hf_encode $ua]
-            set uup [hf_encode $up_submitted]
+            set encode_proc [parameter::get -package_id $instance_id -parameter EncodeProc -default hf_encode]
+            set sdetail [safe_eval [list ${encode_proc} $ua]]
+            set uup  [safe_eval [list ${encode_proc} $up_submitted]]
             # f_id may be asset f_id or ua_id.
-            set f_id_list [hf_asset_attributes_by_type_cascade $ua_id "ua"]
+            set f_id_list [hf_asset_attributes_by_type $ua_id "ua"]
             lappend ua_id_list $ua_id
             set ck_ok_p [db_0or1row hf_ua_ck_up {select ua.ua_id from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and ua.ua_id in ([template::util::tcl_to_sql_list $ua_id_list]) and ua.details=:sdetail and hm.up_id=up.up_id and up.details=:upp}  ]
         } else {
-            if { [ns_conn isconnected] } {
+            if { $connected_p } {
                 set user_id [ad_conn user_id]
                 ns_log Warning "hf_up_ck(2680): Poor call rejected. submitted ua '${ua}' and '${up_submitted}' for conn '${connection_type}' requested by user_id ${user_id}."
             } else {
@@ -584,7 +590,7 @@ ad_proc -private hf_up_write {
     set success_p 1
     
     # validation and limits
-    if { ![qf_is_natural_number $instance_id] } {
+    if { ![qf_is_natural_number $instance_id] && $instance_id ne "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
