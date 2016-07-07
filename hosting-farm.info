@@ -33,8 +33,8 @@
         <parameters>
           <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="MonitorProcsAllowed"  default="" description="A space delimited list of procs allowed for use with monitors in package instance and usually defined in tcl/hosting-farm-local-procs.tcl" section_name="monitoring"/>
           <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="ScheduledProcsAllowed"  default="" description="A space delimited list of procs allowed for use with asset admin in package instance and usually defined in tcl/hosting-farm-local-procs.tcl" section_name="systemcalls"/>
-          <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="CodeProc"  default="hf_code" description="A proc used to scramble some data. DO NOT CHANGE after package in use." section_name="security"/>
-          <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="XcodeProc"  default="hf_xcode" description="A proc used to unscramble some data. DO NOT CHANGE after package in use." section_name="security"/>
+          <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="MystifyProc"  default="hf_mystify" description="A proc used to scramble some data. DO NOT CHANGE after package in use." section_name="security"/>
+          <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="DemystifyProc"  default="hf_demystify" description="A proc used to unscramble some data. DO NOT CHANGE after package in use." section_name="security"/>
           <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="EncodeProc"  default="hf_encode" description="A proc used to scramble pass codes. DO NOT CHANGE after package in use." section_name="security"/>
           <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="DecodeProc"  default="hf_decode" description="A proc used to unscramble pass codes. DO NOT CHANGE after package in use." section_name="security"/>
         </parameters>

@@ -532,6 +532,35 @@ ad_proc -private hf_decode {
     return $x
 }
 
+
+ad_proc -private hf_mystify {
+    string
+    {key_list ""}
+} {
+    if { $key_list eq "" || [llength $key_list ] < 2 } {
+        # other choices: hf_chars 1,  hf_key
+        set key_list [hf_key "abcdefghijklmnopqrstuvwxyz0123456789_" ]
+    }
+    set vka_list [list ]
+    foreach {k v} $key_list {
+        lappend vka_list $v
+        lappend vka_list $k
+    }
+    set x [string map $vka_list $string]
+    return $x
+}
+
+ad_proc -private hf_demystify {
+    string
+    {key_list ""}
+} {
+    if { $key_list eq "" || [llength $key_list ] < 2 } {
+        set key_list [hf_key "abcdefghijklmnopqrstuvwxyz0123456789_" ]
+    }
+    set x [string map $key_list $string]
+    return $x
+}
+
 ad_proc -private hf_up_ck {
     ua
     up_submitted
@@ -735,6 +764,7 @@ ad_proc -private hf_key_create {
     if { $chars eq "" } {
         set chars [hf_chars $chars 1]
     }
+    regsub -all -- {[\]\;]} $chars "" chars
     set b "%"
     append b "c"
     set i 0

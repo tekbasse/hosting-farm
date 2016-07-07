@@ -1,3 +1,4 @@
+
 ad_library {
     Automated tests for hosting-farm
     @creation-date 2015-03-19
@@ -15,11 +16,45 @@ aa_register_case -cats {api smoke} scramble_check {
             # Some tests will fail (predictably) in a hardened system
             set c [hf_chars "" 1]
             ns_log Notice "hosting-farm-coded-procs.tcl.17: c $c"
+            regsub -all -- {[\[;]} $c "" c
             set d [string length $c]
             incr d
             append c $c
             # word_len set to 8, so all end string chars are tested also.
-            set j 8
+            # Ideally, every combo of two letters should be tested 
+            # at beginning and end of string
+            set instance_id [ad_conn package_id]
+            set encode_proc [parameter::get -package_id $instance_id -parameter EncodeProc -default hf_encode]
+            set decode_proc [parameter::get -package_id $instance_id -parameter DecodeProc -default hf_decode]
+            set mystify_proc [parameter::get -package_id $instance_id -parameter MystifyProc -default hf_mystify]
+            set demystify_proc [parameter::get -package_id $instance_id -parameter DemystifyProc -default hf_demystify]
+            set word_len 9
+            for {set i 1} {$i < $d} {incr i} {
+                # set word_len [randomRange 20]
+                # incr word_len
+                set j [expr { $word_len + $i } ]
+                set word [string range $c $i $j]
+
+                set drow [safe_eval [list ${encode_proc} $word]]
+                #set drow [hf_encode $word]
+
+                set id [db_nextval hf_id_seq]
+                set drow_arr(${id}) $word
+                db_dml hf_test_hf_ua_i { insert into hf_up (up_id,details) values (:id,:drow) }
+            }
+            foreach up_id [array names drow_arr] {
+                db_1row hf_test_hf_ua_r { select details from hf_up where up_id=:up_id }
+
+                set guess [safe_eval [list ${decode_proc} $details]]
+                #set guess [hf_decode $details]
+
+                set word $drow_arr(${up_id})
+                aa_equals "Word ${word} coded decoded" $guess $word
+            }
+
+            array unset drow_arr
+
+            # word_len set to 8, so all end string chars are tested also.
             # Ideally, every combo of two letters should be tested 
             # at beginning and end of string
             set word_len 9
@@ -28,16 +63,25 @@ aa_register_case -cats {api smoke} scramble_check {
                 # incr word_len
                 set j [expr { $word_len + $i } ]
                 set word [string range $c $i $j]
-                set drow [hf_encode $word]
+
+                set drow [safe_eval [list $mystify_proc $word]]
+               # set drow [hf_mystify $word]
+
                 set id [db_nextval hf_id_seq]
                 set drow_arr(${id}) $word
-                db_dml hf_test_hf_ua_i { insert into hf_up (up_id,details) values (:id,:drow) }
+                db_dml hf_test_hf_ua_i2 { insert into hf_up (up_id,details) values (:id,:drow) }
             }
             foreach up_id [array names drow_arr] {
-                db_1row hf_test_hf_ua_r { select details from hf_up where up_id=:up_id }
-                set guess [hf_decode $details]
-                aa_equals "Word ${word} coded decoded" $guess $drow_arr(${up_id})
+                db_1row hf_test_hf_ua_r2 { select details from hf_up where up_id=:up_id }
+
+                #set guess [hf_demistify $details]
+                set guess [safe_eval [list $demystify_proc $details]]
+
+                set word $drow_arr(${up_id})
+                aa_equals "Word ${word} mystify demistified" $guess $word
             }
+
+
         } 
     # -teardown_code {
     # 
