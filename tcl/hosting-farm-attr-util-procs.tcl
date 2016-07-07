@@ -768,11 +768,14 @@ ad_proc -private hf_key_create {
     set b "%"
     append b "c"
     set i 0
-    foreach ii [list 97 4 4 6 6 4 -73 1 8 8 4 4 6 6 4 ] {
+    set ii_list [list 97 4 4 6 6 4 -73 1 8 8 4 4 6 6 4 ]
+    if { [string length $chars < 58 ] } {
+        lappend ii_list 25 2 -7 1 -10
+    }
+    foreach ii $ii_list {
         incr i $ii
         lappend med_list [format $b $i]
     }
-
     set keys_list [lsort -unique [split $chars ""]]
     # how many med in keys_list?
     set med_count 0
