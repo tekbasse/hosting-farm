@@ -709,7 +709,8 @@ ad_proc -private hf_up_of_ua_id {
                           where ua_id=:ua_id 
                           and instance_id=:instance_id ) } ]
         if { $success_p } {
-            set up [hf_decode $details]
+            set decode_proc [parameter::get -package_id $instance_id -parameter DecodeProc -default hf_decode]
+            set up [safe_eval [list ${decode_proc} $details]]
         }
     } else {
         ns_log Warning "hf_up_of_ua_id: request denied for user_id '${user_id}' instance_id '${instance_id}' ua_id '${ua_id}' allowed_p ${allowed_p}"

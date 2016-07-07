@@ -929,12 +929,12 @@ ad_proc -private hf_vm_quota_write {
 ad_proc -private hf_user_add {
     array_name
 } {
-    @param arr_name The name of the array in the calling environment with elements of following params:
-    @param f_id  The asset or attribute to associate user.
-    @param ua    Account
-    @param connection_type (optional) Type of connection 
-    @param ua_id (optional) If updating an existing account.
-    @param up    (optional) Set if adding a passcode.
+    Accepts following array elements:
+    f_id  The asset or attribute to associate user;
+    ua    Account;
+    connection_type (optional);
+    ua_id (optional) If updating an existing account;
+    up (optional) Set if adding a pass code.
 } {
     # requires f_id, ua
     upvar 1 $array_name arr_name
@@ -1040,7 +1040,7 @@ ad_proc -private hf_ua_write {
         # validation and limits
         set connection_type [string range $connection_type 0 23]
 
-        set encode_proc [parameter::get -package_id $instance_id -parameter EncodeProc -default hf_encode]
+        set encode_proc [parameter::get -package_id $instance_id -parameter MystifyProc -default hf_mystify]
         set sdetail [safe_eval [list ${encode_proc} $ua]]
         if { $ua_id ne "" } {
             # update
