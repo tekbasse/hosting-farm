@@ -1040,8 +1040,8 @@ ad_proc -private hf_ua_write {
         # validation and limits
         set connection_type [string range $connection_type 0 23]
 
-        set encode_proc [parameter::get -package_id $instance_id -parameter MystifyProc -default hf_mystify]
-        set sdetail [safe_eval [list ${encode_proc} $ua]]
+        set mystify_proc [parameter::get -package_id $instance_id -parameter MystifyProc -default hf_mystify]
+        set sdetail [safe_eval [list ${mystify_proc} $ua]]
         if { $ua_id ne "" } {
             # update
             # does ua_id exist?

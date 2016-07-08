@@ -594,8 +594,9 @@ ad_proc -private hf_up_ck {
         if { !$log_p } {
             # validation and limits
             set connection_type [string range $connection_type 0 23]
+            set mystify_proc [parameter::get -package_id $instance_id -parameter MystifyProc -default hf_mystify]
             set encode_proc [parameter::get -package_id $instance_id -parameter EncodeProc -default hf_encode]
-            set sdetail [safe_eval [list ${encode_proc} $ua]]
+            set sdetail [safe_eval [list ${mystify_proc} $ua]]
             set uup  [safe_eval [list ${encode_proc} $up_submitted]]
             # f_id may be asset f_id or ua_id.
             set f_id_list [hf_asset_attributes_by_type $ua_id "ua"]
