@@ -37,16 +37,8 @@ ad_proc -private hf_asset_primary_attr {
 } {
     upvar 1 instance_id instance_id
 
-    set sub_f_id ""
     set f_id [hf_f_id_of_asset_id $asset_id]
-    db_0or1row hf_sub_asset_id_prime_get {select sub_f_id 
-        from hf_sub_asset_map 
-        where f_id=:f_id 
-        and type_id=sub_type_id
-        and attribute_p!='0'
-        and trashed_p!='1'
-        and instance_id=:instance_id
-        order by sub_sort_order asc limit 1}
+    set sub_f_id [hf_primary_sub_f_id $f_id]
     return $sub_f_id
 }
 
@@ -289,21 +281,46 @@ ad_proc -private hf_os_keys {
     return $keys
 }
 
-
+ad_proc -private hf_primary_sub_f_id {
+    f_id
+} {
+    Returns the primary sub_f_id of f_id, if one exists. Otherwise returns an empty string.
+} {
+    # A stricter version of hf_asset_primary_attr
+    set sub_f_id ""
+    db_0or1row hf_sub_asset_id_prime_get {select sub_f_id 
+        from hf_sub_asset_map 
+        where f_id=:f_id 
+        and type_id=sub_type_id
+        and attribute_p!='0'
+        and trashed_p!='1'
+        and instance_id=:instance_id
+        order by sub_sort_order asc limit 1}
+    return $sub_f_id
+} 
 
 ad_proc -private hf_f_id_of_sub_f_id {
     sub_f_id
+    {primary_p "0"}
 } {
     Returns the f_id of sub_f_id. f_id is the asset connected to attribute sub_f_id.
+    If primary_p is 1, returns the f_id only if sub_f_id is the primary attribute for f_id.
 
     @return f_id, or "" if does not exist
 } {
     upvar 1 instance_id instance_id
     set f_id ""
-    db_0or1row hf_sub_asset_map_f_id_of_sub_f_id {
-        select f_id 
+    set exists_p [db_0or1row hf_sub_asset_map_f_id_of_sub_f_id {
+        select f_id, sub_type_id 
         from hf_sub_asset_map 
-        where sub_f_id=:sub_f_id }
+        where sub_f_id=:sub_f_id 
+        and instance_id=:instance_id } ]
+    if { $exists_p && $primary_p } {
+        set sub_f_id_primary [hf_primary_sub_f_id $f_id]
+        if { $sub_f_id_primary ne $sub_f_id } {
+            set f_id ""
+        } 
+    }
     return $f_id
 }
 
@@ -498,7 +515,7 @@ ad_proc -private hf_ua_id_of_f_id_label {
     f_id
     sub_label
 } {
-    f_id of the asset. sub_label is the label assigned to the ua.
+    f_id of the asset or attribute. sub_label is the label assigned to the ua.
 
     @param f_id
     @param sub_label
@@ -506,12 +523,17 @@ ad_proc -private hf_ua_id_of_f_id_label {
     @return ua_id, or empty string if none found.
 } {
     upvar 1 instance_id instance_id
-    # f_id of asset  hf_assets.f_id
-    # sub_label is  hf_sub_asset_map.sub_label
-    # ua_id is hf_sub_asset_map.sub_f_id 
     set sub_f_id ""
+    set f_id_list [list $f_id]
+    # if sub_f_id is primary, also check f_id
+    set f_id_pri [hf_f_id_of_sub_f_id $sub_f_id 1]
+    if { $f_id_pri ne "" } {
+        lappend f_id_list $f_id_pri
+    }
     db_0or1row hf_sub_asset_map_ua_id_r1 { select sub_f_id from hf_sub_asset_map
-        where f_id=:f_id and sub_label=:sub_label and instance_id=:instance_id }
+        where f_id in ([template::util::tcl_to_sql_list $f_id_list])
+        and sub_label=:sub_label 
+        and instance_id=:instance_id }
     return $sub_f_id
 }
 
@@ -519,19 +541,25 @@ ad_proc -private hf_ua_id_of_f_id_ua {
     f_id
     ua
 } {
-    f_id of the aset. ua is ua input from user ie pre coded.
+    f_id of the asset or attribute. ua is ua input from user ie pre coded.
 } {
     upvar 1 instance_id instance_id
     set mystify_proc [parameter::get -package_id $instance_id -parameter MystifyProc -default hf_mystify]
     set sdetail [safe_eval [list ${mystify_proc} $ua]]
     set ua_id ""
+    set f_id_list [list $f_id]
+    # f_id may be  sub_f_id of primary. If so, also check f_id or visa versa.
+    set f_id_pri [hf_f_id_of_sub_f_id $sub_f_id 1]
+    if { $f_id_pri ne "" } {
+        lappend f_id_list $f_id_pri
+    }
     db_0or1row hf_sub_asset_map_ua_id_r2 { select sam.sub_f_id as ua_id 
         from hf_sub_aset_map sam, hf_ua hu 
         where hu.details=:sdetail
         and hu.instance_id=sam.instance_id
         and sam.instance_id=:instance_id
         and sam.sub_f_id=hu.ua_id
-        and sam.f_id=:f_id }
+        and sam.f_id in ([template::util::tcl_to_sql_list $f_id_list]) }
     return $ua_id
 }
 
