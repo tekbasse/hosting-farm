@@ -494,6 +494,47 @@ ad_proc -private hf_up_id_of_ua_id {
     return $ua_list
 }
 
+ad_proc -private hf_ua_id_of_f_id_label {
+    f_id
+    sub_label
+} {
+    f_id of the asset. sub_label is the label assigned to the ua.
+
+    @param f_id
+    @param sub_label
+
+    @return ua_id, or empty string if none found.
+} {
+    upvar 1 instance_id instance_id
+    # f_id of asset  hf_assets.f_id
+    # sub_label is  hf_sub_asset_map.sub_label
+    # ua_id is hf_sub_asset_map.sub_f_id 
+    set sub_f_id ""
+    db_0or1row hf_sub_asset_map_ua_id_r1 { select sub_f_id from hf_sub_asset_map
+        where f_id=:f_id and sub_label=:sub_label and instance_id=:instance_id }
+    return $sub_f_id
+}
+
+ad_proc -private hf_ua_id_of_f_id_ua {
+    f_id
+    ua
+} {
+    f_id of the aset. ua is ua input from user ie pre coded.
+} {
+    upvar 1 instance_id instance_id
+    set mystify_proc [parameter::get -package_id $instance_id -parameter MystifyProc -default hf_mystify]
+    set sdetail [safe_eval [list ${mystify_proc} $ua]]
+    set ua_id ""
+    db_0or1row hf_sub_asset_map_ua_id_r2 { select sam.sub_f_id as ua_id 
+        from hf_sub_aset_map sam, hf_ua hu 
+        where hu.details=:sdetail
+        and hu.instance_id=sam.instance_id
+        and sam.instance_id=:instance_id
+        and sam.sub_f_id=hu.ua_id
+        and sam.f_id=:f_id }
+    return $ua_id
+}
+
 ad_proc -private hf_ua_keys {
     {separator ""}
 } {
