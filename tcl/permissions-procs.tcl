@@ -1,6 +1,6 @@
 ad_library {
 
-    permissions API for hosting-farm
+    permissions API for Hosting Farm
     @creation-date 5 June 2013
     @Copyright (c) 2014 Benjamin Brink
     @license GNU General Public License 3, see project home or http://www.gnu.org/licenses/gpl-3.0.en.html

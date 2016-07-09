@@ -1,6 +1,6 @@
 ad_library {
 
-    library of procedures for building reports
+    library for making reports in Hosting Farm
     @creation-date 11 December 2013
     @Copyright (c) 2014 Benjamin Brink
     @license GNU General Public License 2, see project home or http://www.gnu.org/licenses/gpl-2.0.html

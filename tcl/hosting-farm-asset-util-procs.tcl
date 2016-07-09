@@ -1,7 +1,7 @@
 # hosting-farm/tcl/hosting-farm-asset-util-procs.tcl
 ad_library {
 
-    utilities for hosting-farm assets
+    Asset utility library for Hosting Farm
     @creation-date 25 May 2013
     @Copyright (c) 2014-2016 Benjamin Brink
     @license GNU General Public License 2, see project home or http://www.gnu.org/licenses/gpl-2.0.html

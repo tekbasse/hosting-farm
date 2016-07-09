@@ -1,7 +1,7 @@
 # hosting-farm/tcl/local-ex-procs.tcl
 ad_library {
 
-    example localize API for hosting-farm ( /local/bin )
+    library showing example api to local interfaces for Hosting Farm
     @creation-date 11 April 2015
     @Copyright (c) 2014 Benjamin Brink
     @license GNU General Public License 3, see project home or http://www.gnu.org/licenses/gpl-3.0.en.html

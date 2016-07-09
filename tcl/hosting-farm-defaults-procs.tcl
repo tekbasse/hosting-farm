@@ -1,7 +1,7 @@
 # hosting-farm/tcl/hosting-farm-defaults-procs.tcl
 ad_library {
 
-    misc API for hosting-farm defaults
+    library that provides defaults for Hosting Farm
     @creation-date 6 June 2016
     @Copyright (c) 2016 Benjamin Brink
     @license GNU General Public License 2,

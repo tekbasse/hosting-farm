@@ -1,7 +1,7 @@
 #hosting-farm/tcl/hosting-farm-biz-procs.tcl
 ad_library {
 
-    business logic for hosting-farm 
+    business logic for Hosting Farm
     @creation-date 17 Jun 2016
     @Copyright (c) 2014-2016 Benjamin Brink
     @license GNU General Public License 2

@@ -1,8 +1,8 @@
 # hosting-farm/tcl/hosting-farm-monitor-procs.tcl
 ad_library {
 
-    Scheduled Monitor procedures for hosting-farm package.
-    Monitoring uses a separate scheduling paradigm
+    library for monitoring of Hosting Farm assets
+    Monitoring uses a separate scheduling paradigm than hosting-farm-scheduled.tcl library
     to avoid instabilities and conflicts from other processes
     @creation-date 2015-09-12
     @Copyright (c) 2015 Benjamin Brink

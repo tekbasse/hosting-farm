@@ -1,7 +1,7 @@
 #hosting-farm/tcl/app-procs.tcl
 ad_library {
 
-    routines for hosting-farm UI-logs
+    App UI alert api for Hosting Farm
     @creation-date 11 Feb 2014
     @Copyright (c) 2014 Benjamin Brink
     @license GNU General Public License 2, see project home or http://www.gnu.org/licenses/gpl-2.0.html

@@ -1,7 +1,7 @@
 # hosting-farm/tcl/hosting-farm-attr-biz-procs.tcl
 ad_library {
 
-    business logic for hosting-farm asset attributes
+    business logic of attributes for Hosting Farm
     @creation-date 29 May 2016
     @Copyright (c) 2014-2016 Benjamin Brink
     @license GNU General Public License 2, 

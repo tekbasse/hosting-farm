@@ -92,17 +92,17 @@ Alternately, here is an overview of API:
 <li>
 <a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/app-procs.tcl">Web-based alert api</a>
 </li><li>
-<a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-asset-biz-procs.tcl">Asset business api</a>
+<a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-asset-biz-procs.tcl">Asset business logic api</a>
 </li><li>
 <a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-asset-view-procs.tcl">Asset views api</a>
 </li><li>
 <a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-asset-util-procs.tcl">Asset utilities api</a>
 </li><li>
-<a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-attr-biz-procs.tcl">Attribute business api</a>
+<a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-attr-biz-procs.tcl">Attribute business logic api</a>
 </li><li>
 <a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-attr-view-procs.tcl">Attribute views api</a>
 </li><li>
-<a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-biz-procs.tcl">General business api</a>
+<a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-biz-procs.tcl">General business logic api</a>
 </li><li>
 <a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-monitor-procs.tcl">System monitors api</a>
 </li><li>

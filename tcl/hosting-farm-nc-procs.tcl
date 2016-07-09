@@ -1,7 +1,8 @@
 # hosting-farm/tcl/hosting-farm-nc-procs.tcl
 ad_library {
 
-    no-connection procedures for hosting-farm package, a repo file for scheduled procs and dev convenience of apm reload
+    library for no-connection admin of Hosting Farm
+    a repository file for scheduled procs and developer convenience allowing apm to reload most of api during testing
     @creation-date 2015-12-30
     @Copyright (c) 2015 Benjamin Brink
     @license GNU General Public License 3, see project home or http://www.gnu.org/licenses/gpl-3.0.en.html
