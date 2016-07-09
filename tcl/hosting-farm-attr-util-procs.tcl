@@ -951,3 +951,23 @@ ad_proc -private hf_types_allowed_by {
     # set y_list \[set_difference_named_v at_list $n_list\]
     return $y_list
 }
+
+ad_proc -private hf_id_is_attribute_q {
+    f_id
+} {
+    Returns 1 if f_id is an attribute, Returns 0 if f_id is not an attribute; ie f_id is an asset. Returns -1 if f_id doesn't exist.
+} {
+    # Consider common cases first.
+    set attribute_p -1
+    set sub_f_id_exists_p [db_0or1row hf_sub_asset_map_sub_f_id_r {
+        select attribute_p 
+        from hf_sub_asset_map
+        where sub_f_id=:f_id } ]
+    if { !$sub_f_id_exists_p } {
+        set f_id_exists_p [hf_f_id_exists_q $f_id]
+        if { $f_id_exists_p } {
+            set attribute_p 0
+        }
+    }
+    return $attribute_p
+}
