@@ -940,24 +940,32 @@ ad_proc -private hf_user_add {
     # requires f_id, ua
     upvar 1 $array_name arr_name
     upvar 1 instance_id instance_id
+    hf_ui_go_ahead_q admin
 
     hf_ua_defaults arr_name
     hf_sub_asset_map_defaults arr_name
     qf_array_to_vars arr_name [hf_ua_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
-    qf_array_to_vars arr_name [list asset_type_id label]
+    qf_array_to_vares arr_name [list asset_type_id label]
+    set f_id_exists_p 0
     if { $type_id eq "" } {
         if { $asset_type_id eq "" } {
             set type_id [hf_asset_type_id_of_f_id $f_id]
-        } else {
-            set type_id $asset_type_id
+            if { $type_id eq "" && $asset_type_id ne "" } {
+                set type_id $asset_type_id
+            }
         }
     }
     set sub_type_id "ua"
+    set ct [hf_asset_subassets_count $f_id ]
+    if { $ct > 0 } {
+        set f_id_exists_p 1
+    }
     if { $sub_label eq "" } {
-        set ct ""
-        set ct [hf_asset_subassets_count $f_id ]
-        set sub_label "${connection_type}:ua${ct}"
+        if { $connection_type ne "" } {
+            append sub_label "${connection_type}:"
+        }
+        append sub_label "ua${ct}"
     }
     set attribute_p 1
     if { $ua_id eq "" } {
@@ -969,7 +977,6 @@ ad_proc -private hf_user_add {
     # and hf_up api handled directly.
     set sub_f_id_new ""
     set trashed_p 0
-    set f_id_exists_p 0
     set sub_f_id_exists_p 0
     if { $sub_f_id ne "" } {
         # Is this an existing attribute?
@@ -982,9 +989,9 @@ ad_proc -private hf_user_add {
  attribute does not exist. fid '${f_id} f_id_ck '${f_id_ck}'"
         }
     } 
-    if { !$sub_f_id_exists_p && $sub_asset_type_id eq "" } {
+    if { !$sub_f_id_exists_p && $sub_type_id eq "" } {
         ns_log Warning "hf_user_add.968: denied. \
- attribute does not exist. and sub_asset_type_id eq ''"
+ attribute does not exist. and sub_type_id eq ''"
 
     } else {
         if { !$f_id_exists_p } {
@@ -992,25 +999,17 @@ ad_proc -private hf_user_add {
             # This is first version of sub_f_id. f_id still required.
         }
         if { $f_id_exists_p } {
-            set up_success_p 1
             #set sub_f_id_new [db_nextval hf_id_seq]
             set sub_f_id_new [hf_ua_write $ua $connection_type $ua_id $up]
             set nowts [dt_systime -gmt 1]
-            if { $sub_f_id_exists_p && $sub_f_id_new ne "" && $up_success_p } {
+            if { $sub_f_id_exists_p && $sub_f_id_new ne "" } {
                 db_dml ss_sub_asset_map_update { update hf_sub_asset_map
                     set sub_f_id=:sub_f_id_new where f_id=:f_id and sub_f_id=:sub_f_id }
-            } elseif { $sub_f_id_new ne "" && $up_success_p } {
+            } elseif { $sub_f_id_new ne "" } {
                 set sub_f_id $sub_f_id_new
-                set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
+                set sub_sort_order [expr { $ct * 20 } ]
                 set time_created $nowts
                 # translate api conventions to internal map refs
-                set sub_type_id $sub_asset_type_id
-                set type_id $asset_type_id
-                set trashed_p [qf_is_true $trashed_p]
-                set attribute_p [qf_is_true $attribute_p 1]
-                if { $type_id eq "" } {
-                    set type_id [hf_asset_type_id_of_asset_id $f_id]
-                }
                 db_dml ss_sub_asset_map_create "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
             } 
