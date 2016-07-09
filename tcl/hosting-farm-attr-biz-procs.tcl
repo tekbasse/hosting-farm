@@ -931,9 +931,10 @@ ad_proc -private hf_user_add {
 } {
     Accepts following array elements:
     f_id  The asset or attribute to associate user;
+    asset_type_id of asset_or attribute to associate user (optional)
     ua    Account;
     connection_type (optional);
-    ua_id (optional) If updating an existing account;
+    ua_id or sub_f_id (optional) If updating an existing account;
     up (optional) Set if adding a pass code.
 } {
     # requires f_id, ua
@@ -946,23 +947,23 @@ ad_proc -private hf_user_add {
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
     qf_array_to_vars arr_name [list asset_type_id label]
     if { $type_id eq "" } {
-        set type_id $asset_type_id
+        if { $asset_type_id eq "" } {
+            set type_id [hf_asset_type_id_of_f_id $f_id]
+        } else {
+            set type_id $asset_type_id
+        }
     }
-    set sub_asset_type_id "ua"
+    set sub_type_id "ua"
     if { $sub_label eq "" } {
         set ct ""
-        if { $f_id ne "" } {
-            set ct [hf_asset_subassets_count $f_id ]
-        }
-        set label "${connection_type}:ua${ct}"
+        set ct [hf_asset_subassets_count $f_id ]
+        set sub_label "${connection_type}:ua${ct}"
     }
     set attribute_p 1
-    if { $sub_f_id eq "" } {
-        set sub_f_id $ua_id
-    }
     if { $ua_id eq "" } {
         set ua_id $sub_f_id
     }
+    set sub_f_id $ua_id
     # Manually added hf_sub_asset_map_update code at this point
     # so hf_ua_write controls db_next_val 
     # and hf_up api handled directly.
