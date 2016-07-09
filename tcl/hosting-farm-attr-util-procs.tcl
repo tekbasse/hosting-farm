@@ -957,12 +957,14 @@ ad_proc -private hf_id_is_attribute_q {
 } {
     Returns 1 if f_id is an attribute, Returns 0 if f_id is not an attribute; ie f_id is an asset. Returns -1 if f_id doesn't exist.
 } {
+    upvar 1 instance_id instance_id
     # Consider common cases first.
     set attribute_p -1
     set sub_f_id_exists_p [db_0or1row hf_sub_asset_map_sub_f_id_r {
         select attribute_p 
         from hf_sub_asset_map
-        where sub_f_id=:f_id } ]
+        where sub_f_id=:f_id 
+        and instance_id=:instance_id } ]
     if { !$sub_f_id_exists_p } {
         set f_id_exists_p [hf_f_id_exists_q $f_id]
         if { $f_id_exists_p } {
@@ -970,4 +972,29 @@ ad_proc -private hf_id_is_attribute_q {
         }
     }
     return $attribute_p
+}
+
+ad_proc -private hf_asset_type_id_of_f_id {
+    f_id
+} {
+    Returns asset_type_id of an f_id, where f_id can be a sub_f_id of an attribute, or an f_id of an asset.
+    Returns empty string if not found.
+} {
+    upvar 1 instance_id instance_id
+    set asset_type_id ""
+    set f_id_orig $f_id
+    set exists_p [db_0or1row hf_sub_asset_map_type_r { 
+        select f_id,type_id,sub_f_id,type_id 
+        where f_id=:f_id or sub_f_id=:f_id
+        and instance_id=:instance_id } ]
+    if { $exists_p } {
+        if { $f_id eq $f_id_orig } {
+            set asset_type_id $type_id
+        } else {
+            # sub_f_id eq f_id_orig
+            set asset_type_id $sub_type_id
+        }
+    } else {
+        set asset_type_id [hf_asset_type_id_of_asset_id $f_id_orig]
+    }
 }
