@@ -3,15 +3,6 @@
 <property name="context">@context;noquote@</property>
 
 <h1>Internal conventions</h1>
-<h3>year 2038 problem statement</h3>
-<p>
-Table hf_monitor's report_id uses machine time in seconds 
- instead of tcl scan to manage times for delta t values in the logs.
-All related database fields use big int format.
-This means 
- <a href="https://en.wikipedia.org/wiki/Year_2038">Year 2038 issues</a>
- are not expected with this system.
-</p>
 <h2>Assets and attributes</h2>
 <p>
 Assets are objects that are designed to be tracked for general administration and billing.
@@ -91,7 +82,149 @@ Priority is given to the first one assigned. Sort order can be revised as needed
 <h2>General API</h2>
 <p>
 Documentation for API is provided via searchable OpenACS API Browser.
-The api is separated into topics by filename. See <a href="/api-doc/package-view?version_id=@pkg_version_id@">ACS API Browser for Hosting Farm</a>
+The api is separated into topics by filename. 
+See <a href="/api-doc/package-view?version_id=@pkg_version_id@">ACS API Browser for Hosting Farm</a>
+ detail.
+</p><p>
+Alternately, here is an overview of API:
 </p>
+<ul>
+<li>
+<a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/app-procs.tcl">Web-based alert api</a>
+</li><li>
+<a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-asset-biz-procs.tcl">Asset business api</a>
+</li><li>
+<a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-asset-view-procs.tcl">Asset views api</a>
+</li><li>
+<a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-asset-util-procs.tcl">Asset utilities api</a>
+</li><li>
+<a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-attr-biz-procs.tcl">Attribute business api</a>
+</li><li>
+<a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-attr-view-procs.tcl">Attribute views api</a>
+</li><li>
+<a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-biz-procs.tcl">General business api</a>
+</li><li>
+<a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-monitor-procs.tcl">System monitors api</a>
+</li><li>
+<a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-monitor-procs.tcl">Admin (without connection) api</a>
+</li><li>
+<a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-monitor-procs.tcl">Permissions api</a>
+</li>
+</ul>
+<p>
+Customization to the system is expected the default file, and by copying and modifying the example api interface file to a new name:
+</p>
+<ul>
+<li>
+<a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-defaults-procs.tcl">System defaults</a>
+</li><li>
+<a href="/api-doc/procs-file-view?version_id=@pkg_version_id@&path=packages/hosting-farm/tcl/hosting-farm-local-ex-procs.tcl">Example api interface to local maintenance libraries</a>
+</li>
+</ul>
+<p>
+Be sure to end any new filenames with *-proc.tcl so the package manager will read it. 
+By using a different name than existing filesnames, your customizations will not be clobbered
+ if and when you decide to upgrade the package.
+</p>
+<h3>year 2038 problem statement</h3>
+<p>
+Table hf_monitor's report_id uses machine time in seconds 
+ instead of tcl scan to manage times for delta t values in the logs.
+All related database fields use big int format.
+This means 
+ <a href="https://en.wikipedia.org/wiki/Year_2038">Year 2038 issues</a>
+ are not expected with this system.
+</p>
+<p>
+By the way, OpenACS has support for all sorts of automated possibiliites with site management. See <a hef="/api-doc/">ACS API Browser</a>.
+</p>
+<pre>
+Here a summary of some early api notes:
 
+UI app procs in app-procs.tcl
+hf_log_create (via batch process)
+hf_log_read
+
+UI batch processor API
+hf::schedule::do
+hf::schedule::add
+hf::schedule::trash
+hf::schedule::read
+hf::schedule::list
+
+General Asset UI in hosting-farm-asset-procs.tcl
+hf_asset_id_exists 
+hf_change_asset_id_for_label
+hf_asset_rename
+hf_asset_id_from_label 
+hf_asset_label_from_id 
+hf_asset_label_id_from_template_id 
+hf_asset_from_label 
+hf_asset_create 
+hf_asset_stats 
+hf_assets 
+hf_asset_read 
+hf_asset_write
+hf_asset_delete
+hf_asset_trash
+
+The monitoring process
+
+monitor batch processor API
+hf::monitor::check
+hf::monitor::do
+hf::monitor::add
+hf::monitor::trash
+hf::monitor::read
+hf::monitor::list
+
+
+
+hosting-farm-local-ex-procs.tcl:ad_proc -private hfl_allow_q
+hosting-farm-local-ex-procs.tcl:ad_proc -private hfl_asset_halt_example
+
+hosting-farm-procs.tcl:ad_proc -private hf_vm_quota_read
+
+monitoring processes are automatically considered periodic, and added using hf::monitor::add
+
+monitor user API:
+hf_monitor_configs_write
+hf_monitor_configs_read
+hf_monitor_logs
+hf_monitors_inactivate
+
+
+A process is called to add to the monitor_log
+
+
+hf_monitor_update updates table hf_monitor_log
+
+hf_monitor_status returns most recent analyzed monitor_logs from table hf_monitor_status
+
+hf_monitor_statistics analyzes data from unprocessed hf_monitor_update, posts to hf_monitor_status, hf_monitor_freq_dist_curves, and hf_monitor_statistics
+
+hf_monitor_report_read
+
+
+
+#   hf_monitor_update         Write an update to a log (this includes distribution curve info, ie time as delta-t)
+#   hf_monitor_status         Read status of asset_id, defaults to most recent status (like read, just status number)
+
+#   hf_monitor_statistics     Analyse most recent hf_monitor_update in context of distribution curve
+#                             Returns distribution curve of most recent configuration (table hf_monitor_freq_dist_curves)
+#                             Save an Analysis an hf_monitor_update (or FLAG ERROR)
+
+#   hf_monitor_logs           Returns monitor_ids of logs indirectly associated with an asset (direct is 1:1 via asset properties)
+
+#   hf_monitor_report         Returns a range of monitor history
+#   hf_monitor_status_history  Returns a range of status history
+
+#   hf_monitor_asset_from_id  Returns asset_id of monitor_id
+
+
+# hf_monitor_alert_create 
+# hf_monitor_alert_process
+# hf_monitor_alerts_status
+# hf_monitor_alert_trash 
+</pre>
 
