@@ -32,6 +32,8 @@ email: tekbasse@yahoo.com</pre>
 <li>
 <a href="intro">introduction</a>
 </li><li>
+<a href="internals">internal conventions</a>
+</li><li>
 <a href="data-model">data model</a>
 </li><li>
 <a href="glossary">glossary</a>
