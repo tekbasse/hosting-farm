@@ -50,7 +50,7 @@ ad_proc -public hf_asset_create {
                 ([hf_asset_keys ","])
             values ([hf_asset_keys ",:"])" 
             hf_asset_rev_map_update $label $f_id $asset_id $trashed_p
-            ns_log Notice "hf_asset_create: hf_asset_create asset_id '$asset_id' \
+            ns_log Notice "hf_asset_create: asset_type_id '${asset_type_id}' asset_id '$asset_id' \
 f_id '$f_id' label '$label' instance_id '$instance_id' user_id '$user_id'"
         } on_error {
             set asset_id 0
@@ -143,9 +143,9 @@ an asset by deleting current revision trashed_p '${trashed_p}'."
     }
     if { $delete_p && $trashed_p } {
         db_dml hf_asset_rev_delete { delete from hf_assets 
-            where asset_id=:asset_id and \
-            instance_id=:instance_id \
-                                         and trashed_p = '1'
+            where asset_id=:asset_id and 
+            instance_id=:instance_id 
+            and trashed_p = '1'
         }
     } else {
         set delete_p 0
