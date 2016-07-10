@@ -449,7 +449,7 @@ ad_proc -private hf_asset_subassets_by_type {
 ad_proc -private hf_asset_subassets_cascade {
     f_id
 } {
-    Returns a list of untrashed f_id of subassets.
+    Returns a list of untrashed f_id of subassets, including the f_id.
 } {
     upvar 1 instance_id instance_id
     set current_id_list [list $f_id]
@@ -556,6 +556,7 @@ ad_proc -private hf_asset_attributes_cascade {
     set current_id_list_len 1
     set final_id_list [list ]
     set not_error_p 1
+    set f_id_is_asset_p [hf_f_id_exists_q $f_id]
     ns_log Notice "hf_asset_attributes_cascade.550: begin while.."
     while { $current_id_list_len > 0 & $not_error_p } {
         set next_id_list [list ]
@@ -575,6 +576,10 @@ ad_proc -private hf_asset_attributes_cascade {
         set current_id_list $next_id_list
         set current_id_list_len [llength $current_id_list]
     }
+    
+    if { $f_id_is_asset_p } {
+        set final_id_list [lreplace $final_id_list 0 0]
+    }
     return $final_id_list
 }
 
@@ -589,6 +594,7 @@ ad_proc -private hf_asset_attributes_by_type_cascade {
     set current_id_list_len 1
     set final_id_list [list ]
     set not_error_p 1
+    set f_id_is_asset_p [hf_f_id_exists_q $f_id]
     ns_log Notice "hf_asset_attributes_by_type_cascade.579: begin while.."
     while { $current_id_list_len > 0 & $not_error_p } {
         set next_id_list [list ]
@@ -607,6 +613,9 @@ ad_proc -private hf_asset_attributes_by_type_cascade {
         }
         set current_id_list $next_id_list
         set current_id_list_len [llength $current_id_list]
+    }
+    if { $f_id_is_asset_p } {
+        set final_id_list [lreplace $final_id_list 0 0]
     }
     return $final_id_list
 }

@@ -133,13 +133,26 @@ aa_register_case -cats {db smoke} assets_attr_check {
 
             
 
-            set dc_f_id_list [hf_asset_subassets_cascade $dc_arr(dc_id)]
+            set dc_f_id_list [hf_asset_subassets_cascade $dc_arr(f_id)]
             set dc_f_id_list_len [llength $dc_f_id_list]
-            aa_equals "Assets total created" $dc_f_id_list_len 2 
+            ns_log Notice "hosting-farm-test-api-procs.tcl.201: dc_f_id_list '${dc_f_id_list}'"
+            aa_equals "DC Assets total created" $dc_f_id_list_len 1
 
-            set dc_sub_f_id_list [hf_asset_attributes_cascade $dc_arr(dc_id)]
+            set dc_sub_f_id_list [hf_asset_attributes_cascade $dc_arr(f_id)]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.205: dc_sub_f_id_list '${dc_sub_f_id_list}'"
             set dc_sub_f_id_list_len [llength $dc_f_id_list]
-            aa_equals "Attributes total created" $dc_sub_f_id_list_len 2 
+            aa_equals "DC Attributes total created" $dc_sub_f_id_list_len 1 
+
+
+            set hw_f_id_list [hf_asset_subassets_cascade $hw_arr(f_id)]
+            set hw_f_id_list_len [llength $hw_f_id_list]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.201: hw_f_id_list '${hw_f_id_list}'"
+            aa_equals "HW Assets total created" $hw_f_id_list_len 1
+
+            set hw_sub_f_id_list [hf_asset_attributes_cascade $hw_arr(f_id)]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.205: hw_sub_f_id_list '${hw_sub_f_id_list}'"
+            set hw_sub_f_id_list_len [llength $hw_sub_f_id_list]
+            aa_equals "HW Attributes total created" $hw_sub_f_id_list_len 3
 
             
         } \
