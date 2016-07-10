@@ -708,14 +708,13 @@ ad_proc -private hf_up_write {
         }
     }
     if { $success_p } {
-
-        set up_exists_p [db_0or1row ua_id_exists_p {
-            select ua_id as ua_id_db 
-            from hf_ua 
-            where ua_id=:ua_id 
-            and instance_id=:instance_id } ]
         set encode_proc [parameter::get -package_id $instance_id -parameter EncodeProc -default hf_encode]
         set details [safe_eval [list ${encode_proc} $up]]
+        set up_exists_p [db_0or1row ua_id_exists_p {
+            select up_id as up_id_db 
+            from hf_ua_up_map 
+            where ua_id=:ua_id 
+            and instance_id=:instance_id } ]
         if { [ns_conn isconnected] } {
             set user_id [ad_conn user_id]
         } else {
@@ -726,16 +725,15 @@ ad_proc -private hf_up_write {
         # Not practical to enforce at this level.
         # maybe could use user_id and instance_id???
         # Record it in the log.
-        
         if { $up_exists_p } {
-            ns_log Notice "hf_ua_write.2991: user_id '${user_id}' changed password for ua_id '${ua_id}' instance_id '${instance_id}'"
+            ns_log Notice "hf_up_write.2991: user_id '${user_id}' changed password for ua_id '${ua_id}' instance_id '${instance_id}'"
             db_dml hf_up_update {
-                update hf_up set details=:details where instance_id=:instance_id and up_id in (select up_id from hf_ua_up_map where ua_id=:ua_id and instance_id=:instance_id)
+                update hf_up set details=:details where instance_id=:instance_id and up_id=:up_id and instance_id=:instance_id)
             }
         } else {
             # create
             set new_up_id [db_nextval hf_id_seq]
-            ns_log Notice "hf_ua_write.2998: user_id '${user_id}' created password for ua_id '${ua_id}' instance_id '${instance_id}'"
+            ns_log Notice "hf_up_write.2998: user_id '${user_id}' created password for ua_id '${ua_id}' instance_id '${instance_id}'"
             db_transaction {
                 db_dml hf_up_create {
                     insert into hf_up (up_id, instance_id, details)
@@ -749,7 +747,7 @@ ad_proc -private hf_up_write {
         }    
     }
     if { !$success_p & $up ne "" } {
-        ns_log Warning "hf_ua_write.3008: failed. Should not happen."
+        ns_log Warning "hf_up_write.3008: failed. Should not happen."
     }
     return $success_p
 }

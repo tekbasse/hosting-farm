@@ -112,9 +112,8 @@ aa_register_case -cats {db smoke} assets_attr_check {
                                   connection_type "https" \
                                   ua_id "" \
                                   up "test" ]
-
             set ua2_arr(ua_id) [hf_user_add ua2_arr]
-            set ua1_arr(ua_id) [hf_user_add ua1_arr]
+
             set q2 "instance_id,f_id,type_id,sub_f_id,sub_type_id,sub_sort_order,sub_label,attribute_p,trashed_p"
             set q2_list [db_list_of_lists hf_test_hf_sub_asset_map_1 "select $q2 from hf_sub_asset_map" ]
             ns_log Notice "hosting-farm-test-api-procs.tcl.149: hf_sub_asset_map $q1 $q1_list"
