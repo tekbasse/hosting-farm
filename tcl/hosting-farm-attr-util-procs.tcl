@@ -795,7 +795,7 @@ ad_proc -private hf_key {
     if { $key eq "" } {
         if { ![db_0or1row hf_sched_params_fk_r { select fk from hf_sched_params } ] } {
             set fk [hf_chars $key 0]
-            db_dml hf_fk_cr { insert into hf_sched_params fk values (:fk) }
+            db_dml hf_fk_cr { insert into hf_sched_params (fk) values (:fk) }
         }
     } else {
         set fk $key
@@ -847,7 +847,7 @@ ad_proc -private hf_key_create {
     append b "c"
     set i 0
     set ii_list [list 97 4 4 6 6 4 -73 1 8 8 4 4 6 6 4 ]
-    if { [string length $chars < 58 ] } {
+    if { [string length $chars] < 58 } {
         lappend ii_list 25 2 -7 1 -10
     }
     foreach ii $ii_list {
