@@ -946,7 +946,7 @@ ad_proc -private hf_user_add {
     hf_sub_asset_map_defaults arr_name
     qf_array_to_vars arr_name [hf_ua_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
-    qf_array_to_vares arr_name [list asset_type_id label]
+    qf_array_to_vars arr_name [list asset_type_id label]
     set f_id_exists_p 0
     if { $type_id eq "" } {
         if { $asset_type_id eq "" } {
