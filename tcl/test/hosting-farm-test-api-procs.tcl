@@ -159,6 +159,8 @@ aa_register_case -cats {api smoke} assets_api_check {
 
                 # Add to dc. hf_asset hierarchy is added manually
                 set dc_ref [expr { round( fmod( $ac , 2 ) ) } ]
+                set dcn $dci(${dc_ref})
+                ns_log Notice "hosting-farm-test-api-procs.tcl.163: dcn $dcn dc_ref $dc_ref"
                 hf_sub_asset_map_update $dci(${dc_ref}) dc $randlabel $asset_arr(f_id) hw 0
                 array set asset_arr [list \
                                          system_name [ad_generate_random_string] \
