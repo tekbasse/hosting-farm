@@ -464,12 +464,15 @@ ad_proc -private hf_sub_asset_map_update {
             # sub_f_id may be an asset. and this is a new link between assets.
             set sub_f_id_is_asset_p [hf_f_id_exists_q $sub_f_id]
             set sub_f_id_exists_p $sub_f_id_is_asset_p
+            if { !$sub_f_id_exists_p } {
+                # force new map
+                set sub_f_id ""
+            }
         }
     } 
     if { !$sub_f_id_exists_p && $sub_asset_type_id eq "" } {
         ns_log Warning "hf_sub_asset_map_update.470: denied. \
  attribute does not exist. and sub_asset_type_id eq ''"
-
     } else {
         if { !$f_id_exists_p } {
             set f_id_exists_p [hf_f_id_exists_q $f_id]
