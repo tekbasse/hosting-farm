@@ -438,20 +438,22 @@ ad_proc -private hf_sub_asset_map_update {
     sub_label
     sub_f_id
     sub_asset_type_id
-    {attribute_p "1"}
+    {attribute_p ""}
 } {
     Updates or creates a new map record.
 
     @return sub_f_id_new Returns a new sub_f_id to assign to new attribute record. Otherwise returns an empty string if unsuccessful.
 } {
     upvar 1 instance_id instance_id
+
     # Actually always creates a record. Trashes any that already exist for same label and f_id.
-    set attribute_p [qf_is_true $attribute_p 1]
+    # Use hf_id_is_attribute_q here?
     set sub_f_id_new ""
     set trashed_p 0
     set sub_f_id ""
     set f_id_exists_p 0
     set sub_f_id_exists_p 0
+    set sub_f_id_is_asset_p 0
     if { $sub_f_id ne "" } {
         # Is this an existing attribute?
         set f_id_ck [hf_f_id_of_sub_f_id $sub_f_id]
@@ -459,8 +461,9 @@ ad_proc -private hf_sub_asset_map_update {
             set f_id_exists_p 1
             set sub_f_id_exists_p 1
         } else {
-            ns_log Warning "hf_sub_asset_map_update.465: denied. \
- attribute does not exist. fid '${f_id} f_id_ck '${f_id_ck}'"
+            # sub_f_id may be an asset. and this is a new link between assets.
+            set sub_f_id_is_asset_p [hf_f_id_exists_q $sub_f_id]
+            set sub_f_id_exists_p $sub_f_id_is_asset_p
         }
     } 
     if { !$sub_f_id_exists_p && $sub_asset_type_id eq "" } {
@@ -479,6 +482,12 @@ ad_proc -private hf_sub_asset_map_update {
                 db_dml hf_sub_asset_map_update { update hf_sub_asset_map
                     set sub_f_id=:sub_f_id_new where f_id=:f_id and sub_f_id=:sub_f_id }
             } else {
+                set if { $attribute_p eq "" && $sub_f_id_is_asset_p } {
+                    set attribute_p 0
+                } else {
+                    set attribute_p 1
+                }
+
                 set sub_f_id $sub_f_id_new
                 set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
                 set time_created $nowts
