@@ -236,7 +236,7 @@ create index hf_asset_type_features_label_idx on hf_asset_type_features (label);
 CREATE TABLE hf_ns_records (
        instance_id integer,
        -- ns_id
-       id          integer DEFAULT nextval ( 'hf_id_seq' ),
+       ns_id          integer DEFAULT nextval ( 'hf_id_seq' ),
        -- should be validated before allowed to go live.
        active_p    integer DEFAULT '0',
        -- DNS records to be added to domain name service
@@ -264,7 +264,7 @@ CREATE TABLE hf_ns_records (
 );
 
 create index hf_ns_records_instance_id_idx on hf_ns_records (instance_id);
-create index hf_ns_records_id_idx on hf_ns_records (id);
+create index hf_ns_records_ns_id_idx on hf_ns_records (ns_id);
 create index hf_ns_records_active_p_idx on hf_ns_records (active_p);
 
 CREATE TABLE hf_data_centers (

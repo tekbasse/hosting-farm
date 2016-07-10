@@ -131,7 +131,7 @@ ad_proc -private hf_ns_keys {
 } {
     Returns an ordered list of keys for hf_network_interfaces
 } {
-    set keys_list [list instance_id id active_p name_record time_trashed time_created]
+    set keys_list [list instance_id ns_id active_p name_record time_trashed time_created]
     set keys [hf_keys_by $keys_list $separator]
     return $keys
 }
@@ -335,14 +335,17 @@ ad_proc -private hf_sub_f_id_current_q {
     @return  1 if true, otherwise returns 0.
 } {
     upvar 1 instance_id instance_id
-    set current_p [db_0or1row hf_sub_f_id_current_q { 
-        select f_id from hf_sub_asset_map 
-        where sub_f_id=:sub_f_id 
-        and trashed_p!='1'
-        and instance_id=:instance_id } ]
-    if { !$current_p } {
-        ns_log Notice "hf_sub_f_id_current_q: not current. \
- sub_f_id '{$sub_f_id}' instance_id '${instance_id}'"
+    set current_p 0
+    if {[qf_is_natural_number $sub_f_id ] } {
+        set current_p [db_0or1row hf_sub_f_id_current_q { 
+            select f_id from hf_sub_asset_map 
+            where sub_f_id=:sub_f_id 
+            and trashed_p!='1'
+            and instance_id=:instance_id } ]
+        if { !$current_p } {
+            ns_log Notice "hf_sub_f_id_current_q: not current. \
+ sub_f_id '${sub_f_id}' instance_id '${instance_id}'"
+        }
     }
     return $current_p
 
@@ -391,7 +394,7 @@ ad_proc -private hf_sub_f_id_current {
             and instance_id=:instance_id } ]
         if { !$exists_p } {
             ns_log Notice "hf_sub_f_id_current: not found. \
- sub_f_id '{$sub_f_id}' instance_id '${instance_id}'"
+ sub_f_id '${sub_f_id}' instance_id '${instance_id}'"
         }
     }
     return $sub_f_id
@@ -450,11 +453,10 @@ ad_proc -private hf_sub_asset_map_update {
     # Use hf_id_is_attribute_q here?
     set sub_f_id_new ""
     set trashed_p 0
-    set sub_f_id ""
     set f_id_exists_p 0
     set sub_f_id_exists_p 0
     set sub_f_id_is_asset_p 0
-    if { $sub_f_id ne "" } {
+    if { [qf_is_natural_number $sub_f_id] } {
         # Is this an existing attribute?
         set f_id_ck [hf_f_id_of_sub_f_id $sub_f_id]
         if { $f_id eq $f_id_ck } {
@@ -465,8 +467,13 @@ ad_proc -private hf_sub_asset_map_update {
             set sub_f_id_is_asset_p [hf_f_id_exists_q $sub_f_id]
             set sub_f_id_exists_p $sub_f_id_is_asset_p
             if { !$sub_f_id_exists_p } {
-                # force new map
-                set sub_f_id ""
+                if { $f_id eq "" } {
+                    ns_log Warning "hf_sub_asset_map_update.440: f_id '${f_id}' f_id_ck '${f_id_ck}'. Problem input?"
+                } else {
+                    # force new map
+                    ns_log Warning "hf_sub_asset_map_update.460: sub_f_id '${sub_f_id}' not found. Creating new map record."
+                    set sub_f_id ""
+                }
             }
         }
     } 
@@ -477,6 +484,11 @@ ad_proc -private hf_sub_asset_map_update {
         if { !$f_id_exists_p } {
             set f_id_exists_p [hf_f_id_exists_q $f_id]
             # This is first version of sub_f_id. f_id still required.
+            if { !$f_id_exists_p } {
+                # try as an attribute (rare, since attribute maps aren't updated 
+                # when a sub_f_id is updated. ) attribute-attribute mapping requires consistent label..
+                set f_id_exists_p [hf_sub_f_id_current_q $f_id]
+            }
         }
         if { $f_id_exists_p } {
             set sub_f_id_new [db_nextval hf_id_seq]
@@ -485,10 +497,12 @@ ad_proc -private hf_sub_asset_map_update {
                 db_dml hf_sub_asset_map_update { update hf_sub_asset_map
                     set sub_f_id=:sub_f_id_new where f_id=:f_id and sub_f_id=:sub_f_id }
             } else {
-                set if { $attribute_p eq "" && $sub_f_id_is_asset_p } {
-                    set attribute_p 0
-                } else {
-                    set attribute_p 1
+                if { $attribute_p eq "" } {
+                    if { $sub_f_id_is_asset_p } {
+                        set attribute_p 0
+                    } else {
+                        set attribute_p 1
+                    }
                 }
 
                 set sub_f_id $sub_f_id_new
@@ -505,6 +519,8 @@ ad_proc -private hf_sub_asset_map_update {
                 db_dml ss_sub_asset_map_create "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
             }
+        } else {
+            ns_log Warning "hf_sub_asset_map_update.512: f_id '${f_id}' not found. Unable to update/create record."
         }
     }
     return $sub_f_id_new

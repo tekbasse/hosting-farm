@@ -153,7 +153,7 @@ drop index hf_data_centers_instance_id_idx;
 DROP TABLE hf_data_centers;
 
 drop index hf_ns_records_active_p_idx;
-drop index hf_ns_records_id_idx;
+drop index hf_ns_records_ns_id_idx;
 drop index hf_ns_records_instance_id_idx;
 
 DROP TABLE hf_ns_records;

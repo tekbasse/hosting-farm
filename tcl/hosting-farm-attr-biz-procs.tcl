@@ -556,6 +556,8 @@ ad_proc -private hf_vh_write {
         }
         append sub_label [hf_asset_subassets_count $f_id]
     }
+    
+    set sub_f_id $vh_id
     set vh_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id vh $attribute_p]
     if { $vh_id_new ne "" } {
         # record revision/new
@@ -595,6 +597,7 @@ ad_proc -private hf_dc_write {
         }
         append sub_label [hf_asset_subassets_count $f_id]
     }
+    set sub_f_id $dc_id
     set dc_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id dc $attribute_p]
     if { $dc_id_new ne "" } {
         # record revision/new
@@ -634,6 +637,7 @@ ad_proc -private hf_hw_write {
         }
         append sub_label [hf_asset_subassets_count $f_id]
     }
+    set sub_f_id $hw_id
     set hw_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id hw $attribute_p]
     if { $hw_id_new ne "" } {
         # record revision/new
@@ -672,6 +676,7 @@ ad_proc -private hf_vm_write {
         }
         append sub_label [hf_asset_subassets_count $f_id]
     }
+    set sub_f_id $vm_id
     set vm_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id vm $attribute_p]
     if { $vm_id_new ne "" } {
         # record revision/new
@@ -710,6 +715,7 @@ ad_proc -private hf_ss_write {
         }
         append sub_label [hf_asset_subassets_count $f_id]
     }
+    set sub_f_id $ss_id
     set ss_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id ss $attribute_p]
     if { $ss_id_new ne "" } {
         # record revision/new
@@ -765,6 +771,7 @@ ad_proc -private hf_ip_write {
         append sub_label [hf_asset_subassets_count $f_id]
     }
     set attribute_p [qf_is_true $attribute_p 1]
+    set sub_f_id $ip_id
     set ip_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id ip $attribute_p]
     if { $ip_id_new ne "" } {
         # record revision/new
@@ -803,10 +810,11 @@ ad_proc -private hf_ni_write {
         }
         append sub_label [hf_asset_subassets_count $f_id]
     }
+    set sub_f_id $ni_id
     set ni_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id ni $attribute_p]
     if { $ni_id_new ne "" } {
         # record revision/new
-        set ns_id $ni_id_new
+        set ni_id $ni_id_new
         db_dml ni_asset_create "insert into hf_network_interfaces ([hf_ni_keys ","]) values ([hf_ni_keys ",:"])"
     }
     return $ni_id_new
@@ -873,6 +881,7 @@ ad_proc -private hf_ns_write {
         append sub_label [hf_asset_subassets_count $f_id]
     }
     set attribute_p [qf_is_true $attribute_p 1]
+    set sub_f_id $ns_id
     set ns_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id ns $attribute_p]
     if { $ns_id_new ne "" } {
         # record revision/new
