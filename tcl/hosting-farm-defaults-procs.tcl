@@ -449,7 +449,7 @@ ad_proc -private hf_ns_defaults {
     upvar 1 instance_id instance_id
     set nowts [dt_systime -gmt 1]
     set ns [list instance_id $instance_id \
-                id "" \
+                ns_id "" \
                 active_p "" \
                 name_record "" \
                 time_trashed "" \
