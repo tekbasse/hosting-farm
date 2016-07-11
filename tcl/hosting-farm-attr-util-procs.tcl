@@ -420,22 +420,48 @@ ad_proc -private hf_label_of_sub_f_id {
 
 ad_proc -private hf_sub_f_id_of_label {
     label
+    {f_id ""}
 } {
-    @param label  Label of attribute
+    Returns list of sub_f_id of untrashed attributes with same label, 
+    or an empty list if none found.
+    If f_id is included, query is scoped to the immediate f_id dependents, where there should be no more than one untrashed label .
+    
+    @param label  
 
-    @return sub_f_id of attribute with label, or empty string if not exists or active.
+    @return sub_f_id 
+
 } {
     upvar 1 instance_id instance_id
-    set sub_f_id ""
-    set exists_p [db_0or1row hf_sub_f_id_of_label { select sub_f_id from hf_sub_asset_map 
-        where label=:label and instance_id=:instance_id }]
-    if { !$exists_p } {
-        ns_log Notice "hf_sub_f_id_of_label: not found. '${label}' instance_id '${instance_id}'"
+    set sub_f_id_list ""
+    if { $f_id ne "" } {
+        set sub_f_id_list [db_list hf_sub_f_id_of_label_f_id { 
+            select sub_f_id from hf_sub_asset_map 
+            where sub_label=:label 
+            and f_id=:f_id
+            and instance_id=:instance_id 
+            and trashed_p!='1'
+        }]
+
+    } else {
+        set sub_f_id_list [db_0or1row hf_sub_f_id_of_label { 
+            select sub_f_id from hf_sub_asset_map 
+            where label=:label 
+            and instance_id=:instance_id
+            and trashed_p!='1'
+        }]
     }
+    set sub_f_id_list_len [llength $sub_f_id_list]
+    if { $sub_f_id_list_len == 0  } {
+        ns_log Notice "hf_sub_f_id_of_label: not found. '${label}' instance_id '${instance_id}' '${f_id}'"
+    }
+    if
     return $sub_f_id
 }
 
 ad_proc -private hf_asset_attrbute_map_create {
+    asset_id
+    sub_label
+    sub_asste_type_id
 } {
     Link new attribute to an existing asset. This includes for creating primary attribute case for each asset.
 } {
@@ -443,7 +469,21 @@ ad_proc -private hf_asset_attrbute_map_create {
     #    an asset and an attribute of same type that describes asset detail.
     # 1. link new attribute to existing asset  (including primary asset case)
 
-
+    set type_id [hf_asset_type_id_of_asset_id $f_id]
+    set label [hf_sub_f_id_of_label $label
+    if { $type_id ne "" } {
+        set nowts [dt_systime -gmt 1]
+        set sub_f_id_new [db_nextval hf_id_seq]
+ [hf_f_id_exists_q $sub_f_id]        
+        set sub_f_id $sub_f_id_new
+        set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
+        set time_created $nowts
+        # translate api conventions to internal map refs
+        set sub_type_id $sub_asset_type_id
+        set trashed_p 0
+        db_dml ss_sub_asset_map_create "insert into hf_sub_asset_map \
+ ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
+        return $sub_f_id
 }
 ad_proc -private hf_attribute_map_update {
     old_id
