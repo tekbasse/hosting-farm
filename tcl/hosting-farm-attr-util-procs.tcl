@@ -382,7 +382,7 @@ ad_proc -private hf_sub_f_id_current {
     set sub_f_id 0
     set sam_list [hf_sub_asset $sub_f_id_orig $f_id]
     if { [llength $sam_list] > 0 } {
-        qf_list_to_vars $sam_list [hf_sub_asset_map_keys]
+        qf_lists_to_vars $sam_list [hf_sub_asset_map_keys]
         set exists_p [db_0or1row hf_f_id_of_sub_f_id_tr { 
             select sub_f_id 
             from hf_sub_asset_map 
@@ -473,19 +473,19 @@ ad_proc -private hf_asset_attrbute_map_create {
             set sub_label [hf_sub_f_id_of_label $label $f_id]
             set nowts [dt_systime -gmt 1]
             set sub_f_id [db_nextval hf_id_seq]
-            [hf_f_id_exists_q $sub_f_id]        
             set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
             set time_created $nowts
             # translate api conventions to internal map refs
             set sub_type_id $sub_asset_type_id
             set trashed_p 0
+            set attribute_p 1
             db_dml hf_asset_attribute_map_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
         }
     }
     return $sub_f_id
 }
-
+##code
 ad_proc -private hf_attribute_map_update {
     old_id
     {new_id ""}
@@ -512,6 +512,18 @@ ad_proc -private hf_assets_map_create {
 }
 
 ad_proc -private hf_attributes_map_create {
+    f_id
+    sub_label
+    sub_asset_type_id
+} {
+    Creates a map between an existing attribute and a new attribute.
+    The existing attribute's sub_f_id is called an f_id here
+    because the sub_f_id becomes an f_id for purposes of this map.
+    These attributes must have different labels.
+    @param f_id ie sub_f_id of existing attribute
+    @param sub_label of new attribute
+    @param sub_asset_type_id of new attribute
+    @return sub_f_id of new attribute
 } {
     # 4. link new attribute to existing attribute. 
     #    hf_attributes_map_create
@@ -522,9 +534,34 @@ ad_proc -private hf_attributes_map_create {
     #    The mapping system would have to be significantly altered.
     #    Instead, 
     #     all cases of the changed id must be updated at the same time
-    #    See case 2.
-} {
+    #    See case 2. (hf_attribute_map_update)
+    # Why do the sub_labels have to differ?  
+    # To help enforce unqiue sub_labels per level of hierarchy and 
+    # maybe to help prevent cases of asset primary attribute morphology
+    # being used in attribute-attribute inheritance --where
+    # sub_label and asset.label are perhaps expected to be same.
+    
+    set sub_f_id ""
+    set sub_label_new $sub_label
+    set sam_list [hf_sub_asset $f_id]
+    qf_lists_to_vars $sam_list [hf_sub_asset_map_keys]
 
+    if { $sub_label ne "" && $sub_label ne $sub_label_new } {
+        set allowed_sub_type_id_list [hf_types_allowed_by $type_id]
+        if { $sub_asset_type_id in $allowed_sub_type_id_list } {
+            set nowts [dt_systime -gmt 1]
+            set sub_f_id [db_nextval hf_id_seq]
+            set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
+            set time_created $nowts
+            # translate api conventions to internal map refs
+            set sub_type_id $sub_asset_type_id
+            set trashed_p 0
+            set attribute_p 1
+            db_dml hf_attributes_map_cr "insert into hf_sub_asset_map \
+ ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
+        }
+    }
+    return $sub_f_id
 }
 
 ad_proc -private hf_sub_asset_map_update {
