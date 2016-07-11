@@ -49,11 +49,18 @@ Each administrative area has a separate table of parameters:
 <p>
 See <a href="data-model">data model</a> for a more complete list with detail.
 </p><p>
-Attributes are assigned to an asset (or possibly another attribute) via table hf_sub_asset_map. 
-In a tree analogy, assets are branches, leaves are attributes, and leaves may have leaves, too. 
-See <a href="/api-doc/proc-view?proc=hf_types_allowed_by">hf_types_allowed_by</a>
+Attributes are assigned to an asset 
+(or possibly another attribute) via table hf_sub_asset_map. 
+In a tree analogy, assets are branches, 
+ leaves are attributes, and leaves may have leaves, too. 
+A leaf needs a leaf for example, 
+ when a vhost is issued it's own user account on a virtual machine,
+ and there are multiple vhosts hosted on the same vm.
+See 
+ <a href="/api-doc/proc-view?proc=hf_types_allowed_by">hf_types_allowed_by</a>
  for assignment restrictions.
- Existing attribute types are in <a href="/api-doc/proc-view?proc=hf_asset_type_id_list">hf_asset_type_id</a>.
+ Existing attribute types are in 
+ <a href="/api-doc/proc-view?proc=hf_asset_type_id_list">hf_asset_type_id</a>.
  This arrangement can be extended to any number of new attributes without requiring a complete code re-write.
 </p><p>
 Attributes are assigned a sub_f_id and a sub_label.
@@ -65,25 +72,32 @@ This provides a way for attribute assignments to adapt
  to administrative circumstances, such as when switching 
  the primary network interface of hardware, without having
  to rebuild an asset-attribute tree.
-A trashed_p flag in hf_sub_asset_map is marked true when an attribute is no longer available.
+A trashed_p flag in hf_sub_asset_map is marked true 
+ when an attribute is no longer available.
 </p>
 <h3>Primary asset attribute pair</h3>
 <p>
 If an asset is of a type described in the <a href="data-model">data model</a>
   then it is usually assigned an attribute where related details are stored.
-For example,  a #hosting-farm.vm# (#hosting-farm.virtual_machine# ) attribute adds details to a record
-  in table hf_virtual_machines.
+For example, 
+ a #hosting-farm.vm# (#hosting-farm.virtual_machine# ) attribute adds details 
+ to a record in table hf_virtual_machines.
 </p><p>
-Attribute parameters are passed to underlying adminstrative procedures when needed, so
- attributes can be referebced by sub_label, asset's f_id, asset_type_id etc. 
-Each attribute type has a sort order assigned to it. See hf_sub_asset_map.sub_sort_order
-Priority is given to the first one assigned. Sort order can be revised as needed.
+Attribute parameters are passed to underlying adminstrative procedures when 
+ needed, 
+ so attributes can be referebced by sub_label, 
+ asset's f_id, asset_type_id etc. 
+Each attribute type has a sort order assigned to it. 
+See hf_sub_asset_map.sub_sort_order.
+Priority is given to the first one assigned. 
+Sort order can be revised as needed.
 </p>
 <h2>General API</h2>
 <p>
 Documentation for API is provided via searchable OpenACS API Browser.
 The api is separated into topics by filename. 
-See <a href="/api-doc/package-view?version_id=@pkg_version_id@">ACS API Browser for Hosting Farm</a>
+See 
+ <a href="/api-doc/package-view?version_id=@pkg_version_id@">ACS API Browser for Hosting Farm</a>
  detail.
 </p><p>
 Alternately, here is an overview of API:
@@ -122,8 +136,10 @@ Customization to the system is expected the default file, and by copying and mod
 </li>
 </ul>
 <p>
-Be sure to end any new filenames with *-proc.tcl so the package manager will read it. 
-By using a different name than existing filesnames, your customizations will not be clobbered
+Be sure to end any new filenames with *-proc.tcl 
+ so the package manager will read it. 
+By using a different name than existing filesnames, 
+ your customizations will not be clobbered
  if and when you decide to upgrade the package.
 </p>
 <h3>year 2038 problem statement</h3>
@@ -136,7 +152,10 @@ This means
  are not expected with this system.
 </p>
 <p>
-By the way, OpenACS has support for all sorts of automated possibiliites with site management. See <a hef="/api-doc/">ACS API Browser</a>.
+By the way, 
+ OpenACS has support for all sorts of automated possibiliites with 
+ site management. 
+See <a hef="/api-doc/">ACS API Browser</a>.
 </p>
 <pre>
 Here a summary of some early api notes:
