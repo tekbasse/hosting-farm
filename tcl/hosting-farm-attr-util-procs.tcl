@@ -461,30 +461,31 @@ ad_proc -private hf_sub_f_id_of_label {
 ad_proc -private hf_asset_attrbute_map_create {
     asset_id
     sub_label
-    sub_asste_type_id
+    sub_asset_type_id
 } {
-    Link new attribute to an existing asset. This includes for creating primary attribute case for each asset.
+    Link a new attribute to an existing asset. This includes for creating primary attribute case for each asset.
 } {
-    # 0. primary asset case consists of special case of case 1.
-    #    an asset and an attribute of same type that describes asset detail.
-    # 1. link new attribute to existing asset  (including primary asset case)
-
+    set sub_f_id ""
     set type_id [hf_asset_type_id_of_asset_id $f_id]
-    set label [hf_sub_f_id_of_label $label
     if { $type_id ne "" } {
-        set nowts [dt_systime -gmt 1]
-        set sub_f_id_new [db_nextval hf_id_seq]
- [hf_f_id_exists_q $sub_f_id]        
-        set sub_f_id $sub_f_id_new
-        set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
-        set time_created $nowts
-        # translate api conventions to internal map refs
-        set sub_type_id $sub_asset_type_id
-        set trashed_p 0
-        db_dml ss_sub_asset_map_create "insert into hf_sub_asset_map \
+        set allowed_sub_type_id_list [hf_types_allowed_by $type_id]
+        if { $sub_asset_type_id in $allowed_sub_type_id_list } {
+            set sub_label [hf_sub_f_id_of_label $label $f_id]
+            set nowts [dt_systime -gmt 1]
+            set sub_f_id [db_nextval hf_id_seq]
+            [hf_f_id_exists_q $sub_f_id]        
+            set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
+            set time_created $nowts
+            # translate api conventions to internal map refs
+            set sub_type_id $sub_asset_type_id
+            set trashed_p 0
+            db_dml hf_asset_attribute_map_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
-        return $sub_f_id
+        }
+    }
+    return $sub_f_id
 }
+
 ad_proc -private hf_attribute_map_update {
     old_id
     {new_id ""}
@@ -501,9 +502,12 @@ ad_proc -private hf_attribute_map_update {
 }
 
 ad_proc -private hf_assets_map_create {
+    f_id
+    sub_f_id
 } {
-    # 3. link existing asset to existing (other) asset
+    Link existing asset to another existing asset.
 } {
+    
 
 }
 
