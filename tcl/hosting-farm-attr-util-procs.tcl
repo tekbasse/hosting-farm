@@ -435,6 +435,54 @@ ad_proc -private hf_sub_f_id_of_label {
     return $sub_f_id
 }
 
+ad_proc -private hf_asset_attrbute_map_create {
+} {
+    Link new attribute to an existing asset. This includes for creating primary attribute case for each asset.
+} {
+    # 0. primary asset case consists of special case of case 1.
+    #    an asset and an attribute of same type that describes asset detail.
+    # 1. link new attribute to existing asset  (including primary asset case)
+
+
+}
+ad_proc -private hf_attribute_map_update {
+    old_id
+    {new_id ""}
+} {
+    Update the map of an existing attribute with a changing id.
+    If new_id is blank, returns a new sub_f_id.
+} {
+    # 2. link updated attribute to existing asset/attribute 
+    #    (including primary asset case) if attribute.label (sub_label) is same.
+    #    The updated attribute will be issued a different id and map updated.
+    #    If the label changes, Is this different than a new attribute?
+    #    Keep and trash the old attribute id and map, and create a new map.
+
+}
+
+ad_proc -private hf_assets_map_create {
+} {
+    # 3. link existing asset to existing (other) asset
+} {
+
+}
+
+ad_proc -private hf_attributes_map_create {
+} {
+    # 4. link new attribute to existing attribute. 
+    #    hf_attributes_map_create
+    #    If this were done via hf_sub_asset_map.sub_label references 
+    #    instead of f_id/sub_f_id
+    #    because id of attributes change with each revision,
+    #    and sub_label will not expected to change..
+    #    The mapping system would have to be significantly altered.
+    #    Instead, 
+    #     all cases of the changed id must be updated at the same time
+    #    See case 2.
+} {
+
+}
+
 ad_proc -private hf_sub_asset_map_update {
     f_id
     asset_type_id
@@ -452,13 +500,18 @@ ad_proc -private hf_sub_asset_map_update {
     # 0. primary asset case consists of special case of case 1.
     #    an asset and an attribute of same type that describes asset detail.
     # 1. link new attribute to existing asset  (including primary asset case)
-    # 2. link updated attribute to existing asset 
+    #    hf_asset_attribute_map_create
+
+    # 2. link updated attribute to existing asset/attribute 
+    #    hf_attribute_map_update
     #    (including primary asset case) if attribute.label (sub_label) is same.
     #    The updated attribute will be issued a different id and map updated.
     #    If the label changes, Is this different than a new attribute?
     #    Keep and trash the old attribute id and map, and create a new map.
     # 3. link existing asset to existing (other) asset
-    # 4. link attribute to attribute. 
+    #    hf_assets_map_create
+    # 4. link new attribute to existing attribute. 
+    #    hf_attributes_map_create
     #    If this were done via hf_sub_asset_map.sub_label references 
     #    instead of f_id/sub_f_id
     #    because id of attributes change with each revision,
