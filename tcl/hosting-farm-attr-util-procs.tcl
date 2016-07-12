@@ -517,12 +517,24 @@ ad_proc -private hf_attribute_map_update {
     set sub_f_id_new ""
     # 2. link updated attribute to existing asset/attribute 
     #    (including primary asset case) if attribute.label (sub_label) is same.
-    #    The updated attribute will be issued a different id and map updated.
-    #    If the label changes, Is this different than a new attribute?
-    #    Keep and trash the old attribute id and map, and create a new map.
-    # See hf_attribute_sub_label_update
+    #    The updated attribute will be issued a different id and map updated
+
+    #    if the label changes, Is this different than a new attribute?
+    #    Keep and trash the old attribute id and map, and create a new map
+    #    using hf_attribute_sub_label_update
 
     if { ![hf_f_id_exists_q $new_id] && ![hf_sub_f_id_exists_q $new_id] } {
+        set new_id_list [hf_sub_asset $new_id]
+    }
+    if { [llength $new_id_list ] > 0 } {
+        #qf_lists_to_vars $new_id_list \[hf_sub_asset_map_keys\]
+        set new_sub_f_id_exists_p 1
+    } else {
+        set new_sub_f_id_exists_p 0
+    }
+
+    if { ![hf_f_id_exists_q $new_id] && !$new_sub_f_id_exists_p } {
+        # new_id seems unused..
         set sub_f_id_new $new_id
     } else {
             set sub_f_id_new ""
@@ -530,6 +542,7 @@ ad_proc -private hf_attribute_map_update {
     if { $sub_f_id_new eq "" } {
         set sub_f_id_new [db_nextval hf_id_seq]
     }
+    # update existing attrbute maps
     db_transaction {
         db_dml hf_attribute_map_sub_f_id_update { 
             update hf_sub_asset_map
@@ -671,8 +684,41 @@ ad_proc -private hf_sub_asset_map_update {
     upvar 1 instance_id instance_id
 
     # determine if f_id is an asset.
+    set f_id_asset_p [hf_f_id_exists_q $f_id]
+    set f_id_attr_p 0
+    if { !$f_id_asset_p && [qf_is_natural_number $f_id] } {
+        # is f_id an attribute?
+        set f_id_attr_p [hf_sub_f_id_current_q $f_id]
+    }
     # determin if sub_f_id is an asset, attribute, or blank (a new attribute)
+    set sub_f_id_attr_new_p 0
+    set sub_f_id_asset_p 0
+    set sub_f_id_attr_p 0
+    if { [qf_is_natural_number $sub_f_id] } {
+        set sub_f_id_asset_p [hf_f_id_exists_q $sub_f_id]
+        if { !$sub_f_id_asset_p } {
+            set sub_f_id_attr_p [hf_sub_f_id_current_q $sub_f_id]
+        }
+    }
+    if { !$sub_f_id_asset_p && !$sub_f_id_attr_p } {
+        set sub_f_id ""
+        set sub_f_id_attr_new_p 1
+        set sub_f_id_attr_p 1
+    }
+##code
     # Call the appropriate proc from the cases above.
+    if { $f_id_asset_p && $sub_f_id_attr_new_p } {
+        set case 1
+    }
+    if { $f_id_asset_p && $sub_f_id_asset_p } {
+        set case 3
+    }
+    if { $sub_f_id_attr_p } {
+        set case 2
+    }
+    if { $f_id_attr_p && $sub_f_id_attr_new_p } {
+        set case 4
+    }
 
     # Actually always creates a record. Trashes any that already exist for same label and f_id.
     # Use hf_id_is_attribute_q here?
