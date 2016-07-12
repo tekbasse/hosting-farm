@@ -197,8 +197,15 @@ ad_proc -private hf_asset_type_id_of_asset_id {
 } {
     upvar 1 instance_id instance_id
     set asset_type_id ""
-    set exists_p [db_0or1row hf_asset_type_id_of_asset_id { select asset_type_id from hf_assets 
-        where asset_id=:asset_id and instance_id=:instance_id } ]
+    # Only asset_id could be checked, but what if original revision is deleted?
+    # Checking on !$exists_p could create an indefinite recursion call
+    # that is avoided if we just check for all cases to begin with.
+    set f_id [hf_f_id_of_asst_id $asset_id]
+    set exists_p [db_0or1row hf_asset_type_id_of_asset_id { 
+        select asset_type_id 
+        from hf_assets 
+        where asset_id=:f_id 
+        and instance_id=:instance_id } ]
     if { !$exists_p } {
         ns_log Notice "hf_asset_type_id_of_asset_id: asset_type_id does not exist for asset_id '${asset_id}' instance_id '${instance_id}'"
     }
@@ -262,11 +269,15 @@ ad_proc -private hf_asset_id_change {
 ad_proc -private hf_f_id_exists_q {
     f_id
 } {
-    @param f_id
+    @param f_id of an asset
 
     @return 1 if exists, otherwise returns 0.
 } {
-    set exists_p [db_0or1row hf_f_id_exists_p "select f_id from hf_asset_rev_map where f_id=:f_id" ]
+    upvar 1 instance_id instance_id
+    set exists_p [db_0or1row hf_f_id_exists_p {
+        select f_id from hf_asset_rev_map 
+        where f_id=:f_id 
+        and instance_id=:instance_id} ]
     return $exists_p
 }
 

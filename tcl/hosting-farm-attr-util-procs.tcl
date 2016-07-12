@@ -429,7 +429,6 @@ ad_proc -private hf_sub_f_id_of_label {
     @param label  
 
     @return sub_f_id 
-
 } {
     upvar 1 instance_id instance_id
     set sub_f_id_list ""
@@ -465,6 +464,7 @@ ad_proc -private hf_asset_attrbute_map_create {
 } {
     Link a new attribute to an existing asset. This includes for creating primary attribute case for each asset.
 } {
+    upvar 1 instance_id instance_id
     set sub_f_id ""
     set type_id [hf_asset_type_id_of_asset_id $f_id]
     if { $type_id ne "" } {
@@ -473,7 +473,7 @@ ad_proc -private hf_asset_attrbute_map_create {
             set sub_label [hf_sub_f_id_of_label $label $f_id]
             set nowts [dt_systime -gmt 1]
             set sub_f_id [db_nextval hf_id_seq]
-            set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
+            set sub_sort_order [expr { [hf_asset_subassets_count $f_id] * 20 } ]
             set time_created $nowts
             # translate api conventions to internal map refs
             set sub_type_id $sub_asset_type_id
@@ -485,20 +485,57 @@ ad_proc -private hf_asset_attrbute_map_create {
     }
     return $sub_f_id
 }
-##code
+
 ad_proc -private hf_attribute_map_update {
     old_id
     {new_id ""}
 } {
-    Update the map of an existing attribute with a changing id.
-    If new_id is blank, returns a new sub_f_id.
+    Update the map of an existing attribute
+    with a new id.
+    If new_id is blank or matches an existing attribute, 
+    a new sub_f_id is created. 
+    Returns an empty string if there was an error.
+
+    @param old_id Previous sub_f_id of attribute
+    @param new_id New sub_f_id of attribute
+
+    @returns new_id
 } {
+    upvar 1 instance_id instance_id
+    set success_p 0
+    set sub_f_id_new ""
     # 2. link updated attribute to existing asset/attribute 
     #    (including primary asset case) if attribute.label (sub_label) is same.
     #    The updated attribute will be issued a different id and map updated.
     #    If the label changes, Is this different than a new attribute?
     #    Keep and trash the old attribute id and map, and create a new map.
-
+    if { ![hf_f_id_exists_q $new_id] && ![hf_sub_f_id_exists_q $new_id] } {
+        set sub_f_id_new $new_id
+    } else {
+            set sub_f_id_new ""
+    } 
+    if { $sub_f_id_new eq "" } {
+        set sub_f_id_new [db_nextval hf_id_seq]
+    }
+    db_transaction {
+        db_dml hf_attribute_map_sub_f_id_update { 
+            update hf_sub_asset_map
+            set sub_f_id=:sub_f_id_new 
+            where sub_f_id=:sub_f_id
+            and instance_id=:instance_id
+            and trashed_p!='1'
+        }
+        db_dml hf_attribute_map_f_id_update { 
+            update hf_sub_asset_map
+            set f_id=:sub_f_id_new 
+            where f_id=:f_id 
+            and instance_id=:intance_id
+            and trashed_p!='1'
+        }
+    } on_error {
+        ns_log Warning "hf_attribute_map_update.519: Error: '${errmsg}'"
+    }
+    return $sub_f_id_new
 }
 
 ad_proc -private hf_assets_map_create {
@@ -506,9 +543,26 @@ ad_proc -private hf_assets_map_create {
     sub_f_id
 } {
     Link existing asset to another existing asset.
+    @param f_id The asset f_id that will be parent of the two.
+    @param sub_f_id The asset f_id that will be child of the two.
+    @return 1 if success, otherwwise returns 0.
 } {
-    
-
+    upvar 1 instance_id instance_id
+    set success_p 0
+    if { [hf_f_id_exists_q $f_id] && [hf_f_id_exists_q $sub_f_id] } {
+        set type_id [hf_asset_type_id_of_asset_id $f_id]
+        set stats_list [hf_asset_stats $asset_id [list label asset_type_id]]
+        if { $type_id ne "" && $asset_type_id ne "" } {
+            set sub_type_id $asset_type_id
+            set sub_sort_order [expr { [hf_asset_subassets_count $f_id] * 20 } ]
+            set trashed_p 0
+            set attribute_p 0
+            set success_p 1
+            db_dml hf_assets_map_cr "insert into hf_sub_asset_map \
+ ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
+        }
+    }
+    return $success_p
 }
 
 ad_proc -private hf_attributes_map_create {
@@ -545,7 +599,6 @@ ad_proc -private hf_attributes_map_create {
     set sub_label_new $sub_label
     set sam_list [hf_sub_asset $f_id]
     qf_lists_to_vars $sam_list [hf_sub_asset_map_keys]
-
     if { $sub_label ne "" && $sub_label ne $sub_label_new } {
         set allowed_sub_type_id_list [hf_types_allowed_by $type_id]
         if { $sub_asset_type_id in $allowed_sub_type_id_list } {
@@ -601,7 +654,12 @@ ad_proc -private hf_sub_asset_map_update {
     #    Instead, 
     #     all cases of the changed id must be updated at the same time
     #    See case 2.
+
     upvar 1 instance_id instance_id
+
+    # determine if f_id is an asset.
+    # determin if sub_f_id is an asset, attribute, or blank (a new attribute)
+    # Call the appropriate proc from the cases above.
 
     # Actually always creates a record. Trashes any that already exist for same label and f_id.
     # Use hf_id_is_attribute_q here?
