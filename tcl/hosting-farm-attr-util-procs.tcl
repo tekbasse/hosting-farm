@@ -508,7 +508,8 @@ ad_proc -private hf_attribute_map_update {
     #    (including primary asset case) if attribute.label (sub_label) is same.
     #    The updated attribute will be issued a different id and map updated.
     #    If the label changes, Is this different than a new attribute?
-    #    Keep and trash the old attribute id and map, and create a new map.
+    #    Keep and trash the old attribute id and map, and create a new map
+    #    using hf_attribute_sub_label_change. ( ##code )
     set new_id_list [hf_sub_asset $new_id]
     if { [llength $new_id_list ] > 0 } {
         #qf_lists_to_vars $new_id_list \[hf_sub_asset_map_keys\]
@@ -526,6 +527,7 @@ ad_proc -private hf_attribute_map_update {
     if { $sub_f_id_new eq "" } {
         set sub_f_id_new [db_nextval hf_id_seq]
     }
+    # update existing attrbute maps
     db_transaction {
         db_dml hf_attribute_map_sub_f_id_update { 
             update hf_sub_asset_map
@@ -666,9 +668,13 @@ ad_proc -private hf_sub_asset_map_update {
 
     upvar 1 instance_id instance_id
 
-##code
     # determine if f_id is an asset.
     set f_id_asset_p [hf_f_id_exists_q $f_id]
+    set f_id_attr_p 0
+    if { !$f_id_asset_p && [qf_is_natural_number $f_id] } {
+        # is f_id an attribute?
+        set f_id_attr_p [hf_sub_f_id_current_q $f_id]
+    }
     # determin if sub_f_id is an asset, attribute, or blank (a new attribute)
     set sub_f_id_attr_new_p 0
     set sub_f_id_asset_p 0
@@ -678,7 +684,8 @@ ad_proc -private hf_sub_asset_map_update {
         if { !$sub_f_id_asset_p } {
             set sub_f_id_attr_p [hf_sub_f_id_current_q $sub_f_id]
         }
-    } else {
+    }
+    if { !$sub_f_id_asset_p && !$sub_f_id_attr_p } {
         set sub_f_id ""
         set sub_f_id_attr_new_p 1
         set sub_f_id_attr_p 1
@@ -691,7 +698,12 @@ ad_proc -private hf_sub_asset_map_update {
     if { $f_id_asset_p && $sub_f_id_asset_p } {
         set case 3
     }
-    if { $f_id_asset_p ||
+    if { $sub_f_id_attr_p } {
+        set case 2
+    }
+    if { $f_id_attr_p && $sub_f_id_attr_new_p } {
+        set case 4
+    }
 
     # Actually always creates a record. Trashes any that already exist for same label and f_id.
     # Use hf_id_is_attribute_q here?

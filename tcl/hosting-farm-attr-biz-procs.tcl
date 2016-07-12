@@ -507,6 +507,8 @@ ad_proc -private hf_attribute_sub_label_change {
     set write_p [hf_ui_go_ahead_q write]
     set success_p 0
     if { $write_p } {
+## code REDO. Don't update map when changing label. 
+   ##Trash current one and create new.
         db_transaction {
             db_dml hf_sub_label_change_asset_map {
                 update hf_sub_asset_map \
