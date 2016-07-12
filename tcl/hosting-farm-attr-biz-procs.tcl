@@ -502,55 +502,92 @@ ad_proc -private hf_attribute_sub_label_update {
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
-
-    set sub_f_id_new ""
-    set sub_asset_list [hf_sb_asset $sub_f_id]
-    qf_lists_to_vars $sub_asset_list [hf_sub_asset_map_keys]
-    if { [llength $sub_asset_list] > 0 } {
-##code
-        db_transaction {
-            switch -exact -- $sub_type_id {
-                dc { 
-                    set dc_list [lindex hf_dc_read $sub_f_id 0]
-                    qf_lists_to_array dc_arr $dc_list [hf_dc_keys]
-                    set dc_arr(dc_id) ""
-                    set sub_f_id__new [hf_dc_write dc_arr]
-}
-                hw { }
-                vm { }
-                vh { }
-                ss { }
-                ip { }
-                ni { }
-                ns { }
-                ua { }
-            }
-            if { $sub_f_id_new ne "" } {
-                # trash existing record
-                db_dml hf_sub_label_trash_1 {
-                    update hf_sub_asset_map
-                    set trashed_p='0'
-                    where sub_f_id=:sub_f_id 
-                    and instance_id=:instance_id
-                }
-                # make new record
-                set sub_f_id $sub_f_id_new
-                set sub_label $new_sub_label
-                db_dml hf_attributes_sub_label_cr "insert into hf_sub_asset_map \
+    set new_sub_label_len [string length $new_sub_label]
+    if { $new_sub_label_len != 0 && $new_sub_label_len < 65 } {
+        set sub_f_id_new ""
+        set sub_asset_list [hf_sb_asset $sub_f_id]
+        qf_lists_to_vars $sub_asset_list [hf_sub_asset_map_keys]
+        if { [llength $sub_asset_list] > 0 } {
+            ##code Must trash old asset_type_record record also.
+            db_transaction {
+                switch -exact -- $sub_type_id {
+                    dc { 
+                        set dc_list [lindex hf_dc_read $sub_f_id 0]
+                        qf_lists_to_array dc_arr $dc_list [hf_dc_keys]
+                        set dc_arr(dc_id) ""
+                        if { $dc_arr(affix) eq [string range $sub_label 0 19] } {
+                            set $dc_arr(affix) [string range $new_sub_label 0 19]
+                        }
+                        set sub_f_id__new [hf_dc_write dc_arr]
+                    }
+                    hw { 
+                        set hw_list [lindex hf_hw_read $sub_f_id 0]
+                        qf_lists_to_array hw_arr $hw_list [hf_hw_keys]
+                        set hw_arr(hw_id) ""
+                        if { $hw_arr(system_name) eq [string range $sub_label 0 19] } {
+                            set $hw_arr(system_name) [string range $new_sub_label 0 19]
+                        }
+                        set sub_f_id__new [hf_hw_write hw_arr]
+                    }
+                    vm { 
+                        set vm_list [lindex hf_vm_read $sub_f_id 0]
+                        qf_lists_to_array vm_arr $vm_list [hf_vm_keys]
+                        set vm_arr(vm_id) ""
+                        if { $vm_arr(domain_name) eq [string range $sub_label 0 19] } {
+                            set $vm_arr(domain_name) [string range $new_sub_label 0 19]
+                        }
+                        set sub_f_id__new [hf_vm_write vm_arr]
+                    }
+                    vh { 
+                        set vh_list [lindex hf_vh_read $sub_f_id 0]
+                        qf_lists_to_array vh_arr $vh_list [hf_vh_keys]
+                        set vh_arr(vh_id) ""
+                        if { $vh_arr(domain_name) eq [string range $sub_label 0 19] } {
+                            set $vh_arr(domain_name) [string range $new_sub_label 0 19]
+                        }
+                        set sub_f_id__new [hf_vh_write vh_arr]
+                    }
+                    ss { 
+                        set ss_list [lindex hf_ss_read $sub_f_id 0]
+                        qf_lists_to_array ss_arr $ss_list [hf_ss_keys]
+                        set ss_arr(ss_id) ""
+                        if { $ss_arr(server_name) eq [string range $sub_label 0 39] } {
+                            set $ss_arr(server_name) [string range $new_sub_label 0 39]
+                        }
+                        set sub_f_id__new [hf_ss_write ss_arr]
+                    }
+                        ip { }
+                        ni { }
+                        ns { }
+                        ua { }
+                    }
+                    if { $sub_f_id_new ne "" } {
+                        # trash existing record
+                        db_dml hf_sub_label_trash_1 {
+                            update hf_sub_asset_map
+                            set trashed_p='0'
+                            where sub_f_id=:sub_f_id 
+                            and instance_id=:instance_id
+                        }
+                        # make new record
+                        set sub_f_id $sub_f_id_new
+                        set sub_label $new_sub_label
+                        db_dml hf_attributes_sub_label_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
-                # update dependencies
-                db_dml hf_attribute_map_f_id_u1 { 
-                    update hf_sub_asset_map
-                    set f_id=:sub_f_id_new 
-                    where f_id=:f_id 
-                    and instance_id=:intance_id
-                    and trashed_p!='1'
+                        # update dependencies
+                        db_dml hf_attribute_map_f_id_u1 { 
+                            update hf_sub_asset_map
+                            set f_id=:sub_f_id_new 
+                            where f_id=:f_id 
+                            and instance_id=:intance_id
+                            and trashed_p!='1'
+                        }
+                    }
+                } on_error {
+                    ns_log Warning "hf_attribute_sub_label_update.524: error '${errmsg}'"
                 }
             }
-        } on_error {
-            ns_log Warning "hf_attribute_sub_label_update.524: error '${errmsg}'"
         }
-    }
     return $sub_f_id_new
 }
 
