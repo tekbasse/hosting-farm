@@ -16,7 +16,7 @@ ad_library {
 }
 
 
-##code asset state  update procs for hf_assets.op_status,popularity,monitor_p,publish_p, triage_priority.. that don't create a new asset_id..
+##code ..make asset state  update procs for hf_assets.op_status,popularity,monitor_p,publish_p, triage_priority.. that don't create a new asset_id..
 
 ad_proc -public hf_asset_create { 
     asset_arr_name

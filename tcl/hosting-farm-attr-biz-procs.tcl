@@ -490,41 +490,68 @@ ad_proc -private hf_monitor_delete {
 }
 
 
-ad_proc -private hf_attribute_sub_label_change {
+ad_proc -private hf_attribute_sub_label_update {
     sub_f_id
     new_sub_label
 } {
     Changes the attribute_name
     where the attribute is referenced from sub_f_id.
-    Returns 1 if successful, otherwise 0.
-
+    Returns new sub_f_id; Or empty string if sub_f_id not found.
     @param sub_f_id  The sub_f_id of the asset.
     @param new_sub_label   The new sub_label.
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
 
-    set write_p [hf_ui_go_ahead_q write]
-    set success_p 0
-    if { $write_p } {
+    set sub_f_id_new ""
+    set sub_asset_list [hf_sb_asset $sub_f_id]
+    qf_lists_to_vars $sub_asset_list [hf_sub_asset_map_keys]
+    if { [llength $sub_asset_list] > 0 } {
+##code
         db_transaction {
-            db_dml hf_sub_label_change_asset_map {
-                update hf_sub_asset_map \
-                    set sub_label=:new_sub_label \
-                    where sub_f_id=:sub_f_id and instance_id=:instance_id 
+            switch -exact -- $sub_type_id {
+                dc { 
+                    set dc_list [lindex hf_dc_read $sub_f_id 0]
+                    qf_lists_to_array dc_arr $dc_list [hf_dc_keys]
+                    set dc_arr(dc_id) ""
+                    set sub_f_id__new [hf_dc_write dc_arr]
+}
+                hw { }
+                vm { }
+                vh { }
+                ss { }
+                ip { }
+                ni { }
+                ns { }
+                ua { }
             }
-            db_dml hf_sub_label_change_hf_subassets {
-                update hf_assets \
-                    set last_modified = current_timestamp, \
-                    sub_label=:new_sub_label \
-                    where sub_f_id=:sub_f_id and instance_id=:instance_id 
+            if { $sub_f_id_new ne "" } {
+                # trash existing record
+                db_dml hf_sub_label_trash_1 {
+                    update hf_sub_asset_map
+                    set trashed_p='0'
+                    where sub_f_id=:sub_f_id 
+                    and instance_id=:instance_id
+                }
+                # make new record
+                set sub_f_id $sub_f_id_new
+                set sub_label $new_sub_label
+                db_dml hf_attributes_sub_label_cr "insert into hf_sub_asset_map \
+ ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
+                # update dependencies
+                db_dml hf_attribute_map_f_id_u1 { 
+                    update hf_sub_asset_map
+                    set f_id=:sub_f_id_new 
+                    where f_id=:f_id 
+                    and instance_id=:intance_id
+                    and trashed_p!='1'
+                }
             }
-            set success_p 1
         } on_error {
-            set success_p 0
+            ns_log Warning "hf_attribute_sub_label_update.524: error '${errmsg}'"
         }
     }
-    return $success_p
+    return $sub_f_id_new
 }
 
 

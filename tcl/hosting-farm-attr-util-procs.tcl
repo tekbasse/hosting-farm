@@ -406,7 +406,7 @@ ad_proc -private hf_label_of_sub_f_id {
 } {
     @param sub_f_id  
 
-    @return label of attribute with sub_f_id, or empty string if not exists or active.
+    @return label of attribute with sub_f_id, or empty string if not exists.
 } {
     upvar 1 instance_id instance_id
     set label ""
@@ -486,6 +486,17 @@ ad_proc -private hf_asset_attrbute_map_create {
     return $sub_f_id
 }
 
+ad_proc -private hf_sub_f_id_exists_q {
+    sub_f_id
+} {
+    upvar 1 instance_id instance_id
+    if { [hf_label_of_sub_f_id $sub_f_id] eq "" } {
+        set sub_f_id_exists_p 0
+    } else {
+        set sub_f_id_exists_p 1
+    }
+return $sub_f_id_exists_p
+
 ad_proc -private hf_attribute_map_update {
     old_id
     {new_id ""}
@@ -509,6 +520,8 @@ ad_proc -private hf_attribute_map_update {
     #    The updated attribute will be issued a different id and map updated.
     #    If the label changes, Is this different than a new attribute?
     #    Keep and trash the old attribute id and map, and create a new map.
+    # See hf_attribute_sub_label_update
+
     if { ![hf_f_id_exists_q $new_id] && ![hf_sub_f_id_exists_q $new_id] } {
         set sub_f_id_new $new_id
     } else {
@@ -1164,7 +1177,7 @@ ad_proc -private hf_types_allowed_by {
     # y for yes
     # n for no
     set y_list [list ]
-    switch -exact $asset_type_id {
+    switch -exact -- $asset_type_id {
         dc {
             set y_list [list dc hw vm vh ss ip ni ns ua]
         }
@@ -1183,6 +1196,9 @@ ad_proc -private hf_types_allowed_by {
         ip {
         }
         ua {
+        }
+        default {
+            ns_log Warning "hf_types_allowed_by.534: unknown asset_type_id '${asset_type_id}'"
         }
     }
     # To use a slower, allowed unless explicitly stated, rules set:
