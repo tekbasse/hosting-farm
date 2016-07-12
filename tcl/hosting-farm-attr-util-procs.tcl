@@ -657,6 +657,7 @@ ad_proc -private hf_sub_asset_map_update {
 
     upvar 1 instance_id instance_id
 
+##code
     # determine if f_id is an asset.
     # determin if sub_f_id is an asset, attribute, or blank (a new attribute)
     # Call the appropriate proc from the cases above.
