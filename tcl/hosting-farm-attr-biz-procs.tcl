@@ -515,53 +515,58 @@ ad_proc -private hf_attribute_sub_label_update {
                         set dc_list [lindex hf_dc_read $sub_f_id 0]
                         qf_lists_to_array dc_arr $dc_list [hf_dc_keys]
                         set dc_arr(dc_id) ""
-                        if { $dc_arr(affix) eq [string range $sub_label 0 19] } {
-                            set $dc_arr(affix) [string range $new_sub_label 0 19]
-                        }
                         set sub_f_id__new [hf_dc_write dc_arr]
                     }
                     hw { 
                         set hw_list [lindex hf_hw_read $sub_f_id 0]
                         qf_lists_to_array hw_arr $hw_list [hf_hw_keys]
                         set hw_arr(hw_id) ""
-                        if { $hw_arr(system_name) eq [string range $sub_label 0 19] } {
-                            set $hw_arr(system_name) [string range $new_sub_label 0 19]
-                        }
                         set sub_f_id__new [hf_hw_write hw_arr]
                     }
                     vm { 
                         set vm_list [lindex hf_vm_read $sub_f_id 0]
                         qf_lists_to_array vm_arr $vm_list [hf_vm_keys]
                         set vm_arr(vm_id) ""
-                        if { $vm_arr(domain_name) eq [string range $sub_label 0 19] } {
-                            set $vm_arr(domain_name) [string range $new_sub_label 0 19]
-                        }
                         set sub_f_id__new [hf_vm_write vm_arr]
                     }
                     vh { 
                         set vh_list [lindex hf_vh_read $sub_f_id 0]
                         qf_lists_to_array vh_arr $vh_list [hf_vh_keys]
                         set vh_arr(vh_id) ""
-                        if { $vh_arr(domain_name) eq [string range $sub_label 0 19] } {
-                            set $vh_arr(domain_name) [string range $new_sub_label 0 19]
-                        }
                         set sub_f_id__new [hf_vh_write vh_arr]
                     }
                     ss { 
                         set ss_list [lindex hf_ss_read $sub_f_id 0]
                         qf_lists_to_array ss_arr $ss_list [hf_ss_keys]
                         set ss_arr(ss_id) ""
-                        if { $ss_arr(server_name) eq [string range $sub_label 0 39] } {
-                            set $ss_arr(server_name) [string range $new_sub_label 0 39]
-                        }
                         set sub_f_id__new [hf_ss_write ss_arr]
                     }
-                        ip { }
-                        ni { }
-                        ns { }
-                        ua { }
+                    ip { 
+                        set ip_list [lindex hf_ip_read $sub_f_id 0]
+                        qf_lists_to_array ip_arr $ip_list [hf_ip_keys]
+                        set ip_arr(ip_id) ""
+                        set sub_f_id__new [hf_ip_write ip_arr]
                     }
-                    if { $sub_f_id_new ne "" } {
+                    ni { 
+                        set ni_list [lindex hf_ni_read $sub_f_id 0]
+                        qf_lists_to_array ni_arr $ni_list [hf_ni_keys]
+                        set ni_arr(ni_id) ""
+                        set sub_f_id__new [hf_ni_write ni_arr]
+                    }
+                    ns { 
+                        set ns_list [lindex hf_ns_read $sub_f_id 0]
+                        qf_lists_to_array ns_arr $ns_list [hf_ns_keys]
+                        set ns_arr(ns_id) ""
+                        set sub_f_id__new [hf_ns_write ns_arr]
+                    }
+                    ua { 
+                        set ua_list [lindex hf_ua_read $sub_f_id 0]
+                        qf_lists_to_array ua_arr $ua_list [hf_ua_keys]
+                        set ua_arr(ua_id) ""
+                        set sub_f_id__new [hf_ua_write ua_arr]
+                    }
+                }
+                if { $sub_f_id_new ne "" } {
                         # trash existing record
                         db_dml hf_sub_label_trash_1 {
                             update hf_sub_asset_map
@@ -591,6 +596,20 @@ ad_proc -private hf_attribute_sub_label_update {
     return $sub_f_id_new
 }
 
+ad_proc -private hf_vh_trash {
+    vh_id
+} {
+    Trashes a vh record
+} {
+    upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
+    db_dml hf_vh_trash {
+        update hf_vhost
+        set time_trashed=:nowts
+        where vh_id=:vh_id
+        and instance_id=:instance_id }
+    return 1
+}
 
 ad_proc -private hf_vh_write {
     vh_arr_name
