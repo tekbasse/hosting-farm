@@ -457,7 +457,7 @@ ad_proc -private hf_sub_f_id_of_label {
     return $sub_f_id
 }
 
-ad_proc -private hf_asset_attrbute_map_create {
+ad_proc -private hf_asset_attribute_map_create {
     asset_id
     sub_label
     sub_asset_type_id
@@ -705,21 +705,20 @@ ad_proc -private hf_sub_asset_map_update {
         set sub_f_id_attr_new_p 1
         set sub_f_id_attr_p 1
     }
-##code
     set sub_f_id_new ""
     # Call the appropriate proc from the cases above.
     if { $f_id_asset_p && $sub_f_id_attr_new_p } {
         # case 1
-        set sub_f_id_new hf_asset_attribute_map_create
+        set sub_f_id_new [hf_asset_attribute_map_create $f_id $sub_label $sub_asset_type_id]
     } elseif { $f_id_asset_p && $sub_f_id_asset_p } {
         # case 3
-        set sub_f_id_new hf_assets_map_create
+        set sub_f_id_new [hf_assets_map_create $f_id $sub_f_id]
     } elseif { $f_id_attr_p && $sub_f_id_attr_new_p } {
         # case 4
-        set sub_f_id_new hf_attributes_map_create
+        set sub_f_id_new [hf_attributes_map_create $f_id $sub_label $sub_asset_type_id]
     } elseif { $sub_f_id_attr_p } {
         # case 2
-        set sub_f_id_new hf_attribute_map_update
+        set sub_f_id_new [hf_attribute_map_update $sub_f_id]
     }
     return $sub_f_id_new
 }
