@@ -495,7 +495,8 @@ ad_proc -private hf_sub_f_id_exists_q {
     } else {
         set sub_f_id_exists_p 1
     }
-return $sub_f_id_exists_p
+    return $sub_f_id_exists_p
+}
 
 ad_proc -private hf_attribute_map_update {
     old_id
@@ -537,7 +538,7 @@ ad_proc -private hf_attribute_map_update {
         # new_id seems unused..
         set sub_f_id_new $new_id
     } else {
-            set sub_f_id_new ""
+        set sub_f_id_new ""
     } 
     if { $sub_f_id_new eq "" } {
         set sub_f_id_new [db_nextval hf_id_seq]
@@ -954,27 +955,27 @@ ad_proc -private hf_up_write {
             ns_log Notice "hf_up_write.2991: user_id '${user_id}' changed password for ua_id '${ua_id}' instance_id '${instance_id}'"
             db_dml hf_up_update {
                 update hf_up set details=:details where instance_id=:instance_id and up_id=:up_id and instance_id=:instance_id)
+        }
+    } else {
+        # create
+        set new_up_id [db_nextval hf_id_seq]
+        ns_log Notice "hf_up_write.2998: user_id '${user_id}' created password for ua_id '${ua_id}' instance_id '${instance_id}'"
+        db_transaction {
+            db_dml hf_up_create {
+                insert into hf_up (up_id, instance_id, details)
+                values (:new_up_id,:instance_id,:details)
             }
-        } else {
-            # create
-            set new_up_id [db_nextval hf_id_seq]
-            ns_log Notice "hf_up_write.2998: user_id '${user_id}' created password for ua_id '${ua_id}' instance_id '${instance_id}'"
-            db_transaction {
-                db_dml hf_up_create {
-                    insert into hf_up (up_id, instance_id, details)
-                    values (:new_up_id,:instance_id,:details)
-                }
-                db_dml hf_up_map_it {
-                    insert into hf_ua_up_map (ua_id, up_id, instance_id)
-                    values (:ua_id,:new_up_id,:instance_id)
-                }
+            db_dml hf_up_map_it {
+                insert into hf_ua_up_map (ua_id, up_id, instance_id)
+                values (:ua_id,:new_up_id,:instance_id)
             }
-        }    
-    }
-    if { !$success_p & $up ne "" } {
-        ns_log Warning "hf_up_write.3008: failed. Should not happen."
-    }
-    return $success_p
+        }
+    }    
+}
+if { !$success_p & $up ne "" } {
+    ns_log Warning "hf_up_write.3008: failed. Should not happen."
+}
+return $success_p
 }
 
 ad_proc -private hf_up_of_ua_id {
