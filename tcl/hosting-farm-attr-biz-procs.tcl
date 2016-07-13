@@ -508,7 +508,8 @@ ad_proc -private hf_attribute_sub_label_update {
         set sub_asset_list [hf_sb_asset $sub_f_id]
         qf_lists_to_vars $sub_asset_list [hf_sub_asset_map_keys]
         if { [llength $sub_asset_list] > 0 } {
-            ##code Must trash old asset_type_record record also.
+            # trash old asset_type_id record also
+            # except for ua case. It doesn't trash.
             db_transaction {
                 switch -exact -- $sub_type_id {
                     dc { 
@@ -560,10 +561,9 @@ ad_proc -private hf_attribute_sub_label_update {
                         set sub_f_id__new [hf_ns_write ns_arr]
                     }
                     ua { 
-                        set ua_list [lindex hf_ua_read $sub_f_id 0]
-                        qf_lists_to_array ua_arr $ua_list [hf_ua_keys]
-                        set ua_arr(ua_id) ""
-                        set sub_f_id__new [hf_ua_write ua_arr]
+                        # don't trash ua record.. not allowed.
+                        # update hf_ua and hf_ua_up_map
+                        ## code
                     }
                 }
                 if { $sub_f_id_new ne "" } {
@@ -656,17 +656,17 @@ ad_proc -private hf_vm_trash {
     return 1
 }
 
-ad_proc -private hf_dc_trash {
-    dc_id
+ad_proc -private hf_ip_trash {
+    ip_id
 } {
-    Trashes a dc record
+    Trashes a ip record
 } {
     upvar 1 instance_id instance_id
     set nowts [dt_systime -gmt 1]
-    db_dml hf_dc_trash {
-        update hf_dcost
+    db_dml hf_ip_trash {
+        update hf_ipost
         set time_trashed=:nowts
-        where dc_id=:dc_id
+        where ip_id=:ip_id
         and instance_id=:instance_id }
     return 1
 }
@@ -686,20 +686,6 @@ ad_proc -private hf_ss_trash {
     return 1
 }
 
-ad_proc -private hf_dc_trash {
-    dc_id
-} {
-    Trashes a dc record
-} {
-    upvar 1 instance_id instance_id
-    set nowts [dt_systime -gmt 1]
-    db_dml hf_dc_trash {
-        update hf_dcost
-        set time_trashed=:nowts
-        where dc_id=:dc_id
-        and instance_id=:instance_id }
-    return 1
-}
 
 ad_proc -private hf_vh_write {
     vh_arr_name
