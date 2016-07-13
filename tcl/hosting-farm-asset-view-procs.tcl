@@ -90,7 +90,7 @@ ad_proc -public hf_asset_stats {
     } 
     set all_keys_list [hf_asset_keys]
     foreach key [split $keys_list " ,"] {
-        set key_idx [lsearch -exact key $all_keys_list $key]
+        set key_idx [lsearch -exact $all_keys_list $key]
         if { $key_idx > -1 } {
             upvar 1 $key [lindex $return_list $key_idx]
         }

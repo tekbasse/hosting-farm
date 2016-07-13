@@ -431,7 +431,7 @@ ad_proc -private hf_sub_f_id_of_label {
     @return sub_f_id 
 } {
     upvar 1 instance_id instance_id
-    set sub_f_id_list ""
+    set sub_f_id_list [list ]
     if { $f_id ne "" } {
         set sub_f_id_list [db_list hf_sub_f_id_of_label_f_id { 
             select sub_f_id from hf_sub_asset_map 
@@ -453,8 +453,7 @@ ad_proc -private hf_sub_f_id_of_label {
     if { $sub_f_id_list_len == 0  } {
         ns_log Notice "hf_sub_f_id_of_label: not found. '${label}' instance_id '${instance_id}' '${f_id}'"
     }
-    if
-    return $sub_f_id
+    return $sub_f_id_list
 }
 
 ad_proc -private hf_asset_attribute_map_create {
@@ -466,17 +465,25 @@ ad_proc -private hf_asset_attribute_map_create {
 } {
     upvar 1 instance_id instance_id
     set sub_f_id ""
+    set f_id [hf_f_id_of_asset_id $asset_id]
     set type_id [hf_asset_type_id_of_asset_id $f_id]
     if { $type_id ne "" } {
         set allowed_sub_type_id_list [hf_types_allowed_by $type_id]
         if { $sub_asset_type_id in $allowed_sub_type_id_list } {
-            set sub_label [hf_sub_f_id_of_label $label $f_id]
+            set sub_type_id $sub_asset_type_id
+            set sub_sort_order [hf_asset_subassets_count $f_id]
+            if { $sub_type_id eq $type_id && $sub_label eq "" } {
+                # give it a label
+                set sub_label [string range [hf_label_of_f_id $f_id] 0 50]
+                append sub_label "-"
+                append sub_label $sub_sort_order
+            }
             set nowts [dt_systime -gmt 1]
             set sub_f_id [db_nextval hf_id_seq]
-            set sub_sort_order [expr { [hf_asset_subassets_count $f_id] * 20 } ]
+            set sub_sort_order [expr { $sub_sort_order * 20 } ]
             set time_created $nowts
             # translate api conventions to internal map refs
-            set sub_type_id $sub_asset_type_id
+
             set trashed_p 0
             set attribute_p 1
             db_dml hf_asset_attribute_map_cr "insert into hf_sub_asset_map \
@@ -576,7 +583,8 @@ ad_proc -private hf_assets_map_create {
 } {
     upvar 1 instance_id instance_id
     set success_p 0
-    if { [hf_f_id_exists_q $f_id] && [hf_f_id_exists_q $sub_f_id] } {
+    set asset_id [hf_asset_id_current_of_f_id $f_id]
+    if { $asset_id ne ""  && [hf_f_id_exists_q $sub_f_id] } {
         set type_id [hf_asset_type_id_of_asset_id $f_id]
         set stats_list [hf_asset_stats $asset_id [list label asset_type_id]]
         if { $type_id ne "" && $asset_type_id ne "" } {

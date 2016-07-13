@@ -175,7 +175,7 @@ ad_proc -private hf_label_of_asset_id {
 } {
     @param asset_id  
 
-    @return label of asset with asset_id, or empty string if not exists or active.
+    @return label of asset with asset_id, or empty string if not exists or not current revision.
 } {
     upvar 1 instance_id instance_id
     set label ""
@@ -183,6 +183,24 @@ ad_proc -private hf_label_of_asset_id {
         where asset_id=:asset_id and instance_id=:instance_id } ]
     if { !$exists_p } {
         ns_log Notice "hf_label_of_asset_id: label does not exist for asset_id '${asset_id}' instance_id '${instance_id}'"
+    }
+    return $label
+}
+
+
+ad_proc -private hf_label_of_f_id {
+    f_id
+} {
+    @param f_id  
+
+    @return label of asset with f_id, or empty string if not exists.
+} {
+    upvar 1 instance_id instance_id
+    set label ""
+    set exists_p [db_0or1row hf_label_of_asset_id { select label from hf_asset_rev_map 
+        where f_id=:f_id and instance_id=:instance_id } ]
+    if { !$exists_p } {
+        ns_log Notice "hf_label_of_f_id: label does not exist for f_id '${f_id}' instance_id '${instance_id}'"
     }
     return $label
 }
@@ -200,7 +218,7 @@ ad_proc -private hf_asset_type_id_of_asset_id {
     # Only asset_id could be checked, but what if original revision is deleted?
     # Checking on !$exists_p could create an indefinite recursion call
     # that is avoided if we just check for all cases to begin with.
-    set f_id [hf_f_id_of_asst_id $asset_id]
+    set f_id [hf_f_id_of_asset_id $asset_id]
     set exists_p [db_0or1row hf_asset_type_id_of_asset_id { 
         select asset_type_id 
         from hf_assets 
