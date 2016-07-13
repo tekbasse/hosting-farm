@@ -611,6 +611,96 @@ ad_proc -private hf_vh_trash {
     return 1
 }
 
+ad_proc -private hf_dc_trash {
+    dc_id
+} {
+    Trashes a dc record
+} {
+    upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
+    db_dml hf_dc_trash {
+        update hf_dcost
+        set time_trashed=:nowts
+        where dc_id=:dc_id
+        and instance_id=:instance_id }
+    return 1
+}
+
+ad_proc -private hf_hw_trash {
+    hw_id
+} {
+    Trashes a hw record
+} {
+    upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
+    db_dml hf_hw_trash {
+        update hf_hwost
+        set time_trashed=:nowts
+        where hw_id=:hw_id
+        and instance_id=:instance_id }
+    return 1
+}
+
+ad_proc -private hf_vm_trash {
+    vm_id
+} {
+    Trashes a vm record
+} {
+    upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
+    db_dml hf_vm_trash {
+        update hf_vmost
+        set time_trashed=:nowts
+        where vm_id=:vm_id
+        and instance_id=:instance_id }
+    return 1
+}
+
+ad_proc -private hf_dc_trash {
+    dc_id
+} {
+    Trashes a dc record
+} {
+    upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
+    db_dml hf_dc_trash {
+        update hf_dcost
+        set time_trashed=:nowts
+        where dc_id=:dc_id
+        and instance_id=:instance_id }
+    return 1
+}
+
+ad_proc -private hf_ss_trash {
+    ss_id
+} {
+    Trashes a ss record
+} {
+    upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
+    db_dml hf_ss_trash {
+        update hf_ssost
+        set time_trashed=:nowts
+        where ss_id=:ss_id
+        and instance_id=:instance_id }
+    return 1
+}
+
+ad_proc -private hf_dc_trash {
+    dc_id
+} {
+    Trashes a dc record
+} {
+    upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
+    db_dml hf_dc_trash {
+        update hf_dcost
+        set time_trashed=:nowts
+        where dc_id=:dc_id
+        and instance_id=:instance_id }
+    return 1
+}
+
 ad_proc -private hf_vh_write {
     vh_arr_name
 } {
