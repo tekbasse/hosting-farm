@@ -682,7 +682,7 @@ ad_proc -private hf_sub_asset_map_update {
     #    See case 2.
 
     upvar 1 instance_id instance_id
-
+    upvar 1 user_id user_id
     # determine if f_id is an asset.
     set f_id_asset_p [hf_f_id_exists_q $f_id]
     set f_id_attr_p 0
@@ -706,93 +706,20 @@ ad_proc -private hf_sub_asset_map_update {
         set sub_f_id_attr_p 1
     }
 ##code
+    set sub_f_id_new ""
     # Call the appropriate proc from the cases above.
     if { $f_id_asset_p && $sub_f_id_attr_new_p } {
-        set case 1
-    }
-    if { $f_id_asset_p && $sub_f_id_asset_p } {
-        set case 3
-    }
-    if { $sub_f_id_attr_p } {
-        set case 2
-    }
-    if { $f_id_attr_p && $sub_f_id_attr_new_p } {
-        set case 4
-    }
-
-    # Actually always creates a record. Trashes any that already exist for same label and f_id.
-    # Use hf_id_is_attribute_q here?
-    set sub_f_id_new ""
-    set trashed_p 0
-    set f_id_exists_p 0
-    set sub_f_id_exists_p 0
-    set sub_f_id_is_asset_p 0
-    if { [qf_is_natural_number $sub_f_id] } {
-        # Is this an existing attribute?
-        set f_id_ck [hf_f_id_of_sub_f_id $sub_f_id]
-        if { $f_id eq $f_id_ck } {
-            set f_id_exists_p 1
-            set sub_f_id_exists_p 1
-        } else {
-            # sub_f_id may be an asset. and this is a new link between assets.
-            set sub_f_id_is_asset_p [hf_f_id_exists_q $sub_f_id]
-            set sub_f_id_exists_p $sub_f_id_is_asset_p
-            if { !$sub_f_id_exists_p } {
-                if { $f_id eq "" } {
-                    ns_log Warning "hf_sub_asset_map_update.440: f_id '${f_id}' f_id_ck '${f_id_ck}'. Problem input?"
-                } else {
-                    # force new map
-                    ns_log Warning "hf_sub_asset_map_update.460: sub_f_id '${sub_f_id}' not found. Creating new map record."
-                    set sub_f_id ""
-                }
-            }
-        }
-    } 
-    if { !$sub_f_id_exists_p && $sub_asset_type_id eq "" } {
-        ns_log Warning "hf_sub_asset_map_update.470: denied. \
- attribute does not exist. and sub_asset_type_id eq ''"
-    } else {
-        if { !$f_id_exists_p } {
-            set f_id_exists_p [hf_f_id_exists_q $f_id]
-            # This is first version of sub_f_id. f_id still required.
-            if { !$f_id_exists_p } {
-                # try as an attribute (rare, since attribute maps aren't updated 
-                # when a sub_f_id is updated. ) attribute-attribute mapping requires consistent label..
-                set f_id_exists_p [hf_sub_f_id_current_q $f_id]
-            }
-        }
-        if { $f_id_exists_p } {
-            set sub_f_id_new [db_nextval hf_id_seq]
-            set nowts [dt_systime -gmt 1]
-            if { $sub_f_id_exists_p } {
-                db_dml hf_sub_asset_map_update { update hf_sub_asset_map
-                    set sub_f_id=:sub_f_id_new where f_id=:f_id and sub_f_id=:sub_f_id }
-            } else {
-                if { $attribute_p eq "" } {
-                    if { $sub_f_id_is_asset_p } {
-                        set attribute_p 0
-                    } else {
-                        set attribute_p 1
-                    }
-                }
-
-                set sub_f_id $sub_f_id_new
-                set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
-                set time_created $nowts
-                # translate api conventions to internal map refs
-                set sub_type_id $sub_asset_type_id
-                set type_id $asset_type_id
-                set trashed_p [qf_is_true $trashed_p]
-                
-                if { $type_id eq "" } {
-                    set type_id [hf_asset_type_id_of_asset_id $f_id]
-                }
-                db_dml ss_sub_asset_map_create "insert into hf_sub_asset_map \
- ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
-            }
-        } else {
-            ns_log Warning "hf_sub_asset_map_update.512: f_id '${f_id}' not found. Unable to update/create record."
-        }
+        # case 1
+        set sub_f_id_new hf_asset_attribute_map_create
+    } elseif { $f_id_asset_p && $sub_f_id_asset_p } {
+        # case 3
+        set sub_f_id_new hf_assets_map_create
+    } elseif { $f_id_attr_p && $sub_f_id_attr_new_p } {
+        # case 4
+        set sub_f_id_new hf_attributes_map_create
+    } elseif { $sub_f_id_attr_p } {
+        # case 2
+        set sub_f_id_new hf_attribute_map_update
     }
     return $sub_f_id_new
 }

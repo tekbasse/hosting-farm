@@ -561,9 +561,20 @@ ad_proc -private hf_attribute_sub_label_update {
                         set sub_f_id__new [hf_ns_write ns_arr]
                     }
                     ua { 
-                        # don't trash ua record.. not allowed.
+                        # don't trash ua record.. not possible.
                         # update hf_ua and hf_ua_up_map
-                        ## code
+                        # with a new id
+                        set sub_f_id_new [db_nextval hf_id_seq]
+                        db_dml hf_ua_id_update {
+                            update hf_ua
+                            set ua_id=:sub_f_id_new
+                            where ua_id=:sub_f_id 
+                            and instance_id=:instance_id }
+                        db_dml hf_ua_up_map_update {
+                            update hf_ua_up_map
+                            set ua_id=:sub_f_id_new
+                            where ua_id=:sub_f_id
+                            and instance_id=:instance_id }
                     }
                 }
                 if { $sub_f_id_new ne "" } {
