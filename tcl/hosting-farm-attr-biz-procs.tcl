@@ -742,7 +742,6 @@ ad_proc -private hf_vh_write {
     return $vh_id_new
 }
 
-
 ad_proc -private hf_dc_write {
     dc_arr_name
 } {
@@ -764,14 +763,7 @@ ad_proc -private hf_dc_write {
         set type_id $asset_type_id
     }
     set sub_type_id "dc"
-    if { $sub_label eq "" } {
-        if { $label ne "" } {
-            set sub_label $label
-        } else {
-            set sub_label $sub_type_id
-            append sub_label [hf_asset_cascade_count $f_id]
-        }
-    }
+    hf_sub_label_define_empty
     set sub_f_id $dc_id
     set dc_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
     if { $dc_id_new ne "" } {
@@ -805,14 +797,7 @@ ad_proc -private hf_hw_write {
         set type_id $asset_type_id
     }
     set sub_type_id "hw"
-    if { $sub_label eq "" } {
-        if { $label ne "" } {
-            set sub_label $label
-        } else {
-            set sub_label $sub_type_id
-            append sub_label [hf_asset_cascade_count $f_id]
-        }
-    }
+    hf_sub_label_define_empty
     set sub_f_id $hw_id
     set hw_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
     if { $hw_id_new ne "" } {
@@ -845,14 +830,7 @@ ad_proc -private hf_vm_write {
         set type_id $asset_type_id
     }
     set sub_type_id "vm"
-    if { $sub_label eq "" } {
-        if { $label ne "" } {
-            set sub_label $label
-        } else {
-            set sub_label $sub_type_id
-            append sub_label [hf_asset_cascade_count $f_id]
-        }
-    }
+    hf_sub_label_define_empty
     set sub_f_id $vm_id
     set vm_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id vm $attribute_p]
     if { $vm_id_new ne "" } {
@@ -885,14 +863,7 @@ ad_proc -private hf_ss_write {
         set type_id $asset_type_id
     }
     set sub_type_id "ss"
-    if { $sub_label eq "" } {
-        if { $label ne "" } {
-            set sub_label $label
-        } else {
-            set sub_label $sub_type_id
-            append sub_label [hf_asset_cascade_count $f_id]
-        }
-    }
+    hf_sub_label_define_empty
     set sub_f_id $ss_id
     set ss_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
     if { $ss_id_new ne "" } {
@@ -941,14 +912,7 @@ ad_proc -private hf_ip_write {
         set type_id $asset_type_id
     }
     set sub_type_id "ip"
-    if { $sub_label eq "" } {
-        if { $label ne "" } {
-            set sub_label $label
-        } else {
-            set sub_label $sub_type_id
-            append sub_label [hf_asset_cascade_count $f_id]
-        }
-    }
+hf_sub_label_define_empty
     set attribute_p [qf_is_true $attribute_p 1]
     set sub_f_id $ip_id
     set ip_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
@@ -982,14 +946,7 @@ ad_proc -private hf_ni_write {
         set type_id $asset_type_id
     }
     set sub_type_id "ni"
-    if { $sub_label eq "" } {
-        if { $label ne "" } {
-            set sub_label $label
-        } else {
-            set sub_label $sub_type_id
-            append sub_label [hf_asset_cascade_count $f_id]
-        }
-    }
+hf_sub_label_define_empty
     set sub_f_id $ni_id
     set ni_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
     if { $ni_id_new ne "" } {
@@ -1053,14 +1010,7 @@ ad_proc -private hf_ns_write {
         set type_id $asset_type_id
     }
     set sub_type_id "ns"
-    if { $sub_label eq "" } {
-        if { $label ne "" } {
-            set sub_label $label
-        } else {
-            set sub_label $sub_type_id
-            append sub_label [hf_asset_cascade_count $f_id]
-        }
-    }
+    hf_sub_label_define_empty
     set attribute_p [qf_is_true $attribute_p 1]
     set sub_f_id $ns_id
     set ns_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]

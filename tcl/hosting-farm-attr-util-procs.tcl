@@ -1249,3 +1249,26 @@ ad_proc -private hf_asset_type_id_of_f_id {
         set asset_type_id [hf_asset_type_id_of_asset_id $f_id_orig]
     }
 }
+
+ad_proc -private hf_sub_label_define_empty {
+} {
+    Define an empty sub_label using a convention
+} {
+    upvar 1 label label
+    upvar 1 sub_label sub_label
+    upvar 1 f_id f_id
+    upvar 1 sub_type_id sub_type_id
+    if { $sub_label eq "" } {
+        set ct [hf_asset_cascade_count $f_id]
+       if { $label ne "" } {
+            set sub_label $label
+        } else {
+            set sub_label $sub_type_id
+        }
+        if { $ct > 1 } {
+            append sub_label "-"
+            append sub_label $ct
+        }
+    }
+}
+
