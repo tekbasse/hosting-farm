@@ -167,6 +167,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                 ns_log Notice "hosting-farm-test-api-procs.tcl.163: dcn $dcn dc_ref $dc_ref"
                 hf_sub_asset_map_update $dci(${dc_ref}) dc $randlabel $asset_arr(f_id) hw 0
                 array set asset_arr [list \
+                                         sub_label $label \
                                          system_name [ad_generate_random_string] \
                                          backup_sys $backup_sys \
                                          os_id [randomRange $osc] \
@@ -179,7 +180,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                 set ipv6_suffix [expr { $atc3 + 7334 } ]
                 array set ip_arr [list \
                                       f_id $asset_arr(f_id) \
-                                      label "eth0" \
+                                      sub_label "eth0" \
                                       ip_id "" \
                                       ipv4_addr "198.51.100.${atc3}" \
                                       ipv4_status "1" \
@@ -195,7 +196,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                 # add ni
                 array set ni_arr [list \
                                       f_id $asset_arr(f_id) \
-                                      label "NIC-${atc3}" \
+                                      sub_label "NIC-${atc3}" \
                                       os_dev_ref "io1" \
                                       bia_mac_address "00:1e:52:c6:3e:7a" \
                                       ul_mac_address "" \
