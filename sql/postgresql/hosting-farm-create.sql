@@ -198,7 +198,8 @@ CREATE TABLE hf_sub_asset_map (
     -- Trash a sub_type_id and create a new one
     -- to provide attribute level revisioning.
     -- Trash a sub_type_id to remove a sub asset from an asset.
-    trashed_p   varchar(1) DEFAULT '0'
+    trashed_p       varchar(1) DEFAULT '0',
+    last_updated    timestamptz DEFAULT now() 
 );
 
 create index hf_sub_asset_map_instance_id_idx on hf_sub_asset_map (instance_id);

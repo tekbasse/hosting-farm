@@ -230,7 +230,7 @@ ad_proc -private hf_sub_asset_map_keys {
 } {
     Returns an ordered list of keys for hf_sub_asset_map.
 } {
-    set keys_list [list instance_id f_id type_id sub_f_id sub_type_id sub_sort_order sub_label attribute_p trashed_p]
+    set keys_list [list instance_id f_id type_id sub_f_id sub_type_id sub_sort_order sub_label attribute_p trashed_p last_updated]
     set keys [hf_keys_by $keys_list $separator]
     return $keys
 }
@@ -414,7 +414,7 @@ ad_proc -private hf_label_of_sub_f_id {
     set exists_p [db_0or1row hf_label_of_sub_f_id { select sub_label from hf_sub_asset_map 
         where sub_f_id=:sub_f_id and instance_id=:instance_id } ]
     if { !$exists_p } {
-        ns_log Notice "hf_label_of_sub_f_id: not found. '${sub_f_id}' instance_id '${instance_id}'"
+        ns_log Notice "hf_label_of_sub_f_id: not found. sub_f_id '${sub_f_id}' instance_id '${instance_id}'"
     }
     return $sub_label
 }
@@ -452,7 +452,7 @@ ad_proc -private hf_sub_f_id_of_label {
     }
     set sub_f_id_list_len [llength $sub_f_id_list]
     if { $sub_f_id_list_len == 0  } {
-        ns_log Notice "hf_sub_f_id_of_label: not found. '${label}' instance_id '${instance_id}' '${f_id}'"
+        ns_log Notice "hf_sub_f_id_of_label: not found. label '${label}' instance_id '${instance_id}' '${f_id}'"
     }
     return $sub_f_id_list
 }
@@ -483,11 +483,13 @@ ad_proc -private hf_asset_attribute_map_create {
             set nowts [dt_systime -gmt 1]
             set sub_f_id [db_nextval hf_id_seq]
 
-            set time_created $nowts
+            #set time_created $nowts
+            set last_updated $nowts
             # translate api conventions to internal map refs
 
             set trashed_p 0
             set attribute_p 1
+            ns_log Notice "hf_asset_attribute_map_create.492: f_id ${f_id} sub_f_id ${sub_f_id} sub_sort_order ${sub_sort_order}"
             db_dml hf_asset_attribute_map_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
         }
@@ -532,40 +534,36 @@ ad_proc -private hf_attribute_map_update {
     #    if the label changes, Is this different than a new attribute?
     #    Keep and trash the old attribute id and map, and create a new map
     #    using hf_attribute_sub_label_update
-
-    if { ![hf_f_id_exists_q $new_id] && ![hf_sub_f_id_exists_q $new_id] } {
-        set new_id_list [hf_sub_asset $new_id]
-    }
-    if { [llength $new_id_list ] > 0 } {
-        #qf_lists_to_vars $new_id_list \[hf_sub_asset_map_keys\]
-        set new_sub_f_id_exists_p 1
-    } else {
-        set new_sub_f_id_exists_p 0
-    }
-
-    if { ![hf_f_id_exists_q $new_id] && !$new_sub_f_id_exists_p } {
-        # new_id seems unused..
-        set sub_f_id_new $new_id
-    } else {
-        set sub_f_id_new ""
+    set sub_f_id_new ""
+    if { $new_id ne "" } {
+        set new_f_id_exists_p [hf_f_id_exists_q $new_id]
+        set new_sub_f_id_exists_p [hf_sub_f_id_exists_q $new_id]
+        if { !$new_f_id_exists_p && !$new_sub_f_id_exists_p } {
+            # new_id seems unused..
+            set sub_f_id_new $new_id
+        }
     } 
     if { $sub_f_id_new eq "" } {
         set sub_f_id_new [db_nextval hf_id_seq]
     }
     # update existing attrbute maps
+    set nowts [dt_systime -gmt 1]
+    ns_log Notice "hf_attribute_map_update.551: old_id '${old_id}' new_id '${new_id}'"
     db_transaction {
         db_dml hf_attribute_map_sub_f_id_update { 
             update hf_sub_asset_map
-            set sub_f_id=:sub_f_id_new 
-            where sub_f_id=:sub_f_id
+            set sub_f_id=:sub_f_id_new,
+            last_updated=:nowts
+            where sub_f_id=:old_id
             and instance_id=:instance_id
             and trashed_p!='1'
         }
         db_dml hf_attribute_map_f_id_update { 
             update hf_sub_asset_map
-            set f_id=:sub_f_id_new 
-            where f_id=:f_id 
-            and instance_id=:intance_id
+            set f_id=:sub_f_id_new,
+            last_updated=:nowts
+            where f_id=:old_id 
+            and instance_id=:instance_id
             and trashed_p!='1'
         }
     } on_error {
@@ -586,16 +584,20 @@ ad_proc -private hf_assets_map_create {
     upvar 1 instance_id instance_id
     set success_p 0
     set asset_id [hf_asset_id_current_of_f_id $f_id]
-    if { $asset_id ne ""  && [hf_f_id_exists_q $sub_f_id] } {
+    set sub_asset_id [hf_asset_id_current_of_f_id $sub_f_id]
+    if { $asset_id ne ""  && $sub_asset_id ne "" } {
         set type_id [hf_asset_type_id_of_asset_id $f_id]
-        set stats_list [hf_asset_stats $asset_id [list label asset_type_id]]
+        set stats_list [hf_asset_stats $sub_asset_id [list label asset_type_id]]
         if { $type_id ne "" && $asset_type_id ne "" } {
+            set nowts [dt_systime -gmt 1]
+            set last_updated $nowts
             set sub_type_id $asset_type_id
-            set sub_label [string range [hf_label_of_f_id $f_id] 0 64]
+            set sub_label [string range $label 0 64]
             set sub_sort_order [expr { [hf_asset_subassets_count $f_id] * 20 } ]
             set trashed_p 0
             set attribute_p 0
             set success_p 1
+            ns_log Notice "hf_assets_map_create.598: f_id '${f_id}' sub_f_id '${sub_f_id}' sub_sort_order '${sub_sort_order}'"
             db_dml hf_assets_map_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
         }
@@ -643,11 +645,12 @@ ad_proc -private hf_attributes_map_create {
             set nowts [dt_systime -gmt 1]
             set sub_f_id [db_nextval hf_id_seq]
             set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
-            set time_created $nowts
+            set last_updated $nowts
             # translate api conventions to internal map refs
             set sub_type_id $sub_asset_type_id
             set trashed_p 0
             set attribute_p 1
+            ns_log Notice "hf_attributes_map_create.652: f_id '${f_id}' sub_f_id '${sub_f_id}' sub_sort_order '${sub_sort_order}'"
             db_dml hf_attributes_map_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
         }

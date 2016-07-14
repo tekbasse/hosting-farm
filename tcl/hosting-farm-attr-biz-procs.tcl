@@ -579,23 +579,27 @@ ad_proc -private hf_attribute_sub_label_update {
                 }
                 if { $sub_f_id_new ne "" } {
                         # trash existing record
+                    set nowts [dt_systime -gmt 1]
                         db_dml hf_sub_label_trash_1 {
                             update hf_sub_asset_map
-                            set trashed_p='0'
+                            set trashed_p='0',
+                            last_updated=:nowts
                             where sub_f_id=:sub_f_id 
                             and instance_id=:instance_id
                         }
-                        # make new record
-                        set sub_f_id $sub_f_id_new
-                        set sub_label $new_sub_label
-                        db_dml hf_attributes_sub_label_cr "insert into hf_sub_asset_map \
+                    # make new record
+                    set sub_f_id $sub_f_id_new
+                    set sub_label $new_sub_label
+                    set last_updated $nowts
+                    db_dml hf_attributes_sub_label_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
                         # update dependencies
                         db_dml hf_attribute_map_f_id_u1 { 
                             update hf_sub_asset_map
-                            set f_id=:sub_f_id_new 
+                            set f_id=:sub_f_id_new,
+                            last_updated=:nowts
                             where f_id=:f_id 
-                            and instance_id=:intance_id
+                            and instance_id=:instance_id
                             and trashed_p!='1'
                         }
                     }
@@ -1183,11 +1187,14 @@ ad_proc -private hf_user_add {
             set nowts [dt_systime -gmt 1]
             if { $sub_f_id_exists_p && $sub_f_id_new ne "" } {
                 db_dml ss_sub_asset_map_update { update hf_sub_asset_map
-                    set sub_f_id=:sub_f_id_new where f_id=:f_id and sub_f_id=:sub_f_id }
+                    set sub_f_id=:sub_f_id_new,
+                    last_updated=:nowts
+                    where f_id=:f_id 
+                    and sub_f_id=:sub_f_id }
             } elseif { $sub_f_id_new ne "" } {
                 set sub_f_id $sub_f_id_new
                 set sub_sort_order [expr { $ct * 20 } ]
-                set time_created $nowts
+                set last_updated $nowts
                 # translate api conventions to internal map refs
                 db_dml ss_sub_asset_map_create "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
