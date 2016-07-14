@@ -258,7 +258,7 @@ ad_proc -private hf_vm_defaults {
                 vm_id "" \
                 domain_name "" \
                 os_id "" \
-                type_id "" \
+                server_type "" \
                 resource_path "" \
                 mount_union "" \
                 details "" \

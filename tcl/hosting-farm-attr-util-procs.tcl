@@ -198,7 +198,7 @@ ad_proc -private hf_vm_keys {
 } {
     Returns an ordered list of keys for hf_virtual_machines
 } {
-    set keys_list [list instance_id vm_id domain_name os_id type_id resource_path mount_union details time_trashed time_created]
+    set keys_list [list instance_id vm_id domain_name os_id server_type resource_path mount_union details time_trashed time_created]
     set keys [hf_keys_by $keys_list $separator]
     return $keys
 }
