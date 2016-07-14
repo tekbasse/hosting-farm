@@ -475,10 +475,19 @@ ad_proc -private hf_asset_attribute_map_create {
             set sub_sort_order [hf_asset_subassets_count $f_id]
             if { $sub_type_id eq $type_id && $sub_label eq "" } {
                 # give it a label
-                set sub_label [string range [hf_label_of_f_id $f_id] 0 50]
+                if { $sub_sort_order == 1 } {
+                    # assume this is primary attribute.
+                    set sub_label [hf_label_of_f_id $f_id]
+                } else {
+                    set sub_label [string range [hf_label_of_f_id $f_id] 0 50]
+                    append sub_label "-"
+                    append sub_label $sub_sort_order
+                }
+            } elseif { $sub_label eq "" } {
+                set sub_label $sub_type_id
                 append sub_label "-"
                 append sub_label $sub_sort_order
-            }
+            }                
             set sub_sort_order [expr { $sub_sort_order * 20 } ]
             set nowts [dt_systime -gmt 1]
             set sub_f_id [db_nextval hf_id_seq]
