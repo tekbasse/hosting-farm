@@ -72,7 +72,7 @@ aa_register_case -cats {api smoke} assets_sys_build_api_check {
                 set os_arr(os_id) [hf_os_write os_arr]
                 lappend os_id_list $os_arr(os_id)
 
-                set b_larr(${osc}) [array get os_arr]
+                set os_larr(${osc}) [array get os_arr]
                 array unset os_arr
                 ns_log Notice "hosting-farm-test-api-procs.tcl.76: osc ${osc}"
                 incr osc
@@ -188,7 +188,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                 set ip_arr(ip_id) [hf_ip_write ip_arr]
                 lappend ip_id_list $ip_arr(ip_id)
 
-                set c_larr(${atc3}) [array get ip_arr]
+                set ip_larr(${atc3}) [array get ip_arr]
                 # delayed unset ip_arr. See below
                 incr atc3
 
@@ -204,7 +204,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                 set ni_arr(ni_id) [hf_ni_write ni_arr]
                 lappend ni_id_list $ni_arr(ni_id)
                 
-                set c_larr(${atc4}) [array get ni_arr]
+                set ni_larr(${atc4}) [array get ni_arr]
                 array unset ni_arr
                 incr atc4
 
@@ -216,7 +216,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                 set ns_arr(ns_id) [hf_ns_write ns_arr]
                 lappend ns_id_list $ns_arr(ns_id)
                 
-                set c_larr(${atc5}) [array get ns_arr]
+                set ns_larr(${atc5}) [array get ns_arr]
                 array unset ns_arr
                 incr atc5
 
@@ -231,8 +231,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                                       ua_id "" \
                                       up "test" ]
                 set ua_arr(ua_id) [hf_user_add ua_arr]
-                set d_larr(${atc5}) [array get ua_arr]
-                lappend ua_larr(${ac}) $ua_arr(ua_id)
+                lappend ua_larr(${atc5}) [array get ua_arr]
                 array unset ua_arr
                 incr atc5
 
@@ -243,8 +242,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                                       ua_id "" \
                                       up "test" ]
                 set ua_arr(ua_id) [hf_user_add ua_arr]
-                set d_larr(${atc5}) [array get ua_arr]
-                lappend ua_larr(${ac}) $ua_arr(ua_id)
+                lappend ua_larr(${atc5}) [array get ua_arr]
                 array unset ua_arr
                 incr atc5
 

@@ -1258,6 +1258,7 @@ ad_proc -private hf_sub_label_define_empty {
     upvar 1 sub_label sub_label
     upvar 1 f_id f_id
     upvar 1 sub_type_id sub_type_id
+    upvar 1 instance_id instance_id
     if { $sub_label eq "" } {
         set ct [hf_asset_cascade_count $f_id]
        if { $label ne "" } {
