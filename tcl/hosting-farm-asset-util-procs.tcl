@@ -507,10 +507,10 @@ ad_proc -private hf_asset_subassets_cascade {
     return $final_id_list
 }
 
-ad_proc -private hf_asset_subassets_count {
+ad_proc -private hf_asset_cascade_count {
     f_id
 } {
-    Returns count of all subassets and trashed revisions of f_id.
+    Returns count of all untrashed attributes and subassets of f_id.
     This is useful for creating a chronological sort order
 } {
     upvar 1 instance_id instance_id
@@ -518,7 +518,7 @@ ad_proc -private hf_asset_subassets_count {
     set current_id_list_len 1
     set final_id_list [list ]
     set not_error_p 1
-    ns_log Notice "hf_asset_subassets_count.492: begin while.."
+    ns_log Notice "hf_asset_cascade_count.492: begin while.."
     while { $current_id_list_len > 0 && $not_error_p } {
         set next_id_list [list ]
         foreach s_id $current_id_list {
@@ -527,7 +527,7 @@ ad_proc -private hf_asset_subassets_count {
             foreach sb_id $new_list {
                 if { $sb_id in $next_id_list || $sb_id in $final_id_list } {
                     # skip
-                    ns_log Warning "hf_asset_subassets_count.499. Branching/hierarchy/looping issue. sb_id $sb_id duplicate. next_id_list '${next_id_list}' final_id_list '${final_id_list}'"
+                    ns_log Warning "hf_asset_cascade_count.499. Branching/hierarchy/looping issue. sb_id $sb_id duplicate. next_id_list '${next_id_list}' final_id_list '${final_id_list}'"
                     set not_error_p 0
                 } else {
                     lappend next_id_list $sb_id
@@ -649,6 +649,43 @@ ad_proc -private hf_asset_attributes_by_type_cascade {
     return $final_id_list
 }
 
+
+ad_proc -private hf_asset_cascade {
+    f_id
+} {
+    Returns a list of untrashed f_id of attributes and assets assigned to f_id.
+} {
+    upvar 1 instance_id instance_id
+    set current_id_list [list $f_id]
+    set current_id_list_len 1
+    set final_id_list [list ]
+    set not_error_p 1
+    set f_id_is_asset_p [hf_f_id_exists_q $f_id]
+    ns_log Notice "hf_asset_cascade.550: begin while.."
+    while { $current_id_list_len > 0 & $not_error_p } {
+        set next_id_list [list ]
+        foreach s_id $current_id_list {
+            lappend final_id_list $s_id
+            set new_list [db_list hf_attributes_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and instance_id=:instance_id and trashed_p!='1'"]
+            foreach sb_id $new_list {
+                if { $sb_id in $next_id_list || $sb_id in $final_id_list } {
+                    # skip
+                    ns_log Warning "hf_asset_cascade.570. Branching/hierarchy/looping issue. sb_id $sb_id duplicate. next_id_list '${next_id_list}' final_id_list '${final_id_list}'"
+                    set not_error_p 0
+                } else {
+                    lappend next_id_list $sb_id
+                }
+            }
+        }
+        set current_id_list $next_id_list
+        set current_id_list_len [llength $current_id_list]
+    }
+    
+    if { $f_id_is_asset_p } {
+        set final_id_list [lreplace $final_id_list 0 0]
+    }
+    return $final_id_list
+}
 
 # see hf_asset_do
 # The following tables are involved in managing asset direct api

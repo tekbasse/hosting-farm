@@ -728,7 +728,7 @@ ad_proc -private hf_vh_write {
         } else {
             set sub_label $sub_type_id
         }
-        append sub_label [hf_asset_subassets_count $f_id]
+        append sub_label [hf_asset_cascade_count $f_id]
     }
     
     set sub_f_id $vh_id
@@ -769,7 +769,7 @@ ad_proc -private hf_dc_write {
         } else {
             set sub_label $sub_type_id
         }
-        append sub_label [hf_asset_subassets_count $f_id]
+        append sub_label [hf_asset_cascade_count $f_id]
     }
     set sub_f_id $dc_id
     set dc_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id dc $attribute_p]
@@ -809,7 +809,7 @@ ad_proc -private hf_hw_write {
         } else {
             set sub_label $sub_type_id
         }
-        append sub_label [hf_asset_subassets_count $f_id]
+        append sub_label [hf_asset_cascade_count $f_id]
     }
     set sub_f_id $hw_id
     set hw_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id hw $attribute_p]
@@ -848,7 +848,7 @@ ad_proc -private hf_vm_write {
         } else {
             set sub_label $sub_type_id
         }
-        append sub_label [hf_asset_subassets_count $f_id]
+        append sub_label [hf_asset_cascade_count $f_id]
     }
     set sub_f_id $vm_id
     set vm_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id vm $attribute_p]
@@ -887,7 +887,7 @@ ad_proc -private hf_ss_write {
         } else {
             set sub_label $sub_type_id
         }
-        append sub_label [hf_asset_subassets_count $f_id]
+        append sub_label [hf_asset_cascade_count $f_id]
     }
     set sub_f_id $ss_id
     set ss_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id ss $attribute_p]
@@ -942,7 +942,7 @@ ad_proc -private hf_ip_write {
         } else {
             set sub_label $sub_type_id
         }
-        append sub_label [hf_asset_subassets_count $f_id]
+        append sub_label [hf_asset_cascade_count $f_id]
     }
     set attribute_p [qf_is_true $attribute_p 1]
     set sub_f_id $ip_id
@@ -982,7 +982,7 @@ ad_proc -private hf_ni_write {
         } else {
             set sub_label $sub_type_id
         }
-        append sub_label [hf_asset_subassets_count $f_id]
+        append sub_label [hf_asset_cascade_count $f_id]
     }
     set sub_f_id $ni_id
     set ni_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id ni $attribute_p]
@@ -1052,7 +1052,7 @@ ad_proc -private hf_ns_write {
         } else {
             set sub_label $sub_type_id
         }
-        append sub_label [hf_asset_subassets_count $f_id]
+        append sub_label [hf_asset_cascade_count $f_id]
     }
     set attribute_p [qf_is_true $attribute_p 1]
     set sub_f_id $ns_id
@@ -1140,7 +1140,7 @@ ad_proc -private hf_user_add {
         }
     }
     set sub_type_id "ua"
-    set ct [hf_asset_subassets_count $f_id ]
+    set ct [hf_asset_cascade_count $f_id ]
     if { $ct > 0 } {
         set f_id_exists_p 1
     }

@@ -472,7 +472,7 @@ ad_proc -private hf_asset_attribute_map_create {
         set allowed_sub_type_id_list [hf_types_allowed_by $type_id]
         if { $sub_asset_type_id in $allowed_sub_type_id_list } {
             set sub_type_id $sub_asset_type_id
-            set sub_sort_order [hf_asset_subassets_count $f_id]
+            set sub_sort_order [hf_asset_cascade_count $f_id]
             if { $sub_type_id eq $type_id && $sub_label eq "" } {
                 # give it a label
                 if { $sub_sort_order == 1 } {
@@ -602,7 +602,7 @@ ad_proc -private hf_assets_map_create {
             set last_updated $nowts
             set sub_type_id $asset_type_id
             set sub_label [string range $label 0 64]
-            set sub_sort_order [expr { [hf_asset_subassets_count $f_id] * 20 } ]
+            set sub_sort_order [expr { [hf_asset_cascade_count $f_id] * 20 } ]
             set trashed_p 0
             set attribute_p 0
             set success_p 1
@@ -653,7 +653,7 @@ ad_proc -private hf_attributes_map_create {
         if { $sub_asset_type_id in $allowed_sub_type_id_list } {
             set nowts [dt_systime -gmt 1]
             set sub_f_id [db_nextval hf_id_seq]
-            set sub_sort_order [expr { [hf_asset_subassets_count $f_id ] * 20 } ]
+            set sub_sort_order [expr { [hf_asset_cascade_count $f_id ] * 20 } ]
             set last_updated $nowts
             # translate api conventions to internal map refs
             set sub_type_id $sub_asset_type_id

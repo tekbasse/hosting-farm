@@ -98,6 +98,7 @@ aa_register_case -cats {api smoke} assets_api_check {
 
             # ac= asset counter
             set ac 0
+            set atc2 0
 
             set domain [hf_domain_example]
             set asset_type_id "dc"
@@ -113,6 +114,7 @@ aa_register_case -cats {api smoke} assets_api_check {
                                      description "[string toupper ${asset_type_id}]${ac}" \
                                      details "This is for api test"]
             set asset_arr(${asset_type_id}_id) [hf_dc_write asset_arr]
+            incr atc2
             lappend type_larr(${asset_type_id}) $ac
             set a_larr(${ac}) [array get asset_arr]
             ns_log Notice "hosting-farm-test-api-procs.tcl.116: dci(0) '$dci(0)'"
@@ -133,6 +135,7 @@ aa_register_case -cats {api smoke} assets_api_check {
                                      description "[string toupper ${asset_type_id}]${ac}" \
                                      details "This is for api test"]
             set asset_arr(${asset_type_id}_id) [hf_dc_write asset_arr]
+            incr atc2
             lappend type_larr(${asset_type_id}) $ac
             set a_larr(${ac}) [array get asset_arr]
 
@@ -148,8 +151,8 @@ aa_register_case -cats {api smoke} assets_api_check {
                               
 
                 set backup_sys [qal_namelur 1 2 ""]
-                set randlabel "${backup_sys}-[qal_namelur 1 3 "-"]"
                 set asset_type_id "hw"
+                set randlabel "${asset_type_id}-${backup_sys}-[qal_namelur 1 3 "-"]"
                 array set asset_arr [list \
                                          asset_type_id ${asset_type_id} \
                                          label $randlabel \
@@ -257,16 +260,31 @@ aa_register_case -cats {api smoke} assets_api_check {
             set dc1_f_id_list [hf_asset_subassets_cascade $dci(1)]
             set dc1_f_id_list_len [llength $dc1_f_id_list]
             set asset_tot [expr { $dc0_f_id_list_len + $dc1_f_id_list_len } ]
-            ns_log Notice "hosting-farm-test-api-procs.tcl dc0_f_id_list '${dc0_f_id_list}' dc1_f_id_list '${dc1_f_id_list}'"
+            ns_log Notice "hosting-farm-test-api-procs.tcl.260: $dc0_f_id_list_len + $dc1_f_id_list_len = $asset_tot"
+            ns_log Notice "hosting-farm-test-api-procs.tcl.261: dc0_f_id_list '${dc0_f_id_list}' dc1_f_id_list '${dc1_f_id_list}'"
             aa_equals "Assets total created" $asset_tot $ac 
 
-            set atcn [expr { $atc3 + $atc4 + $atc5 } ]
+            set atcn [expr { $atc2 + $atc3 + $atc4 + $atc5 } ]
             set dc0_sub_f_id_list [hf_asset_attributes_cascade $dci(0)]
-            set dc0_sub_f_id_list_len [llength $dc0_sub_f_id_list]
             set dc1_sub_f_id_list [hf_asset_attributes_cascade $dci(1)]
+            set dc0_sub_f_id_list_len [llength $dc0_sub_f_id_list]
             set dc1_sub_f_id_list_len [llength $dc1_sub_f_id_list]
-            set attr_tot [expr { $dc0_sub_f_id_list_len + $dc1_sub_f_id_list_len } ]
-            ns_log Notice "hosting-farm-test-api-procs.tcl.262: dc0_sub_f_id_list '${dc0_sub_f_id_list}' dc1_sub_f_id_list '${dc1_sub_f_id_list}'"
+            set attr_tot 0
+            foreach f_id $dc0_f_id_list {
+                set f_id_list [hf_asset_attributes_cascade $f_id]
+                set f_id_list_len [llength $f_id_list]
+                incr attr_tot $f_id_list_len
+            }
+            foreach f_id $dc1_f_id_list {
+                set f_id_list [hf_asset_attributes_cascade $f_id]
+                set f_id_list_len [llength $f_id_list]
+                incr attr_tot $f_id_list_len
+            }
+
+            ns_log Notice "hosting-farm-test-api-procs.tcl.262: $dc0_sub_f_id_list_len + $dc1_sub_f_id_list_len = $attr_tot"
+            ns_log Notice "hosting-farm-test-api-procs.tcl.263: dc0_sub_f_id_list '${dc0_sub_f_id_list}' dc1_sub_f_id_list '${dc1_sub_f_id_list}'"
+
+
             aa_equals "Attributes total created" $attr_tot $atcn 
 
             
