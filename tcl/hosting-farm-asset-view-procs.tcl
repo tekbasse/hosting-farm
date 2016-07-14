@@ -87,14 +87,15 @@ ad_proc -public hf_asset_stats {
         set return_list_of_lists [db_list_of_lists hf_asset_stats "select [hf_asset_keys ","] from hf_assets where asset_id=:asset_id and instance_id=:instance_id" ] 
         # convert return_lists_of_lists to return_list
         set return_list [lindex $return_list_of_lists 0]
-    } 
-    set all_keys_list [hf_asset_keys]
-    foreach key [split $keys_list " ,"] {
-        set key_idx [lsearch -exact $all_keys_list $key]
-        if { $key_idx > -1 } {
-            upvar 1 $key [lindex $return_list $key_idx]
+        set all_keys_list [hf_asset_keys]
+        foreach key [split $keys_list " ,"] {
+            set key_idx [lsearch -exact $all_keys_list $key]
+            if { $key_idx > -1 } {
+                upvar 1 $key $key 
+                set $key [lindex $return_list $key_idx]
+            }
         }
-    }
+    } 
     return $return_list
 }
 

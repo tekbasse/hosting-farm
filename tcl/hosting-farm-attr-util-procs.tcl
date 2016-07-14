@@ -357,12 +357,13 @@ ad_proc -private hf_sub_asset {
 } {
     Returns a list of values from hf_sub_asset_map in order of hf_sub_asset_map_keys, or empty list if not found. If f_id is supplied, scopes to f_id.
 } {
+    upvar 1 instance_id instance_id
     if { [qf_is_natural_number $f_id] } {
         set xtra_sql "and f_id=:f_id "
     } else {
         set xtra_sql ""
     }
-    set sam0_list [db_list_of_lists hf_sub_asset_map_read "select [hf_sub_asset_map_keys ","] from hf_sub_asset_map where sub_f_id=:sub_f_id ${extra_sql}and instance_id=:instance_id"]
+    set sam0_list [db_list_of_lists hf_sub_asset_map_read "select [hf_sub_asset_map_keys ","] from hf_sub_asset_map where sub_f_id=:sub_f_id ${xtra_sql}and instance_id=:instance_id"]
     set sam_list [lindex $sam0_list 0]
     return $sam_list
 }
@@ -409,13 +410,13 @@ ad_proc -private hf_label_of_sub_f_id {
     @return label of attribute with sub_f_id, or empty string if not exists.
 } {
     upvar 1 instance_id instance_id
-    set label ""
-    set exists_p [db_0or1row hf_label_of_sub_f_id { select label from hf_sub_asset_map 
+    set sub_label ""
+    set exists_p [db_0or1row hf_label_of_sub_f_id { select sub_label from hf_sub_asset_map 
         where sub_f_id=:sub_f_id and instance_id=:instance_id } ]
     if { !$exists_p } {
         ns_log Notice "hf_label_of_sub_f_id: not found. '${sub_f_id}' instance_id '${instance_id}'"
     }
-    return $label
+    return $sub_label
 }
 
 ad_proc -private hf_sub_f_id_of_label {
@@ -444,7 +445,7 @@ ad_proc -private hf_sub_f_id_of_label {
     } else {
         set sub_f_id_list [db_0or1row hf_sub_f_id_of_label { 
             select sub_f_id from hf_sub_asset_map 
-            where label=:label 
+            where sub_label=:label 
             and instance_id=:instance_id
             and trashed_p!='1'
         }]
@@ -478,9 +479,10 @@ ad_proc -private hf_asset_attribute_map_create {
                 append sub_label "-"
                 append sub_label $sub_sort_order
             }
+            set sub_sort_order [expr { $sub_sort_order * 20 } ]
             set nowts [dt_systime -gmt 1]
             set sub_f_id [db_nextval hf_id_seq]
-            set sub_sort_order [expr { $sub_sort_order * 20 } ]
+
             set time_created $nowts
             # translate api conventions to internal map refs
 
@@ -589,6 +591,7 @@ ad_proc -private hf_assets_map_create {
         set stats_list [hf_asset_stats $asset_id [list label asset_type_id]]
         if { $type_id ne "" && $asset_type_id ne "" } {
             set sub_type_id $asset_type_id
+            set sub_label [string range [hf_label_of_f_id $f_id] 0 64]
             set sub_sort_order [expr { [hf_asset_subassets_count $f_id] * 20 } ]
             set trashed_p 0
             set attribute_p 0
@@ -1219,9 +1222,9 @@ ad_proc -private hf_asset_type_id_of_f_id {
     set asset_type_id ""
     set f_id_orig $f_id
     set exists_p [db_0or1row hf_sub_asset_map_type_r { 
-        select f_id,type_id,sub_f_id,type_id 
+        select f_id,type_id,sub_f_id,sub_type_id 
         from hf_sub_asset_map
-        where f_id=:f_id or sub_f_id=:f_id
+        where ( f_id=:f_id or sub_f_id=:f_id )
         and instance_id=:instance_id limit 1 } ]
     if { $exists_p } {
         if { $f_id eq $f_id_orig } {
