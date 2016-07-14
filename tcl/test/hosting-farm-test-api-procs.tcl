@@ -3,13 +3,14 @@ ad_library {
     @creation-date 2015-03-19
 }
 
-aa_register_case -cats {api smoke} assets_api_check {
+aa_register_case -cats {api smoke} assets_sys_build_api_check {
     Test assets and attributes api
 } {
     aa_run_with_teardown \
         -test_code {
 #        -rollback \
-            ns_log Notice "aa_register_case.12: Begin test assets_api_check"
+            ns_log Notice "aa_register_case.12: Begin test assets_sys_build_api_check"
+            aa_log "Build 2 DCs with HW and some attributes"
             # Use default permissions provided by tcl/hosting-farm-init.tcl
             # Yet, users must have read access permissions or test fails
             # Some tests will fail (predictably) in a hardened system
@@ -109,13 +110,14 @@ aa_register_case -cats {api smoke} assets_api_check {
                                      user_id $sysowner_user_id ]
             set asset_arr(f_id) [hf_asset_create asset_arr ]
             set dci(0) $asset_arr(f_id)
+ns_log Notice "hosting-farm-test-api-procs.tcl.113: asset_arr(label) $asset_arr(label)"
             array set asset_arr [list \
                                      affix [ad_generate_random_string] \
                                      description "[string toupper ${asset_type_id}]${ac}" \
                                      details "This is for api test"]
+ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(label)"
             set asset_arr(${asset_type_id}_id) [hf_dc_write asset_arr]
             incr atc2
-            lappend type_larr(${asset_type_id}) $ac
             set a_larr(${ac}) [array get asset_arr]
             ns_log Notice "hosting-farm-test-api-procs.tcl.116: dci(0) '$dci(0)'"
             array unset asset_arr
@@ -136,7 +138,6 @@ aa_register_case -cats {api smoke} assets_api_check {
                                      details "This is for api test"]
             set asset_arr(${asset_type_id}_id) [hf_dc_write asset_arr]
             incr atc2
-            lappend type_larr(${asset_type_id}) $ac
             set a_larr(${ac}) [array get asset_arr]
 
             ns_log Notice "hosting-farm-test-api-procs.tcl.116: dci(1) '$dci(1)'"
@@ -172,7 +173,6 @@ aa_register_case -cats {api smoke} assets_api_check {
                                          description "[string toupper ${asset_type_id}]${ac}" \
                                          details "This is for api test"]
                 set asset_arr(${asset_type_id}_id) [hf_hw_write asset_arr]
-                lappend type_larr(${asset_type_id}) $asset_arr(${asset_type_id}_id)
                 set a_larr(${ac}) [array get asset_arr]
 
                 # add ip
@@ -255,6 +255,17 @@ aa_register_case -cats {api smoke} assets_api_check {
 
             }
 
+
+            #
+            # test api results against creation data
+            # ac = asset count
+            # atc2, atc3, atc4, atc5 = attribute counts
+            # atc2 = dc primary attribute count
+            # atc3 = ip attribute counts
+            # atc4 = ni attribute counts
+            # atc5 = ns + ua attribute counts
+
+
             set dc0_f_id_list [hf_asset_subassets_cascade $dci(0)]
             set dc0_f_id_list_len [llength $dc0_f_id_list]
             set dc1_f_id_list [hf_asset_subassets_cascade $dci(1)]
@@ -287,15 +298,75 @@ aa_register_case -cats {api smoke} assets_api_check {
 
             aa_equals "Attributes total created" $attr_tot $atcn 
 
+
             
         } \
         -teardown_code {
-            # 
             #acs_user::delete -user_id $user1_arr(user_id) -permanent
-
         }
     #aa_true "Test for .." $passed_p
     #aa_equals "Test for .." $test_value $expected_value
+}
 
 
+aa_register_case -cats {api smoke} assets_sys_populate_api_check {
+    Test assets and attributes api
+} {
+    aa_run_with_teardown \
+        -test_code {
+#        -rollback \
+            ns_log Notice "aa_register_case.327: Begin test assets_sys_populate_api_check"
+             aa_log "Test populate 2 DCs with HW and some attributes"
+            # dc asset_id dci(0) dci(1)
+            # dc hardware
+            # dc0_f_id_list
+            # dc1_f_id_list
+
+
+            # add  business cases
+            # some vm, multiple vh on vm, ss on vh, ss on vm, ua on each
+            # ss asset (db, wiki server, asterix for example) with multiple ua
+            # vh asset as basic services, ua on each
+            # hw asset as co-location,  rasberry pi, linux box, 
+
+
+       }
+}
+
+aa_register_case -cats {api smoke} assets_sys_evolve_api_check {
+    Test assets and attributes api
+} {
+    aa_run_with_teardown \
+        -test_code {
+#        -rollback \
+            ns_log Notice "aa_register_case.327: Begin test assets_sys_evolve_api_check"
+             aa_log "Test evolve DC assets and attributes"
+
+            # update ua of each
+            # verify ua of each
+            # update an ns 
+            # verify ns
+            # 
+            # move vm from 1 to 2.
+            # verify
+            # move vh from 2 to 1
+            # verify
+
+       }
+}
+
+aa_register_case -cats {api smoke} assets_sys_clear_api_check {
+    Test assets and attributes api
+} {
+    aa_run_with_teardown \
+        -test_code {
+#        -rollback \
+            ns_log Notice "aa_register_case.327: Begin test assets_sys_clear_api_check"
+             aa_log "Clear 2 DCs of managed assets and attributes."
+
+            # delete everything below a hw
+            # verify
+
+
+       }
 }
