@@ -414,7 +414,7 @@ ad_proc -private hf_label_of_sub_f_id {
     set exists_p [db_0or1row hf_label_of_sub_f_id { select sub_label from hf_sub_asset_map 
         where sub_f_id=:sub_f_id and instance_id=:instance_id } ]
     if { !$exists_p } {
-        ns_log Notice "hf_label_of_sub_f_id: not found. sub_f_id '${sub_f_id}' instance_id '${instance_id}'"
+        ns_log Warning "hf_label_of_sub_f_id: not found. sub_f_id '${sub_f_id}' instance_id '${instance_id}'"
     }
     return $sub_label
 }
@@ -452,7 +452,7 @@ ad_proc -private hf_sub_f_id_of_label {
     }
     set sub_f_id_list_len [llength $sub_f_id_list]
     if { $sub_f_id_list_len == 0  } {
-        ns_log Notice "hf_sub_f_id_of_label: not found. label '${label}' instance_id '${instance_id}' '${f_id}'"
+        ns_log Warning "hf_sub_f_id_of_label: not found. label '${label}' instance_id '${instance_id}' '${f_id}'"
     }
     return $sub_f_id_list
 }
@@ -502,7 +502,7 @@ ad_proc -private hf_asset_attribute_map_create {
             db_dml hf_asset_attribute_map_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
         } else {
-            ns_log Notice "hf_asset_attribute_map_create.505: sub_asset_type_id '${sub_asset_type_id}' cannot be dependent of type_id '${type_id}'"
+            ns_log Warning "hf_asset_attribute_map_create.505: sub_asset_type_id '${sub_asset_type_id}' cannot be dependent of type_id '${type_id}'"
         }
     }
     return $sub_f_id
@@ -613,7 +613,7 @@ ad_proc -private hf_assets_map_create {
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
         }
     } else {
-            ns_log Notice "hf_assets_map_create.614: sub_asset_type_id '${sub_asset_type_id}' cannot be dependent of type_id '${type_id}'"
+            ns_log Warning "hf_assets_map_create.614: sub_asset_type_id '${sub_asset_type_id}' cannot be dependent of type_id '${type_id}'"
     }
     return $success_p
 }
@@ -667,7 +667,7 @@ ad_proc -private hf_attributes_map_create {
             db_dml hf_attributes_map_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
         } else {
-            ns_log Notice "hf_attributes_map_create.666: sub_asset_type_id '${sub_asset_type_id}' cannot be dependent of type_id '${type_id}'"
+            ns_log Warning "hf_attributes_map_create.666: sub_asset_type_id '${sub_asset_type_id}' cannot be dependent of type_id '${type_id}'"
         }
     }
     return $sub_f_id

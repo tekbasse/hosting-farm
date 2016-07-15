@@ -944,7 +944,7 @@ ad_proc -private hf_ni_write {
     Otherwise empty string is returned.
 } {
     # requires f_id
-    upvar 1 ni_arr_name arr_name
+    upvar 1 $ni_arr_name arr_name
     upvar 1 instance_id instance_id
 
     hf_ni_defaults arr_name
@@ -964,7 +964,7 @@ ad_proc -private hf_ni_write {
         set ni_id $ni_id_new
         db_dml ni_asset_create "insert into hf_network_interfaces ([hf_ni_keys ","]) values ([hf_ni_keys ",:"])"
     } else {
-        ns_log Warning "hf_ni_write: rejected '[array get arr_name]'"
+        ns_log Warning "hf_ni_write.967: rejected '[array get arr_name]'"
     }
     return $ni_id_new
 }

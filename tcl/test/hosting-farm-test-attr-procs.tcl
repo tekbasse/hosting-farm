@@ -131,6 +131,24 @@ aa_register_case -cats {db smoke} assets_attr_check {
             ns_log Notice "hosting-farm-test-api-procs.tcl.135: hf_up $q5 $q5_list"
 
 
+            # add network interface
+            array set ni1_arr [list \
+                                   f_id $hw_arr(f_id) \
+                                   sub_label "NIC-1" \
+                                   os_dev_ref "io1" \
+                                   bia_mac_address "00:1e:52:c6:3e:7a" \
+                                   ul_mac_address "" \
+                                   ipv4_addr_range "198.51.100.0/24" \
+                                   ipv6_addr_range "2001:db8:1234::/48" ]
+            set ni1_arr(ni_id) [hf_ni_write ni1_arr]
+
+            set q2 "instance_id,f_id,type_id,sub_f_id,sub_type_id,sub_sort_order,sub_label,attribute_p,trashed_p"
+            set q2_list [db_list_of_lists hf_test_hf_sub_asset_map_1 "select $q2 from hf_sub_asset_map" ]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.139: hf_sub_asset_map $q2 $q2_list"
+            set q4 "instance_id,ni_id,os_dev_ref,bia_mac_address,ul_mac_address,ipv4_addr_range,ipv6_addr_range,time_trashed,time_created"
+            set q4_list [db_list_of_lists hf_test_hf_ni_1 "select $q4 from hf_network_interfaces" ]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.134: hf_ni $q4 $q4_list"
+
             
 
             set dc_f_id_list [hf_asset_subassets_cascade $dc_arr(f_id)]
@@ -152,7 +170,7 @@ aa_register_case -cats {db smoke} assets_attr_check {
             set hw_sub_f_id_list [hf_asset_attributes_cascade $hw_arr(f_id)]
             ns_log Notice "hosting-farm-test-api-procs.tcl.205: hw_sub_f_id_list '${hw_sub_f_id_list}'"
             set hw_sub_f_id_list_len [llength $hw_sub_f_id_list]
-            aa_equals "HW Attributes total created" $hw_sub_f_id_list_len 3
+            aa_equals "HW Attributes total created" $hw_sub_f_id_list_len 4
 
             
         } \
