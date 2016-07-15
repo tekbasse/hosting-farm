@@ -3,8 +3,8 @@ ad_library {
     @creation-date 2015-03-19
 }
 
-aa_register_case -cats {api smoke} assets_sys_build_api_check {
-    Test assets and attributes api
+aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
+    Test assets and attributes api through system lifecycle simmulation
 } {
     aa_run_with_teardown \
         -test_code {
@@ -180,8 +180,8 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                 set dc_ref [expr { round( fmod( $ac , 2 ) ) } ]
                 set dcn $dci(${dc_ref})
                 hf_sub_asset_map_update $dcn dc $randlabel $asset_arr(f_id) hw 0
-
-                append hw_id_larr(${dcn}) $$asset_arr(f_id)
+                ns_log Notice "hosting-farm-test-api-procs.tcl.182: dc_ref $dc_ref"
+                lappend hw_id_larr(${dc_ref}) $asset_arr(f_id)
 
                 # add dc primary attribute
                 array set asset_arr [list \
@@ -320,23 +320,8 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
 
             aa_equals "Attributes total created" $attr_tot $atcn 
 
+# populate
 
-            
-        } \
-        -teardown_code {
-            #acs_user::delete -user_id $user1_arr(user_id) -permanent
-        }
-    #aa_true "Test for .." $passed_p
-    #aa_equals "Test for .." $test_value $expected_value
-}
-
-
-aa_register_case -cats {api smoke} assets_sys_populate_api_check {
-    Test assets and attributes api
-} {
-    aa_run_with_teardown \
-        -test_code {
-#        -rollback \
             ns_log Notice "aa_register_case.327: Begin test assets_sys_populate_api_check"
              aa_log "Test populate 2 DCs with HW and some attributes"
             # dc asset_id dci(0) dci(1)
@@ -349,9 +334,9 @@ aa_register_case -cats {api smoke} assets_sys_populate_api_check {
             # ss asset (db, wiki server, asterix for example) with multiple ua
             # vh asset as basic services, ua on each
             # hw asset as co-location,  rasberry pi, linux box, 
-            set hw_asset_id_list [concat $hf_id_larr(0) $hf_id_larr(1)]
-            for hf_asset_id $hf_asset_id_list {
-                set dice [randRange 11]
+            set hw_asset_id_list [concat $hw_id_larr(0) $hw_id_larr(1) ]
+            foreach hf_asset_id $hw_asset_id_list {
+                set dice [randomRange 11]
 
                 switch -exact $dice {
                     0 {
@@ -543,7 +528,7 @@ aa_register_case -cats {api smoke} assets_sys_populate_api_check {
                                               service_name "gold" \
                                               daemon_ref "au" \
                                               protocol "http/2" \
-                                              port [randRange 65535] \
+                                              port [randomRange 65535] \
                                               ss_type "gold type" \
                                               ss_subtype "198" \
                                               ss_undersubtype "+1" \
@@ -604,15 +589,8 @@ aa_register_case -cats {api smoke} assets_sys_populate_api_check {
                 
             }
 
-       }
-}
+# evolve data
 
-aa_register_case -cats {api smoke} assets_sys_evolve_api_check {
-    Test assets and attributes api
-} {
-    aa_run_with_teardown \
-        -test_code {
-#        -rollback \
             ns_log Notice "aa_register_case.327: Begin test assets_sys_evolve_api_check"
              aa_log "Test evolve DC assets and attributes"
 
@@ -626,15 +604,10 @@ aa_register_case -cats {api smoke} assets_sys_evolve_api_check {
             # move vh from 2 to 1
             # verify
 
-       }
-}
 
-aa_register_case -cats {api smoke} assets_sys_clear_api_check {
-    Test assets and attributes api
-} {
-    aa_run_with_teardown \
-        -test_code {
-#        -rollback \
+# system clear DCs
+
+
             ns_log Notice "aa_register_case.327: Begin test assets_sys_clear_api_check"
              aa_log "Clear 2 DCs of managed assets and attributes."
 
