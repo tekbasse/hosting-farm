@@ -219,7 +219,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                 # add ni
                 array set ni_arr [list \
                                       f_id $asset_arr(f_id) \
-                                      sub_label "NIC-${ip_atc}" \
+                                      sub_label "NIC-${ni_atc}" \
                                       os_dev_ref "io1" \
                                       bia_mac_address "00:1e:52:c6:3e:7a" \
                                       ul_mac_address "" \

@@ -243,7 +243,7 @@ ad_proc -private hf_ip_id_exists_q {
 } {
     set ip_id_exists_p 0
     if { [qf_is_natural_number_p $ip_id] } {
-        set ip_id_exists_p 1 [db_0or1row ip_id_exists_q {
+        set ip_id_exists_p [db_0or1row ip_id_exists_q {
             select ip_id 
             from hf_ip_addresses 
             where instance_id=:instance_id 
@@ -261,7 +261,7 @@ ad_proc -private hf_ni_id_exists_q {
 } {
     set ni_id_exists_p 0
     if { [qf_is_natural_number_p $ni_id] } {
-        set ni_id_exists_p 1 [db_0or1row ni_id_exists_q {
+        set ni_id_exists_p [db_0or1row ni_id_exists_q {
             select ni_id 
             from hf_network_interfaces 
             where instance_id=:instance_id 
@@ -501,6 +501,8 @@ ad_proc -private hf_asset_attribute_map_create {
             ns_log Notice "hf_asset_attribute_map_create.492: f_id ${f_id} sub_f_id ${sub_f_id} sub_sort_order ${sub_sort_order}"
             db_dml hf_asset_attribute_map_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
+        } else {
+            ns_log Notice "hf_asset_attribute_map_create.505: sub_asset_type_id '${sub_asset_type_id}' cannot be dependent of type_id '${type_id}'"
         }
     }
     return $sub_f_id
@@ -610,6 +612,8 @@ ad_proc -private hf_assets_map_create {
             db_dml hf_assets_map_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
         }
+    } else {
+            ns_log Notice "hf_assets_map_create.614: sub_asset_type_id '${sub_asset_type_id}' cannot be dependent of type_id '${type_id}'"
     }
     return $success_p
 }
@@ -662,6 +666,8 @@ ad_proc -private hf_attributes_map_create {
             ns_log Notice "hf_attributes_map_create.652: f_id '${f_id}' sub_f_id '${sub_f_id}' sub_sort_order '${sub_sort_order}'"
             db_dml hf_attributes_map_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
+        } else {
+            ns_log Notice "hf_attributes_map_create.666: sub_asset_type_id '${sub_asset_type_id}' cannot be dependent of type_id '${type_id}'"
         }
     }
     return $sub_f_id
@@ -743,6 +749,8 @@ ad_proc -private hf_sub_asset_map_update {
     } elseif { $sub_f_id_attr_p } {
         # case 2
         set sub_f_id_new [hf_attribute_map_update $sub_f_id]
+    } else {
+        ns_log Warning "hf_sub_asset_map_update.747: case not found for f_id '${f_id}' sub_f_id '${sub_f_id}'"
     }
     return $sub_f_id_new
 }
@@ -1199,6 +1207,7 @@ ad_proc -private hf_types_allowed_by {
             set y_list [list ni ua ns]
         }
         ua {
+            set y_list [list ss vh ns]
         }
         default {
             ns_log Warning "hf_types_allowed_by.534: unknown asset_type_id '${asset_type_id}'"
