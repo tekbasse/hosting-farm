@@ -447,9 +447,6 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                         array unset ua_arr
                         incr ua_atc
 
-                        unset asset_arr
-                        incr ac
-
                         # add vh asset + ua
                         # First, create vh asset
                         set randlabel [hf_domain_example]
@@ -485,6 +482,9 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
 
                         unset vh_arr
                         incr vm_atc
+                        unset asset_arr
+                        incr ac
+
                     }
                     3 {
                         # add ss + ua asset to a vh attribute + ua
