@@ -97,9 +97,27 @@ aa_register_case -cats {api smoke} assets_sys_build_api_check {
             # delete everything below a hw
             # verify
 
-            # ac= asset counter
+            # ac = asset count
+            # dc_atc, atc3, atc4, ua_atc = attribute counts
+            # dc_atc = dc primary attribute count
+            # ip_atc = ip attribute counts
+            # ni_atc = ni attribute counts
+            # ua_atc = ns + ua attribute counts
+            # ss_tc 
+
             set ac 0
-            set atc2 0
+            # atc# = attribute counter
+            set dc_atc 0
+            set hw_atc 0
+            set vh_atc 0
+            set vm_atc 0
+            set ip_atc 0
+            set ni_atc 0
+            set ua_atc 0
+            set ss_atc 0
+            set ns_atc 0
+
+
 
             set domain [hf_domain_example]
             set asset_type_id "dc"
@@ -117,7 +135,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.113: asset_arr(label) $asset_arr(
                                      details "This is for api test"]
 ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(label)"
             set asset_arr(${asset_type_id}_id) [hf_dc_write asset_arr]
-            incr atc2
+            incr dc_atc
             set a_larr(${ac}) [array get asset_arr]
             ns_log Notice "hosting-farm-test-api-procs.tcl.116: dci(0) '$dci(0)'"
             array unset asset_arr
@@ -137,16 +155,12 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                                      description "[string toupper ${asset_type_id}]${ac}" \
                                      details "This is for api test"]
             set asset_arr(${asset_type_id}_id) [hf_dc_write asset_arr]
-            incr atc2
+            incr dc_atc
             set a_larr(${ac}) [array get asset_arr]
 
             ns_log Notice "hosting-farm-test-api-procs.tcl.116: dci(1) '$dci(1)'"
             array unset asset_arr
             incr ac
-            # atc# = attribute counter
-            set atc3 0
-            set atc4 0
-            set atc5 0
 
             while { $ac < 15 } {
                               
@@ -171,40 +185,41 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
 
                 # add dc primary attribute
                 array set asset_arr [list \
-                                         sub_label $label \
+                                         sub_label $asset_arr(label) \
                                          system_name [ad_generate_random_string] \
                                          backup_sys $backup_sys \
                                          os_id [randomRange $osc] \
                                          description "[string toupper ${asset_type_id}]${ac}" \
                                          details "This is for api test"]
                 set asset_arr(${asset_type_id}_id) [hf_hw_write asset_arr]
+                incr hw_atc
 
                 set a_larr(${ac}) [array get asset_arr]
 
 
                 # add ip
-                set ipv6_suffix [expr { $atc3 + 7334 } ]
+                set ipv6_suffix [expr { $ip_atc + 7334 } ]
                 array set ip_arr [list \
                                       f_id $asset_arr(f_id) \
                                       sub_label "eth0" \
                                       ip_id "" \
-                                      ipv4_addr "198.51.100.${atc3}" \
+                                      ipv4_addr "198.51.100.${ip_atc}" \
                                       ipv4_status "1" \
                                       ipv6_addr "2001:0db8:85a3:0000:0000:8a2e:0370:${ipv6_suffix}" \
                                       ipv6_status "1"]
                 set ip_arr(ip_id) [hf_ip_write ip_arr]
                 lappend ip_id_list $ip_arr(ip_id)
 
-                set ip_larr(${atc3}) [array get ip_arr]
+                set ip_larr(${ip_atc}) [array get ip_arr]
 
                 # delayed unset ip_arr. See below
-                incr atc3
+                incr ip_atc
 
 
                 # add ni
                 array set ni_arr [list \
                                       f_id $asset_arr(f_id) \
-                                      sub_label "NIC-${atc3}" \
+                                      sub_label "NIC-${ip_atc}" \
                                       os_dev_ref "io1" \
                                       bia_mac_address "00:1e:52:c6:3e:7a" \
                                       ul_mac_address "" \
@@ -213,10 +228,10 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                 set ni_arr(ni_id) [hf_ni_write ni_arr]
                 lappend ni_id_list $ni_arr(ni_id)
                 
-                set ni_larr(${atc4}) [array get ni_arr]
+                set ni_larr(${ni_atc}) [array get ni_arr]
 
                 array unset ni_arr
-                incr atc4
+                incr ni_atc
 
                 # add a ns
                 array set ns_arr [list \
@@ -226,10 +241,10 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                 set ns_arr(ns_id) [hf_ns_write ns_arr]
                 lappend ns_id_list $ns_arr(ns_id)
                 
-                set ns_larr(${atc5}) [array get ns_arr]
+                set ns_larr(${ns_atc}) [array get ns_arr]
 
                 array unset ns_arr
-                incr atc5
+                incr ns_atc
 
                 # delayed unset ip_arr, so info could be used in ns_arr
                 array unset ip_arr
@@ -243,10 +258,10 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                                       up "test" ]
                 set ua_arr(ua_id) [hf_user_add ua_arr]
 
-                lappend ua_larr(${atc5}) [array get ua_arr]
+                lappend ua_larr(${ua_atc}) [array get ua_arr]
 
                 array unset ua_arr
-                incr atc5
+                incr ua_atc
 
                 array set ua_arr [list \
                                       f_id $asset_arr(f_id) \
@@ -256,10 +271,10 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                                       up "test" ]
                 set ua_arr(ua_id) [hf_user_add ua_arr]
 
-                lappend ua_larr(${atc5}) [array get ua_arr]
+                lappend ua_larr(${ua_atc}) [array get ua_arr]
 
                 array unset ua_arr
-                incr atc5
+                incr ua_atc
 
                 ns_log Notice "hosting-farm-test-api-procs.tcl.237: ac ${ac}"
                 array unset asset_arr
@@ -271,13 +286,6 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
 
             #
             # test api results against creation data
-            # ac = asset count
-            # atc2, atc3, atc4, atc5 = attribute counts
-            # atc2 = dc primary attribute count
-            # atc3 = ip attribute counts
-            # atc4 = ni attribute counts
-            # atc5 = ns + ua attribute counts
-
 
             set dc0_f_id_list [hf_asset_subassets_cascade $dci(0)]
             set dc0_f_id_list_len [llength $dc0_f_id_list]
@@ -288,7 +296,8 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
             #ns_log Notice "hosting-farm-test-api-procs.tcl.261: dc0_f_id_list '${dc0_f_id_list}' dc1_f_id_list '${dc1_f_id_list}'"
             aa_equals "Assets total created" $asset_tot $ac 
 
-            set atcn [expr { $atc2 + $atc3 + $atc4 + $atc5 } ]
+            set atcn [expr { $dc_atc + $hw_atc + $vh_atc + $vm_atc + $ip_atc + $ni_atc + $ua_atc + $ss_atc + $ns_atc } ]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.261: atc dc $dc_atc hw $hw_atc vm $vm_atc vh $vh_atc ip $ip_atc ni $ni_atc ua $ua_atc ss $ss_atc ns $ns_atc"
             set dc0_sub_f_id_list [hf_asset_attributes_cascade $dci(0)]
             set dc1_sub_f_id_list [hf_asset_attributes_cascade $dci(1)]
             set dc0_sub_f_id_list_len [llength $dc0_sub_f_id_list]
@@ -355,6 +364,7 @@ aa_register_case -cats {api smoke} assets_sys_populate_api_check {
                                                  name "${domain} ${asset_type_id} asset + ua" \
                                                  user_id $sysowner_user_id ]
                         set asset_arr(f_id) [hf_asset_create asset_arr ]
+
                         array set asset_arr [list \
                                                  domain_name $domain \
                                                  os_id [randomRange $osc] \
@@ -364,7 +374,7 @@ aa_register_case -cats {api smoke} assets_sys_populate_api_check {
                                                  details "generated by hosting-farm-test-api-procs.tcl" ]
                         set asset_arr(vm_id) [hf_vm_write asset_arr]
                         set a_larr(${ac}) [array get asset_arr]
-                        incr ac
+
                         
                         array set ua_arr [list \
                                               f_id $asset_arr(f_id) \
@@ -372,11 +382,13 @@ aa_register_case -cats {api smoke} assets_sys_populate_api_check {
                                               up [ad_generate_random_string]]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                        lappend ua_larr(${atc5}) [array get ua_arr]
+                        lappend ua_larr(${ua_atc}) [array get ua_arr]
 
                         array unset ua_arr
-                        incr atc5
+                        incr ua_atc
 
+                        incr ac
+                        incr vm_atc
                         unset asset_arr
                     }
                     1 {
@@ -399,7 +411,7 @@ aa_register_case -cats {api smoke} assets_sys_populate_api_check {
                                                  details "generated by hosting-farm-test-api-procs.tcl" ]
                         set asset_arr(vm_id) [hf_vm_write asset_arr]
                         set a_larr(${ac}) [array get asset_arr]
-                        incr ac
+
                         set user_count [expr { [randomRange 5] + 1 } ]
                         for { set i 0} {$i < $user_count} {incr i} {
                             array set ua_arr [list \
@@ -408,11 +420,14 @@ aa_register_case -cats {api smoke} assets_sys_populate_api_check {
                                                   up [ad_generate_random_string]]
                             set ua_arr(ua_id) [hf_user_add ua_arr]
                             
-                            lappend ua_larr(${atc5}) [array get ua_arr]
+                            lappend ua_larr(${ua_atc}) [array get ua_arr]
                             
                             array unset ua_arr
-                            incr atc5
+                            incr ua_atc
                         }
+
+                        incr ac
+                        incr vm_atc
                         unset asset_arr
                     }
                     2 {
@@ -434,7 +449,7 @@ aa_register_case -cats {api smoke} assets_sys_populate_api_check {
                                                  details "switch 2, generated by hosting-farm-test-api-procs.tcl" ]
                         set asset_arr(vm_id) [hf_vm_write asset_arr]
                         set a_larr(${ac}) [array get asset_arr]
-                        incr ac
+
                         
                         array set ua_arr [list \
                                               f_id $asset_arr(f_id) \
@@ -442,10 +457,13 @@ aa_register_case -cats {api smoke} assets_sys_populate_api_check {
                                               up [ad_generate_random_string]]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                        lappend ua_larr(${atc5}) [array get ua_arr]
+                        lappend ua_larr(${ua_atc}) [array get ua_arr]
 
                         array unset ua_arr
-                        incr atc5
+                        incr ua_atc
+
+                        unset asset_arr
+                        incr ac
 
                         # add vh asset + ua
                         # First, create vh asset
@@ -460,7 +478,7 @@ aa_register_case -cats {api smoke} assets_sys_populate_api_check {
                         array set vh_arr [list \
                                               domain_name $randlabel \
                                               details "switch 2, generated by hosting-farm-test-api-procs.tcl" ]
-                        set vh_arr(vh_id) [hf_vh_write vh-arr ]
+                        set vh_arr(vh_id) [hf_vh_write vh_arr ]
                         set a_larr(${ac}) [array get asset_arr]
                         incr ac
 
@@ -474,15 +492,14 @@ aa_register_case -cats {api smoke} assets_sys_populate_api_check {
                                               up [ad_generate_random_string]]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                        lappend ua_larr(${atc5}) [array get ua_arr]
+                        lappend ua_larr(${ua_atc}) [array get ua_arr]
 
                         array unset ua_arr
-                        incr atc5
+                        incr ua_atc
 
 
-                        unset asset_arr
                         unset vh_arr
-
+                        incr vm_atc
                     }
                     3 {
                         # add ss + ua asset to a vh attribute + ua
@@ -499,8 +516,8 @@ aa_register_case -cats {api smoke} assets_sys_populate_api_check {
                         array set vh_arr [list \
                                               domain_name $randlabel \
                                               details "switch 2, generated by hosting-farm-test-api-procs.tcl" ]
-                        set vh_arr(vh_id) [hf_vh_write vh-arr ]
-                        set a_larr(${ac}) [array get asset_arr]
+                        set vh_arr(vh_id) [hf_vh_write vh_arr ]
+                        set a_larr(${ac}) [array get vh_arr]
                         incr ac
 
                         array set ua_arr [list \
@@ -509,20 +526,53 @@ aa_register_case -cats {api smoke} assets_sys_populate_api_check {
                                               up [ad_generate_random_string]]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                        lappend ua_larr(${atc5}) [array get ua_arr]
+                        lappend ua_larr(${ua_atc}) [array get ua_arr]
 
                         array unset ua_arr
-                        incr atc5
+                        incr ua_atc
 
                         # create ss and ua asset
-##code
 
-                        # link ua asset to vh asset
-                        hf_sub_asset_map_update $vh_arr(f_id) vh $ua_arr(f_id) ua 0
+                        array set ss_arr [array get vh_arr]
+                        set ss_arr(asset_type_id) "ss"
+                        append ss_arr(label) "-gold"
+                        set ss_arr(f_id) [hf_asset_create ss_arr]
+
+                        array set ss_arr [list \
+                                              server_name $ss_arr(label) \
+                                              service_name "gold" \
+                                              daemon_ref "au" \
+                                              protocol "http/2" \
+                                              port [randRange 65535] \
+                                              ss_type "gold type" \
+                                              ss_subtype "198" \
+                                              ss_undersubtype "+1" \
+                                              ss_ultrasubtype "1337K" \
+                                              config_uri "/usr/etc/au.conf" \
+                                              memory_bytes "65535" ]
+                        set ss_arr(ss_id) [hf_ss_write ss_arr]
+                        set a_larr(${ac}) [array get ss_arr]
 
 
+                        array set ua_arr [list \
+                                              f_id $ss_arr(f_id) \
+                                              ua "user1" \
+                                              up [ad_generate_random_string]]
+                        set ua_arr(ua_id) [hf_user_add ua_arr]
+                        
+                        lappend ua_larr(${ua_atc}) [array get ua_arr]
 
+                        array unset ua_arr
+                        incr ua_atc
+
+                        # link ss asset to vh asset
+                        hf_sub_asset_map_update $vh_arr(f_id) vh $ss_arr(f_id) ss 0
+
+
+                        unset ss_arr
                         unset vh_arr
+                        incr ss_atc
+                        incr ac                                          
                     }
                     4 {
                         # add ss + ua to a vm attribute
