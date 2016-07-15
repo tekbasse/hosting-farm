@@ -738,6 +738,8 @@ ad_proc -private hf_vh_write {
         set vh_id $vh_id_new
         db_dml vh_asset_create "insert into hf_vhosts \
  ([hf_vh_keys ","]) values ([hf_vh_keys ",:"])"
+    } else {
+        ns_log Warning "hf_vh_write: rejected '[array get arr_name]'"
     }
     return $vh_id_new
 }
@@ -771,6 +773,8 @@ ad_proc -private hf_dc_write {
         set dc_id $dc_id_new
         db_dml dc_asset_create "insert into hf_data_centers \
  ([hf_dc_keys ","]) values ([hf_dc_keys ",:"])"
+    } else {
+        ns_log Warning "hf_dc_write: rejected '[array get arr_name]'"
     }
     return $dc_id_new
 }
@@ -805,6 +809,8 @@ ad_proc -private hf_hw_write {
         set hw_id $hw_id_new
         db_dml hw_asset_create "insert into hf_hardware \
  ([hf_hw_keys ","]) values ([hf_hw_keys ",:"])"
+    } else {
+        ns_log Warning "hf_hw_write: rejected '[array get arr_name]'"
     }
     return $hw_id_new
 }
@@ -838,6 +844,8 @@ ad_proc -private hf_vm_write {
         set vm_id $vm_id_new
         db_dml vm_asset_create "insert into hf_virtual_machines \
  ([hf_vm_keys ","]) values ([hf_vm_keys ",:"])"
+    } else {
+        ns_log Warning "hf_vm_write: rejected '[array get arr_name]'"
     }
     return $vm_id_new
 }
@@ -912,7 +920,7 @@ ad_proc -private hf_ip_write {
         set type_id $asset_type_id
     }
     set sub_type_id "ip"
-hf_sub_label_define_empty
+    hf_sub_label_define_empty
     set attribute_p [qf_is_true $attribute_p 1]
     set sub_f_id $ip_id
     set ip_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
@@ -921,6 +929,8 @@ hf_sub_label_define_empty
         set ip_id $ip_id_new
         db_dml ip_asset_create "insert into hf_ip_addresses \
  ([hf_ip_keys ","]) values ([hf_ip_keys ",:"])"
+    } else {
+        ns_log Warning "hf_ip_write: rejected '[array get arr_name]'"
     }
     return $ip_id_new
 }
@@ -946,13 +956,15 @@ ad_proc -private hf_ni_write {
         set type_id $asset_type_id
     }
     set sub_type_id "ni"
-hf_sub_label_define_empty
+    hf_sub_label_define_empty
     set sub_f_id $ni_id
     set ni_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
     if { $ni_id_new ne "" } {
         # record revision/new
         set ni_id $ni_id_new
         db_dml ni_asset_create "insert into hf_network_interfaces ([hf_ni_keys ","]) values ([hf_ni_keys ",:"])"
+    } else {
+        ns_log Warning "hf_ni_write: rejected '[array get arr_name]'"
     }
     return $ni_id_new
 }
@@ -1019,6 +1031,8 @@ ad_proc -private hf_ns_write {
         set ns_id $ns_id_new
         db_dml ns_asset_create "insert into hf_ns_records \
  ([hf_ns_keys ","]) values ([hf_ns_keys ",:"])"
+    } else {
+        ns_log Warning "hf_ns_write: rejected '[array get arr_name]'"
     }
     return $ns_id_new
 }

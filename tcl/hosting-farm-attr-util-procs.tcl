@@ -1189,7 +1189,14 @@ ad_proc -private hf_types_allowed_by {
         ss { 
             set y_list [list ns ua]
         }
+        ni { 
+            set y_list [list ns ua ip]
+        }
+        ns {
+            set y_list [list ni ua ip]
+        }
         ip {
+            set y_list [list ni ua ns]
         }
         ua {
         }
