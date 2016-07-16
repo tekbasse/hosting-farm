@@ -989,7 +989,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                         
 
                         set asset_type_id "ua"
-                        set i_count [randomRange]
+                        set i_count [randomRange 200]
                         incr $i_count 100
                         for {set i 0} {$i < $i_count} {incr i} {
                             array set ua_arr [list \
