@@ -1157,7 +1157,7 @@ ad_proc -private hf_user_add {
             set sub_f_id_new [hf_ua_write $ua $connection_type $ua_id $up]
             set nowts [dt_systime -gmt 1]
             if { $sub_f_id_exists_p && $sub_f_id_new ne "" } {
-                db_dml ss_sub_asset_map_update { update hf_sub_asset_map
+                db_dml hfua_sub_asset_map_update { update hf_sub_asset_map
                     set sub_f_id=:sub_f_id_new,
                     last_updated=:nowts
                     where f_id=:f_id 
@@ -1167,13 +1167,15 @@ ad_proc -private hf_user_add {
                 set sub_sort_order [expr { $ct * 20 } ]
                 set last_updated $nowts
                 # translate api conventions to internal map refs
-                db_dml ss_sub_asset_map_create "insert into hf_sub_asset_map \
+                db_dml hfua_sub_asset_map_create "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
             } 
         }
     }
     return $sub_f_id_new
 }
+
+
 
 ad_proc -private hf_ua_write {
     ua
@@ -1193,12 +1195,16 @@ ad_proc -private hf_ua_write {
     if { [hf_are_visible_characters_q $ua ] } {    
         set log_p 0
         set id_exists_p 0
+        set ua_id_new ""
 
         # validation and limits
         set connection_type [string range $connection_type 0 23]
 
         set mystify_proc [parameter::get -package_id $instance_id -parameter MystifyProc -default hf_mystify]
         set sdetail [safe_eval [list ${mystify_proc} $ua]]
+
+        # hf_sub_asset_map_update internal convention is not fit for purpose with hf_ua and friends.
+
         if { $ua_id ne "" } {
             # update
             # does ua_id exist?
@@ -1220,11 +1226,11 @@ ad_proc -private hf_ua_write {
         }
         if { !$id_exists_p } {
             # create
-            set ua_id [db_nextval hf_id_seq]
+            set ua_id_new [db_nextval hf_id_seq]
             db_dml hf_ua_create {insert into hf_ua (instance_id,ua_id,details,connection_type) 
-                values (:instance_id,:ua_id,:sdetail,:connection_type)}
+                values (:instance_id,:ua_id_new,:sdetail,:connection_type)}
             if { $up ne "" } {
-                set not_log_p [hf_up_write $ua_id $up $instance_id]
+                set not_log_p [hf_up_write $ua_id_new $up $instance_id]
             }
         }
         if { $log_p } {
@@ -1235,7 +1241,7 @@ New ua '${details}' created by user_id ${user_id} \
 called with blank instance_id."
             } else {
                 ns_log Warning "hf_ua_write(2513): Poor call. \
-New ua '${details}' with ua_id ${ua_id} created without a connection \
+New ua '${details}' with ua_id ${ua_id} ua_id_new '${ua_id_new}' created without a connection \
 and called with blank instance_id."
             }
         }

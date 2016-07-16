@@ -470,7 +470,10 @@ ad_proc -private hf_asset_attribute_map_create {
     set type_id [hf_asset_type_id_of_asset_id $f_id]
     if { $type_id ne "" } {
         set allowed_sub_type_id_list [hf_types_allowed_by $type_id]
-        if { $sub_asset_type_id in $allowed_sub_type_id_list } {
+        # have to also check for case where an asset type assigns primary attribute (of same type):
+        set sub_asset_types_list [hf_asset_attributes_by_type_cascade $f_id $sub_asset_type_id]
+        set sub_asset_types_count [llength $sub_asset_types_list]
+        if { $sub_asset_type_id in $allowed_sub_type_id_list || ( $sub_asset_types_count == 0 && $type_id eq $sub_asset_type_id ) } {
             set sub_type_id $sub_asset_type_id
             set sub_sort_order [hf_asset_cascade_count $f_id]
             if { $sub_type_id eq $type_id && $sub_label eq "" } {
@@ -1180,6 +1183,7 @@ ad_proc -private hf_types_allowed_by {
     # explicitly stated. See proc hf_asset_type_id_list
     # y for yes
     # n for no
+
     set y_list [list ]
     switch -exact -- $asset_type_id {
         dc {
