@@ -164,7 +164,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
 
             while { $ac < 15 } {
                               
-
+                # create hw asset
                 set backup_sys [qal_namelur 1 2 ""]
                 set asset_type_id "hw"
                 set randlabel "${asset_type_id}-${backup_sys}-[qal_namelur 1 3 "-"]"
@@ -183,7 +183,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                 ns_log Notice "hosting-farm-test-api-procs.tcl.182: dc_ref $dc_ref"
                 lappend hw_id_larr(${dc_ref}) $asset_arr(f_id)
 
-                # add dc primary attribute
+                # add hw primary attribute
                 array set asset_arr [list \
                                          sub_label $asset_arr(label) \
                                          system_name [ad_generate_random_string] \
@@ -640,7 +640,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                     5 {
                         # add ss asset + ua*N (asterix, wiki, db)
                         set randlabel [hf_domain_example]
-                        set randtype [lindex [list [list asterix wiki db crm] [randomRange 2]]]
+                        set randtype [lindex [list asterix wiki db crm] [randomRange 3]]
                         append randlabel - $randtype
                         set asset_type_id "ss"
                         array set ss_arr [list \
@@ -688,17 +688,162 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                         incr ac
 
                     }
-                    6 {
-                        # add hw asset + ua  as colo unit
-                    }
-                    7 {
-                        # add hw asset + ua  as rasp. pi
-                    }
-                    8 {
-                        # add hw asset + ua  as linux box
+                    6,7,8 {
+                        # add hw asset + ua  as colo unit botbox etc.
+                        
+                        set randlabel [hf_domain_example]
+                        set randtype [lindex [list "botbox" "raspPi" "linuxBox" "BSDbox" "blackbox" "arduino"] [randomRange 5]]
+                        append randlabel - $randtype
+                        set asset_type_id "hw"
+                        array set ss_arr [list \
+                                              asset_type_id ${asset_type_id} \
+                                              label $randlabel \
+                                              name "${randlabel} test ${asset_type_id} $ac" \
+                                              user_id $sysowner_user_id ]
+                        set ss_arr(f_id) [hf_asset_create ss_arr]
+                        # link asset to hw_id
+                        hf_sub_asset_map_update $hf_asset_id hw $asset_arr(f_id) $asset_type_id 0
+                        
+                        # add hw primary attribute
+                        array set asset_arr [list \
+                                                 sub_label $asset_arr(label) \
+                                                 system_name [ad_generate_random_string] \
+                                                 backup_sys "n/a" \
+                                                 os_id ${randtype} \
+                                                 description "[string toupper ${asset_type_id}]${ac}" \
+                                                 details "This is for api test"]
+                        set asset_arr(${asset_type_id}_id) [hf_hw_write asset_arr]
+                        incr hw_atc
+
+                        set a_larr(${ac}) [array get asset_arr]
+
+
+                        # add ip
+                        set ipn [expr { int( fmod( $ip_atc, 256) ) } ]
+                        set ipn2 [expr { int( $ip_atc / 256 ) } ]
+                        set ipv6_suffix [format %x [expr { int( fmod( $ip_atc, 65535 ) ) } ]]
+                        set hw_atc_f [format %x $hw_atc]
+                        array set ip_arr [list \
+                                              f_id $asset_arr(f_id) \
+                                              sub_label "eth0" \
+                                              ip_id "" \
+                                              ipv4_addr "10.0.${ipn2}.${ipn}" \
+                                              ipv4_status "1" \
+                                              ipv6_addr "2001:0db8:85a3:0000:0000:8a2e:${hw_atc_f}:${ipv6_suffix}" \
+                                              ipv6_status "1"]
+                        set ip_arr(ip_id) [hf_ip_write ip_arr]
+                        lappend ip_id_list $ip_arr(ip_id)
+
+                        set ip_larr(${ip_atc}) [array get ip_arr]
+
+                        # delayed unset ip_arr. See below
+                        incr ip_atc
+
+
+                        # add ni
+                        array set ni_arr [list \
+                                              f_id $asset_arr(f_id) \
+                                              sub_label "NIC-${ni_atc}" \
+                                              os_dev_ref "io1" \
+                                              bia_mac_address "00:1e:52:c6:3e:7a" \
+                                              ul_mac_address "" \
+                                              ipv4_addr_range "10.00.${ipn2}.0/3" \
+                                              ipv6_addr_range "2001:db8:1234::/3" ]
+                        set ni_arr(ni_id) [hf_ni_write ni_arr]
+                        lappend ni_id_list $ni_arr(ni_id)
+                        
+                        set ni_larr(${ni_atc}) [array get ni_arr]
+
+                        array unset ni_arr
+                        incr ni_atc
+
+                        # add a ns
+                        array set ns_arr [list \
+                                              f_id $asset_arr(f_id) \
+                                              active_p "0" \
+                                              name_record "${domain}. A $ip_arr(ipv4_addr)" ]
+                        set ns_arr(ns_id) [hf_ns_write ns_arr]
+                        lappend ns_id_list $ns_arr(ns_id)
+                        
+                        set ns_larr(${ns_atc}) [array get ns_arr]
+
+                        array unset ns_arr
+                        incr ns_atc
+
+                        # delayed unset ip_arr, so info could be used in ns_arr
+                        array unset ip_arr
+
+                        # add two ua
+                        array set ua_arr [list \
+                                              f_id $asset_arr(f_id) \
+                                              ua "user1" \
+                                              connection_type "https" \
+                                              ua_id "" \
+                                              up "test" ]
+                        set ua_arr(ua_id) [hf_user_add ua_arr]
+
+                        lappend ua_larr(${ua_atc}) [array get ua_arr]
+
+                        array unset ua_arr
+                        incr ua_atc
+
+                        array set ua_arr [list \
+                                              f_id $asset_arr(f_id) \
+                                              ua "user2" \
+                                              connection_type "https" \
+                                              ua_id "" \
+                                              up "test" ]
+                        set ua_arr(ua_id) [hf_user_add ua_arr]
+
+                        lappend ua_larr(${ua_atc}) [array get ua_arr]
+
+                        array unset ua_arr
+                        incr ua_atc
+
+
+                        array unset asset_arr
+                        incr ac
+
+
                     }
                     9 {
                         # add ss asset as killer app
+                        set randlabel [hf_domain_example]
+                        set randtype [lindex [list killer sage web blog ] [randomRange 3]]
+                        append randlabel - $randtype
+                        set asset_type_id "ss"
+                        array set ss_arr [list \
+                                              asset_type_id ${asset_type_id} \
+                                              label $randlabel \
+                                              name "${randlabel} test ${asset_type_id} $ac" \
+                                              user_id $sysowner_user_id ]
+                        set ss_arr(f_id) [hf_asset_create ss_arr]
+                        # link asset to hw_id
+                        hf_sub_asset_map_update $hf_asset_id hw $asset_arr(f_id) $asset_type_id 0
+
+                        set rand [randomRange 65535]
+                        set user_count [randRange 25]
+
+                        array set ss_arr [list \
+                                              server_name $ss_arr(label) \
+                                              service_name "${randtype} app" \
+                                              daemon_ref ${randtype} \
+                                              protocol "http/3" \
+                                              port $rand \
+                                              ss_type "${randtype} type" \
+                                              ss_subtype NAFB \
+                                              ss_undersubtype "ColterStevens" \
+                                              ss_ultrasubtype "sourcecode" \
+                                              config_uri "/usr/etc/${randtype}.conf" \
+                                              memory_bytes "7:40A ORD" ]
+                        set ss_arr(ss_id) [hf_ss_write ss_arr]
+                        set a_larr(${ac}) [array get ss_arr]
+
+
+                        unset ss_arr
+                        incr ss_atc
+                        incr ac
+
                     }
                     10 {
                         # add hw network device to dc attr
@@ -712,10 +857,10 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                 
             }
 
-# evolve data
+            # evolve data
 
             ns_log Notice "aa_register_case.327: Begin test assets_sys_evolve_api_check"
-             aa_log "Test evolve DC assets and attributes"
+            aa_log "Test evolve DC assets and attributes"
 
             # update ua of each
             # verify ua of each
@@ -728,15 +873,15 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
             # verify
 
 
-# system clear DCs
+            # system clear DCs
 
 
             ns_log Notice "aa_register_case.327: Begin test assets_sys_clear_api_check"
-             aa_log "Clear 2 DCs of managed assets and attributes."
+            aa_log "Clear 2 DCs of managed assets and attributes."
 
             # delete everything below a hw
             # verify
 
 
-       }
+        }
 }
