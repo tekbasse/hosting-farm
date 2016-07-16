@@ -647,7 +647,7 @@ ad_proc -private hf_attributes_map_create {
     # maybe to help prevent cases of asset primary attribute morphology
     # being used in attribute-attribute inheritance --where
     # sub_label and asset.label are perhaps expected to be same.
-    
+    upvar 1 instance_id instance_id
     set sub_f_id ""
     set sub_label_new $sub_label
     set sam_list [hf_sub_asset $f_id]
