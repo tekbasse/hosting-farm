@@ -217,11 +217,17 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
 
 
                 # add ni
+                set i_list [list 0 1]
+                for {set i 0} {$i < 4} {incr i} {
+                    lappend i_list [format %x [randRange 255]]
+                }
+                set biamac [join $i_list ":"]
+
                 array set ni_arr [list \
                                       f_id $asset_arr(f_id) \
                                       sub_label "NIC-${ni_atc}" \
                                       os_dev_ref "io1" \
-                                      bia_mac_address "00:1e:52:c6:3e:7a" \
+                                      bia_mac_address ${biamac} \
                                       ul_mac_address "" \
                                       ipv4_addr_range "198.51.100.0/24" \
                                       ipv6_addr_range "2001:db8:1234::/48" ]
@@ -741,11 +747,17 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
 
 
                         # add ni
+                        set i_list [list 0 ]
+                        for {set i 0} {$i < 5} {incr i} {
+                            lappend i_list [format %x [randRange 255]]
+                        }
+                        set biamac [join $i_list ":"]
+
                         array set ni_arr [list \
                                               f_id $asset_arr(f_id) \
                                               sub_label "NIC-${ni_atc}" \
                                               os_dev_ref "io1" \
-                                              bia_mac_address "00:1e:52:c6:3e:7a" \
+                                              bia_mac_address ${biamac} \
                                               ul_mac_address "" \
                                               ipv4_addr_range "10.00.${ipn2}.0/3" \
                                               ipv6_addr_range "2001:db8:1234::/3" ]
@@ -847,9 +859,164 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                     }
                     10 {
                         # add hw network device to dc attr
+
+                        set randlabel [hf_domain_example]
+                        set randtype [lindex [list "switch" "firewall" "fiber" "satlink" "laser" "cylon"] [randomRange 5]]
+                        append randlabel - $randtype
+                        set asset_type_id "hw"
+                        
+                        # add hw primary attribute
+                        array set attr_arr [list \
+                                                 f_id $hf_asset_id \
+                                                 type_id hw \
+                                                 sub_label $asset_arr(label) \
+                                                 system_name [ad_generate_random_string] \
+                                                 backup_sys "n/a" \
+                                                 os_id ${randtype} \
+                                                 description "[string toupper ${asset_type_id}]${ac}" \
+                                                 details "This is for api test"]
+                        set attr_arr(f_id) [hf_hw_write attr_arr]
+                        incr hw_atc
+
+                        set a_larr(${ac}) [array get attr_arr]
+
+
+                        # add ip
+                        set ipn [expr { int( fmod( $ip_atc, 256) ) } ]
+                        set ipn2 [expr { int( $ip_atc / 256 ) } ]
+                        set ipv6_suffix [format %x [expr { int( fmod( $ip_atc, 65535 ) ) } ]]
+                        set hw_atc_f [format %x $hw_atc]
+                        array set ip_arr [list \
+                                              f_id $attr_arr(f_id) \
+                                              sub_label "eth20" \
+                                              ip_id "" \
+                                              ipv4_addr "10.0.${ipn2}.${ipn}" \
+                                              ipv4_status "1" \
+                                              ipv6_addr "2001:0db8:85a3:0000:0000:8a2e:${hw_atc_f}:${ipv6_suffix}" \
+                                              ipv6_status "0"]
+                        set ip_arr(ip_id) [hf_ip_write ip_arr]
+                        lappend ip_id_list $ip_arr(ip_id)
+
+                        set ip_larr(${ip_atc}) [array get ip_arr]
+
+                        # delayed unset ip_arr. See below
+                        incr ip_atc
+
+
+                        # add ni
+                        set i_list [list ]
+                        for {set i 0} {$i < 6} {incr i} {
+                            lappend i_list [format %x [randRange 255]]
+                        }
+                        set biamac [join $i_list ":"]
+                        array set ni_arr [list \
+                                              f_id $attr_arr(f_id) \
+                                              sub_label "NIC-${ni_atc}" \
+                                              os_dev_ref "io1" \
+                                              bia_mac_address ${biamac} \
+                                              ul_mac_address "" \
+                                              ipv4_addr_range "10.00.${ipn2}.0/3" \
+                                              ipv6_addr_range "2001:db8:1234::/3" ]
+                        set ni_arr(ni_id) [hf_ni_write ni_arr]
+                        lappend ni_id_list $ni_arr(ni_id)
+                        
+                        set ni_larr(${ni_atc}) [array get ni_arr]
+
+                        array unset ni_arr
+                        incr ni_atc
+
+                        # add a ns
+                        array set ns_arr [list \
+                                              f_id $attr_arr(f_id) \
+                                              active_p "0" \
+                                              name_record "${domain}. A $ip_arr(ipv4_addr)" ]
+                        set ns_arr(ns_id) [hf_ns_write ns_arr]
+                        lappend ns_id_list $ns_arr(ns_id)
+                        
+                        set ns_larr(${ns_atc}) [array get ns_arr]
+
+                        array unset ns_arr
+                        incr ns_atc
+
+                        # delayed unset ip_arr, so info could be used in ns_arr
+                        array unset ip_arr
+
+                        # add two ua
+                        array set ua_arr [list \
+                                              f_id $attr_arr(f_id) \
+                                              ua "user1" \
+                                              connection_type "https" \
+                                              ua_id "" \
+                                              up "test" ]
+                        set ua_arr(ua_id) [hf_user_add ua_arr]
+
+                        lappend ua_larr(${ua_atc}) [array get ua_arr]
+
+                        array unset ua_arr
+                        incr ua_atc
+
+                        array set ua_arr [list \
+                                              f_id $attr_arr(f_id) \
+                                              ua "user2" \
+                                              connection_type "https" \
+                                              ua_id "" \
+                                              up "test" ]
+                        set ua_arr(ua_id) [hf_user_add ua_arr]
+
+                        lappend ua_larr(${ua_atc}) [array get ua_arr]
+
+                        array unset ua_arr
+                        incr ua_atc
+
+
+                        array unset attr_arr
+                        incr ac
+
+
                     }
                     11 {
-                        # add a vm asset + 1000 ua assets + multiple ns to ua Think domain leasing service
+                        # add a vm attr + 1000 ua assets + multiple ns to ua Think domain leasing service
+                        set domain [hf_domain_example]
+                        set asset_type_id "vm"
+
+                        array set asset_arr [list \
+                                                 f_id $hf_asset_id \
+                                                 type_id hw \
+                                                 domain_name $domain \
+                                                 os_id [randomRange $osc] \
+                                                 server_type "domainleasing" \
+                                                 resource_path "/var/www/${domain}" \
+                                                 mount_union "/vm/${domain}" \
+                                                 details "switch 11, generated by hosting-farm-test-api-procs.tcl" ]
+                        set asset_arr(vm_id) [hf_vm_write asset_arr]
+                        set a_larr(${ac}) [array get asset_arr]
+                        incr vm_atc
+                        
+
+                        set asset_type_id "ua"
+                        set i_count [randomRange]
+                        incr $i_count 100
+                        for {set i 0} {$i < $i_count} {incr i} {
+                            array set ua_arr [list \
+                                                  asset_type_id ${asset_type_id} \
+                                                  label $randlabel \
+                                                  name "${randlabel} test switch 11 ${asset_type_id} $ac" \
+                                                  user_id $sysowner_user_id ]
+                            set ua_arr(f_id) [hf_asset_create ua_arr]
+                            # link asset to hw_id
+                            hf_sub_asset_map_update $hf_asset_id hw $ua_arr(f_id) $asset_type_id 0
+                            array set ua_arr [list \
+                                                  f_id $ua_arr(f_id) \
+                                                  ua "user${i}" \
+                                                  up [ad_generate_random_string]]
+                            set ua_arr(ua_id) [hf_user_add ua_arr]
+                        
+                            lappend ua_larr(${ua_atc}) [array get ua_arr]
+                            
+                            array unset ua_arr
+                            incr ua_atc
+                            incr ac
+                        }
                         
                     }
 
