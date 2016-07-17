@@ -341,10 +341,11 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
             # vh asset as basic services, ua on each
             # hw asset as co-location,  rasberry pi, linux box, 
             set hw_asset_id_list [concat $hw_id_larr(0) $hw_id_larr(1) ]
-            foreach hf_asset_id $hw_asset_id_list {
+            foreach hw_asset_id $hw_asset_id_list {
                 set dice [randomRange 11]
                 switch -exact $dice {
                     0 {
+                        ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
                         # add vm asset + ua
                         set domain [hf_domain_example]
                         set asset_type_id "vm"
@@ -354,7 +355,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                                                  name "${domain} ${asset_type_id} asset + ua" \
                                                  user_id $sysowner_user_id ]
                         set asset_arr(f_id) [hf_asset_create asset_arr ]
-                        hf_sub_asset_map_update $hf_asset_id hw $asset_arr(f_id) $asset_type_id 0
+                        hf_sub_asset_map_update $hw_asset_id hw $asset_arr(label) $asset_arr(f_id) $asset_type_id 0
                         array set asset_arr [list \
                                                  domain_name $domain \
                                                  os_id [randomRange $osc] \
@@ -382,6 +383,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                         unset asset_arr
                     }
                     1 {
+                        ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
                         # add vm asset with multiple vh + ua
                         # add vm asset + ua
                         set domain [hf_domain_example]
@@ -393,7 +395,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                                                  user_id $sysowner_user_id ]
                         set asset_arr(f_id) [hf_asset_create asset_arr ]
                         # link asset to hw_id
-                        hf_sub_asset_map_update $hf_asset_id hw $asset_arr(f_id) $asset_type_id 0
+                        hf_sub_asset_map_update $hw_asset_id hw $asset_arr(label) $asset_arr(f_id) $asset_type_id 0
 
                         array set asset_arr [list \
                                                  domain_name $domain \
@@ -424,6 +426,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                         unset asset_arr
                     }
                     2 {
+                        ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
                         # add vh asset + ua to a vm attribute + ua
                         set domain [hf_domain_example]
                         set asset_type_id "vm"
@@ -434,7 +437,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                                                  user_id $sysowner_user_id ]
                         set asset_arr(f_id) [hf_asset_create asset_arr ]
                         # link asset to hw_id
-                        hf_sub_asset_map_update $hf_asset_id hw $asset_arr(f_id) $asset_type_id 0
+                        hf_sub_asset_map_update $hw_asset_id hw $asset_arr(label) $asset_arr(f_id) $asset_type_id 0
 
                         array set asset_arr [list \
                                                  domain_name $domain \
@@ -476,7 +479,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                         incr ac
 
                         # link assets
-                        hf_sub_asset_map_update $asset_arr(f_id) vm $vh_arr(f_id) vh 0
+                        hf_sub_asset_map_update $asset_arr(f_id) vm $vh_arr(label) $vh_arr(f_id) vh 0
 
 
                         array set ua_arr [list \
@@ -498,6 +501,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
 
                     }
                     3 {
+                        ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
                         # add ss + ua asset to a vh attribute + ua
                         
                         # First, create vh asset
@@ -505,7 +509,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                         set asset_type_id "vh"
 
                         array set vh_arr [list \
-                                              f_id $hf_asset_id \
+                                              f_id $hw_asset_id \
                                               domain_name $randlabel \
                                               details "switch 2, generated by hosting-farm-test-api-procs.tcl" ]
                         set vh_arr(vh_id) [hf_vh_write vh_arr ]
@@ -531,7 +535,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                         set ss_arr(f_id) [hf_asset_create ss_arr]
 
                         # link asset to vh_id
-                        hf_sub_asset_map_update $vh_arr(vh_id) vh $ss_arr(f_id) ss 0
+                        hf_sub_asset_map_update $vh_arr(vh_id) vh $ss_arr(label) $ss_arr(f_id) ss 0
 
                         array set ss_arr [list \
                                               server_name $ss_arr(label) \
@@ -568,6 +572,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                         incr ac                                          
                     }
                     4 {
+                        ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
                         # add ss + ua attribute to a vm 
                         set domain [hf_domain_example]
                         set asset_type_id "vm"
@@ -578,7 +583,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                                                  user_id $sysowner_user_id ]
                         set asset_arr(f_id) [hf_asset_create asset_arr ]
                         # link asset to hw_id
-                        hf_sub_asset_map_update $hf_asset_id hw $asset_arr(f_id) $asset_type_id 0
+                        hf_sub_asset_map_update $hw_asset_id hw $asset_arr(label) $asset_arr(f_id) $asset_type_id 0
 
                         array set asset_arr [list \
                                                  domain_name $domain \
@@ -638,6 +643,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                         incr ac
                     }
                     5 {
+                        ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
                         # add ss asset + ua*N (asterix, wiki, db)
                         set randlabel [hf_domain_example]
                         set randtype [lindex [list asterix wiki db crm] [randomRange 3]]
@@ -650,7 +656,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                                               user_id $sysowner_user_id ]
                         set ss_arr(f_id) [hf_asset_create ss_arr]
                         # link asset to hw_id
-                        hf_sub_asset_map_update $hf_asset_id hw $ss_arr(f_id) $asset_type_id 0
+                        hf_sub_asset_map_update $hw_asset_id hw $ss_arr(label) $ss_arr(f_id) $asset_type_id 0
 
                         set rand [randomRange 65535]
                         set user_count [randomRange 25]
@@ -689,6 +695,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
 
                     }
                     6,7,8 {
+                        ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
                         # add hw asset + ua  as colo unit botbox etc.
                         
                         set randlabel [hf_domain_example]
@@ -702,7 +709,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                                               user_id $sysowner_user_id ]
                         set hw_arr(f_id) [hf_asset_create hw_arr]
                         # link asset to hw_id
-                        hf_sub_asset_map_update $hf_asset_id hw $hw_arr(f_id) $asset_type_id 0
+                        hf_sub_asset_map_update $hw_asset_id hw $hw_arr(label) $hw_arr(f_id) $asset_type_id 0
                         
                         # add hw primary attribute
                         array set hw_arr [list \
@@ -813,6 +820,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
 
                     }
                     9 {
+                        ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
                         # add ss asset as killer app
                         set randlabel [hf_domain_example]
                         set randtype [lindex [list killer sage web blog ] [randomRange 3]]
@@ -825,7 +833,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                                               user_id $sysowner_user_id ]
                         set ss_arr(f_id) [hf_asset_create ss_arr]
                         # link asset to hw_id
-                        hf_sub_asset_map_update $hf_asset_id hw $ss_arr(f_id) $asset_type_id 0
+                        hf_sub_asset_map_update $hw_asset_id hw $ss_arr(label) $ss_arr(f_id) $asset_type_id 0
 
                         set rand [randomRange 65535]
                         set user_count [randomRange 25]
@@ -852,6 +860,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
 
                     }
                     10 {
+                        ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
                         # add hw network device to dc attr
 
                         set randlabel [hf_domain_example]
@@ -862,7 +871,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                         append randtype - $hw_atc
                         # add hw primary attribute
                         array set attr_arr [list \
-                                                f_id $hf_asset_id \
+                                                f_id $hw_asset_id \
                                                 type_id hw \
                                                 sub_label $label \
                                                 system_name [ad_generate_random_string] \
@@ -970,12 +979,13 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
 
                     }
                     11 {
+                        ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
                         # add a vm attr + 1000 ua assets + multiple ns to ua Think domain leasing service
                         set domain [hf_domain_example]
                         set asset_type_id "vm"
 
                         array set asset_arr [list \
-                                                 f_id $hf_asset_id \
+                                                 f_id $hw_asset_id \
                                                  type_id hw \
                                                  domain_name $domain \
                                                  os_id [randomRange $osc] \
@@ -999,7 +1009,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                                                   user_id $sysowner_user_id ]
                             set ua_arr(f_id) [hf_asset_create ua_arr]
                             # link asset to hw_id
-                            hf_sub_asset_map_update $hf_asset_id hw $ua_arr(f_id) $asset_type_id 0
+                            hf_sub_asset_map_update $hw_asset_id hw $ua_arr(label) $ua_arr(f_id) $asset_type_id 0
                             array set ua_arr [list \
                                                   f_id $ua_arr(f_id) \
                                                   ua "user${i}" \

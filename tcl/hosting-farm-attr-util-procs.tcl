@@ -473,8 +473,8 @@ ad_proc -private hf_asset_attribute_map_create {
         # have to also check for case where an asset type assigns primary attribute (of same type):
         set sub_asset_types_list [hf_asset_attributes_by_type_cascade $f_id $sub_asset_type_id]
         set sub_asset_types_count [llength $sub_asset_types_list]
+        set sub_type_id $sub_asset_type_id
         if { $sub_asset_type_id in $allowed_sub_type_id_list || ( $sub_asset_types_count == 0 && $type_id eq $sub_asset_type_id ) } {
-            set sub_type_id $sub_asset_type_id
             set sub_sort_order [hf_asset_cascade_count $f_id]
             if { $sub_type_id eq $type_id && $sub_label eq "" } {
                 # give it a label
@@ -655,6 +655,7 @@ ad_proc -private hf_attributes_map_create {
     set sub_label_new $sub_label
     set sam_list [hf_sub_asset $f_id]
     qf_lists_to_vars $sam_list [hf_sub_asset_map_keys]
+    set sub_type_id $sub_asset_type_id
     if { $sub_label ne "" && $sub_label ne $sub_label_new } {
         set allowed_sub_type_id_list [hf_types_allowed_by $type_id]
         if { $sub_asset_type_id in $allowed_sub_type_id_list } {
@@ -663,7 +664,6 @@ ad_proc -private hf_attributes_map_create {
             set sub_sort_order [expr { [hf_asset_cascade_count $f_id ] * 20 } ]
             set last_updated $nowts
             # translate api conventions to internal map refs
-            set sub_type_id $sub_asset_type_id
             set trashed_p 0
             set attribute_p 1
             ns_log Notice "hf_attributes_map_create.652: f_id '${f_id}' sub_f_id '${sub_f_id}' sub_sort_order '${sub_sort_order}'"
