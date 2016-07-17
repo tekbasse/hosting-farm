@@ -153,16 +153,8 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
             set ac 0
             # atc# = attribute counter
-            set audit_atc_arr(dc) 0
-            set audit_atc_arr(hw) 0
-            set audit_atc_arr(vh) 0
-            set audit_atc_arr(vm) 0
-            set audit_atc_arr(ip) 0
-            set audit_atc_arr(ni) 0
-            set audit_atc_arr(ua) 0
-            set audit_atc_arr(ss) 0
-            set audit_atc_arr(ns) 0
-            set audit_ac_arr [array get audit_atc_arr]
+            array set audit_atc_arr [array get audit_sam_zero_arr]
+            array set audit_ac_arr [array get audit_a_zero_arr]
 
 
             set domain [hf_domain_example]
@@ -251,14 +243,14 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                       f_id $asset_arr(f_id) \
                                       sub_label "eth0" \
                                       ip_id "" \
-                                      ipv4_addr "198.51.100.${audit_atc_arr(ip)}" \
+                                      ipv4_addr "198.51.100.$audit_atc_arr(ip)" \
                                       ipv4_status "1" \
                                       ipv6_addr "2001:0db8:85a3:0000:0000:8a2e:0370:${ipv6_suffix}" \
                                       ipv6_status "1"]
                 set ip_arr(ip_id) [hf_ip_write ip_arr]
                 lappend ip_id_list $ip_arr(ip_id)
 
-                set ip_larr(${audit_atc_arr(ip)}) [array get ip_arr]
+                set ip_larr($audit_atc_arr(ip)) [array get ip_arr]
 
                 # delayed unset ip_arr. See below
                 incr audit_atc_arr(ip)
@@ -273,7 +265,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
                 array set ni_arr [list \
                                       f_id $asset_arr(f_id) \
-                                      sub_label "NIC-${audit_atc_arr(ni)}" \
+                                      sub_label "NIC-$audit_atc_arr(ni)" \
                                       os_dev_ref "io1" \
                                       bia_mac_address ${biamac} \
                                       ul_mac_address "" \
@@ -282,7 +274,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                 set ni_arr(ni_id) [hf_ni_write ni_arr]
                 lappend ni_id_list $ni_arr(ni_id)
                 
-                set ni_larr(${audit_atc_arr(ni)}) [array get ni_arr]
+                set ni_larr($audit_atc_arr(ni)) [array get ni_arr]
 
                 array unset ni_arr
                 incr audit_atc_arr(ni)
@@ -295,7 +287,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                 set ns_arr(ns_id) [hf_ns_write ns_arr]
                 lappend ns_id_list $ns_arr(ns_id)
                 
-                set ns_larr(${audit_atc_arr(ns)}) [array get ns_arr]
+                set ns_larr($audit_atc_arr(ns)) [array get ns_arr]
 
                 array unset ns_arr
                 incr audit_atc_arr(ns)
@@ -312,7 +304,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                       up "test" ]
                 set ua_arr(ua_id) [hf_user_add ua_arr]
 
-                lappend ua_larr(${audit_atc_arr(ua)}) [array get ua_arr]
+                lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
 
                 array unset ua_arr
                 incr audit_atc_arr(ua)
@@ -325,7 +317,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                       up "test" ]
                 set ua_arr(ua_id) [hf_user_add ua_arr]
 
-                lappend ua_larr(${audit_atc_arr(ua)}) [array get ua_arr]
+                lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
 
                 array unset ua_arr
                 incr audit_atc_arr(ua)
@@ -384,6 +376,10 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             }
             array set audit_arm_0_arr [array get audit_arm_zero_arr]
             array set audit_arm_0_arr $audit_arm_0_list
+            foreach i [hf_asset_type_id_list] {
+                set audit_arm_0_arr($i) [expr { $audit_arm_0_arr($i) - $audit_arm_d_arr($i) } ]
+                aa_equals "Asset revisions $i created" $audit_arm_0_arr($i) $audit_atc_arr($i) 
+            }
             # assets (from hf_asset_rev_map)
             db_1row hf_a_recs_count { select count(*) as hf_a_count_0 from hf_assets where trashed_p!='1' }
             set audit_a_0_lists [db_list_of_lists hf_audit_asset_type_id_assets0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
@@ -410,7 +406,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             array set audit_sam_0_arr $audit_sam_0_list
             foreach i [hf_asset_type_id_list] {
                 set audit_sam_0_arr($i) [expr { $audit_sam_0_arr($i) - $audit_sam_d_arr($i) } ]
-                aa_equals "Assets $i created" $audit_sam_0_arr($i) $audit_atc_arr($i) 
+                aa_equals "Attributes $i created" $audit_sam_0_arr($i) $audit_atc_arr($i) 
             }
 
 
@@ -464,7 +460,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up [ad_generate_random_string]]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                        lappend ua_larr(${audit_atc_arr(ua)}) [array get ua_arr]
+                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
 
                         array unset ua_arr
                         incr audit_atc_arr(ua)
@@ -507,7 +503,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                                   up [ad_generate_random_string]]
                             set ua_arr(ua_id) [hf_user_add ua_arr]
                             
-                            lappend ua_larr(${audit_atc_arr(ua)}) [array get ua_arr]
+                            lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
                             
                             array unset ua_arr
                             incr audit_atc_arr(ua)
@@ -549,7 +545,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up [ad_generate_random_string]]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                        lappend ua_larr(${audit_atc_arr(ua)}) [array get ua_arr]
+                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
 
                         array unset ua_arr
                         incr audit_atc_arr(ua)
@@ -582,7 +578,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up [ad_generate_random_string]]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                        lappend ua_larr(${audit_atc_arr(ua)}) [array get ua_arr]
+                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
 
                         array unset ua_arr
                         incr audit_atc_arr(ua)
@@ -616,7 +612,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up [ad_generate_random_string]]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                        lappend ua_larr(${audit_atc_arr(ua)}) [array get ua_arr]
+                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
 
                         array unset ua_arr
                         incr audit_atc_arr(ua)
@@ -653,7 +649,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up [ad_generate_random_string]]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                        lappend ua_larr(${audit_atc_arr(ua)}) [array get ua_arr]
+                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
 
                         array unset ua_arr
                         incr audit_atc_arr(ua)
@@ -697,7 +693,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up [ad_generate_random_string]]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                        lappend ua_larr(${audit_atc_arr(ua)}) [array get ua_arr]
+                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
 
                         array unset ua_arr
                         incr audit_atc_arr(ua)
@@ -726,7 +722,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up [ad_generate_random_string]]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                        lappend ua_larr(${audit_atc_arr(ua)}) [array get ua_arr]
+                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
 
                         array unset ss_arr
                         incr audit_atc_arr(ss)
@@ -779,7 +775,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                                   up [ad_generate_random_string]]
                             set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                            lappend ua_larr(${audit_atc_arr(ua)}) [array get ua_arr]
+                            lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
 
                             array unset ua_arr
                             incr audit_atc_arr(ua)
@@ -825,19 +821,19 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         set ipn [expr { int( fmod( $audit_atc_arr(ip), 256) ) } ]
                         set ipn2 [expr { int( $audit_atc_arr(ip) / 256 ) } ]
                         set ipv6_suffix [format %x [expr { int( fmod( $audit_atc_arr(ip), 65535 ) ) } ]]
-                        set audit_atc_arr(hw)_f [format %x $audit_atc_arr(hw)]
+                        set hwf [format %x $audit_atc_arr(hw)]
                         array set ip_arr [list \
                                               f_id $hw_arr(f_id) \
                                               sub_label "eth0" \
                                               ip_id "" \
                                               ipv4_addr "10.0.${ipn2}.${ipn}" \
                                               ipv4_status "1" \
-                                              ipv6_addr "2001:0db8:85a3:0000:0000:8a2e:${audit_atc_arr(hw)_f}:${ipv6_suffix}" \
+                                              ipv6_addr "2001:0db8:85a3:0000:0000:8a2e:${hwf}:${ipv6_suffix}" \
                                               ipv6_status "1"]
                         set ip_arr(ip_id) [hf_ip_write ip_arr]
                         lappend ip_id_list $ip_arr(ip_id)
 
-                        set ip_larr(${audit_atc_arr(ip)}) [array get ip_arr]
+                        set ip_larr($audit_atc_arr(ip)) [array get ip_arr]
 
                         # delayed unset ip_arr. See below
                         incr audit_atc_arr(ip)
@@ -852,7 +848,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
                         array set ni_arr [list \
                                               f_id $hw_arr(f_id) \
-                                              sub_label "NIC-${audit_atc_arr(ni)}" \
+                                              sub_label "NIC-$audit_atc_arr(ni)" \
                                               os_dev_ref "io1" \
                                               bia_mac_address ${biamac} \
                                               ul_mac_address "" \
@@ -861,7 +857,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         set ni_arr(ni_id) [hf_ni_write ni_arr]
                         lappend ni_id_list $ni_arr(ni_id)
                         
-                        set ni_larr(${audit_atc_arr(ni)}) [array get ni_arr]
+                        set ni_larr($audit_atc_arr(ni)) [array get ni_arr]
 
                         array unset ni_arr
                         incr audit_atc_arr(ni)
@@ -874,7 +870,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         set ns_arr(ns_id) [hf_ns_write ns_arr]
                         lappend ns_id_list $ns_arr(ns_id)
                         
-                        set ns_larr(${audit_atc_arr(ns)}) [array get ns_arr]
+                        set ns_larr($audit_atc_arr(ns)) [array get ns_arr]
 
                         array unset ns_arr
                         incr audit_atc_arr(ns)
@@ -891,7 +887,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up "test" ]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
 
-                        lappend ua_larr(${audit_atc_arr(ua)}) [array get ua_arr]
+                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
 
                         array unset ua_arr
                         incr audit_atc_arr(ua)
@@ -904,7 +900,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up "test" ]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
 
-                        lappend ua_larr(${audit_atc_arr(ua)}) [array get ua_arr]
+                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
 
                         array unset ua_arr
                         incr audit_atc_arr(ua)
@@ -986,19 +982,19 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         set ipn [expr { int( fmod( $audit_atc_arr(ip), 256) ) } ]
                         set ipn2 [expr { int( $audit_atc_arr(ip) / 256 ) } ]
                         set ipv6_suffix [format %x [expr { int( fmod( $audit_atc_arr(ip), 65535 ) ) } ]]
-                        set audit_atc_arr(hw)_f [format %x $audit_atc_arr(hw)]
+                        set hwf [format %x $audit_atc_arr(hw)]
                         array set ip_arr [list \
                                               f_id $attr_arr(f_id) \
                                               sub_label "eth20" \
                                               ip_id "" \
                                               ipv4_addr "10.0.${ipn2}.${ipn}" \
                                               ipv4_status "1" \
-                                              ipv6_addr "2001:0db8:85a3:0000:0000:8a2e:${audit_atc_arr(hw)_f}:${ipv6_suffix}" \
+                                              ipv6_addr "2001:0db8:85a3:0000:0000:8a2e:${hwf}:${ipv6_suffix}" \
                                               ipv6_status "0"]
                         set ip_arr(ip_id) [hf_ip_write ip_arr]
                         lappend ip_id_list $ip_arr(ip_id)
 
-                        set ip_larr(${audit_atc_arr(ip)}) [array get ip_arr]
+                        set ip_larr($audit_atc_arr(ip)) [array get ip_arr]
 
                         # delayed unset ip_arr. See below
                         incr audit_atc_arr(ip)
@@ -1012,7 +1008,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         set biamac [join $i_list ":"]
                         array set ni_arr [list \
                                               f_id $attr_arr(f_id) \
-                                              sub_label "NIC-${audit_atc_arr(ni)}" \
+                                              sub_label "NIC-$audit_atc_arr(ni)" \
                                               os_dev_ref "io1" \
                                               bia_mac_address ${biamac} \
                                               ul_mac_address "" \
@@ -1021,7 +1017,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         set ni_arr(ni_id) [hf_ni_write ni_arr]
                         lappend ni_id_list $ni_arr(ni_id)
                         
-                        set ni_larr(${audit_atc_arr(ni)}) [array get ni_arr]
+                        set ni_larr($audit_atc_arr(ni)) [array get ni_arr]
 
                         array unset ni_arr
                         incr audit_atc_arr(ni)
@@ -1034,7 +1030,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         set ns_arr(ns_id) [hf_ns_write ns_arr]
                         lappend ns_id_list $ns_arr(ns_id)
                         
-                        set ns_larr(${audit_atc_arr(ns)}) [array get ns_arr]
+                        set ns_larr($audit_atc_arr(ns)) [array get ns_arr]
 
                         array unset ns_arr
                         incr audit_atc_arr(ns)
@@ -1051,7 +1047,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up "test" ]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
 
-                        lappend ua_larr(${audit_atc_arr(ua)}) [array get ua_arr]
+                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
 
                         array unset ua_arr
                         incr audit_atc_arr(ua)
@@ -1064,7 +1060,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up "test" ]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
 
-                        lappend ua_larr(${audit_atc_arr(ua)}) [array get ua_arr]
+                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
 
                         array unset ua_arr
                         incr audit_atc_arr(ua)
@@ -1114,7 +1110,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                                   up [ad_generate_random_string]]
                             set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                            lappend ua_larr(${audit_atc_arr(ua)}) [array get ua_arr]
+                            lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
                             
                             array unset ua_arr
                             incr audit_atc_arr(ua)
@@ -1128,39 +1124,51 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                 
             }
 
-            # get pre-db mod table counts
+
+            # + - + - + - # AUDIT CODE # + - + - + - # 
+            # asset revisions (from hf_assets)
             db_1row hf_arm_recs_count { select count(*) as hf_arm_count_1 from hf_asset_rev_map where trashed_p!='1' }
-            db_1row hf_a_recs_count { select count(*) as hf_a_count_1 from hf_assets where trashed_p!='1' }
-            db_1row hf_sam_recs_count { select count(*) as hf_sam_count_1 from hf_sub_asset_map where trashed_p!='1' }
-
-            # audit creations
-            ns_log Notice "hosting-farm-test-api-procs.tcl.1043: hf_arm_count_1 $hf_arm_count_1 hf_arm_count_0 $hf_arm_count_0"
-            set asset_tot [expr { $hf_arm_count_1 - $hf_arm_count_0 } ]
-            aa_equals "Assets total created" $asset_tot $ac 
-
-            set asset_rev_tot [expr { $hf_a_count_1 - $hf_a_count_0 } ]
-            aa_equals "Assets revisions mapped" $asset_rev_tot $asset_tot
-
-            set atcn [expr { $audit_atc_arr(dc) + $audit_atc_arr(hw) + $audit_atc_arr(vh) + $audit_atc_arr(vm) + $audit_atc_arr(ip) + $audit_atc_arr(ni) + $audit_atc_arr(ua) + $audit_atc_arr(ss) + $audit_atc_arr(ns) } ]
-            set audit_assets_1_lists [db_list_of_lists hf_audit_asset_type_id_assets1 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
-            foreach row $audit_assets_1_lists {
+            set audit_arm_1_lists [db_list_of_lists hf_audit_asset_type_id_assets0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            foreach row $audit_arm_1_lists {
                 foreach element $row {
-                    lappend audit_assets_1_list $element
+                    lappend audit_arm_1_list $element
                 }
             }
-            # initialize audit array elements
-            foreach a_type_id [hf_asset_type_id_list] {
-                set audit_assets_1_arr(${a_type_id}) 0
+            array set audit_arm_1_arr [array get audit_arm_zero_arr]
+            array set audit_arm_1_arr $audit_arm_1_list
+            foreach i [hf_asset_type_id_list] {
+                set audit_arm_1_arr($i) [expr { $audit_arm_1_arr($i) - $audit_arm_d_arr($i) } ]
+                aa_equals "Asset revisions $i created" $audit_arm_1_arr($i) $audit_atc_arr($i) 
             }
-            array set audit_assets_1_arr $audit_assets_1_list
-            foreach i [array names audit_assets_0_arr] {
-                set audit_assets_1_arr($i) [expr { $audit_assets_1_arr($i) - $audit_assets_0_arr($i) } ]
+            # assets (from hf_asset_rev_map)
+            db_1row hf_a_recs_count { select count(*) as hf_a_count_1 from hf_assets where trashed_p!='1' }
+            set audit_a_1_lists [db_list_of_lists hf_audit_asset_type_id_assets0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            foreach row $audit_a_1_lists {
+                foreach element $row {
+                    lappend audit_a_1_list $element
+                }
             }
-            ns_log Notice "hosting-farm-test-api-procs.tcl.1086: '[array get audit_assets_1_arr]'"
+            array set audit_a_1_arr [array get audit_a_zero_arr]
+            array set audit_a_1_arr $audit_a_1_list
+            foreach i [hf_asset_type_id_list] {
+                set audit_a_1_arr($i) [expr { $audit_a_1_arr($i) - $audit_a_d_arr($i) } ]
+                aa_equals "Assets $i created" $audit_a_1_arr($i) $audit_atc_arr($i) 
+            }
+            # attributes (from hf_sub_asset_map)
+            db_1row hf_sam_recs_count { select count(*) as hf_sam_count_1 from hf_sub_asset_map where trashed_p!='1' }
+            set audit_sam_1_lists [db_list_of_lists hf_audit_asset_type_id_assets0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            foreach row $audit_sam_1_lists {
+                foreach element $row {
+                    lappend audit_sam_1_list $element
+                }
+            }
+            array set audit_sam_1_arr [array get audit_sam_zero_arr]
+            array set audit_sam_1_arr $audit_sam_1_list
+            foreach i [hf_asset_type_id_list] {
+                set audit_sam_1_arr($i) [expr { $audit_sam_1_arr($i) - $audit_sam_d_arr($i) } ]
+                aa_equals "Attributes $i created" $audit_sam_1_arr($i) $audit_atc_arr($i) 
+            }
 
-            ns_log Notice "hosting-farm-test-api-procs.tcl.1051: atc dc $audit_atc_arr(dc) hw $audit_atc_arr(hw) vm $audit_atc_arr(vm) vh $audit_atc_arr(vh) ip $audit_atc_arr(ip) ni $audit_atc_arr(ni) ua $audit_atc_arr(ua) ss $audit_atc_arr(ss) ns $audit_atc_arr(ns)"
-            set attr_tot [expr { $hf_sam_count_1 - $hf_sam_count_0 } ]
-            aa_equals "Attributes total created" $attr_tot $atcn 
 
 
 
@@ -1179,40 +1187,49 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             # move vh from 2 to 1
             # verify
 
-            # get db modified table counts
+            # + - + - + - # AUDIT CODE # + - + - + - # 
+            # asset revisions (from hf_assets)
             db_1row hf_arm_recs_count { select count(*) as hf_arm_count_2 from hf_asset_rev_map where trashed_p!='1' }
-            db_1row hf_a_recs_count { select count(*) as hf_a_count_2 from hf_assets where trashed_p!='1' }
-            db_1row hf_sam_recs_count { select count(*) as hf_sam_count_2 from hf_sub_asset_map where trashed_p!='1' }
-
-
-            # audit creations
-            ns_log Notice "hosting-farm-test-api-procs.tcl.1080: hf_arm_count_1 $hf_arm_count_1 hf_arm_count_0 $hf_arm_count_0"
-            set asset_tot [expr { $hf_arm_count_2 - $hf_arm_count_0 } ]
-            aa_equals "Assets total created" $asset_tot $ac 
-
-            set asset_rev_tot [expr { $hf_a_count_2 - $hf_a_count_0 } ]
-            aa_equals "Assets revisions mapped" $asset_rev_tot $asset_tot
-
-            set atcn [expr { $audit_atc_arr(dc) + $audit_atc_arr(hw) + $audit_atc_arr(vh) + $audit_atc_arr(vm) + $audit_atc_arr(ip) + $audit_atc_arr(ni) + $audit_atc_arr(ua) + $audit_atc_arr(ss) + $audit_atc_arr(ns) } ]
-            set audit_assets_2_lists [db_list_of_lists hf_audit_asset_type_id_assets2 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
-            foreach row $audit_assets_2_lists {
+            set audit_arm_2_lists [db_list_of_lists hf_audit_asset_type_id_assets0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            foreach row $audit_arm_2_lists {
                 foreach element $row {
-                    lappend audit_assets_2_list $element
+                    lappend audit_arm_2_list $element
                 }
             }
-            # initialize audit array elements
-            foreach a_type_id [hf_asset_type_id_list] {
-                set audit_assets_2_arr(${a_type_id}) 0
+            array set audit_arm_2_arr [array get audit_arm_zero_arr]
+            array set audit_arm_2_arr $audit_arm_2_list
+            foreach i [hf_asset_type_id_list] {
+                set audit_arm_2_arr($i) [expr { $audit_arm_2_arr($i) - $audit_arm_d_arr($i) } ]
+                aa_equals "Asset revisions $i created" $audit_arm_2_arr($i) $audit_atc_arr($i) 
             }
-            array set audit_assets_2_arr $audit_assets_2_list
-            foreach i [array names audit_assets_0_arr] {
-                set audit_assets_2_arr($i) [expr { $audit_assets_2_arr($i) - $audit_assets_0_arr($i) } ]
+            # assets (from hf_asset_rev_map)
+            db_1row hf_a_recs_count { select count(*) as hf_a_count_2 from hf_assets where trashed_p!='1' }
+            set audit_a_2_lists [db_list_of_lists hf_audit_asset_type_id_assets0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            foreach row $audit_a_2_lists {
+                foreach element $row {
+                    lappend audit_a_2_list $element
+                }
             }
-            ns_log Notice "hosting-farm-test-api-procs.tcl.1108: '[array get audit_assets_2_arr]'"
-
-            ns_log Notice "hosting-farm-test-api-procs.tcl.1110: atc dc $audit_atc_arr(dc) hw $audit_atc_arr(hw) vm $audit_atc_arr(vm) vh $audit_atc_arr(vh) ip $audit_atc_arr(ip) ni $audit_atc_arr(ni) ua $audit_atc_arr(ua) ss $audit_atc_arr(ss) ns $audit_atc_arr(ns)"
-            set attr_tot [expr { $hf_sam_count_2 - $hf_sam_count_0 } ]
-            aa_equals "Attributes total created" $attr_tot $atcn 
+            array set audit_a_2_arr [array get audit_a_zero_arr]
+            array set audit_a_2_arr $audit_a_2_list
+            foreach i [hf_asset_type_id_list] {
+                set audit_a_2_arr($i) [expr { $audit_a_2_arr($i) - $audit_a_d_arr($i) } ]
+                aa_equals "Assets $i created" $audit_a_2_arr($i) $audit_atc_arr($i) 
+            }
+            # attributes (from hf_sub_asset_map)
+            db_1row hf_sam_recs_count { select count(*) as hf_sam_count_2 from hf_sub_asset_map where trashed_p!='1' }
+            set audit_sam_2_lists [db_list_of_lists hf_audit_asset_type_id_assets0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            foreach row $audit_sam_2_lists {
+                foreach element $row {
+                    lappend audit_sam_2_list $element
+                }
+            }
+            array set audit_sam_2_arr [array get audit_sam_zero_arr]
+            array set audit_sam_2_arr $audit_sam_2_list
+            foreach i [hf_asset_type_id_list] {
+                set audit_sam_2_arr($i) [expr { $audit_sam_2_arr($i) - $audit_sam_d_arr($i) } ]
+                aa_equals "Attributes $i created" $audit_sam_2_arr($i) $audit_atc_arr($i) 
+            }
 
 
             # system clear DCs
@@ -1223,40 +1240,50 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
             # delete everything below a hw
             # verify
-            # get db modified table counts
+
+            # + - + - + - # AUDIT CODE # + - + - + - # 
+            # asset revisions (from hf_assets)
             db_1row hf_arm_recs_count { select count(*) as hf_arm_count_3 from hf_asset_rev_map where trashed_p!='1' }
-            db_1row hf_a_recs_count { select count(*) as hf_a_count_3 from hf_assets where trashed_p!='1' }
-            db_1row hf_sam_recs_count { select count(*) as hf_sam_count_3 from hf_sub_asset_map where trashed_p!='1' }
-
-
-            # audit creations
-            ns_log Notice "hosting-farm-test-api-procs.tcl.1201: hf_arm_count_1 $hf_arm_count_1 hf_arm_count_0 $hf_arm_count_0"
-            set asset_tot [expr { $hf_arm_count_3 - $hf_arm_count_0 } ]
-            aa_equals "Assets total created" $asset_tot $ac 
-
-            set asset_rev_tot [expr { $hf_a_count_3 - $hf_a_count_0 } ]
-            aa_equals "Assets revisions mapped" $asset_rev_tot $asset_tot
-
-            set atcn [expr { $audit_atc_arr(dc) + $audit_atc_arr(hw) + $audit_atc_arr(vh) + $audit_atc_arr(vm) + $audit_atc_arr(ip) + $audit_atc_arr(ni) + $audit_atc_arr(ua) + $audit_atc_arr(ss) + $audit_atc_arr(ns) } ]
-            set audit_assets_3_lists [db_list_of_lists hf_audit_asset_type_id_assets3 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
-            foreach row $audit_assets_3_lists {
+            set audit_arm_3_lists [db_list_of_lists hf_audit_asset_type_id_assets0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            foreach row $audit_arm_3_lists {
                 foreach element $row {
-                    lappend audit_assets_3_list $element
+                    lappend audit_arm_3_list $element
                 }
             }
-            # initialize audit array elements
-            foreach a_type_id [hf_asset_type_id_list] {
-                set audit_assets_3_arr(${a_type_id}) 0
+            array set audit_arm_3_arr [array get audit_arm_zero_arr]
+            array set audit_arm_3_arr $audit_arm_3_list
+            foreach i [hf_asset_type_id_list] {
+                set audit_arm_3_arr($i) [expr { $audit_arm_3_arr($i) - $audit_arm_d_arr($i) } ]
+                aa_equals "Asset revisions $i created" $audit_arm_3_arr($i) $audit_atc_arr($i) 
             }
-            array set audit_assets_3_arr $audit_assets_3_list
-            foreach i [array names audit_assets_0_arr] {
-                set audit_assets_3_arr($i) [expr { $audit_assets_3_arr($i) - $audit_assets_0_arr($i) } ]
+            # assets (from hf_asset_rev_map)
+            db_1row hf_a_recs_count { select count(*) as hf_a_count_3 from hf_assets where trashed_p!='1' }
+            set audit_a_3_lists [db_list_of_lists hf_audit_asset_type_id_assets0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            foreach row $audit_a_3_lists {
+                foreach element $row {
+                    lappend audit_a_3_list $element
+                }
             }
-            ns_log Notice "hosting-farm-test-api-procs.tcl.1200: '[array get audit_assets_3_arr]'"
-
-            ns_log Notice "hosting-farm-test-api-procs.tcl.1210: atc dc $audit_atc_arr(dc) hw $audit_atc_arr(hw) vm $audit_atc_arr(vm) vh $audit_atc_arr(vh) ip $audit_atc_arr(ip) ni $audit_atc_arr(ni) ua $audit_atc_arr(ua) ss $audit_atc_arr(ss) ns $audit_atc_arr(ns)"
-            set attr_tot [expr { $hf_sam_count_3 - $hf_sam_count_0 } ]
-            aa_equals "Attributes total created" $attr_tot $atcn 
+            array set audit_a_3_arr [array get audit_a_zero_arr]
+            array set audit_a_3_arr $audit_a_3_list
+            foreach i [hf_asset_type_id_list] {
+                set audit_a_3_arr($i) [expr { $audit_a_3_arr($i) - $audit_a_d_arr($i) } ]
+                aa_equals "Assets $i created" $audit_a_3_arr($i) $audit_atc_arr($i) 
+            }
+            # attributes (from hf_sub_asset_map)
+            db_1row hf_sam_recs_count { select count(*) as hf_sam_count_3 from hf_sub_asset_map where trashed_p!='1' }
+            set audit_sam_3_lists [db_list_of_lists hf_audit_asset_type_id_assets0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            foreach row $audit_sam_3_lists {
+                foreach element $row {
+                    lappend audit_sam_3_list $element
+                }
+            }
+            array set audit_sam_3_arr [array get audit_sam_zero_arr]
+            array set audit_sam_3_arr $audit_sam_3_list
+            foreach i [hf_asset_type_id_list] {
+                set audit_sam_3_arr($i) [expr { $audit_sam_3_arr($i) - $audit_sam_d_arr($i) } ]
+                aa_equals "Attributes $i created" $audit_sam_3_arr($i) $audit_atc_arr($i) 
+            }
 
         }
 }
