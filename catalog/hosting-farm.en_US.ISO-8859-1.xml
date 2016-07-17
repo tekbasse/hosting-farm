@@ -137,6 +137,9 @@
   <msg key="instance_id_def">An OpenACS package identifier ie object_id of a specific hosting-farm instance</msg>
   <msg key="interval_s">Interval (s)</msg>
   <msg key="interval_s_def">Scheduled duration between monitor checks</msg>
+  <msg key="ip">IP</msg>
+  <msg key="ip_address">IP Address</msg>
+  <msg key="ip_def">Internet protocol</msg>
   <msg key="ip_id">IP id</msg>
   <msg key="ip_id_def">IP interface identifier</msg>
   <msg key="ipv4_addr">IPV4 addr</msg>
@@ -175,6 +178,9 @@
   <msg key="name_def">A title or pretty version of label. Spaces allowed.</msg>
   <msg key="name_record">Name record</msg>
   <msg key="name_record_def">A domain name.</msg>
+  <msg key="network_interface">Network interface</msg>
+  <msg key="ni">NI</msg>
+  <msg key="ni_def">Network interface</msg>
   <msg key="ni_id">NI id</msg>
   <msg key="ni_id_def">Network interface (NI) identifier</msg>
   <msg key="ns">NS</msg>
@@ -186,7 +192,6 @@
   <msg key="os_dev_ref_def">Operating System Device Reference</msg>
   <msg key="os_id">OS id</msg>
   <msg key="os_id_def">Operating system identifier</msg>
-  <msg key="ot">OT</msg>
   <msg key="ot">OT</msg>
   <msg key="over_memory_sku">Extra Memory SKU</msg>
   <msg key="over_memory_sku_def">SKU reference for pricing over base memory rate of plan_id.</msg>
