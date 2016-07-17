@@ -693,7 +693,7 @@ ad_proc -private hf_asset_type_id_init {
                  [list vh "#hosting-farm.vh#" "#hosting-farm.Virtual_host#"] \
                  [list ns "#hosting-farm.ns#" "#hosting-farm.Name_service#"] \
                  [list ip "#hosting-farm.ip#" "#hosting-farm.ip_address#"] \
-                 [list ni "#hosting-farm.ni#" "#hosting-farm.network_interface#"]
+                 [list ni "#hosting-farm.ni#" "#hosting-farm.network_interface#"] \
                  [list ot "#hosting-farm.ot#" "#hosting-farm.Other#"] ]
         foreach def_as_type_list $ast_d_lists {
             set asset_type_id [lindex $def_as_type_list 0]
