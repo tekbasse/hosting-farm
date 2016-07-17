@@ -1083,15 +1083,16 @@ ad_proc -private hf_vm_quota_write {
 ad_proc -private hf_user_add {
     array_name
 } {
-    Accepts following array elements:
-    f_id  The asset or attribute to associate user;
-    asset_type_id of asset_or attribute to associate user (optional)
-    ua    Account;
+    Requires the following array elements: f_id and ua.
+    f_id  The asset or attribute to associate user; 
+    ua  is User Account;
+    asset_type_id of asset_or attribute to associate user (optional);
     connection_type (optional);
-    ua_id or sub_f_id (optional) If updating an existing account;
-    up (optional) Set if adding a pass code.
+    ua_id or sub_f_id (optional) references for updating an existing account;
+    up (optional) Set if adding a password.
 } {
     # requires f_id, ua
+    # hf_ua_write does not fit hf_sub_asset_map_update paradigms
     upvar 1 $array_name arr_name
     upvar 1 instance_id instance_id
     hf_ui_go_ahead_q admin
@@ -1102,26 +1103,11 @@ ad_proc -private hf_user_add {
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
     qf_array_to_vars arr_name [list asset_type_id label]
     set f_id_exists_p 0
-    if { $type_id eq "" } {
-        if { $asset_type_id eq "" } {
-            set type_id [hf_asset_type_id_of_f_id $f_id]
-            if { $type_id eq "" && $asset_type_id ne "" } {
-                set type_id $asset_type_id
-            }
-        }
-    }
-    set sub_type_id "ua"
-    set ct [hf_asset_cascade_count $f_id]
-    if { $ct > 0 } {
+    set type_id [hf_asset_type_id_of_f_id $f_id]
+    if { $type_id ne "" } {
         set f_id_exists_p 1
     }
-    if { $sub_label eq "" } {
-        if { $connection_type ne "" } {
-            append sub_label "${connection_type}:"
-        }
-        append sub_label "ua${ct}"
-    }
-    set attribute_p 1
+    set sub_type_id "ua"
     if { $ua_id eq "" } {
         set ua_id $sub_f_id
     }
@@ -1131,41 +1117,38 @@ ad_proc -private hf_user_add {
     # and hf_up api handled directly.
     set sub_f_id_new ""
     set trashed_p 0
+    set attribute_p 1
     set sub_f_id_exists_p 0
-    if { $sub_f_id ne "" } {
-        # Is this an existing attribute?
-        set f_id_ck [hf_f_id_of_sub_f_id $sub_f_id]
-        if { $f_id eq $f_id_ck } {
-            set f_id_exists_p 1
+    if { $ua_id ne "" } {
+        set sub_type_id [hf_asset_type_id_of_f_id $sub_f_id]
+        if { $sub_type_id eq "ua" } {
             set sub_f_id_exists_p 1
         } else {
             ns_log Warning "hf_user_add.963: denied. \
- attribute does not exist. fid '${f_id} f_id_ck '${f_id_ck}'"
+ attribute ref not exist. fid '${f_id} ua_id '${ua_id}'"
         }
     } 
-    if { !$sub_f_id_exists_p && $sub_type_id eq "" } {
-        ns_log Warning "hf_user_add.968: denied. \
- attribute does not exist. and sub_type_id eq ''"
-
-    } else {
-        if { !$f_id_exists_p } {
-            set f_id_exists_p [hf_f_id_exists_q $f_id]
-            # This is first version of sub_f_id. f_id still required.
-        }
-        if { $f_id_exists_p } {
-            #set sub_f_id_new [db_nextval hf_id_seq]
-            set sub_f_id_new [hf_ua_write $ua $connection_type $ua_id $up]
+    if { $f_id_exists_p } {
+        set sub_f_id_new [hf_ua_write $ua $connection_type $ua_id $up]
+        if { $sub_f_id_new ne "" } {
             set nowts [dt_systime -gmt 1]
-            if { $sub_f_id_exists_p && $sub_f_id_new ne "" } {
+            if { $sub_f_id_exists_p } {
                 db_dml hfua_sub_asset_map_update { update hf_sub_asset_map
-                    set sub_f_id=:sub_f_id_new,
-                    last_updated=:nowts
+                    set last_updated=:nowts
                     where f_id=:f_id 
                     and sub_f_id=:sub_f_id }
-            } elseif { $sub_f_id_new ne "" } {
+            } else {
+                #  $sub_f_id ne $sub_f_id_new 
                 set sub_f_id $sub_f_id_new
+                set ct [hf_asset_cascade_count $f_id]
                 set sub_sort_order [expr { $ct * 20 } ]
                 set last_updated $nowts
+                if { $sub_label eq "" } {
+                    if { $connection_type ne "" } {
+                        append sub_label "${connection_type}:"
+                    }
+                    append sub_label ua $ct
+                }
                 # translate api conventions to internal map refs
                 db_dml hfua_sub_asset_map_create "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
@@ -1195,7 +1178,6 @@ ad_proc -private hf_ua_write {
     if { [hf_are_visible_characters_q $ua ] } {    
         set log_p 0
         set id_exists_p 0
-        set ua_id_new ""
 
         # validation and limits
         set connection_type [string range $connection_type 0 23]
@@ -1226,11 +1208,11 @@ ad_proc -private hf_ua_write {
         }
         if { !$id_exists_p } {
             # create
-            set ua_id_new [db_nextval hf_id_seq]
+            set ua_id [db_nextval hf_id_seq]
             db_dml hf_ua_create {insert into hf_ua (instance_id,ua_id,details,connection_type) 
-                values (:instance_id,:ua_id_new,:sdetail,:connection_type)}
+                values (:instance_id,:ua_id,:sdetail,:connection_type)}
             if { $up ne "" } {
-                set not_log_p [hf_up_write $ua_id_new $up $instance_id]
+                set not_log_p [hf_up_write $ua_id $up $instance_id]
             }
         }
         if { $log_p } {
@@ -1241,7 +1223,7 @@ New ua '${details}' created by user_id ${user_id} \
 called with blank instance_id."
             } else {
                 ns_log Warning "hf_ua_write(2513): Poor call. \
-New ua '${details}' with ua_id ${ua_id} ua_id_new '${ua_id_new}' created without a connection \
+New ua '${details}' with ua_id ${ua_id} ua_id '${ua_id}' created without a connection \
 and called with blank instance_id."
             }
         }
