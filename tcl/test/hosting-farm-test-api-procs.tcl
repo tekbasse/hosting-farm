@@ -51,6 +51,11 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                 set domain [hf_domain_example]
             }
             
+            # get pre-db mod table counts
+            db_1row hf_arm_recs_count { select count(*) as hf_arm_count_0 from hf_asset_rev_map where trashed_p!='1' }
+            db_1row hf_a_recs_count { select count(*) as hf_a_count_0 from hf_assets where trashed_p!='1' }
+            db_1row hf_sam_recs_count { select count(*) as hf_sam_count_0 from hf_sub_asset_map where trashed_p!='1' }
+
 
             # os inits
             set osc 0
@@ -128,12 +133,12 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                      user_id $sysowner_user_id ]
             set asset_arr(f_id) [hf_asset_create asset_arr ]
             set dci(0) $asset_arr(f_id)
-ns_log Notice "hosting-farm-test-api-procs.tcl.113: asset_arr(label) $asset_arr(label)"
+            #ns_log Notice "hosting-farm-test-api-procs.tcl.113: asset_arr(label) $asset_arr(label)"
             array set asset_arr [list \
                                      affix [ad_generate_random_string] \
                                      description "[string toupper ${asset_type_id}]${ac}" \
                                      details "This is for api test"]
-ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(label)"
+            #ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(label)"
             set asset_arr(${asset_type_id}_id) [hf_dc_write asset_arr]
             incr dc_atc
             set a_larr(${ac}) [array get asset_arr]
@@ -282,7 +287,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                 array unset ua_arr
                 incr ua_atc
 
-                ns_log Notice "hosting-farm-test-api-procs.tcl.237: ac ${ac}"
+                #ns_log Notice "hosting-farm-test-api-procs.tcl.237: ac ${ac}"
                 array unset asset_arr
                 incr ac
 
@@ -303,7 +308,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
             aa_equals "Assets total created" $asset_tot $ac 
 
             set atcn [expr { $dc_atc + $hw_atc + $vh_atc + $vm_atc + $ip_atc + $ni_atc + $ua_atc + $ss_atc + $ns_atc } ]
-            ns_log Notice "hosting-farm-test-api-procs.tcl.261: atc dc $dc_atc hw $hw_atc vm $vm_atc vh $vh_atc ip $ip_atc ni $ni_atc ua $ua_atc ss $ss_atc ns $ns_atc"
+            #ns_log Notice "hosting-farm-test-api-procs.tcl.261: atc dc $dc_atc hw $hw_atc vm $vm_atc vh $vh_atc ip $ip_atc ni $ni_atc ua $ua_atc ss $ss_atc ns $ns_atc"
             set dc0_sub_f_id_list [hf_asset_attributes_cascade $dci(0)]
             set dc1_sub_f_id_list [hf_asset_attributes_cascade $dci(1)]
             set dc0_sub_f_id_list_len [llength $dc0_sub_f_id_list]
@@ -320,15 +325,15 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                 incr attr_tot $f_id_list_len
             }
 
-            ns_log Notice "hosting-farm-test-api-procs.tcl.262: $dc0_sub_f_id_list_len + $dc1_sub_f_id_list_len = $attr_tot"
-            ns_log Notice "hosting-farm-test-api-procs.tcl.263: dc0_sub_f_id_list '${dc0_sub_f_id_list}' dc1_sub_f_id_list '${dc1_sub_f_id_list}'"
+            #ns_log Notice "hosting-farm-test-api-procs.tcl.262: $dc0_sub_f_id_list_len + $dc1_sub_f_id_list_len = $attr_tot"
+            #ns_log Notice "hosting-farm-test-api-procs.tcl.263: dc0_sub_f_id_list '${dc0_sub_f_id_list}' dc1_sub_f_id_list '${dc1_sub_f_id_list}'"
 
 
             aa_equals "Attributes total created" $attr_tot $atcn 
 
 # populate
 
-            ns_log Notice "aa_register_case.327: Begin test assets_sys_populate_api_check"
+            #ns_log Notice "aa_register_case.327: Begin test assets_sys_populate_api_check"
              aa_log "Test populate 2 DCs with HW and some attributes"
             # dc asset_id dci(0) dci(1)
             # dc hardware
@@ -345,7 +350,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                 set dice [randomRange 11]
                 switch -exact $dice {
                     0 {
-                        ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
+                        #ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
                         # add vm asset + ua
                         set domain [hf_domain_example]
                         set asset_type_id "vm"
@@ -383,7 +388,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                         unset asset_arr
                     }
                     1 {
-                        ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
+                        #ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
                         # add vm asset with multiple vh + ua
                         # add vm asset + ua
                         set domain [hf_domain_example]
@@ -426,7 +431,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                         unset asset_arr
                     }
                     2 {
-                        ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
+                        #ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
                         # add vh asset + ua to a vm attribute + ua
                         set domain [hf_domain_example]
                         set asset_type_id "vm"
@@ -501,7 +506,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
 
                     }
                     3 {
-                        ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
+                        #ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
                         # add ss + ua asset to a vh attribute + ua
                         
                         # First, create vh asset
@@ -572,7 +577,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                         incr ac                                          
                     }
                     4 {
-                        ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
+                        #ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
                         # add ss + ua attribute to a vm 
                         set domain [hf_domain_example]
                         set asset_type_id "vm"
@@ -643,7 +648,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                         incr ac
                     }
                     5 {
-                        ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
+                        #ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
                         # add ss asset + ua*N (asterix, wiki, db)
                         set randlabel [hf_domain_example]
                         set randtype [lindex [list asterix wiki db crm] [randomRange 3]]
@@ -695,7 +700,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
 
                     }
                     6,7,8 {
-                        ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
+                        #ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
                         # add hw asset + ua  as colo unit botbox etc.
                         
                         set randlabel [hf_domain_example]
@@ -820,7 +825,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
 
                     }
                     9 {
-                        ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
+                        #ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
                         # add ss asset as killer app
                         set randlabel [hf_domain_example]
                         set randtype [lindex [list killer sage web blog ] [randomRange 3]]
@@ -860,7 +865,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
 
                     }
                     10 {
-                        ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
+                        #ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
                         # add hw network device to dc attr
 
                         set randlabel [hf_domain_example]
@@ -979,7 +984,7 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
 
                     }
                     11 {
-                        ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
+                        #ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
                         # add a vm attr + 1000 ua assets + multiple ns to ua Think domain leasing service
                         set domain [hf_domain_example]
                         set asset_type_id "vm"
@@ -1029,6 +1034,42 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
                 
             }
 
+            # get pre-db mod table counts
+            db_1row hf_arm_recs_count { select count(*) as hf_arm_count_1 from hf_asset_rev_map where trashed_p!='1' }
+            db_1row hf_a_recs_count { select count(*) as hf_a_count_1 from hf_assets where trashed_p!='1' }
+            db_1row hf_sam_recs_count { select count(*) as hf_sam_count_1 from hf_sub_asset_map where trashed_p!='1' }
+            # audit creations
+
+            ns_log Notice "hosting-farm-test-api-procs.tcl.1043: hf_arm_count_1 $hf_arm_count_1 hf_arm_count_0 $hf_arm_count_0"
+            set asset_tot [expr { $hf_arm_count_1 - $hf_arm_count_0 } ]
+
+            aa_equals "Assets total created" $asset_tot $ac 
+
+            set atcn [expr { $dc_atc + $hw_atc + $vh_atc + $vm_atc + $ip_atc + $ni_atc + $ua_atc + $ss_atc + $ns_atc } ]
+            ns_log Notice "hosting-farm-test-api-procs.tcl.1049: atc dc $dc_atc hw $hw_atc vm $vm_atc vh $vh_atc ip $ip_atc ni $ni_atc ua $ua_atc ss $ss_atc ns $ns_atc"
+            set dc0_sub_f_id_list [hf_asset_attributes_cascade $dci(0)]
+            set dc1_sub_f_id_list [hf_asset_attributes_cascade $dci(1)]
+            set dc0_sub_f_id_list_len [llength $dc0_sub_f_id_list]
+            set dc1_sub_f_id_list_len [llength $dc1_sub_f_id_list]
+            set attr_tot 0
+            foreach f_id $dc0_f_id_list {
+                set f_id_list [hf_asset_attributes_cascade $f_id]
+                set f_id_list_len [llength $f_id_list]
+                incr attr_tot $f_id_list_len
+            }
+            foreach f_id $dc1_f_id_list {
+                set f_id_list [hf_asset_attributes_cascade $f_id]
+                set f_id_list_len [llength $f_id_list]
+                incr attr_tot $f_id_list_len
+            }
+
+            #ns_log Notice "hosting-farm-test-api-procs.tcl.262: $dc0_sub_f_id_list_len + $dc1_sub_f_id_list_len = $attr_tot"
+            #ns_log Notice "hosting-farm-test-api-procs.tcl.263: dc0_sub_f_id_list '${dc0_sub_f_id_list}' dc1_sub_f_id_list '${dc1_sub_f_id_list}'"
+
+
+            aa_equals "Attributes total created" $attr_tot $atcn 
+
+
             # evolve data
 
             ns_log Notice "aa_register_case.327: Begin test assets_sys_evolve_api_check"
@@ -1044,6 +1085,10 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
             # move vh from 2 to 1
             # verify
 
+            # get db modified table counts
+            db_1row hf_arm_recs_count { select count(*) as hf_arm_count_2 from hf_asset_rev_map where trashed_p!='1' }
+            db_1row hf_a_recs_count { select count(*) as hf_a_count_2 from hf_assets where trashed_p!='1' }
+            db_1row hf_sam_recs_count { select count(*) as hf_sam_count_2 from hf_sub_asset_map where trashed_p!='1' }
 
             # system clear DCs
 
@@ -1053,6 +1098,10 @@ ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(
 
             # delete everything below a hw
             # verify
+            # get db modified table counts
+            db_1row hf_arm_recs_count { select count(*) as hf_arm_count_3 from hf_asset_rev_map where trashed_p!='1' }
+            db_1row hf_a_recs_count { select count(*) as hf_a_count_3 from hf_assets where trashed_p!='1' }
+            db_1row hf_sam_recs_count { select count(*) as hf_sam_count_3 from hf_sub_asset_map where trashed_p!='1' }
 
 
         }
