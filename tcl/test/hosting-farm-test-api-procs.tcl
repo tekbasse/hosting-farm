@@ -57,6 +57,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             # asset revisions (from hf_assets)
             db_1row hf_arm_recs_count { select count(*) as hf_arm_count_0 from hf_asset_rev_map where trashed_p!='1' }
             set audit_arm_d_lists [db_list_of_lists hf_audit_asset_type_id_assets0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            set audit_arm_d_list [list ]
             foreach row $audit_arm_d_lists {
                 foreach element $row {
                     lappend audit_arm_d_list $element
@@ -70,6 +71,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             # assets (from hf_asset_rev_map)
             db_1row hf_a_recs_count { select count(*) as hf_a_count_0 from hf_assets where trashed_p!='1' }
             set audit_a_d_lists [db_list_of_lists hf_audit_asset_type_id_assets0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            set audit_a_d_list [list ]
             foreach row $audit_a_d_lists {
                 foreach element $row {
                     lappend audit_a_d_list $element
@@ -84,6 +86,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             # attributes (from hf_sub_asset_map)
             db_1row hf_sam_recs_count { select count(*) as hf_sam_count_0 from hf_sub_asset_map where trashed_p!='1' }
             set audit_sam_d_lists [db_list_of_lists hf_audit_asset_type_id_assets0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            set audit_sam_d_list [list ]
             foreach row $audit_sam_d_lists {
                 foreach element $row {
                     lappend audit_sam_d_list $element

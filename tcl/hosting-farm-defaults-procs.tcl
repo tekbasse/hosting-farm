@@ -686,15 +686,17 @@ ad_proc -private hf_asset_type_id_init {
     if { [llength [hf_asset_type_id_list] ] == 0 } {
         set ast_d_lists \
             [list \
-                 [list ss "#hosting-farm.SAAS#" "#hosting-farm.Software_as_a_service#"] \
                  [list dc "#hosting-farm.dc#" "#hosting-farm.Data_center#"] \
                  [list hw "#hosting-farm.hw#" "#hosting-farm.Hardware#"] \
-                 [list vm "#hosting-farm.vm#" "#hosting-farm.Virtual_machine#"] \
-                 [list vh "#hosting-farm.vh#" "#hosting-farm.Virtual_host#"] \
-                 [list ns "#hosting-farm.ns#" "#hosting-farm.Name_service#"] \
                  [list ip "#hosting-farm.ip#" "#hosting-farm.ip_address#"] \
+                 [list ip "#hosting-farm.ua#" "#hosting-farm.user_account#"] \
                  [list ni "#hosting-farm.ni#" "#hosting-farm.network_interface#"] \
-                 [list ot "#hosting-farm.ot#" "#hosting-farm.Other#"] ]
+                 [list ns "#hosting-farm.ns#" "#hosting-farm.Name_service#"] \
+                 [list ot "#hosting-farm.ot#" "#hosting-farm.Other#"] \
+                 [list ss "#hosting-farm.SAAS#" "#hosting-farm.Software_as_a_service#"] \
+                 [list vh "#hosting-farm.vh#" "#hosting-farm.Virtual_host#"] \
+                 [list vm "#hosting-farm.vm#" "#hosting-farm.Virtual_machine#"] \
+                ]
         foreach def_as_type_list $ast_d_lists {
             set asset_type_id [lindex $def_as_type_list 0]
             set label [lindex $def_as_type_list 1]

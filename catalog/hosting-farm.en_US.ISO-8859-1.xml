@@ -309,6 +309,7 @@
   <msg key="ua_id_def">User Account id</msg>
   <msg key="ul_mac_address">MAC address</msg>
   <msg key="ul_mac_address_def">Universal/Local programmed (non_OUI) MAC address</msg>
+  <msg key="user_account">User account</msg>
   <msg key="user_id">User id</msg>
   <msg key="user_id_def">A user identifier; a kind of OpenACS object_id</msg>
   <msg key="version">Version</msg>
