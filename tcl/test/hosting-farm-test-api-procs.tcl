@@ -307,8 +307,22 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             #ns_log Notice "hosting-farm-test-api-procs.tcl.261: dc0_f_id_list '${dc0_f_id_list}' dc1_f_id_list '${dc1_f_id_list}'"
             aa_equals "Assets total created" $asset_tot $ac 
 
+            set audit_assets_0_lists [db_list_of_lists hf_audit_asset_type_id_assets0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            foreach row $audit_assets_0_lists {
+                foreach element $row {
+                    lappend audit_assets_0_list $element
+                }
+            }
+            # initialize audit array elements
+            foreach a_type_id [hf_asset_type_id_list] {
+                set audit0_arr(${a_type_id}) 0
+            }
+            array set audit0_arr $audit_assets_0_list
+            
+            ns_log Notice "hosting-farm-test-api-procs.tcl.311: '${audit_assets_0_list}'"
+            ns_log Notice "hosting-farm-test-api-procs.tcl.312: atc dc $dc_atc hw $hw_atc vm $vm_atc vh $vh_atc ip $ip_atc ni $ni_atc ua $ua_atc ss $ss_atc ns $ns_atc"
             set atcn [expr { $dc_atc + $hw_atc + $vh_atc + $vm_atc + $ip_atc + $ni_atc + $ua_atc + $ss_atc + $ns_atc } ]
-            #ns_log Notice "hosting-farm-test-api-procs.tcl.261: atc dc $dc_atc hw $hw_atc vm $vm_atc vh $vh_atc ip $ip_atc ni $ni_atc ua $ua_atc ss $ss_atc ns $ns_atc"
+            
             set dc0_sub_f_id_list [hf_asset_attributes_cascade $dci(0)]
             set dc1_sub_f_id_list [hf_asset_attributes_cascade $dci(1)]
             set dc0_sub_f_id_list_len [llength $dc0_sub_f_id_list]
@@ -1038,36 +1052,36 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             db_1row hf_arm_recs_count { select count(*) as hf_arm_count_1 from hf_asset_rev_map where trashed_p!='1' }
             db_1row hf_a_recs_count { select count(*) as hf_a_count_1 from hf_assets where trashed_p!='1' }
             db_1row hf_sam_recs_count { select count(*) as hf_sam_count_1 from hf_sub_asset_map where trashed_p!='1' }
-            # audit creations
 
+            # audit creations
             ns_log Notice "hosting-farm-test-api-procs.tcl.1043: hf_arm_count_1 $hf_arm_count_1 hf_arm_count_0 $hf_arm_count_0"
             set asset_tot [expr { $hf_arm_count_1 - $hf_arm_count_0 } ]
-
             aa_equals "Assets total created" $asset_tot $ac 
 
+            set asset_rev_tot [expr { $hf_a_count_1 - $hf_a_count_0 } ]
+            aa_equals "Assets revisions mapped" $asset_rev_tot $asset_tot
+
             set atcn [expr { $dc_atc + $hw_atc + $vh_atc + $vm_atc + $ip_atc + $ni_atc + $ua_atc + $ss_atc + $ns_atc } ]
-            ns_log Notice "hosting-farm-test-api-procs.tcl.1049: atc dc $dc_atc hw $hw_atc vm $vm_atc vh $vh_atc ip $ip_atc ni $ni_atc ua $ua_atc ss $ss_atc ns $ns_atc"
-            set dc0_sub_f_id_list [hf_asset_attributes_cascade $dci(0)]
-            set dc1_sub_f_id_list [hf_asset_attributes_cascade $dci(1)]
-            set dc0_sub_f_id_list_len [llength $dc0_sub_f_id_list]
-            set dc1_sub_f_id_list_len [llength $dc1_sub_f_id_list]
-            set attr_tot 0
-            foreach f_id $dc0_f_id_list {
-                set f_id_list [hf_asset_attributes_cascade $f_id]
-                set f_id_list_len [llength $f_id_list]
-                incr attr_tot $f_id_list_len
+            set audit_assets_1_lists [db_list_of_lists hf_audit_asset_type_id_assets1 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            foreach row $audit_assets_1_lists {
+                foreach element $row {
+                    lappend audit_assets_1_list $element
+                }
             }
-            foreach f_id $dc1_f_id_list {
-                set f_id_list [hf_asset_attributes_cascade $f_id]
-                set f_id_list_len [llength $f_id_list]
-                incr attr_tot $f_id_list_len
+            # initialize audit array elements
+            foreach a_type_id [hf_asset_type_id_list] {
+                set audit1_arr(${a_type_id}) 0
             }
+            array set audit1_arr $audit_assets_1_list
+            foreach i [array names audit0_arr] {
+                set audit1_arr($i) [expr { $audit1_arr($i) - $audit0_arr($i) } ]
+            }
+            ns_log Notice "hosting-farm-test-api-procs.tcl.1086: '[array get audit1_arr]'"
 
-            #ns_log Notice "hosting-farm-test-api-procs.tcl.262: $dc0_sub_f_id_list_len + $dc1_sub_f_id_list_len = $attr_tot"
-            #ns_log Notice "hosting-farm-test-api-procs.tcl.263: dc0_sub_f_id_list '${dc0_sub_f_id_list}' dc1_sub_f_id_list '${dc1_sub_f_id_list}'"
-
-
+            ns_log Notice "hosting-farm-test-api-procs.tcl.1051: atc dc $dc_atc hw $hw_atc vm $vm_atc vh $vh_atc ip $ip_atc ni $ni_atc ua $ua_atc ss $ss_atc ns $ns_atc"
+            set attr_tot [expr { $hf_sam_count_1 - $hf_sam_count_0 } ]
             aa_equals "Attributes total created" $attr_tot $atcn 
+
 
 
             # evolve data
@@ -1090,6 +1104,37 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             db_1row hf_a_recs_count { select count(*) as hf_a_count_2 from hf_assets where trashed_p!='1' }
             db_1row hf_sam_recs_count { select count(*) as hf_sam_count_2 from hf_sub_asset_map where trashed_p!='1' }
 
+
+            # audit creations
+            ns_log Notice "hosting-farm-test-api-procs.tcl.1080: hf_arm_count_1 $hf_arm_count_1 hf_arm_count_0 $hf_arm_count_0"
+            set asset_tot [expr { $hf_arm_count_2 - $hf_arm_count_0 } ]
+            aa_equals "Assets total created" $asset_tot $ac 
+
+            set asset_rev_tot [expr { $hf_a_count_2 - $hf_a_count_0 } ]
+            aa_equals "Assets revisions mapped" $asset_rev_tot $asset_tot
+
+            set atcn [expr { $dc_atc + $hw_atc + $vh_atc + $vm_atc + $ip_atc + $ni_atc + $ua_atc + $ss_atc + $ns_atc } ]
+            set audit_assets_2_lists [db_list_of_lists hf_audit_asset_type_id_assets2 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            foreach row $audit_assets_2_lists {
+                foreach element $row {
+                    lappend audit_assets_2_list $element
+                }
+            }
+            # initialize audit array elements
+            foreach a_type_id [hf_asset_type_id_list] {
+                set audit2_arr(${a_type_id}) 0
+            }
+            array set audit2_arr $audit_assets_2_list
+            foreach i [array names audit0_arr] {
+                set audit2_arr($i) [expr { $audit2_arr($i) - $audit0_arr($i) } ]
+            }
+            ns_log Notice "hosting-farm-test-api-procs.tcl.1108: '[array get audit2_arr]'"
+
+            ns_log Notice "hosting-farm-test-api-procs.tcl.1110: atc dc $dc_atc hw $hw_atc vm $vm_atc vh $vh_atc ip $ip_atc ni $ni_atc ua $ua_atc ss $ss_atc ns $ns_atc"
+            set attr_tot [expr { $hf_sam_count_2 - $hf_sam_count_0 } ]
+            aa_equals "Attributes total created" $attr_tot $atcn 
+
+
             # system clear DCs
 
 
@@ -1103,6 +1148,35 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             db_1row hf_a_recs_count { select count(*) as hf_a_count_3 from hf_assets where trashed_p!='1' }
             db_1row hf_sam_recs_count { select count(*) as hf_sam_count_3 from hf_sub_asset_map where trashed_p!='1' }
 
+
+            # audit creations
+            ns_log Notice "hosting-farm-test-api-procs.tcl.1201: hf_arm_count_1 $hf_arm_count_1 hf_arm_count_0 $hf_arm_count_0"
+            set asset_tot [expr { $hf_arm_count_3 - $hf_arm_count_0 } ]
+            aa_equals "Assets total created" $asset_tot $ac 
+
+            set asset_rev_tot [expr { $hf_a_count_3 - $hf_a_count_0 } ]
+            aa_equals "Assets revisions mapped" $asset_rev_tot $asset_tot
+
+            set atcn [expr { $dc_atc + $hw_atc + $vh_atc + $vm_atc + $ip_atc + $ni_atc + $ua_atc + $ss_atc + $ns_atc } ]
+            set audit_assets_3_lists [db_list_of_lists hf_audit_asset_type_id_assets3 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            foreach row $audit_assets_3_lists {
+                foreach element $row {
+                    lappend audit_assets_3_list $element
+                }
+            }
+            # initialize audit array elements
+            foreach a_type_id [hf_asset_type_id_list] {
+                set audit3_arr(${a_type_id}) 0
+            }
+            array set audit3_arr $audit_assets_3_list
+            foreach i [array names audit0_arr] {
+                set audit3_arr($i) [expr { $audit3_arr($i) - $audit0_arr($i) } ]
+            }
+            ns_log Notice "hosting-farm-test-api-procs.tcl.1200: '[array get audit3_arr]'"
+
+            ns_log Notice "hosting-farm-test-api-procs.tcl.1210: atc dc $dc_atc hw $hw_atc vm $vm_atc vh $vh_atc ip $ip_atc ni $ni_atc ua $ua_atc ss $ss_atc ns $ns_atc"
+            set attr_tot [expr { $hf_sam_count_3 - $hf_sam_count_0 } ]
+            aa_equals "Attributes total created" $attr_tot $atcn 
 
         }
 }
