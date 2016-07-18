@@ -54,7 +54,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             # + - + - + - # AUDIT CODE # + - + - + - # 
             # audit initializations
             # get pre-db mod table counts
-            # asset revisions (from hf_assets)
+            # assets (from hf_asset_rev_map)
             db_1row hf_arm_recs_count { select count(*) as hf_arm_count_0 from hf_asset_rev_map where trashed_p!='1' }
             set audit_arm_d_lists [db_list_of_lists hf_audit_asset_type_id_arm0 { select count(*) as ct, asset_type_id from hf_assets where f_id in ( select f_id from hf_asset_rev_map where trashed_p!='1') group by asset_type_id } ]
             set audit_arm_d_list [list ]
@@ -66,23 +66,24 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             foreach a_type_id [hf_asset_type_id_list] {
                 set audit_arm_d_arr(${a_type_id}) 0
             }
+            array set audit_arm_arr [array get audit_arm_d_arr]
             array set audit_arm_zero_arr [array get audit_arm_d_arr]
             array set audit_arm_d_arr $audit_arm_d_list
-            # assets (from hf_asset_rev_map)
-            db_1row hf_a_recs_count { select count(*) as hf_a_count_0 from hf_assets where trashed_p!='1' }
-            set audit_a_d_lists [db_list_of_lists hf_audit_asset_type_id_a0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
-            set audit_a_d_list [list ]
-            foreach row $audit_a_d_lists {
+            # asset revisions (from hf_assets)
+            db_1row hf_ac_recs_count { select count(*) as hf_ac_count_0 from hf_assets where trashed_p!='1' }
+            set audit_ac_d_lists [db_list_of_lists hf_audit_asset_type_id_a0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            set audit_ac_d_list [list ]
+            foreach row $audit_ac_d_lists {
                 foreach element $row {
-                    lappend audit_a_d_list $element
+                    lappend audit_ac_d_list $element
                 }
             }
             foreach a_type_id [hf_asset_type_id_list] {
-                set audit_a_d_arr(${a_type_id}) 0
+                set audit_ac_d_arr(${a_type_id}) 0
             }
-            array set audit_ac_arr [array get audit_a_d_arr]
-            array set audit_a_zero_arr [array get audit_a_d_arr]
-            array set audit_a_d_arr $audit_a_d_list
+            array set audit_ac_arr [array get audit_ac_d_arr]
+            array set audit_ac_zero_arr [array get audit_ac_d_arr]
+            array set audit_ac_d_arr $audit_ac_d_list
             # attributes (from hf_sub_asset_map)
             db_1row hf_sam_recs_count { select count(*) as hf_sam_count_0 from hf_sub_asset_map where trashed_p!='1' }
             set audit_sam_d_lists [db_list_of_lists hf_audit_asset_type_id_sam0 { select sub_type_id, count(*) as ct from hf_sub_asset_map where trashed_p!='1' group by sub_type_id }]
@@ -95,7 +96,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             foreach a_type_id [hf_asset_type_id_list] {
                 set audit_sam_d_arr(${a_type_id}) 0
             }
-            array set audit_atc_arr [array get audit_a_d_arr]
+            array set audit_sam_arr [array get audit_sam_d_arr]
             array set audit_sam_zero_arr [array get audit_sam_d_arr]
             array set audit_sam_d_arr $audit_sam_d_list
 
@@ -350,7 +351,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
 
             # + - + - + - # AUDIT CODE # + - + - + - # 
-            # asset revisions (from hf_assets)
+            # assets (from hf_asset_rev_map)
             db_1row hf_arm_recs_count { select count(*) as hf_arm_count_0 from hf_asset_rev_map where trashed_p!='1' }
             set audit_arm_0_lists [db_list_of_lists hf_audit_asset_type_id_arm0 { select count(*) as ct, asset_type_id from hf_assets where f_id in ( select f_id from hf_asset_rev_map where trashed_p!='1') group by asset_type_id } ]
             foreach row $audit_arm_0_lists {
@@ -364,19 +365,19 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                 set audit_arm_0_arr($i) [expr { $audit_arm_0_arr($i) - $audit_arm_d_arr($i) } ]
                 aa_equals "Asset revisions $i created" $audit_arm_0_arr($i) $audit_ac_arr($i) 
             }
-            # assets (from hf_asset_rev_map)
-            db_1row hf_a_recs_count { select count(*) as hf_a_count_0 from hf_assets where trashed_p!='1' }
-            set audit_a_0_lists [db_list_of_lists hf_audit_asset_type_id_a0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
-            foreach row $audit_a_0_lists {
+            # asset revisions (from hf_assets)
+            db_1row hf_ac_recs_count { select count(*) as hf_ac_count_0 from hf_assets where trashed_p!='1' }
+            set audit_ac_0_lists [db_list_of_lists hf_audit_asset_type_id_a0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            foreach row $audit_ac_0_lists {
                 foreach element $row {
-                    lappend audit_a_0_list $element
+                    lappend audit_ac_0_list $element
                 }
             }
-            array set audit_a_0_arr [array get audit_a_zero_arr]
-            array set audit_a_0_arr $audit_a_0_list
+            array set audit_ac_0_arr [array get audit_ac_zero_arr]
+            array set audit_ac_0_arr $audit_ac_0_list
             foreach i [hf_asset_type_id_list] {
-                set audit_a_0_arr($i) [expr { $audit_a_0_arr($i) - $audit_a_d_arr($i) } ]
-                aa_equals "Assets $i created" $audit_a_0_arr($i) $audit_ac_arr($i) 
+                set audit_ac_0_arr($i) [expr { $audit_ac_0_arr($i) - $audit_ac_d_arr($i) } ]
+                aa_equals "Assets $i created" $audit_ac_0_arr($i) $audit_ac_arr($i) 
             }
             # attributes (from hf_sub_asset_map)
             db_1row hf_sam_recs_count { select count(*) as hf_sam_count_0 from hf_sub_asset_map where trashed_p!='1' }
@@ -1108,7 +1109,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
 
             # + - + - + - # AUDIT CODE # + - + - + - # 
-            # asset revisions (from hf_assets)
+            # assets (from hf_asset_rev_map)
             db_1row hf_arm_recs_count { select count(*) as hf_arm_count_1 from hf_asset_rev_map where trashed_p!='1' }
             set audit_arm_1_lists [db_list_of_lists hf_audit_asset_type_id_arm0 { select count(*) as ct, asset_type_id from hf_assets where f_id in ( select f_id from hf_asset_rev_map where trashed_p!='1') group by asset_type_id } ]
             foreach row $audit_arm_1_lists {
@@ -1122,19 +1123,19 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                 set audit_arm_1_arr($i) [expr { $audit_arm_1_arr($i) - $audit_arm_d_arr($i) } ]
                 aa_equals "Asset revisions $i created" $audit_arm_1_arr($i) $audit_ac_arr($i) 
             }
-            # assets (from hf_asset_rev_map)
-            db_1row hf_a_recs_count { select count(*) as hf_a_count_1 from hf_assets where trashed_p!='1' }
-            set audit_a_1_lists [db_list_of_lists hf_audit_asset_type_id_a0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
-            foreach row $audit_a_1_lists {
+            # asset revisions (from hf_assets)
+            db_1row hf_ac_recs_count { select count(*) as hf_ac_count_1 from hf_assets where trashed_p!='1' }
+            set audit_ac_1_lists [db_list_of_lists hf_audit_asset_type_id_a0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            foreach row $audit_ac_1_lists {
                 foreach element $row {
-                    lappend audit_a_1_list $element
+                    lappend audit_ac_1_list $element
                 }
             }
-            array set audit_a_1_arr [array get audit_a_zero_arr]
-            array set audit_a_1_arr $audit_a_1_list
+            array set audit_ac_1_arr [array get audit_ac_zero_arr]
+            array set audit_ac_1_arr $audit_ac_1_list
             foreach i [hf_asset_type_id_list] {
-                set audit_a_1_arr($i) [expr { $audit_a_1_arr($i) - $audit_a_d_arr($i) } ]
-                aa_equals "Assets $i created" $audit_a_1_arr($i) $audit_ac_arr($i) 
+                set audit_ac_1_arr($i) [expr { $audit_ac_1_arr($i) - $audit_ac_d_arr($i) } ]
+                aa_equals "Assets $i created" $audit_ac_1_arr($i) $audit_ac_arr($i) 
             }
             # attributes (from hf_sub_asset_map)
             db_1row hf_sam_recs_count { select count(*) as hf_sam_count_1 from hf_sub_asset_map where trashed_p!='1' and attribute_p!='0' }
@@ -1170,7 +1171,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             # verify
 
             # + - + - + - # AUDIT CODE # + - + - + - # 
-            # asset revisions (from hf_assets)
+            # assets (from hf_asset_rev_map)
             db_1row hf_arm_recs_count { select count(*) as hf_arm_count_2 from hf_asset_rev_map where trashed_p!='1' }
             set audit_arm_2_lists [db_list_of_lists hf_audit_asset_type_id_arm0 { select count(*) as ct, asset_type_id from hf_assets where f_id in ( select f_id from hf_asset_rev_map where trashed_p!='1') group by asset_type_id } ]
             foreach row $audit_arm_2_lists {
@@ -1184,19 +1185,19 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                 set audit_arm_2_arr($i) [expr { $audit_arm_2_arr($i) - $audit_arm_d_arr($i) } ]
                 aa_equals "Asset revisions $i created" $audit_arm_2_arr($i) $audit_ac_arr($i) 
             }
-            # assets (from hf_asset_rev_map)
-            db_1row hf_a_recs_count { select count(*) as hf_a_count_2 from hf_assets where trashed_p!='1' }
-            set audit_a_2_lists [db_list_of_lists hf_audit_asset_type_id_a0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
-            foreach row $audit_a_2_lists {
+            # asset revisions (from hf_assets)
+            db_1row hf_ac_recs_count { select count(*) as hf_ac_count_2 from hf_assets where trashed_p!='1' }
+            set audit_ac_2_lists [db_list_of_lists hf_audit_asset_type_id_a0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            foreach row $audit_ac_2_lists {
                 foreach element $row {
-                    lappend audit_a_2_list $element
+                    lappend audit_ac_2_list $element
                 }
             }
-            array set audit_a_2_arr [array get audit_a_zero_arr]
-            array set audit_a_2_arr $audit_a_2_list
+            array set audit_ac_2_arr [array get audit_ac_zero_arr]
+            array set audit_ac_2_arr $audit_ac_2_list
             foreach i [hf_asset_type_id_list] {
-                set audit_a_2_arr($i) [expr { $audit_a_2_arr($i) - $audit_a_d_arr($i) } ]
-                aa_equals "Assets $i created" $audit_a_2_arr($i) $audit_ac_arr($i) 
+                set audit_ac_2_arr($i) [expr { $audit_ac_2_arr($i) - $audit_ac_d_arr($i) } ]
+                aa_equals "Assets $i created" $audit_ac_2_arr($i) $audit_ac_arr($i) 
             }
             # attributes (from hf_sub_asset_map)
             db_1row hf_sam_recs_count { select count(*) as hf_sam_count_2 from hf_sub_asset_map where trashed_p!='1' and attribute_p!='0' }
@@ -1239,18 +1240,18 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                 aa_equals "Asset revisions $i created" $audit_arm_3_arr($i) $audit_ac_arr($i) 
             }
             # assets (from hf_asset_rev_map)
-            db_1row hf_a_recs_count { select count(*) as hf_a_count_3 from hf_assets where trashed_p!='1' }
-            set audit_a_3_lists [db_list_of_lists hf_audit_asset_type_id_a0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
-            foreach row $audit_a_3_lists {
+            db_1row hf_ac_recs_count { select count(*) as hf_ac_count_3 from hf_assets where trashed_p!='1' }
+            set audit_ac_3_lists [db_list_of_lists hf_audit_asset_type_id_a0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
+            foreach row $audit_ac_3_lists {
                 foreach element $row {
-                    lappend audit_a_3_list $element
+                    lappend audit_ac_3_list $element
                 }
             }
-            array set audit_a_3_arr [array get audit_a_zero_arr]
-            array set audit_a_3_arr $audit_a_3_list
+            array set audit_ac_3_arr [array get audit_ac_zero_arr]
+            array set audit_ac_3_arr $audit_ac_3_list
             foreach i [hf_asset_type_id_list] {
-                set audit_a_3_arr($i) [expr { $audit_a_3_arr($i) - $audit_a_d_arr($i) } ]
-                aa_equals "Assets $i created" $audit_a_3_arr($i) $audit_ac_arr($i) 
+                set audit_ac_3_arr($i) [expr { $audit_ac_3_arr($i) - $audit_ac_d_arr($i) } ]
+                aa_equals "Assets $i created" $audit_ac_3_arr($i) $audit_ac_arr($i) 
             }
             # attributes (from hf_sub_asset_map)
             db_1row hf_sam_recs_count { select count(*) as hf_sam_count_3 from hf_sub_asset_map where trashed_p!='1' and attribute_p!='0' }
