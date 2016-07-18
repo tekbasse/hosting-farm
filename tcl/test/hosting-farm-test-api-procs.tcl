@@ -168,6 +168,8 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                      name "${domain} test ${asset_type_id} $ac" \
                                      user_id $sysowner_user_id ]
             set asset_arr(f_id) [hf_asset_create asset_arr ]
+            incr ac
+            incr audit_ac_arr(dc)
             set dci(0) $asset_arr(f_id)
             #ns_log Notice "hosting-farm-test-api-procs.tcl.113: asset_arr(label) $asset_arr(label)"
             array set asset_arr [list \
@@ -177,12 +179,11 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             #ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(label)"
             set asset_arr(${asset_type_id}_id) [hf_dc_write asset_arr]
             incr audit_atc_arr(dc)
-            set a_larr(${ac}) [array get asset_arr]
-            ns_log Notice "hosting-farm-test-api-procs.tcl.116: dci(0) '$dci(0)'"
             array unset asset_arr
-            incr ac
-            incr audit_ac_arr(dc)
-            
+            #ns_log Notice "hosting-farm-test-api-procs.tcl.116: dci(0) '$dci(0)'"
+
+
+
             set domain [hf_domain_example]
             set asset_type_id "dc"
             array set asset_arr [list \
@@ -191,6 +192,8 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                      name "${domain} test ${asset_type_id} $ac" \
                                      user_id $sysowner_user_id ]
             set asset_arr(f_id) [hf_asset_create asset_arr ]
+            incr ac
+            incr audit_ac_arr(dc)
             set dci(1) $asset_arr(f_id)
             array set asset_arr [list \
                                      affix [ad_generate_random_string] \
@@ -198,12 +201,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                      details "This is for api test"]
             set asset_arr(${asset_type_id}_id) [hf_dc_write asset_arr]
             incr audit_atc_arr(dc)
-            set a_larr(${ac}) [array get asset_arr]
-
-            ns_log Notice "hosting-farm-test-api-procs.tcl.116: dci(1) '$dci(1)'"
             array unset asset_arr
-            incr ac
-            incr audit_ac_arr(dc)
+            #ns_log Notice "hosting-farm-test-api-procs.tcl.116: dci(1) '$dci(1)'"
+
 
             while { $ac < 15 } {
                               
@@ -217,13 +217,15 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                          name "${randlabel} test ${asset_type_id} $ac" \
                                          user_id $sysowner_user_id ]
                 set asset_arr(f_id) [hf_asset_create asset_arr ]
+                incr ac
+                incr audit_ac_arr(hw)
 
 
                 # Add to dc. hf_asset hierarchy is added manually
                 set dc_ref [expr { round( fmod( $ac , 2 ) ) } ]
                 set dcn $dci(${dc_ref})
                 hf_sub_asset_map_update $dcn dc $randlabel $asset_arr(f_id) hw 0
-                ns_log Notice "hosting-farm-test-api-procs.tcl.182: dc_ref $dc_ref"
+                #ns_log Notice "hosting-farm-test-api-procs.tcl.182: dc_ref $dc_ref"
                 lappend hw_id_larr(${dc_ref}) $asset_arr(f_id)
 
                 # add hw primary attribute
@@ -234,10 +236,10 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                          os_id [randomRange $osc] \
                                          description "[string toupper ${asset_type_id}]${ac}" \
                                          details "This is for api test"]
-                set asset_arr(${asset_type_id}_id) [hf_hw_write asset_arr]
+                set asset_arr(hw_id) [hf_hw_write asset_arr]
                 incr audit_atc_arr(hw)
 
-                set a_larr(${ac}) [array get asset_arr]
+
 
 
                 # add ip
@@ -251,12 +253,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                       ipv6_addr "2001:0db8:85a3:0000:0000:8a2e:0370:${ipv6_suffix}" \
                                       ipv6_status "1"]
                 set ip_arr(ip_id) [hf_ip_write ip_arr]
-                lappend ip_id_list $ip_arr(ip_id)
-
-                set ip_larr($audit_atc_arr(ip)) [array get ip_arr]
-
-                # delayed unset ip_arr. See below
                 incr audit_atc_arr(ip)
+                # delayed unset ip_arr. See below
+
 
 
                 # add ni
@@ -265,7 +264,6 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     lappend i_list [format %x [randomRange 255]]
                 }
                 set biamac [join $i_list ":"]
-
                 array set ni_arr [list \
                                       f_id $asset_arr(f_id) \
                                       sub_label "NIC-$audit_atc_arr(ni)" \
@@ -275,12 +273,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                       ipv4_addr_range "198.51.100.0/24" \
                                       ipv6_addr_range "2001:db8:1234::/48" ]
                 set ni_arr(ni_id) [hf_ni_write ni_arr]
-                lappend ni_id_list $ni_arr(ni_id)
-                
-                set ni_larr($audit_atc_arr(ni)) [array get ni_arr]
-
-                array unset ni_arr
                 incr audit_atc_arr(ni)
+                array unset ni_arr
+
 
                 # add a ns
                 array set ns_arr [list \
@@ -288,13 +283,8 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                       active_p "0" \
                                       name_record "${domain}. A $ip_arr(ipv4_addr)" ]
                 set ns_arr(ns_id) [hf_ns_write ns_arr]
-                lappend ns_id_list $ns_arr(ns_id)
-                
-                set ns_larr($audit_atc_arr(ns)) [array get ns_arr]
-
-                array unset ns_arr
                 incr audit_atc_arr(ns)
-
+                array unset ns_arr
                 # delayed unset ip_arr, so info could be used in ns_arr
                 array unset ip_arr
 
@@ -306,11 +296,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                       ua_id "" \
                                       up "test" ]
                 set ua_arr(ua_id) [hf_user_add ua_arr]
-
-                lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
-
-                array unset ua_arr
                 incr audit_atc_arr(ua)
+                array unset ua_arr
+
 
                 array set ua_arr [list \
                                       f_id $asset_arr(f_id) \
@@ -319,16 +307,12 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                       ua_id "" \
                                       up "test" ]
                 set ua_arr(ua_id) [hf_user_add ua_arr]
-
-                lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
-
-                array unset ua_arr
                 incr audit_atc_arr(ua)
+                array unset ua_arr
+
 
                 #ns_log Notice "hosting-farm-test-api-procs.tcl.237: ac ${ac}"
                 array unset asset_arr
-                incr ac
-                incr audit_ac_arr(${asset_type_id})
 
             }
 
@@ -445,7 +429,11 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                                  name "${domain} ${asset_type_id} asset + ua" \
                                                  user_id $sysowner_user_id ]
                         set asset_arr(f_id) [hf_asset_create asset_arr ]
+                        incr ac
+                        incr audit_ac_arr(vm)
+
                         hf_sub_asset_map_update $hw_asset_id hw $asset_arr(label) $asset_arr(f_id) $asset_type_id 0
+
                         array set asset_arr [list \
                                                  domain_name $domain \
                                                  os_id [randomRange $osc] \
@@ -454,23 +442,17 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                                  mount_union "0" \
                                                  details "generated by hosting-farm-test-api-procs.tcl" ]
                         set asset_arr(vm_id) [hf_vm_write asset_arr]
-                        set a_larr(${ac}) [array get asset_arr]
-
+                        incr audit_atc_arr(vm)
                         
                         array set ua_arr [list \
                                               f_id $asset_arr(f_id) \
                                               ua "user1" \
                                               up [ad_generate_random_string]]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
-                        
-                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
-
+                        incr audit_atc_arr(ua)                        
                         array unset ua_arr
-                        incr audit_atc_arr(ua)
 
-                        incr ac
-                        incr audit_ac_arr(${asset_type_id})
-                        incr audit_atc_arr(vm)
+
                         unset asset_arr
                     }
                     1 {
@@ -496,7 +478,6 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                                  mount_union "0" \
                                                  details "generated by hosting-farm-test-api-procs.tcl" ]
                         set asset_arr(vm_id) [hf_vm_write asset_arr]
-                        set a_larr(${ac}) [array get asset_arr]
 
                         set user_count [expr { [randomRange 5] + 1 } ]
                         for { set i 0} {$i < $user_count} {incr i} {
@@ -506,7 +487,6 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                                   up [ad_generate_random_string]]
                             set ua_arr(ua_id) [hf_user_add ua_arr]
                             
-                            lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
                             
                             array unset ua_arr
                             incr audit_atc_arr(ua)
@@ -539,7 +519,6 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                                  mount_union "1" \
                                                  details "switch 2, generated by hosting-farm-test-api-procs.tcl" ]
                         set asset_arr(vm_id) [hf_vm_write asset_arr]
-                        set a_larr(${ac}) [array get asset_arr]
 
                         
                         array set ua_arr [list \
@@ -548,7 +527,6 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up [ad_generate_random_string]]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
 
                         array unset ua_arr
                         incr audit_atc_arr(ua)
@@ -567,7 +545,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               domain_name $randlabel \
                                               details "switch 2, generated by hosting-farm-test-api-procs.tcl" ]
                         set vh_arr(vh_id) [hf_vh_write vh_arr ]
-                        set a_larr(${ac}) [array get asset_arr]
+
                         incr ac
                         incr audit_ac_arr(${asset_type_id})
 
@@ -581,7 +559,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up [ad_generate_random_string]]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
+
 
                         array unset ua_arr
                         incr audit_atc_arr(ua)
@@ -606,7 +584,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               domain_name $randlabel \
                                               details "switch 2, generated by hosting-farm-test-api-procs.tcl" ]
                         set vh_arr(vh_id) [hf_vh_write vh_arr ]
-                        set a_larr(${ac}) [array get vh_arr]
+
                         incr audit_atc_arr(vh)
 
                         array set ua_arr [list \
@@ -615,7 +593,6 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up [ad_generate_random_string]]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
 
                         array unset ua_arr
                         incr audit_atc_arr(ua)
@@ -643,7 +620,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               config_uri "/usr/etc/au.conf" \
                                               memory_bytes "65535" ]
                         set ss_arr(ss_id) [hf_ss_write ss_arr]
-                        set a_larr(${ac}) [array get ss_arr]
+
 
 
                         array set ua_arr [list \
@@ -652,7 +629,6 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up [ad_generate_random_string]]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
 
                         array unset ua_arr
                         incr audit_atc_arr(ua)
@@ -687,7 +663,6 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                                  mount_union "0" \
                                                  details "switch 2, generated by hosting-farm-test-api-procs.tcl" ]
                         set asset_arr(vm_id) [hf_vm_write asset_arr]
-                        set a_larr(${ac}) [array get asset_arr]
 
                         
                         array set ua_arr [list \
@@ -696,7 +671,6 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up [ad_generate_random_string]]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
 
                         array unset ua_arr
                         incr audit_atc_arr(ua)
@@ -716,7 +690,6 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               config_uri "/usr/etc/db.conf" \
                                               memory_bytes "4294967295" ]
                         set ss_arr(ss_id) [hf_ss_write ss_arr]
-                        set a_larr(${ac}) [array get ss_arr]
                         
 
                         array set ua_arr [list \
@@ -725,7 +698,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up [ad_generate_random_string]]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
+
 
                         array unset ss_arr
                         incr audit_atc_arr(ss)
@@ -769,7 +742,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               config_uri "/usr/etc/${randtype}.conf" \
                                               memory_bytes $rand ]
                         set ss_arr(ss_id) [hf_ss_write ss_arr]
-                        set a_larr(${ac}) [array get ss_arr]
+
 
                         for {set i 0} {$i < $user_count} {incr i} {
                             array set ua_arr [list \
@@ -778,7 +751,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                                   up [ad_generate_random_string]]
                             set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                            lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
+
 
                             array unset ua_arr
                             incr audit_atc_arr(ua)
@@ -817,7 +790,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         set hw_arr(${asset_type_id}_id) [hf_hw_write asset_arr]
                         incr audit_atc_arr(hw)
 
-                        set a_larr(${ac}) [array get hw_arr]
+
 
 
                         # add ip
@@ -834,9 +807,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               ipv6_addr "2001:0db8:85a3:0000:0000:8a2e:${hwf}:${ipv6_suffix}" \
                                               ipv6_status "1"]
                         set ip_arr(ip_id) [hf_ip_write ip_arr]
-                        lappend ip_id_list $ip_arr(ip_id)
 
-                        set ip_larr($audit_atc_arr(ip)) [array get ip_arr]
+
+
 
                         # delayed unset ip_arr. See below
                         incr audit_atc_arr(ip)
@@ -858,9 +831,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               ipv4_addr_range "10.00.${ipn2}.0/3" \
                                               ipv6_addr_range "2001:db8:1234::/3" ]
                         set ni_arr(ni_id) [hf_ni_write ni_arr]
-                        lappend ni_id_list $ni_arr(ni_id)
+
                         
-                        set ni_larr($audit_atc_arr(ni)) [array get ni_arr]
+
 
                         array unset ni_arr
                         incr audit_atc_arr(ni)
@@ -871,9 +844,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               active_p "0" \
                                               name_record "${domain}. A $ip_arr(ipv4_addr)" ]
                         set ns_arr(ns_id) [hf_ns_write ns_arr]
-                        lappend ns_id_list $ns_arr(ns_id)
+
                         
-                        set ns_larr($audit_atc_arr(ns)) [array get ns_arr]
+
 
                         array unset ns_arr
                         incr audit_atc_arr(ns)
@@ -890,7 +863,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up "test" ]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
 
-                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
+
 
                         array unset ua_arr
                         incr audit_atc_arr(ua)
@@ -903,7 +876,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up "test" ]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
 
-                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
+
 
                         array unset ua_arr
                         incr audit_atc_arr(ua)
@@ -946,7 +919,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               config_uri "/usr/etc/${randtype}.conf" \
                                               memory_bytes "7:40A ORD" ]
                         set ss_arr(ss_id) [hf_ss_write ss_arr]
-                        set a_larr(${ac}) [array get ss_arr]
+
 
 
                         unset ss_arr
@@ -978,7 +951,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         set attr_arr(f_id) [hf_hw_write attr_arr]
                         incr audit_atc_arr(hw)
                         
-                        set a_larr(${ac}) [array get attr_arr]
+
                         
                         
                         # add ip
@@ -995,9 +968,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               ipv6_addr "2001:0db8:85a3:0000:0000:8a2e:${hwf}:${ipv6_suffix}" \
                                               ipv6_status "0"]
                         set ip_arr(ip_id) [hf_ip_write ip_arr]
-                        lappend ip_id_list $ip_arr(ip_id)
 
-                        set ip_larr($audit_atc_arr(ip)) [array get ip_arr]
+
+
 
                         # delayed unset ip_arr. See below
                         incr audit_atc_arr(ip)
@@ -1018,9 +991,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               ipv4_addr_range "10.00.${ipn2}.0/3" \
                                               ipv6_addr_range "2001:db8:1234::/3" ]
                         set ni_arr(ni_id) [hf_ni_write ni_arr]
-                        lappend ni_id_list $ni_arr(ni_id)
+
                         
-                        set ni_larr($audit_atc_arr(ni)) [array get ni_arr]
+
 
                         array unset ni_arr
                         incr audit_atc_arr(ni)
@@ -1031,9 +1004,8 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               active_p "0" \
                                               name_record "${domain}. A $ip_arr(ipv4_addr)" ]
                         set ns_arr(ns_id) [hf_ns_write ns_arr]
-                        lappend ns_id_list $ns_arr(ns_id)
+
                         
-                        set ns_larr($audit_atc_arr(ns)) [array get ns_arr]
 
                         array unset ns_arr
                         incr audit_atc_arr(ns)
@@ -1050,7 +1022,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up "test" ]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
 
-                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
+
 
                         array unset ua_arr
                         incr audit_atc_arr(ua)
@@ -1063,7 +1035,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               up "test" ]
                         set ua_arr(ua_id) [hf_user_add ua_arr]
 
-                        lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
+
 
                         array unset ua_arr
                         incr audit_atc_arr(ua)
@@ -1091,7 +1063,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                                  mount_union "0" \
                                                  details "switch 11, generated by hosting-farm-test-api-procs.tcl" ]
                         set asset_arr(vm_id) [hf_vm_write asset_arr]
-                        set a_larr(${ac}) [array get asset_arr]
+
                         incr audit_atc_arr(vm)
                         
 
@@ -1113,7 +1085,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                                   up [ad_generate_random_string]]
                             set ua_arr(ua_id) [hf_user_add ua_arr]
                         
-                            lappend ua_larr($audit_atc_arr(ua)) [array get ua_arr]
+
                             
                             array unset ua_arr
                             incr audit_atc_arr(ua)
@@ -1158,7 +1130,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                 aa_equals "Assets $i created" $audit_a_1_arr($i) $audit_atc_arr($i) 
             }
             # attributes (from hf_sub_asset_map)
-            db_1row hf_sam_recs_count { select count(*) as hf_sam_count_1 from hf_sub_asset_map where trashed_p!='1' }
+            db_1row hf_sam_recs_count { select count(*) as hf_sam_count_1 from hf_sub_asset_map where trashed_p!='1' and attribute_p!='0' }
             set audit_sam_1_lists [db_list_of_lists hf_audit_asset_type_id_assets0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
             foreach row $audit_sam_1_lists {
                 foreach element $row {
@@ -1220,7 +1192,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                 aa_equals "Assets $i created" $audit_a_2_arr($i) $audit_atc_arr($i) 
             }
             # attributes (from hf_sub_asset_map)
-            db_1row hf_sam_recs_count { select count(*) as hf_sam_count_2 from hf_sub_asset_map where trashed_p!='1' }
+            db_1row hf_sam_recs_count { select count(*) as hf_sam_count_2 from hf_sub_asset_map where trashed_p!='1' and attribute_p!='0' }
             set audit_sam_2_lists [db_list_of_lists hf_audit_asset_type_id_assets0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
             foreach row $audit_sam_2_lists {
                 foreach element $row {
@@ -1274,7 +1246,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                 aa_equals "Assets $i created" $audit_a_3_arr($i) $audit_atc_arr($i) 
             }
             # attributes (from hf_sub_asset_map)
-            db_1row hf_sam_recs_count { select count(*) as hf_sam_count_3 from hf_sub_asset_map where trashed_p!='1' }
+            db_1row hf_sam_recs_count { select count(*) as hf_sam_count_3 from hf_sub_asset_map where trashed_p!='1' and attribute_p!='0' }
             set audit_sam_3_lists [db_list_of_lists hf_audit_asset_type_id_assets0 { select asset_type_id, count(*) as ct from hf_assets group by asset_type_id }]
             foreach row $audit_sam_3_lists {
                 foreach element $row {
