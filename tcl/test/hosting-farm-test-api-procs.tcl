@@ -53,6 +53,12 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             
             # + - + - + - # AUDIT CODE # + - + - + - # 
             # audit initializations
+            foreach a_type_id [hf_asset_type_id_list] {
+                set audit_zero_arr(${a_type_id}) 0
+            }
+            array set audit_arm_arr [array get audit_zero_arr]
+            array set audit_ac_arr [array get audit_zero_arr]
+            array set audit_sam_arr [array get audit_zero_arr]
             # get pre-db mod table counts
             # assets (from hf_asset_rev_map)
             db_1row hf_arm_recs_count { select count(*) as hf_arm_count_0 from hf_asset_rev_map where trashed_p!='1' }
@@ -63,11 +69,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     lappend audit_arm_d_list $element
                 }
             }
-            foreach a_type_id [hf_asset_type_id_list] {
-                set audit_arm_d_arr(${a_type_id}) 0
-            }
-            array set audit_arm_arr [array get audit_arm_d_arr]
-            array set audit_arm_zero_arr [array get audit_arm_d_arr]
+            array set audit_arm_d_arr [array get audit_zero_arr]
             array set audit_arm_d_arr $audit_arm_d_list
             # asset revisions (from hf_assets)
             db_1row hf_ac_recs_count { select count(*) as hf_ac_count_0 from hf_assets where trashed_p!='1' }
@@ -78,11 +80,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     lappend audit_ac_d_list $element
                 }
             }
-            foreach a_type_id [hf_asset_type_id_list] {
-                set audit_ac_d_arr(${a_type_id}) 0
-            }
-            array set audit_ac_arr [array get audit_ac_d_arr]
-            array set audit_ac_zero_arr [array get audit_ac_d_arr]
+            array set audit_ac_d_arr [array get audit_zero_arr]
             array set audit_ac_d_arr $audit_ac_d_list
             # attributes (from hf_sub_asset_map)
             db_1row hf_sam_recs_count { select count(*) as hf_sam_count_0 from hf_sub_asset_map where trashed_p!='1' }
@@ -93,11 +91,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     lappend audit_sam_d_list $element
                 }
             }
-            foreach a_type_id [hf_asset_type_id_list] {
-                set audit_sam_d_arr(${a_type_id}) 0
-            }
-            array set audit_sam_arr [array get audit_sam_d_arr]
-            array set audit_sam_zero_arr [array get audit_sam_d_arr]
+            array set audit_sam_d_arr [array get audit_zero_arr]
             array set audit_sam_d_arr $audit_sam_d_list
 
 
@@ -359,7 +353,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     lappend audit_arm_0_list $element
                 }
             }
-            array set audit_arm_0_arr [array get audit_arm_zero_arr]
+            array set audit_arm_0_arr [array get audit_zero_arr]
             array set audit_arm_0_arr $audit_arm_0_list
             foreach i [hf_asset_type_id_list] {
                 set audit_arm_0_arr($i) [expr { $audit_arm_0_arr($i) - $audit_arm_d_arr($i) } ]
@@ -373,7 +367,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     lappend audit_ac_0_list $element
                 }
             }
-            array set audit_ac_0_arr [array get audit_ac_zero_arr]
+            array set audit_ac_0_arr [array get audit_zero_arr]
             array set audit_ac_0_arr $audit_ac_0_list
             foreach i [hf_asset_type_id_list] {
                 set audit_ac_0_arr($i) [expr { $audit_ac_0_arr($i) - $audit_ac_d_arr($i) } ]
@@ -387,7 +381,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     lappend audit_sam_0_list $element
                 }
             }
-            array set audit_sam_0_arr [array get audit_sam_zero_arr]
+            array set audit_sam_0_arr [array get audit_zero_arr]
             array set audit_sam_0_arr $audit_sam_0_list
             foreach i [hf_asset_type_id_list] {
                 set audit_sam_0_arr($i) [expr { $audit_sam_0_arr($i) - $audit_sam_d_arr($i) } ]
@@ -1117,7 +1111,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     lappend audit_arm_1_list $element
                 }
             }
-            array set audit_arm_1_arr [array get audit_arm_zero_arr]
+            array set audit_arm_1_arr [array get audit_zero_arr]
             array set audit_arm_1_arr $audit_arm_1_list
             foreach i [hf_asset_type_id_list] {
                 set audit_arm_1_arr($i) [expr { $audit_arm_1_arr($i) - $audit_arm_d_arr($i) } ]
@@ -1131,7 +1125,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     lappend audit_ac_1_list $element
                 }
             }
-            array set audit_ac_1_arr [array get audit_ac_zero_arr]
+            array set audit_ac_1_arr [array get audit_zero_arr]
             array set audit_ac_1_arr $audit_ac_1_list
             foreach i [hf_asset_type_id_list] {
                 set audit_ac_1_arr($i) [expr { $audit_ac_1_arr($i) - $audit_ac_d_arr($i) } ]
@@ -1145,7 +1139,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     lappend audit_sam_1_list $element
                 }
             }
-            array set audit_sam_1_arr [array get audit_sam_zero_arr]
+            array set audit_sam_1_arr [array get audit_zero_arr]
             array set audit_sam_1_arr $audit_sam_1_list
             foreach i [hf_asset_type_id_list] {
                 set audit_sam_1_arr($i) [expr { $audit_sam_1_arr($i) - $audit_sam_d_arr($i) } ]
@@ -1179,7 +1173,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     lappend audit_arm_2_list $element
                 }
             }
-            array set audit_arm_2_arr [array get audit_arm_zero_arr]
+            array set audit_arm_2_arr [array get audit_zero_arr]
             array set audit_arm_2_arr $audit_arm_2_list
             foreach i [hf_asset_type_id_list] {
                 set audit_arm_2_arr($i) [expr { $audit_arm_2_arr($i) - $audit_arm_d_arr($i) } ]
@@ -1193,7 +1187,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     lappend audit_ac_2_list $element
                 }
             }
-            array set audit_ac_2_arr [array get audit_ac_zero_arr]
+            array set audit_ac_2_arr [array get audit_zero_arr]
             array set audit_ac_2_arr $audit_ac_2_list
             foreach i [hf_asset_type_id_list] {
                 set audit_ac_2_arr($i) [expr { $audit_ac_2_arr($i) - $audit_ac_d_arr($i) } ]
@@ -1207,7 +1201,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     lappend audit_sam_2_list $element
                 }
             }
-            array set audit_sam_2_arr [array get audit_sam_zero_arr]
+            array set audit_sam_2_arr [array get audit_zero_arr]
             array set audit_sam_2_arr $audit_sam_2_list
             foreach i [hf_asset_type_id_list] {
                 set audit_sam_2_arr($i) [expr { $audit_sam_2_arr($i) - $audit_sam_d_arr($i) } ]
@@ -1233,7 +1227,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     lappend audit_arm_3_list $element
                 }
             }
-            array set audit_arm_3_arr [array get audit_arm_zero_arr]
+            array set audit_arm_3_arr [array get audit_zero_arr]
             array set audit_arm_3_arr $audit_arm_3_list
             foreach i [hf_asset_type_id_list] {
                 set audit_arm_3_arr($i) [expr { $audit_arm_3_arr($i) - $audit_arm_d_arr($i) } ]
@@ -1247,7 +1241,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     lappend audit_ac_3_list $element
                 }
             }
-            array set audit_ac_3_arr [array get audit_ac_zero_arr]
+            array set audit_ac_3_arr [array get audit_zero_arr]
             array set audit_ac_3_arr $audit_ac_3_list
             foreach i [hf_asset_type_id_list] {
                 set audit_ac_3_arr($i) [expr { $audit_ac_3_arr($i) - $audit_ac_d_arr($i) } ]
@@ -1261,7 +1255,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     lappend audit_sam_3_list $element
                 }
             }
-            array set audit_sam_3_arr [array get audit_sam_zero_arr]
+            array set audit_sam_3_arr [array get audit_zero_arr]
             array set audit_sam_3_arr $audit_sam_3_list
             foreach i [hf_asset_type_id_list] {
                 set audit_sam_3_arr($i) [expr { $audit_sam_3_arr($i) - $audit_sam_d_arr($i) } ]
