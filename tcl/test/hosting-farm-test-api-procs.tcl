@@ -80,7 +80,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             foreach a_type_id [hf_asset_type_id_list] {
                 set audit_a_d_arr(${a_type_id}) 0
             }
-            array set audit_ac_arr [array get autid_a_d_arr]
+            array set audit_ac_arr [array get audit_a_d_arr]
             array set audit_a_zero_arr [array get audit_a_d_arr]
             array set audit_a_d_arr $audit_a_d_list
             # attributes (from hf_sub_asset_map)
@@ -95,7 +95,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             foreach a_type_id [hf_asset_type_id_list] {
                 set audit_sam_d_arr(${a_type_id}) 0
             }
-            array set audit_atc_arr [array get autid_a_d_arr]
+            array set audit_atc_arr [array get audit_a_d_arr]
             array set audit_sam_zero_arr [array get audit_sam_d_arr]
             array set audit_sam_d_arr $audit_sam_d_list
 
@@ -156,10 +156,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
             set ac 0
             # atc# = attribute counter
-            array set audit_atc_arr [array get audit_sam_zero_arr]
-            array set audit_ac_arr [array get audit_a_zero_arr]
-
-
+ 
             set domain [hf_domain_example]
             set asset_type_id "dc"
             array set asset_arr [list \
@@ -467,6 +464,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                                  name "${domain} ${asset_type_id} asset + ua" \
                                                  user_id $sysowner_user_id ]
                         set asset_arr(f_id) [hf_asset_create asset_arr ]
+                        incr ac
+                        incr audit_ac_arr(vm)
+
                         # link asset to hw_id
                         hf_sub_asset_map_update $hw_asset_id hw $asset_arr(label) $asset_arr(f_id) $asset_type_id 0
 
@@ -508,6 +508,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                                  name "${domain} ${asset_type_id} asset + ua" \
                                                  user_id $sysowner_user_id ]
                         set asset_arr(f_id) [hf_asset_create asset_arr ]
+                        incr ac
+                        incr audit_ac_arr(vm)
+
                         # link asset to hw_id
                         hf_sub_asset_map_update $hw_asset_id hw $asset_arr(label) $asset_arr(f_id) $asset_type_id 0
 
@@ -568,8 +571,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         unset vh_arr
                         incr audit_atc_arr(vm)
                         unset asset_arr
-                        incr ac
-                        incr audit_ac_arr(${asset_type_id})
+
                     }
                     3 {
                         #ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
@@ -603,6 +605,8 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         set ss_arr(asset_type_id) "ss"
                         append ss_arr(label) "-gold"
                         set ss_arr(f_id) [hf_asset_create ss_arr]
+                        incr ac
+                        incr audit_ac_arr(${asset_type_id})                                          
 
                         # link asset to vh_id
                         hf_sub_asset_map_update $vh_arr(vh_id) vh $ss_arr(label) $ss_arr(f_id) ss 0
@@ -638,8 +642,6 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         unset ss_arr
                         unset vh_arr
                         incr audit_atc_arr(ss)
-                        incr ac
-                        incr audit_ac_arr(${asset_type_id})                                          
                     }
                     4 {
                         #ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
@@ -652,6 +654,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                                  name "${domain} ${asset_type_id} asset + ua" \
                                                  user_id $sysowner_user_id ]
                         set asset_arr(f_id) [hf_asset_create asset_arr ]
+                        incr ac
+                        incr audit_ac_arr(vm)
+
                         # link asset to hw_id
                         hf_sub_asset_map_update $hw_asset_id hw $asset_arr(label) $asset_arr(f_id) $asset_type_id 0
 
@@ -707,8 +712,6 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
                         array unset asset_arr
                         
-                        incr ac
-                        incr audit_ac_arr(${asset_type_id})
                     }
                     5 {
                         #ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
@@ -723,6 +726,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               name "${randlabel} test ${asset_type_id} $ac" \
                                               user_id $sysowner_user_id ]
                         set ss_arr(f_id) [hf_asset_create ss_arr]
+                        incr ac
+                        incr audit_ac_arr(ss)
+
                         # link asset to hw_id
                         hf_sub_asset_map_update $hw_asset_id hw $ss_arr(label) $ss_arr(f_id) $asset_type_id 0
 
@@ -759,8 +765,6 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
                         unset ss_arr
                         incr audit_atc_arr(ss)
-                        incr ac
-                        incr audit_ac_arr(${asset_type_id})
                     }
                     6,7,8 {
                         #ns_log Notice "hosting-farm-test-api-procs.tcl: switch '${dice}' hw_asset_id '${hw_asset_id}'"
@@ -776,6 +780,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               name "${randlabel} test ${asset_type_id} $ac" \
                                               user_id $sysowner_user_id ]
                         set hw_arr(f_id) [hf_asset_create hw_arr]
+                        incr ac
+                        incr audit_ac_arr(hw)
+
                         # link asset to hw_id
                         hf_sub_asset_map_update $hw_asset_id hw $hw_arr(label) $hw_arr(f_id) $asset_type_id 0
                         
@@ -883,8 +890,6 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
 
                         array unset hw_arr
-                        incr ac
-                        incr audit_ac_arr(${asset_type_id})
 
                     }
                     9 {
@@ -900,6 +905,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                               name "${randlabel} test ${asset_type_id} $ac" \
                                               user_id $sysowner_user_id ]
                         set ss_arr(f_id) [hf_asset_create ss_arr]
+                        incr ac
+                        incr audit_ac_arr(ss)
+
                         # link asset to hw_id
                         hf_sub_asset_map_update $hw_asset_id hw $ss_arr(label) $ss_arr(f_id) $asset_type_id 0
 
@@ -924,8 +932,6 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
                         unset ss_arr
                         incr audit_atc_arr(ss)
-                        incr ac
-                        incr audit_ac_arr(${asset_type_id})
 
                     }
                     10 {
@@ -1077,6 +1083,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                                   name "${randlabel} test switch 11 ${asset_type_id} $ac" \
                                                   user_id $sysowner_user_id ]
                             set ua_arr(f_id) [hf_asset_create ua_arr]
+                            incr ac
+                            incr audit_ac_arr(${asset_type_id})
+
                             # link asset to hw_id
                             hf_sub_asset_map_update $hw_asset_id hw $ua_arr(label) $ua_arr(f_id) $asset_type_id 0
                             array set ua_arr [list \
@@ -1089,8 +1098,6 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                             
                             array unset ua_arr
                             incr audit_atc_arr(ua)
-                            incr ac
-                            incr audit_ac_arr(${asset_type_id})
                         }
                         
                     }
