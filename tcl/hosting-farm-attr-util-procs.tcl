@@ -588,6 +588,7 @@ ad_proc -private hf_attribute_map_update {
 ad_proc -private hf_assets_map_create {
     f_id
     sub_f_id
+    {sub_label ""}
 } {
     Link existing asset to another existing asset.
     @param f_id The asset f_id that will be parent of the two.
@@ -601,21 +602,38 @@ ad_proc -private hf_assets_map_create {
     if { $asset_id ne ""  && $sub_asset_id ne "" } {
         set type_id [hf_asset_type_id_of_asset_id $f_id]
         set stats_list [hf_asset_stats $sub_asset_id [list label asset_type_id]]
-        if { $type_id ne "" && $asset_type_id ne "" } {
+        set allowed_sub_type_id_list [hf_types_allowed_by $type_id]
+        if { $asset_type_id in $allowed_sub_type_id_list } {
+            # verify link does not already exist.
+            set exists_p [db_0or1row hf_assets_map_ck { select f_id from hf_sub_asset_map
+                where f_id=:f_id
+                and sub_f_id=:sub_f_id
+                and instance_id=:instance_id
+            } ]
+            
             set nowts [dt_systime -gmt 1]
             set last_updated $nowts
             set sub_type_id $asset_type_id
-            set sub_label [string range $label 0 64]
+            if { $sub_label eq "" } {
+                set sub_label [string range $label 0 64]
+            }
             set sub_sort_order [expr { [hf_asset_cascade_count $f_id] * 20 } ]
             set trashed_p 0
             set attribute_p 0
             set success_p 1
             ns_log Notice "hf_assets_map_create.598: f_id '${f_id}' sub_f_id '${sub_f_id}' sub_sort_order '${sub_sort_order}'"
-            db_dml hf_assets_map_cr "insert into hf_sub_asset_map \
+            if { $exists_p } {
+                db_dml hf_assets_map_up { update hf_sub_asset_map
+                    set trashed_p=:trashed_p,attribute_p=:attribute_p,last_updated=:last_updated,sub_label=:sub_label
+                    where f_id=:f_id and sub_f_id=:sub_f_id and instance_id=:instance_id
+                } else {
+                    db_dml hf_assets_map_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
+                }
+            }
+        } else {
+            ns_log Warning "hf_assets_map_create.614: sub_f_id '${sub_f_id}' sub_asset_type_id '${sub_asset_type_id}' cannot be dependent of f_id '${f_id}' type_id '${type_id}'. "
         }
-    } else {
-            ns_log Warning "hf_assets_map_create.614: sub_asset_type_id '${sub_asset_type_id}' cannot be dependent of type_id '${type_id}'"
     }
     return $success_p
 }
@@ -675,6 +693,78 @@ ad_proc -private hf_attributes_map_create {
     return $sub_f_id
 }
 
+
+ad_proc -private hf_attribute_asset_map_create {
+    f_id
+    sub_f_id
+    {sub_label ""}
+} {
+    Link existing asset (dependent) to an existing attribute (parent).
+    @param f_id The asset f_id that will be parent of the two.
+    @param sub_f_id The asset f_id that will be child of the two.
+    @return 1 if success, otherwwise returns 0.
+} {
+    # 5. An existing asset linked to an existing attribute.
+    #    hf_attribute_asset_create
+    #    This isn't a recommended linkage, because common sense dictates
+    #    that any system assets that are monitored ought to have
+    #    all dependent linkages monitorable also.  
+    #    And attrbute ids change with each revision.. there is
+    #    only a casual sense of revisioning--if sublabel is same. Still..
+    #    enforcing this restriction  may be more of a hassle to enforce
+    #    than just issuing the linkage directly.  By offering this
+    #    case, there is also the possibiity to track the cases at time
+    #    of issue and maybe create an asset to assign to the parent attribute
+    #    without modifying the existing code too much as a means to enforce
+    #    --could even make
+    #    adding an asset automatically as a package parameter (feature creep?)
+    upvar 1 instance_id instance_id
+    set success_p 0
+    # Remember here: f_id is attribute, sub_f_id is asset (Reverse of everywhere else).
+    set f_id_orig $f_id
+    set sub_f_id_orig $sub_f_id
+    set f_id [hf_sub_f_id_current $f_id_orig]
+    set sub_f_id [hf_asset_id_current_of_f_id $sub_f_id_orig]
+    if { $f_id ne ""  && $sub_f_id ne "" } {
+        set type_id [hf_asset_type_id_of_f_id $f_id]
+        set stats_list [hf_asset_stats $sub_f_id [list label asset_type_id]]
+        set allowed_sub_type_id_list [hf_types_allowed_by $type_id]
+        if { $asset_type_id in $allowed_sub_type_id_list } {
+            # verify link does not already exist.
+            set exists_p [db_0or1row hf_attribute_asset_map_ck { select f_id from hf_sub_asset_map
+                where f_id=:f_id
+                and sub_f_id=:sub_f_id
+                and instance_id=:instance_id
+            } ]
+
+            set nowts [dt_systime -gmt 1]
+            set last_updated $nowts
+            set sub_type_id $asset_type_id
+            if { $sub_label eq "" } {
+                set sub_label [string range $label 0 64]
+            }
+            set sub_sort_order [expr { [hf_asset_cascade_count $f_id] * 20 } ]
+            set trashed_p 0
+            set attribute_p 0
+            set success_p 1
+            ns_log Notice "hf_attribute_asset_map_create.720: f_id '${f_id}' f_id_orig '${f_id_orig}' sub_f_id '${sub_f_id}' sub_label '${sub_label}' sub_sort_order '${sub_sort_order}'"
+            if { $exists_p } {
+                db_dml hf_attribute_asset_map_up { update hf_sub_asset_map
+                    set trashed_p=:trashed_p,attribute_p=:attribute_p,last_updated=:last_updated,sub_label=:sub_label
+                    where f_id=:f_id and sub_f_id=:sub_f_id and instance_id=:instance_id
+                } else {
+                    db_dml hf_attribute_asset_map_cr "insert into hf_sub_asset_map \
+ ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
+                }
+            }
+        } else {
+            ns_log Warning "hf_attribute_asset_map_create.741: sub_f_id '${sub_f_id}' sub_asset_type_id '${sub_asset_type_id}' cannot be dependent of f_id '${f_id}' type_id '${type_id}'. "
+        }
+    }
+    return $success_p
+}
+
+
 ad_proc -private hf_sub_asset_map_update {
     f_id
     asset_type_id
@@ -712,6 +802,17 @@ ad_proc -private hf_sub_asset_map_update {
     #    Instead, 
     #     all cases of the changed id must be updated at the same time
     #    See case 2.
+    # 5. An existing asset linked to an existing attribute.
+    #    hf_attribute_asset_create
+    #    This isn't a recommended linkage, because common sense dictates
+    #    that any system assets that are monitored ought to have
+    #    all dependent linkages monitorable also.  Still..
+    #    this kind of api enforcement may be more of a hassle to enforce
+    #    than just issuing the linkage directly.  By offering this
+    #    case, there is also the possibiity to track the cases at time
+    #    of issue and may create an asset to assign to the parent attribute
+    #    without modifying the existing code too much --could even make
+    #    adding an asset automatically as a package parameter.
 
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -762,12 +863,16 @@ ad_proc -private hf_sub_asset_map_update {
     } elseif { $sub_f_id_attr_p } {
         # case 2
         if { $sub_f_id ne "" } {
-            set sub_f_id_new [hf_attribute_map_update $sub_f_id]
+            set sub_f_id_new [hf_attribute_map_update $sub_f_id]    
         } else {
             ns_log Warning "hf_sub_asset_map_update.743: empty sub_f_id  f_id '${f_id}' sub_f_id '${sub_f_id}'"
         }
+    } elseif { $f_id_attr_p && $sub_f_id_asset_p && !$sub_f_id_attr_new_p } {
+        # case 5  Not recommended, but hey, okay let's do it.
+        ns_log Notice "hf_sub_asset_map_update.746: mapping an asset to an attribute. f_id '${f_id}' sub_f_id '${sub_f_id}'"
+
+        set sub_f_id_new [hf_attribute_asset_map_create $f_id $sub_f_id]
     } else {
-        ##code Need to add case f_id_attr_p && sub_f_id_asset_p
         ns_log Warning "hf_sub_asset_map_update.747: case not found for f_id '${f_id}' sub_f_id '${sub_f_id}'"
     }
     return $sub_f_id_new
