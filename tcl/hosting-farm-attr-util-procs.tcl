@@ -715,21 +715,32 @@ ad_proc -private hf_sub_asset_map_update {
 
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
-    # determine if f_id is an asset.
+   
+    # Determine if f_id is an asset.
     set f_id_asset_p [hf_f_id_exists_q $f_id]
     set f_id_attr_p 0
     if { !$f_id_asset_p && [qf_is_natural_number $f_id] } {
         # is f_id an attribute?
         set f_id_attr_p [hf_sub_f_id_current_q $f_id]
     }
-    # determine if sub_f_id is an asset, attribute, or blank (a new attribute)
+
+    # Determine if sub_f_id is:
+    #                           _asset_p attr_p  attr_new_p
+    # an asset                     1       0      0
+    #, attribute,                  0       1      0
+    # or blank (a new attribute)   0       1      1
+
     set sub_f_id_attr_new_p 0
     set sub_f_id_asset_p 0
     set sub_f_id_attr_p 0
     if { [qf_is_natural_number $sub_f_id] } {
+        # expected to be asset XOR attribute
         set sub_f_id_asset_p [hf_f_id_exists_q $sub_f_id]
         if { !$sub_f_id_asset_p } {
             set sub_f_id_attr_p [hf_sub_f_id_current_q $sub_f_id]
+        }
+        if { !$sub_f_id_asset_p && !$sub_f_id_attr_p } {
+            ns_log Warning "hf_sub-asset_map_update.735: sub_f_id '${sub_f_id}' supplied, but not f_id or current sub_f_id."
         }
     }
     if { !$sub_f_id_asset_p && !$sub_f_id_attr_p } {
@@ -750,7 +761,11 @@ ad_proc -private hf_sub_asset_map_update {
         set sub_f_id_new [hf_attributes_map_create $f_id $sub_label $sub_asset_type_id]
     } elseif { $sub_f_id_attr_p } {
         # case 2
-        set sub_f_id_new [hf_attribute_map_update $sub_f_id]
+        if { $sub_f_id ne "" } {
+            set sub_f_id_new [hf_attribute_map_update $sub_f_id]
+        } else {
+            ns_log Warning "hf_sub_asset_map_update.743: empty sub_f_id  f_id '${f_id}' sub_f_id '${sub_f_id}'"
+        }
     } else {
         ns_log Warning "hf_sub_asset_map_update.747: case not found for f_id '${f_id}' sub_f_id '${sub_f_id}'"
     }

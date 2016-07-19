@@ -417,6 +417,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             set hw_asset_id_list [concat $hw_id_larr(0) $hw_id_larr(1) ]
             foreach hw_asset_id $hw_asset_id_list {
                 set dice [randomRange 11]
+                ns_log Notice "hosting-farm-test-api-procs.tcl: starting switch '${dice}'"
                 switch -glob -- $dice {
                     0 {
 
@@ -1064,6 +1065,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         }
                     }
                 }
+                ns_log Notice "hosting-farm-test-api-procs.tcl: end switch '${dice}'"
                 #end switch
             }
             # end foreach
