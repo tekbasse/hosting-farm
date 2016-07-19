@@ -76,7 +76,7 @@ ad_proc -private hf_sub_asset_map_defaults {
                       sub_type_id "" \
                       sub_sort_order "" \
                       sub_label "" \
-                      attribute_p $attribute_p "1" \
+                      attribute_p $attribute_p \
                       trashed_p "0" \
                       last_updated $nowts ]
     foreach {key value} $sam_list {

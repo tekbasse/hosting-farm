@@ -629,7 +629,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
 
                             array set ua_arr [list \
-                                                  f_id $ss_arr(f_id) \
+                                                  f_id $ss_arr(ss_id) \
                                                   ua "user1" \
                                                   up [ad_generate_random_string]]
                             set ua_arr(ua_id) [hf_user_add ua_arr]
@@ -671,7 +671,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                             set asset_arr(vm_id) [hf_vm_write asset_arr]
 
                             array set ua_arr [list \
-                                                  f_id $asset_arr(f_id) \
+                                                  f_id $asset_arr(vm_id) \
                                                   ua "user1" \
                                                   up [ad_generate_random_string]]
                             set ua_arr(ua_id) [hf_user_add ua_arr]
@@ -679,7 +679,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                             array unset ua_arr
 
                             array set ss_arr [list \
-                                                  f_id $asset_arr(f_id) \
+                                                  f_id $asset_arr(vm_id) \
                                                   server_name "db.server.local" \
                                                   service_name "fields" \
                                                   daemon_ref "wc" \
@@ -695,7 +695,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                             incr audit_atc_arr(ss)
 
                             array set ua_arr [list \
-                                                  f_id $ss_arr(f_id) \
+                                                  f_id $ss_arr(ss_id) \
                                                   ua "db_user1" \
                                                   up [ad_generate_random_string]]
                             set ua_arr(ua_id) [hf_user_add ua_arr]
@@ -748,7 +748,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
                             for {set i 0} {$i < $user_count} {incr i} {
                                 array set ua_arr [list \
-                                                      f_id $ss_arr(f_id) \
+                                                      f_id $ss_arr(ss_id) \
                                                       ua "user${i}" \
                                                       up [ad_generate_random_string]]
                                 set ua_arr(ua_id) [hf_user_add ua_arr]
@@ -761,7 +761,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         }
                         array unset ss_arr
                     }
-                    6 - 8 {
+                    6 - 7 - 8 {
 
                         # add hw asset + ua  as colo unit botbox etc.
 
@@ -779,8 +779,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                             incr ac
                             incr audit_ac_arr(hw)
 
+                            #ns_log Notice "hosting-farm-test-api-procs.tcl.781 hw_arr(f_id) $hw_arr(f_id) hw_arr(label) $hw_arr(label)"
                             # link asset to hw_id
-                            hf_sub_asset_map_update $hw_asset_id hw $hw_arr(label) $hw_arr(f_id) $asset_type_id 0
+                            hf_sub_asset_map_update $hw_asset_id hw $hw_arr(label) $hw_arr(f_id) hw 0
 
                             # add hw primary attribute
                             array set hw_arr [list \
@@ -790,7 +791,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                                   os_id [randomRange $osc] \
                                                   description "[string toupper ${asset_type_id}]${ac}" \
                                                   details "This is for api test"]
-                            set hw_arr(hw_id) [hf_hw_write asset_arr]
+                            set hw_arr(hw_id) [hf_hw_write hw_arr]
                             if { $hw_arr(hw_id) > 0 } {
                                 incr audit_atc_arr(hw)
                             } else {
@@ -803,7 +804,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                             set ipv6_suffix [format %x [expr { int( fmod( $audit_atc_arr(ip), 65535 ) ) } ]]
                             set hwf [format %x $audit_atc_arr(hw)]
                             array set ip_arr [list \
-                                                  f_id $hw_arr(f_id) \
+                                                  f_id $hw_arr(hw_id) \
                                                   sub_label "eth0" \
                                                   ip_id "" \
                                                   ipv4_addr "10.0.${ipn2}.${ipn}" \
@@ -823,7 +824,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                             set biamac [join $i_list ":"]
 
                             array set ni_arr [list \
-                                                  f_id $hw_arr(f_id) \
+                                                  f_id $hw_arr(hw_id) \
                                                   sub_label "NIC-$audit_atc_arr(ni)" \
                                                   os_dev_ref "io1" \
                                                   bia_mac_address ${biamac} \
@@ -837,7 +838,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
                             # add a ns
                             array set ns_arr [list \
-                                                  f_id $hw_arr(f_id) \
+                                                  f_id $hw_arr(hw_id) \
                                                   active_p "0" \
                                                   name_record "${domain}. A $ip_arr(ipv4_addr)" ]
                             set ns_arr(ns_id) [hf_ns_write ns_arr]
