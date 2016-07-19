@@ -453,8 +453,12 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                             set ua_arr(ua_id) [hf_user_add ua_arr]
                             incr audit_atc_arr(ua)
                             array unset ua_arr
+
+                        } else {
+                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 0 failed to create asset."
                         }
-                      array unset asset_arr
+
+                        array unset asset_arr
                     }
                     1 {
 
@@ -851,7 +855,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
                             # add two ua
                             array set ua_arr [list \
-                                                  f_id $hw_arr(f_id) \
+                                                  f_id $hw_arr(hw_id) \
                                                   ua "user1" \
                                                   connection_type "https" \
                                                   ua_id "" \
@@ -862,7 +866,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
 
                             array set ua_arr [list \
-                                                  f_id $hw_arr(f_id) \
+                                                  f_id $hw_arr(hw_id) \
                                                   ua "user2" \
                                                   connection_type "https" \
                                                   ua_id "" \
@@ -1050,7 +1054,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                 incr audit_ac_arr(ua)
 
                                 # link asset to hw_id
-                                hf_sub_asset_map_update $hw_asset_id hw $ua_arr(label) $ua_arr(f_id) $asset_type_id 0
+                                #hf_sub_asset_map_update $hw_asset_id hw $ua_arr(label) $ua_arr(f_id) $asset_type_id 0
+                                # link asset to vm_id
+                                hf_sub_asset_map_update $asset_arr(vm_id) vm $ua_arr(label) $ua_arr(f_id) $asset_type_id 0
 
                                 array set ua_arr [list \
                                                       f_id $ua_arr(f_id) \
@@ -1059,11 +1065,30 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                 set ua_arr(ua_id) [hf_user_add ua_arr]
                                 incr audit_atc_arr(ua)
 
+                                set j_count [randomRange 200]
+                                incr $j_count 100
+                                for {set j 0} {$j < $j_count} {incr j} {
+
+                                    # add a ns
+                                    set domain [hf_domain_example]
+                                    set ipn [expr { int( fmod( $audit_atc_arr(ua), 256) ) } ]
+                                    set ipn2 [expr { int( $audit_atc_arr(ua) / 256 ) } ]
+                                    set ipv4_addr "10.0.${ipn2}.${ipn}"
+                                    array set ns_arr [list \
+                                                          f_id $ua_arr(f_id) \
+                                                          active_p "0" \
+                                                          name_record "${domain}. A ${ipv4_addr}" ]
+                                    set ns_arr(ns_id) [hf_ns_write ns_arr]
+                                    incr audit_atc_arr(ns)
+                                    array unset ns_arr
+                                    
+                                }
                             } else {
                                 ns_log Warning "hosting-farm-test-api-procs.tcl dice= 11 failed to create asset."
                             }
                             array unset ua_arr
                         }
+                        array unset asset_arr
                     }
                 }
                 ns_log Notice "hosting-farm-test-api-procs.tcl: end switch '${dice}'"
