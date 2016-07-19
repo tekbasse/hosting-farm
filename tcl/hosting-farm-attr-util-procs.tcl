@@ -539,8 +539,7 @@ ad_proc -private hf_attribute_map_update {
     @returns new_id
 } {
     upvar 1 instance_id instance_id
-    set success_p 0
-    set sub_f_id_new ""
+
     # 2. link updated attribute to existing asset/attribute 
     #    (including primary asset case) if attribute.label (sub_label) is same.
     #    The updated attribute will be issued a different id and map updated
@@ -723,7 +722,7 @@ ad_proc -private hf_sub_asset_map_update {
         # is f_id an attribute?
         set f_id_attr_p [hf_sub_f_id_current_q $f_id]
     }
-    # determin if sub_f_id is an asset, attribute, or blank (a new attribute)
+    # determine if sub_f_id is an asset, attribute, or blank (a new attribute)
     set sub_f_id_attr_new_p 0
     set sub_f_id_asset_p 0
     set sub_f_id_attr_p 0
