@@ -767,6 +767,7 @@ ad_proc -private hf_sub_asset_map_update {
             ns_log Warning "hf_sub_asset_map_update.743: empty sub_f_id  f_id '${f_id}' sub_f_id '${sub_f_id}'"
         }
     } else {
+        ##code Need to add case f_id_attr_p && sub_f_id_asset_p
         ns_log Warning "hf_sub_asset_map_update.747: case not found for f_id '${f_id}' sub_f_id '${sub_f_id}'"
     }
     return $sub_f_id_new
