@@ -625,15 +625,17 @@ ad_proc -private hf_assets_map_create {
             if { $exists_p } {
                 db_dml hf_assets_map_up { update hf_sub_asset_map
                     set trashed_p=:trashed_p,attribute_p=:attribute_p,last_updated=:last_updated,sub_label=:sub_label
-                    where f_id=:f_id and sub_f_id=:sub_f_id and instance_id=:instance_id
-                } else {
-                    db_dml hf_assets_map_cr "insert into hf_sub_asset_map \
+                    where f_id=:f_id and sub_f_id=:sub_f_id and instance_id=:instance_id }
+            } else {
+                db_dml hf_assets_map_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
-                }
+
             }
         } else {
             ns_log Warning "hf_assets_map_create.614: sub_f_id '${sub_f_id}' asset_type_id '${asset_type_id}' cannot be dependent of f_id '${f_id}' type_id '${type_id}'. "
         }
+    } else {
+        ns_log Warning "hf_assets_map_create.638: asset_id '${asset_id}' of f_id '${f_id}' OR sub_asset_id '${sub_asset_id}' of sub_f_id '${sub_f_id}' is empty string"
     }
     return $success_p
 }
@@ -753,11 +755,10 @@ ad_proc -private hf_attribute_asset_map_create {
             if { $exists_p } {
                 db_dml hf_attribute_asset_map_up { update hf_sub_asset_map
                     set trashed_p=:trashed_p,attribute_p=:attribute_p,last_updated=:last_updated,sub_label=:sub_label
-                    where f_id=:f_id and sub_f_id=:sub_f_id and instance_id=:instance_id
-                } else {
-                    db_dml hf_attribute_asset_map_cr "insert into hf_sub_asset_map \
+                    where f_id=:f_id and sub_f_id=:sub_f_id and instance_id=:instance_id }
+            } else {
+                db_dml hf_attribute_asset_map_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
-                }
             }
         } else {
             ns_log Warning "hf_attribute_asset_map_create.741: sub_f_id '${sub_f_id}' sub_asset_type_id '${sub_asset_type_id}' cannot be dependent of f_id '${f_id}' type_id '${type_id}'. "
