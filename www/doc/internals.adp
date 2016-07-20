@@ -56,6 +56,7 @@ In a tree analogy, assets are branches,
 A leaf needs a leaf for example, 
  when a vhost is issued it's own user account on a virtual machine,
  and there are multiple vhosts hosted on the same vm.
+The api also supports adding branches to a leaf, in case you want to.
 See 
  <a href="/api-doc/proc-view?proc=hf_types_allowed_by">hf_types_allowed_by</a>
  for assignment restrictions.
