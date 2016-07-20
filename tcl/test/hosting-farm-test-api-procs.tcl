@@ -402,7 +402,6 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             # populate data
             #
 
-ad_script_abort
             #ns_log Notice "aa_register_case.327: Begin test assets_sys_populate_api_check"
             aa_log "1. Test populate 2 DCs with HW and some attributes"
             # dc asset_id dci(0) dci(1)
