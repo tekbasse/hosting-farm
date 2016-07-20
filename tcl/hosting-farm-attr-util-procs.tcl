@@ -601,11 +601,11 @@ ad_proc -private hf_assets_map_create {
     set sub_asset_id [hf_asset_id_current_of_f_id $sub_f_id]
     if { $asset_id ne ""  && $sub_asset_id ne "" } {
         set type_id [hf_asset_type_id_of_asset_id $f_id]
-        set stats_list [hf_asset_stats $sub_asset_id [list label asset_type_id]]
+        set stats_list [hf_asset_stats $sub_f_id [list label asset_type_id]]
         set allowed_sub_type_id_list [hf_types_allowed_by $type_id]
         if { $asset_type_id in $allowed_sub_type_id_list } {
             # verify link does not already exist.
-            set exists_p [db_0or1row hf_assets_map_ck { select f_id from hf_sub_asset_map
+            set exists_p [db_0or1row hf_assets_map_ck { select f_id as f_id_ck from hf_sub_asset_map
                 where f_id=:f_id
                 and sub_f_id=:sub_f_id
                 and instance_id=:instance_id
@@ -632,7 +632,7 @@ ad_proc -private hf_assets_map_create {
                 }
             }
         } else {
-            ns_log Warning "hf_assets_map_create.614: sub_f_id '${sub_f_id}' sub_asset_type_id '${sub_asset_type_id}' cannot be dependent of f_id '${f_id}' type_id '${type_id}'. "
+            ns_log Warning "hf_assets_map_create.614: sub_f_id '${sub_f_id}' asset_type_id '${asset_type_id}' cannot be dependent of f_id '${f_id}' type_id '${type_id}'. "
         }
     }
     return $success_p
@@ -720,7 +720,9 @@ ad_proc -private hf_attribute_asset_map_create {
     #    adding an asset automatically as a package parameter (feature creep?)
     upvar 1 instance_id instance_id
     set success_p 0
-    # Remember here: f_id is attribute, sub_f_id is asset (Reverse of everywhere else).
+    # Important: Remember here: 
+    # f_id is an attribute reference, sub_f_id is an asset reference
+    # This is the reverse of everywhere else in the code..
     set f_id_orig $f_id
     set sub_f_id_orig $sub_f_id
     set f_id [hf_sub_f_id_current $f_id_orig]
@@ -731,7 +733,7 @@ ad_proc -private hf_attribute_asset_map_create {
         set allowed_sub_type_id_list [hf_types_allowed_by $type_id]
         if { $asset_type_id in $allowed_sub_type_id_list } {
             # verify link does not already exist.
-            set exists_p [db_0or1row hf_attribute_asset_map_ck { select f_id from hf_sub_asset_map
+            set exists_p [db_0or1row hf_attribute_asset_map_ck { select f_id as f_id_ck from hf_sub_asset_map
                 where f_id=:f_id
                 and sub_f_id=:sub_f_id
                 and instance_id=:instance_id
@@ -836,12 +838,15 @@ ad_proc -private hf_sub_asset_map_update {
     set sub_f_id_attr_p 0
     if { [qf_is_natural_number $sub_f_id] } {
         # expected to be asset XOR attribute
+        # If this frequencly fails because asset_id is commonly passed,
+        # then consider changing hf_f_id_exists_q to
+        # use hf_f_id_of_asset_id
         set sub_f_id_asset_p [hf_f_id_exists_q $sub_f_id]
         if { !$sub_f_id_asset_p } {
             set sub_f_id_attr_p [hf_sub_f_id_current_q $sub_f_id]
         }
         if { !$sub_f_id_asset_p && !$sub_f_id_attr_p } {
-            ns_log Warning "hf_sub-asset_map_update.735: sub_f_id '${sub_f_id}' supplied, but not f_id or current sub_f_id."
+            ns_log Warning "hf_sub_asset_map_update.735: sub_f_id '${sub_f_id}' supplied, but not f_id or current sub_f_id."
         }
     }
     if { !$sub_f_id_asset_p && !$sub_f_id_attr_p } {
