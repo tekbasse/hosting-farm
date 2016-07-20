@@ -3,6 +3,14 @@
 <property name="context">@context;noquote@</property>
 
 <h1>Internal conventions</h1>
+
+<p>
+#hosting-farm.Hosting_Farm# helps manage servers as assets.
+Assets can be assigned attributes that convey information in the managing process.
+Assets and attributes can be adapted into most any existing organization,
+including no organization at all.
+</p>
+
 <h2>Assets and attributes</h2>
 <p>
 Assets are objects that are designed to be tracked for general administration and billing.
