@@ -367,10 +367,11 @@ ad_proc -public hfdt_vm_create {
     @return f_id_of_vm which is also asset_id
 } {
     # These are for audits in test cases. See hosting-farm-test-api-procs.tcl
-    upvar 1 audit_ac_arr
-    upvar 1 audit_atc_arr
-    upvar 1 ac
-    upvar 1 atc
+    upvar 1 audit_ac_arr audit_ac_arr
+    upvar 1 audit_atc_arr audit_atc_arr
+    upvar 1 ac ac
+    upvar 1 atc atc
+    upvar 1 instance_id instance_id
 
     set head_f_id $f_id
     unset f_id
@@ -384,6 +385,11 @@ ad_proc -public hfdt_vm_create {
     # add vm asset + ua
     set domain [hf_domain_example]
     set asset_type_id "vm"
+
+    # A user with sysadmin rights and not customer
+    set sysowner_email [ad_system_owner]
+    set sysowner_user_id [party::get_by_email -email $sysowner_email]
+
     array set asset_arr [list \
                              asset_type_id ${asset_type_id} \
                              label $domain \
@@ -399,7 +405,7 @@ ad_proc -public hfdt_vm_create {
         }
         array set asset_arr [list \
                                  domain_name $domain \
-                                 os_id [randomRange $osc] \
+                                 os_id [randomRange 3] \
                                  server_type "standard" \
                                  resource_path "/var/www/${domain}" \
                                  mount_union "0" \
@@ -419,7 +425,7 @@ ad_proc -public hfdt_vm_create {
         ns_log Warning "hfdt_vm_create  failed to create asset."
     }
     set f_id $asset_arr(f_id)
-    array unset asset_arr
+    #array unset asset_arr
     
     return $asset_arr(f_id)
 }
@@ -435,10 +441,11 @@ ad_proc -public hfdt_shared_hosting_client_create {
     @return f_id_of_vh which is also asset_id
 } {
     # These are for audits in test cases. See hosting-farm-test-api-procs.tcl
-    upvar 1 audit_ac_arr
-    upvar 1 audit_atc_arr
-    upvar 1 ac
-    upvar 1 atc
+    upvar 1 audit_ac_arr audit_ac_arr
+    upvar 1 audit_atc_arr audit_atc_arr
+    upvar 1 ac ac
+    upvar 1 atc atc
+    upvar 1 instance_id instance_id
 
     set head_f_id $f_id
     unset f_id
@@ -450,7 +457,11 @@ ad_proc -public hfdt_shared_hosting_client_create {
         }
     }
     # add a virtual host asset with user account
-    
+
+    # A user with sysadmin rights and not customer
+    set sysowner_email [ad_system_owner]
+    set sysowner_user_id [party::get_by_email -email $sysowner_email]
+
     # First, create vh asset
     set randlabel [hf_domain_example]
     set asset_type_id "vh"
@@ -498,11 +509,12 @@ ad_proc -public hfdt_vm_base_create {
     Creates a an asset virtual machine with user account
 } {
     # These are for audits in test cases. See hosting-farm-test-api-procs.tcl
-    upvar 1 audit_ac_arr
-    upvar 1 audit_atc_arr
-    upvar 1 ac
-    upvar 1 atc
-    
+    upvar 1 audit_ac_arr audit_ac_arr
+    upvar 1 audit_atc_arr audit_atc_arr
+    upvar 1 ac ac
+    upvar 1 atc atc
+    upvar 1 instance_id instance_id
+
     set head_f_id $f_id
     unset f_id
     set head_type_id ""
@@ -512,6 +524,11 @@ ad_proc -public hfdt_vm_base_create {
             set head_f_id ""
         }
     }
+
+    # A user with sysadmin rights and not customer
+    set sysowner_email [ad_system_owner]
+    set sysowner_user_id [party::get_by_email -email $sysowner_email]
+
     # add vm asset + ua
     set domain [hf_domain_example]
     set asset_type_id "vm"
@@ -532,7 +549,7 @@ ad_proc -public hfdt_vm_base_create {
         }
         array set asset_arr [list \
                                  domain_name $domain \
-                                 os_id [randomRange $osc] \
+                                 os_id [randomRange 3] \
                                  server_type "standard" \
                                  resource_path "/var/www/${domain}" \
                                  mount_union "0" \
@@ -563,11 +580,12 @@ ad_proc -public hfdt_vm_attr_create {
     Requires connecting to existing attribute or asset.
 } {
     # These are for audits in test cases. See hosting-farm-test-api-procs.tcl
-    upvar 1 audit_ac_arr
-    upvar 1 audit_atc_arr
-    upvar 1 ac
-    upvar 1 atc
-    
+    upvar 1 audit_ac_arr audit_ac_arr
+    upvar 1 audit_atc_arr audit_atc_arr
+    upvar 1 ac ac
+    upvar 1 atc atc
+    upvar 1 instance_id instance_id
+
     set head_f_id $f_id
     unset f_id
     set head_type_id ""
@@ -580,7 +598,7 @@ ad_proc -public hfdt_vm_attr_create {
             set asset_type_id "vm"
             array set asset_arr [list \
                                      domain_name $domain \
-                                     os_id [randomRange $osc] \
+                                     os_id [randomRange 3] \
                                      server_type "standard" \
                                      resource_path "/var/www/${domain}" \
                                      mount_union "0" \
@@ -601,7 +619,7 @@ ad_proc -public hfdt_vm_attr_create {
                 
                 #array unset asset_arr
             } else {
-                ns_log Warning "hfdt_vm_attr_create: failed to create vm attribute. f_id '${f_id}'"
+                ns_log Warning "hfdt_vm_attr_create: failed to create vm attribute. head_f_id '${head_f_id}'"
             }
         }
     }
@@ -617,11 +635,12 @@ ad_proc -public hfdt_vh_attr_create {
     Requires connecting to existing attribute or asset.
 } {
     # These are for audits in test cases. See hosting-farm-test-api-procs.tcl
-    upvar 1 audit_ac_arr
-    upvar 1 audit_atc_arr
-    upvar 1 ac
-    upvar 1 atc
-    
+    upvar 1 audit_ac_arr audit_ac_arr
+    upvar 1 audit_atc_arr audit_atc_arr
+    upvar 1 ac ac
+    upvar 1 atc atc
+    upvar 1 instance_id instance_id
+
     set head_f_id $f_id
     unset f_id
     set head_type_id ""
@@ -634,9 +653,9 @@ ad_proc -public hfdt_vh_attr_create {
             set asset_type_id "vh"
 
             array set vh_arr [list \
-                                  f_id $hw_asset_id \
+                                  f_id $head_f_id \
                                   domain_name $randlabel \
-                                  details "generated by hfdt_vh_base_create" ]
+                                  details "generated by hfdt_vh_attr_create" ]
             set vh_arr(vh_id) [hf_vh_write vh_arr ]
             
             if { $vh_arr(vh_id) > 0 } {
@@ -653,7 +672,7 @@ ad_proc -public hfdt_vh_attr_create {
                 
                 #array unset vh_arr
             } else {
-                ns_log Warning "hfdt_vh_attr_create: failed to create vh attribute. f_id '${f_id}'"
+                ns_log Warning "hfdt_vh_attr_create: failed to create vh attribute. head_f_id '${head_f_id}'"
             }
         }
     }
@@ -669,11 +688,12 @@ ad_proc -public hfdt_ss_base_create {
     Creates a an asset software as service with user account
 } {
     # These are for audits in test cases. See hosting-farm-test-api-procs.tcl
-    upvar 1 audit_ac_arr
-    upvar 1 audit_atc_arr
-    upvar 1 ac
-    upvar 1 atc
-    
+    upvar 1 audit_ac_arr audit_ac_arr
+    upvar 1 audit_atc_arr audit_atc_arr
+    upvar 1 ac ac
+    upvar 1 atc atc
+    upvar 1 instance_id instance_id
+
     set head_f_id $f_id
     unset f_id
     set head_type_id ""
@@ -683,14 +703,19 @@ ad_proc -public hfdt_ss_base_create {
             set head_f_id ""
         }
     }
+
+    # A user with sysadmin rights and not customer
+    set sysowner_email [ad_system_owner]
+    set sysowner_user_id [party::get_by_email -email $sysowner_email]
+
     # add ss asset + ua
     set domain [hf_domain_example]
     set asset_type_id "ss"
-
+    set randtype [lindex [list "dbserver" "wiki" "asterix" "crm" "killerAPP" "alertbot"] [randomRange 5]]
     array set ss_arr [list \
                           asset_type_id ${asset_type_id} \
                           label $domain \
-                          domain_name $randlabel \
+                          domain_name $domain \
                           name "${domain} ${asset_type_id} asset + ua" \
                           user_id $sysowner_user_id ]
     set ss_arr(f_id) [hf_asset_create ss_arr]
@@ -701,9 +726,9 @@ ad_proc -public hfdt_ss_base_create {
         
         if { $head_type_id ne "" } {
             # map to existing asset
-            hf_sub_asset_map_update $head_f_id $head_type_id $asset_arr(label) $asset_arr(f_id) $asset_type_id 0
+            hf_sub_asset_map_update $head_f_id $head_type_id $ss_arr(label) $ss_arr(f_id) $asset_type_id 0
         }
-        
+        set rand [randomRange 65535]
         array set ss_arr [list \
                               server_name $ss_arr(label) \
                               service_name "${randtype} app" \
@@ -730,7 +755,7 @@ ad_proc -public hfdt_ss_base_create {
         array unset ua_arr
 
     } else {
-        ns_log Warning "hfdt_ss_base_create failed to create asset. f_id '${f_id}'"
+        ns_log Warning "hfdt_ss_base_create failed to create asset. head_f_id '${head_f_id}'"
     }
 
     return $ss_arr(f_id)
@@ -745,11 +770,12 @@ ad_proc -public hfdt_ss_attr_create {
     Requires connecting to existing attribute or asset.
 } {
     # These are for audits in test cases. See hosting-farm-test-api-procs.tcl
-    upvar 1 audit_ac_arr
-    upvar 1 audit_atc_arr
-    upvar 1 ac
-    upvar 1 atc
-    
+    upvar 1 audit_ac_arr audit_ac_arr
+    upvar 1 audit_atc_arr audit_atc_arr
+    upvar 1 ac ac
+    upvar 1 atc atc
+    upvar 1 instance_id instance_id
+
     set head_f_id $f_id
     unset f_id
     set head_type_id ""
@@ -762,7 +788,7 @@ ad_proc -public hfdt_ss_attr_create {
             set asset_type_id "ss"
 
             array set ss_arr [list \
-                                  f_id $asset_arr(vm_id) \
+                                  f_id $head_f_id \
                                   server_name "db.server.local" \
                                   service_name "fields" \
                                   daemon_ref "wc" \
@@ -790,7 +816,7 @@ ad_proc -public hfdt_ss_attr_create {
                 #array unset ua_arr
                 #array unset ss_arr
             } else {
-                ns_log Warning "hfdt_ss_attr_create: failed to create ss attribute. f_id '${f_id}'"
+                ns_log Warning "hfdt_ss_attr_create: failed to create ss attribute. head_f_id '${head_f_id}'"
             }
 
             
@@ -808,16 +834,22 @@ ad_proc -public hfdt_ua_asset_create {
     Requires connecting to existing attribute or asset.
 } {
     # These are for audits in test cases. See hosting-farm-test-api-procs.tcl
-    upvar 1 audit_ac_arr
-    upvar 1 audit_atc_arr
-    upvar 1 ac
-    upvar 1 atc
-    
+    upvar 1 audit_ac_arr audit_ac_arr
+    upvar 1 audit_atc_arr audit_atc_arr
+    upvar 1 ac ac
+    upvar 1 atc atc
+    upvar 1 instance_id instance_id
+
     set ua_id ""
     set head_f_id $f_id
     unset f_id
     set head_type_id ""
     if { $head_f_id ne "" } {
+
+        # A user with sysadmin rights and not customer
+        set sysowner_email [ad_system_owner]
+        set sysowner_user_id [party::get_by_email -email $sysowner_email]
+
         set head_type_id [hf_asset_type_id_of_asset_id $head_f_id]
         if { $head_type_id ne "" } {
             set domain [hf_domain_example]
@@ -841,7 +873,7 @@ ad_proc -public hfdt_ua_asset_create {
                 
                 # add ua asset 
                 array set ua_arr [list \
-                                      f_id $ua_arr(ua_id) \
+                                      f_id $ua_arr(f_id) \
                                       ua "user1" \
                                       up [ad_generate_random_string]]
                 set ua_arr(ua_id) [hf_user_add ua_arr]
@@ -850,7 +882,7 @@ ad_proc -public hfdt_ua_asset_create {
                 #array unset ua_arr
                 set ua_id $ua_arr(ua_id)
             } else {
-                ns_log Warning "hfdt_ua_asset_create: failed to create ua attribute. f_id '${f_id}'"
+                ns_log Warning "hfdt_ua_asset_create: failed to create ua attribute. head_f_id '${head_f_id}'"
             }
         }
     }
@@ -865,11 +897,12 @@ ad_proc -public hfdt_hw_base_create {
     Creates a an asset hardware device with user account etc, such as switch, firewall etc
 } {
     # These are for audits in test cases. See hosting-farm-test-api-procs.tcl
-    upvar 1 audit_ac_arr
-    upvar 1 audit_atc_arr
-    upvar 1 ac
-    upvar 1 atc
-    
+    upvar 1 audit_ac_arr audit_ac_arr
+    upvar 1 audit_atc_arr audit_atc_arr
+    upvar 1 ac ac
+    upvar 1 atc atc
+    upvar 1 instance_id instance_id
+
     set head_f_id $f_id
     unset f_id
     set head_type_id ""
@@ -879,6 +912,10 @@ ad_proc -public hfdt_hw_base_create {
             set head_f_id ""
         }
     }
+
+    # A user with sysadmin rights and not customer
+    set sysowner_email [ad_system_owner]
+    set sysowner_user_id [party::get_by_email -email $sysowner_email]
 
     set randlabel [hf_domain_example]
     set randtype [lindex [list "switch" "router" "gateway" "MACbridge" "firewall" "SMON"] [randomRange 5]]
@@ -905,7 +942,7 @@ ad_proc -public hfdt_hw_base_create {
                               sub_label $hw_arr(label) \
                               system_name [ad_generate_random_string] \
                               backup_sys "n/a" \
-                              os_id [randomRange $osc] \
+                              os_id [randomRange 3] \
                               description "[string toupper ${asset_type_id}]${ac}" \
                               details "This is for api test"]
         set hw_arr(hw_id) [hf_hw_write hw_arr]
@@ -1021,10 +1058,11 @@ ad_proc -public hfdt_hw_1u_create {
     Creates a an asset hardware device with user account etc representing a colocation server
 } {
     # These are for audits in test cases. See hosting-farm-test-api-procs.tcl
-    upvar 1 audit_ac_arr
-    upvar 1 audit_atc_arr
-    upvar 1 ac
-    upvar 1 atc
+    upvar 1 audit_ac_arr audit_ac_arr
+    upvar 1 audit_atc_arr audit_atc_arr
+    upvar 1 ac ac
+    upvar 1 atc atc
+    upvar 1 instance_id instance_id
     
     set head_f_id $f_id
     unset f_id
@@ -1036,7 +1074,10 @@ ad_proc -public hfdt_hw_1u_create {
         }
     }
 
-
+    # A user with sysadmin rights and not customer
+    set sysowner_email [ad_system_owner]
+    set sysowner_user_id [party::get_by_email -email $sysowner_email]
+    
 
     set randlabel [hf_domain_example]
     set randtype [lindex [list "botbox" "raspPi" "linuxBox" "BSDbox" "blackbox" "arduino"] [randomRange 5]]
@@ -1063,7 +1104,7 @@ ad_proc -public hfdt_hw_1u_create {
                               sub_label $hw_arr(label) \
                               system_name [ad_generate_random_string] \
                               backup_sys "n/a" \
-                              os_id [randomRange $osc] \
+                              os_id [randomRange 3] \
                               description "[string toupper ${asset_type_id}]${ac}" \
                               details "This is for api test"]
         set hw_arr(hw_id) [hf_hw_write hw_arr]
@@ -1115,7 +1156,7 @@ ad_proc -public hfdt_hw_1u_create {
         array set ns_arr [list \
                               f_id $hw_arr(hw_id) \
                               active_p "0" \
-                              name_record "${domain}. A $ip_arr(ipv4_addr)" ]
+                              name_record "${randlabel}. A $ip_arr(ipv4_addr)" ]
         set ns_arr(ns_id) [hf_ns_write ns_arr]
         incr audit_atc_arr(ns)
         array unset ns_arr
@@ -1154,3 +1195,79 @@ ad_proc -public hfdt_hw_1u_create {
     return $hw_arr(f_id)
 }
 
+
+ad_proc -public hfdt_vh_base_create {
+    {f_id ""}
+} {
+    part of test suite and demo.
+    Creates a an asset virtual machine with user account
+} {
+    # These are for audits in test cases. See hosting-farm-test-api-procs.tcl
+    upvar 1 audit_ac_arr audit_ac_arr
+    upvar 1 audit_atc_arr audit_atc_arr
+    upvar 1 ac ac
+    upvar 1 atc atc
+    upvar 1 instance_id instance_id
+
+    set head_f_id $f_id
+    unset f_id
+    set head_type_id ""
+    if { $head_f_id ne "" } {
+        set head_type_id [hf_asset_type_id_of_asset_id $head_f_id]
+        if { $head_type_id eq "" } {
+            set head_f_id ""
+        }
+    }
+
+    # A user with sysadmin rights and not customer
+    set sysowner_email [ad_system_owner]
+    set sysowner_user_id [party::get_by_email -email $sysowner_email]
+
+    # add vh asset + ua
+    set domain [hf_domain_example]
+    set asset_type_id "vh"
+    array set asset_arr [list \
+                             asset_type_id ${asset_type_id} \
+                             label $domain \
+                             name "${domain} ${asset_type_id} asset + ua" \
+                             user_id $sysowner_user_id ]
+    set asset_arr(f_id) [hf_asset_create asset_arr ]
+
+    if { $asset_arr(f_id) > 0 } {
+        incr ac
+        incr audit_ac_arr(vh)
+        
+        if { $head_type_id ne "" } {
+            # map to existing asset
+            hf_sub_asset_map_update $head_f_id $head_type_id $asset_arr(label) $asset_arr(f_id) $asset_type_id 0
+        }
+
+        array set vh_arr [list \
+                              f_id $head_f_id \
+                              domain_name $domain \
+                              details "generated by hfdt_vh_base_create" ]
+        set vh_arr(vh_id) [hf_vh_write vh_arr ]
+        
+        if { $vh_arr(vh_id) > 0 } {
+            incr atc
+            incr audit_atc_arr(vh)
+            
+            array set ua_arr [list \
+                                  f_id $asset_arr(f_id) \
+                                  ua "user1" \
+                                  up [ad_generate_random_string]]
+            set ua_arr(ua_id) [hf_user_add ua_arr]
+            incr audit_atc_arr(ua)
+            array unset ua_arr
+
+        } else {
+            ns_log Warning "hfdt_vh_base_create: failed to create vh attribute. head_f_id '${head_f_id}'"
+        }
+        
+    } else {
+        ns_log Warning "hfdt_vh_base_create: failed to create vh asset. head_f_id '${head_f_id}'"
+    }
+    
+    #array unset asset_arr
+    return $asset_arr(f_id)
+}
