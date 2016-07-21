@@ -164,7 +164,7 @@ This means
 By the way, 
  OpenACS has support for all sorts of automated possibilities with 
  site management. 
-See <a hef="/api-doc/">ACS API Browser</a>.
+See <a href="/api-doc/">ACS API Browser</a>.
 </p>
 <pre>
 Here a summary of some early api notes:
@@ -238,7 +238,7 @@ hf_monitor_report_read
 #   hf_monitor_update         Write an update to a log (this includes distribution curve info, ie time as delta-t)
 #   hf_monitor_status         Read status of asset_id, defaults to most recent status (like read, just status number)
 
-#   hf_monitor_statistics     Analyse most recent hf_monitor_update in context of distribution curve
+#   hf_monitor_statistics     Analyze most recent hf_monitor_update in context of distribution curve
 #                             Returns distribution curve of most recent configuration (table hf_monitor_freq_dist_curves)
 #                             Save an Analysis an hf_monitor_update (or FLAG ERROR)
 
