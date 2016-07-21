@@ -166,7 +166,7 @@
   <msg key="memory_bytes">Memory (bytes)</msg>
   <msg key="memory_bytes_def">Memory in bytes</msg>
   <msg key="memory_unit">Memory unit</msg>
-  <msg key="memory_unit_def">The unit used for measuuring quantity of memory.</msg>
+  <msg key="memory_unit_def">The unit used for measuring quantity of memory.</msg>
   <msg key="monitor_id">Monitor id</msg>
   <msg key="monitor_id_def">Identifier of a monitor.</msg>
   <msg key="monitor_p">Monitor?</msg>
