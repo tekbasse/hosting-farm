@@ -3,7 +3,7 @@ Hosting Farm
 
 For the latest updates to this readme file, see: http://github.com/tekbasse/hosting-farm
 
-The lastest version of the code is available at the development site:
+The latest version of the code is available at the development site:
  http://github.com/tekbasse/hosting-farm
 
 introduction
