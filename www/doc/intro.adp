@@ -29,7 +29,7 @@ can be ported to Oracle or other databases
 </li><li>
 integrates with perl and php server scripts
 </li><li>
-avoids pitfalls other web-based admin panels that add an additional technology layer to
+avoids pitfalls of other web-based admin panels that add an additional technology layer to
 administration support
 </li><li>
 UI for user DNS zone editing
