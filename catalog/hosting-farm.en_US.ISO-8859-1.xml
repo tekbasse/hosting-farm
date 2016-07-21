@@ -83,7 +83,7 @@
   <msg key="daemon_ref_def">A daemon reference</msg>
   <msg key="dc">DC</msg>
   <msg key="dc_id">DC id</msg>
-  <msg key="dc_id_def">Data cener (DC) identifier</msg>
+  <msg key="dc_id_def">Data center (DC) identifier</msg>
   <msg key="delta_x">&delta;x</msg>
   <msg key="delta_x_def">The change in value of X between two points p0(X,Y) and p1(X,Y). For monitors, X is usually a duration in seconds.</msg>
   <msg key="description">Description</msg>
@@ -127,7 +127,7 @@
   <msg key="health_percentile_def">Health percentile is a function of health history. The average of the most common health numbers is at 50% percentile. 100% is highest recorded health; 0% is lowest recorded health.</msg>
   <msg key="health_percentile_trigger">Health% trigger</msg>
   <msg key="health_percentile_trigger_def">The percentile where an alert notification is sent</msg>
-  <msg key="health_threshold">Health threashold</msg>
+  <msg key="health_threshold">Health threshold</msg>
   <msg key="health_threshold_def">Health number corresponding to Health percentile trigger</msg>
   <msg key="hw">HW</msg>
   <msg key="hw_id">HW id</msg>
@@ -271,7 +271,7 @@
   <msg key="start_proc">Start proc</msg>
   <msg key="start_proc_def">Local call to start an asset</msg>
   <msg key="status_id">Status id</msg>
-  <msg key="status_id_def">Identifer indicating status of plan</msg>
+  <msg key="status_id_def">Identifier indicating status of plan</msg>
   <msg key="storage_unit">Storage unit</msg>
   <msg key="storage_unit_def">The unit used to measure quantity of storage.</msg>
   <msg key="sub_f_id">sub_f_id</msg>
@@ -308,7 +308,7 @@
   <msg key="triage_priority">Priority</msg>
   <msg key="triage_priority_def">Triage priority in case of resource bottleneck</msg>
   <msg key="type_id">Type</msg>
-  <msg key="type_id_def">An identifiier of a set of types. See asset_type_id or type_id of virtual machine or other asset or attribute type</msg>
+  <msg key="type_id_def">An identifier of a set of types. See asset_type_id or type_id of virtual machine or other asset or attribute type</msg>
   <msg key="type_id_def">The type of VM server, by use or configuration</msg>
   <msg key="ua">UA</msg>
   <msg key="ua_def">User account</msg>
