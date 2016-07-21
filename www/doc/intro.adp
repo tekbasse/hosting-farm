@@ -7,7 +7,7 @@ Hosting Farm is a virtual hosting operations management package for use with Ope
 It is initially designed for a hosting farm using freebsd jails.
 </p>
 <p>
-OpenACS is a highly scalable application developement platform with many plug-in 
+OpenACS is a highly scalable application development platform with many plug-in 
 and built-in features for community-based services, including mature 
 implementations of internationalization, localization, permissions,
 custom page templating, and notifications.
@@ -46,7 +46,7 @@ support operations with multiple servers, data centers, and custom configured eq
 </li><li>
 client configurable custom permissions
 </li><li>
-ticket tracker with built-in streamlining for outages/disrutions that deal with multiple/bulk sets of clients
+ticket tracker with built-in streamlining for outages/disruptions that deal with multiple/bulk sets of clients
 </li><li>
 SEO ready wiki for publishable content generated from system
 </li></ul>

@@ -92,9 +92,9 @@ For example,
  a #hosting-farm.vm# (#hosting-farm.virtual_machine# ) attribute adds details 
  to a record in table hf_virtual_machines.
 </p><p>
-Attribute parameters are passed to underlying adminstrative procedures when 
+Attribute parameters are passed to underlying administrative procedures when 
  needed, 
- so attributes can be referebced by sub_label, 
+ so attributes can be referenced by sub_label, 
  asset's f_id, asset_type_id etc. 
 Each attribute type has a sort order assigned to it. 
 See hf_sub_asset_map.sub_sort_order.
@@ -147,7 +147,7 @@ Customization to the system is expected the default file, and by copying and mod
 <p>
 Be sure to end any new filenames with *-proc.tcl 
  so the package manager will read it. 
-By using a different name than existing filesnames, 
+By using a different name than existing filenames, 
  your customizations will not be clobbered
  if and when you decide to upgrade the package.
 </p>
@@ -162,7 +162,7 @@ This means
 </p>
 <p>
 By the way, 
- OpenACS has support for all sorts of automated possibiliites with 
+ OpenACS has support for all sorts of automated possibilities with 
  site management. 
 See <a hef="/api-doc/">ACS API Browser</a>.
 </p>
