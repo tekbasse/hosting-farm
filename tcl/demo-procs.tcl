@@ -703,19 +703,19 @@ ad_proc -public hfdt_ss_base_create {
             # map to existing asset
             hf_sub_asset_map_update $head_f_id $head_type_id $asset_arr(label) $asset_arr(f_id) $asset_type_id 0
         }
-
+        
         array set ss_arr [list \
                               server_name $ss_arr(label) \
-                              service_name "gold" \
-                              daemon_ref "au" \
-                              protocol "http/2" \
-                              port [randomRange 65535] \
-                              ss_type "gold type" \
-                              ss_subtype "198" \
-                              ss_undersubtype "+1" \
-                              ss_ultrasubtype "1337K" \
-                              config_uri "/usr/etc/au.conf" \
-                              memory_bytes "65535" ]
+                              service_name "${randtype} app" \
+                              daemon_ref ${randtype} \
+                              protocol "http/3" \
+                              port $rand \
+                              ss_type "${randtype} type" \
+                              ss_subtype NAFB \
+                              ss_undersubtype "ColterStevens" \
+                              ss_ultrasubtype "sourcecode" \
+                              config_uri "/usr/etc/${randtype}.conf" \
+                              memory_bytes "7:40A ORD" ]
         set ss_arr(ss_id) [hf_ss_write ss_arr]
         incr audit_atc_arr(ss)
 
@@ -1014,7 +1014,7 @@ ad_proc -public hfdt_hw_base_create {
 }
 
 
-ad_proc -public hfdt_hw_colo_create {
+ad_proc -public hfdt_hw_1u_create {
     {f_id ""}
 } {
     part of test suite and demo.
@@ -1153,3 +1153,4 @@ ad_proc -public hfdt_hw_colo_create {
 
     return $hw_arr(f_id)
 }
+
