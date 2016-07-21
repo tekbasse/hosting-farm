@@ -159,8 +159,10 @@
   <msg key="kernel_def">Kernel reference</msg>
   <msg key="label">Label</msg>
   <msg key="label_def">One word reference aka a name, sku, or readable id. Must be unique. Might be domain or machine name etc.</msg>
-  <msg key="last_modified">Last Modified</msg>
+  <msg key="last_modified">Last modified</msg>
   <msg key="last_modified_def">When record was last modified.</msg>
+  <msg key="last_updated">Last updated</msg>
+  <msg key="last_updated_def">When record was last updated.</msg>
   <msg key="max_domain">Max Domains</msg>
   <msg key="max_domain_def">Maximum domains assignable to one of this plan.</msg>
   <msg key="memory_bytes">Memory (bytes)</msg>
@@ -185,6 +187,9 @@
   <msg key="ni_id">NI id</msg>
   <msg key="ni_id_def">Network interface (NI) identifier</msg>
   <msg key="ns">NS</msg>
+  <msg key="ns_def">Name service</msg>
+  <msg key="ns_id">NS id</msg>
+  <msg key="ns_id_def">Name service (NS) identifier</msg>
   <msg key="op_status">Status</msg>
   <msg key="op_status_def">Operational status</msg>
   <msg key="orphaned_p">Orphaned?</msg>
@@ -310,6 +315,8 @@
   <msg key="ua_id_def">User Account id</msg>
   <msg key="ul_mac_address">MAC address</msg>
   <msg key="ul_mac_address_def">Universal/Local programmed (non_OUI) MAC address</msg>
+  <msg key="up">UP</msg>
+  <msg key="up_def">User password</msg>
   <msg key="user_account">User account</msg>
   <msg key="user_id">User id</msg>
   <msg key="user_id_def">A user identifier; a kind of OpenACS object_id</msg>
