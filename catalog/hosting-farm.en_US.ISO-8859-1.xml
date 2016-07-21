@@ -250,6 +250,7 @@
   <msg key="server_name">Server name</msg>
   <msg key="server_name_def">SAAS server name</msg>
   <msg key="server_type">Server type</msg>
+  <msg key="server_type_def">A one character classification of a server.</msg>
   <msg key="service_name">Service name</msg>
   <msg key="service_name_def">SAAS service name</msg>
   <msg key="significant_change">System Changed?</msg>
