@@ -488,119 +488,25 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     6 - 
                     7 - 
                     8 {
+                        # Add a rack or shelf of equipment
+                        set f_id [hfdt_hw_base_create $hw_asset_id]
+                        if { $f_id ne "" } {
 
-                        # add hw asset + ua  as colo unit botbox etc.
-
-                        set randlabel [hf_domain_example]
-                        set randtype [lindex [list "botbox" "raspPi" "linuxBox" "BSDbox" "blackbox" "arduino"] [randomRange 5]]
-                        append randlabel - $randtype
-                        set asset_type_id "hw"
-                        array set hw_arr [list \
-                                              asset_type_id ${asset_type_id} \
-                                              label $randlabel \
-                                              name "${randlabel} test ${asset_type_id} $ac" \
-                                              user_id $sysowner_user_id ]
-                        set hw_arr(f_id) [hf_asset_create hw_arr]
-                        if { $hw_arr(f_id) > 0 } {
-                            incr ac
-                            incr audit_ac_arr(hw)
-
-                            #ns_log Notice "hosting-farm-test-api-procs.tcl.781 hw_arr(f_id) $hw_arr(f_id) hw_arr(label) $hw_arr(label)"
-                            # link asset to hw_id
-                            hf_sub_asset_map_update $hw_asset_id hw $hw_arr(label) $hw_arr(f_id) hw 0
-
-                            # add hw primary attribute
-                            array set hw_arr [list \
-                                                  sub_label $hw_arr(label) \
-                                                  system_name [ad_generate_random_string] \
-                                                  backup_sys "n/a" \
-                                                  os_id [randomRange $osc] \
-                                                  description "[string toupper ${asset_type_id}]${ac}" \
-                                                  details "This is for api test"]
-                            set hw_arr(hw_id) [hf_hw_write hw_arr]
-                            if { $hw_arr(hw_id) > 0 } {
-                                incr audit_atc_arr(hw)
-                            } else {
-                                ns_log Warning "hosting-farm-test-api-procs.tcl.796: hf_hw_write failed"
-                            }
-
-                            # add ip
-                            set ipn [expr { int( fmod( $audit_atc_arr(ip), 256) ) } ]
-                            set ipn2 [expr { int( $audit_atc_arr(ip) / 256 ) } ]
-                            set ipv6_suffix [format %x [expr { int( fmod( $audit_atc_arr(ip), 65535 ) ) } ]]
-                            set hwf [format %x $audit_atc_arr(hw)]
-                            array set ip_arr [list \
-                                                  f_id $hw_arr(hw_id) \
-                                                  sub_label "eth0" \
-                                                  ip_id "" \
-                                                  ipv4_addr "10.0.${ipn2}.${ipn}" \
-                                                  ipv4_status "1" \
-                                                  ipv6_addr "2001:0db8:85a3:0000:0000:8a2e:${hwf}:${ipv6_suffix}" \
-                                                  ipv6_status "1"]
-                            set ip_arr(ip_id) [hf_ip_write ip_arr]
-                            # delayed unset ip_arr. See below
-                            incr audit_atc_arr(ip)
-
-
-                            # add ni
-                            set i_list [list 0 ]
-                            for {set i 0} {$i < 5} {incr i} {
-                                lappend i_list [format %x [randomRange 255]]
-                            }
-                            set biamac [join $i_list ":"]
-
-                            array set ni_arr [list \
-                                                  f_id $hw_arr(hw_id) \
-                                                  sub_label "NIC-$audit_atc_arr(ni)" \
-                                                  os_dev_ref "io1" \
-                                                  bia_mac_address ${biamac} \
-                                                  ul_mac_address "" \
-                                                  ipv4_addr_range "10.00.${ipn2}.0/3" \
-                                                  ipv6_addr_range "2001:db8:1234::/3" ]
-                            set ni_arr(ni_id) [hf_ni_write ni_arr]
-                            incr audit_atc_arr(ni)
-                            array unset ni_arr
-
-
-                            # add a ns
-                            array set ns_arr [list \
-                                                  f_id $hw_arr(hw_id) \
-                                                  active_p "0" \
-                                                  name_record "${domain}. A $ip_arr(ipv4_addr)" ]
-                            set ns_arr(ns_id) [hf_ns_write ns_arr]
-                            incr audit_atc_arr(ns)
-                            array unset ns_arr
-
-
-                            # delayed unset ip_arr, so info could be used in ns_arr
-                            array unset ip_arr
-
-                            # add two ua
-                            array set ua_arr [list \
-                                                  f_id $hw_arr(hw_id) \
-                                                  ua "user1" \
-                                                  connection_type "https" \
-                                                  ua_id "" \
-                                                  up "test" ]
-                            set ua_arr(ua_id) [hf_user_add ua_arr]
-                            incr audit_atc_arr(ua)
-                            array unset ua_arr
-
-
-                            array set ua_arr [list \
-                                                  f_id $hw_arr(hw_id) \
-                                                  ua "user2" \
-                                                  connection_type "https" \
-                                                  ua_id "" \
-                                                  up "test" ]
-                            set ua_arr(ua_id) [hf_user_add ua_arr]
-                            incr audit_atc_arr(ua)
-                            array unset ua_arr
-
+                                # add hw asset + ua  as colo unit botbox etc.
+                                set box_id [hfdt_hw_colo_create $f_id]
+                                if { $box_id ne "" } {
+                                    set c [randomRange 8]
+                                    incr c 5
+                                    for {set i 0} {$i < $c } {incr i} {
+                                        # add hw asset + ua  as colo unit botbox etc.
+                                        set box_id [hfdt_hw_colo_create $f_id]
+                                    }
+                                } else {
+                                    ns_log Warning "hosting-farm-test-api-procs.tcl dice= 6,7,8 failed to create colo assets."
+                                }
                         } else {
                             ns_log Warning "hosting-farm-test-api-procs.tcl dice= 6,7,8 failed to create asset."
                         }
-                        array unset hw_arr
                     }
                     9 {
 
