@@ -19,18 +19,18 @@ made by one hosting farm company for system admins and their customers.
 
 <h3>features</h3>
 <ul><li>
-A consistent, secure, small-device friendly UI for local, custom services.
+a consistent, secure, small-device friendly UI for local, custom services
 </li><li>
-Works with OpenACS on linux and FreeBSD. Should also work with OpenACS on other OSes with limited changes.
+works with OpenACS on linux and FreeBSD. Should also work with OpenACS on other OSes with limited changes
 </li><li>
-programmed in TCL with OpenACS' TCL API and Postgresql database integration.
+programmed in TCL with OpenACS' TCL API and Postgresql database integration
 </li><li>
-Can be ported to Oracle or other databases.
+can be ported to Oracle or other databases
 </li><li>
 integrates with perl and php server scripts
 </li><li>
-Avoids pitfalls other web-based admin panels that add an additional technology layer to
-administration support. 
+avoids pitfalls other web-based admin panels that add an additional technology layer to
+administration support
 </li><li>
 UI for user DNS zone editing
 </li><li>
