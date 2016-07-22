@@ -230,6 +230,22 @@ ad_proc -public hf_f_id_delete {
     return $success_p
 }
 
+ad_proc -private hf_asset_trash_f_id {
+    f_id
+} {
+    Trashes all revisions of an asset.
+} {
+    upvar 1 instance_id instance_id
+    db_dml hf_asset_rev_map_trash_f {update hf_asset_rev_map 
+        set trashed_p='1' 
+        where f_id=:f_id 
+        and instance_id=:instance_id }
+    db_dml hf_assets_trash_f {update hf_assets 
+        set trash_p='1'
+        where f_id=:f_id
+        and instance_id=:instance_id }
+    return 1
+}
 
 ad_proc -public hf_asset_trash {
     asset_id
@@ -248,7 +264,8 @@ ad_proc -public hf_asset_trash {
             db_transaction {
                 db_dml hf_asset_trash "update hf_assets set trash_p='1' where asset_id=:asset_id and instance_id=:instance_id"
                 if { [hf_asset_id_current_q $asset_id ] } {
-                    db_dml hf_asset_rev_map_trash "update hf_asset_rev_map set trashed_p='1' where asset_id=:asset_id and instance_id=:instance_id"
+                    set f_id [hf_f_id_of_asset_id $asset_id]
+                    hf_asset_trash_f_id $f_id
                 }
             } on_error {
                 ns_log Warning "hf_asset_trash: error for asset_id '${asset_id}'"
