@@ -1132,7 +1132,7 @@ ad_proc -private hf_up_write {
         }
     }    
 }
-if { !$success_p & $up ne "" } {
+if { !$success_p && $up ne "" } {
     ns_log Warning "hf_up_write.3008: failed. Should not happen."
 }
 return $success_p

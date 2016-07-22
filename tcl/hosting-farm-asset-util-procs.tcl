@@ -587,7 +587,7 @@ ad_proc -private hf_asset_attributes_cascade {
     set not_error_p 1
     set f_id_is_asset_p [hf_f_id_exists_q $f_id]
     ns_log Notice "hf_asset_attributes_cascade.550: begin while.."
-    while { $current_id_list_len > 0 & $not_error_p } {
+    while { $current_id_list_len > 0 && $not_error_p } {
         set next_id_list [list ]
         foreach s_id $current_id_list {
             lappend final_id_list $s_id
@@ -625,7 +625,7 @@ ad_proc -private hf_asset_attributes_by_type_cascade {
     set not_error_p 1
     set f_id_is_asset_p [hf_f_id_exists_q $f_id]
     ns_log Notice "hf_asset_attributes_by_type_cascade.579: begin while.."
-    while { $current_id_list_len > 0 & $not_error_p } {
+    while { $current_id_list_len > 0 && $not_error_p } {
         set next_id_list [list ]
         foreach s_id $current_id_list {
             lappend final_id_list $s_id
@@ -662,7 +662,7 @@ ad_proc -private hf_asset_cascade {
     set not_error_p 1
     set f_id_is_asset_p [hf_f_id_exists_q $f_id]
     ns_log Notice "hf_asset_cascade.550: begin while.."
-    while { $current_id_list_len > 0 & $not_error_p } {
+    while { $current_id_list_len > 0 && $not_error_p } {
         set next_id_list [list ]
         foreach s_id $current_id_list {
             lappend final_id_list $s_id
