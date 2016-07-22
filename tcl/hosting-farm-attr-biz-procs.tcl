@@ -634,7 +634,7 @@ ad_proc -private hf_dc_trash {
     upvar 1 instance_id instance_id
     set nowts [dt_systime -gmt 1]
     db_dml hf_dc_trash {
-        update hf_dcost
+        update hf_data_centers
         set time_trashed=:nowts
         where dc_id=:dc_id
         and instance_id=:instance_id }
@@ -649,7 +649,7 @@ ad_proc -private hf_hw_trash {
     upvar 1 instance_id instance_id
     set nowts [dt_systime -gmt 1]
     db_dml hf_hw_trash {
-        update hf_hwost
+        update hf_hardware
         set time_trashed=:nowts
         where hw_id=:hw_id
         and instance_id=:instance_id }
@@ -664,7 +664,7 @@ ad_proc -private hf_vm_trash {
     upvar 1 instance_id instance_id
     set nowts [dt_systime -gmt 1]
     db_dml hf_vm_trash {
-        update hf_vmost
+        update hf_virtual_machines
         set time_trashed=:nowts
         where vm_id=:vm_id
         and instance_id=:instance_id }
@@ -679,7 +679,7 @@ ad_proc -private hf_ip_trash {
     upvar 1 instance_id instance_id
     set nowts [dt_systime -gmt 1]
     db_dml hf_ip_trash {
-        update hf_ipost
+        update hf_ip_addresses
         set time_trashed=:nowts
         where ip_id=:ip_id
         and instance_id=:instance_id }
@@ -694,7 +694,7 @@ ad_proc -private hf_ss_trash {
     upvar 1 instance_id instance_id
     set nowts [dt_systime -gmt 1]
     db_dml hf_ss_trash {
-        update hf_ssost
+        update hf_services
         set time_trashed=:nowts
         where ss_id=:ss_id
         and instance_id=:instance_id }
