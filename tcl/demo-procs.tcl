@@ -801,7 +801,6 @@ ad_proc -public hfdt_ss_attr_create {
                                   config_uri "/usr/etc/db.conf" \
                                   memory_bytes "4294967295" ]
             set ss_arr(ss_id) [hf_ss_write ss_arr]
-            incr audit_atc_arr(ss)
             if { $ss_arr(ss_id) > 0 } {
                 incr atc
                 incr audit_atc_arr(ss)
@@ -1270,4 +1269,21 @@ ad_proc -public hfdt_vh_base_create {
     
     #array unset asset_arr
     return $asset_arr(f_id)
+}
+
+ad_proc -public hf_shuffle {
+    a_list
+} {
+    Returns a randomized or shuffled list.
+} {
+    # based con code from http://www.wiki.tcl.tk/unsort
+    set count [llength $a_list]
+    
+    for {set idx_1 0} {$idx_1 < $count} {incr idx_1} {
+        set idx_2 [expr {int($count * [random])}]
+        set temp [lindex $a_list $idx_1]
+        lset a_list $idx_1 [lindex $a_list $idx_2]
+        lset a_list $idx_2 $temp
+    }
+    return $a_list
 }
