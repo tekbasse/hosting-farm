@@ -414,9 +414,17 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             # ss asset (db, wiki server, asterix for example) with multiple ua
             # vh asset as basic services, ua on each
             # hw asset as co-location,  rasberry pi, linux box,
+            set dice -1
             set hw_asset_id_list [concat $hw_id_larr(0) $hw_id_larr(1) ]
+            set switch_options_count 12
+            # randomize a list of all switch references instead of maybe randomly missing one or two.
+            for {set i 0} {$i < $switch_options_count } {incr i} {
+                set dice [expr { int( fmod( $dice + 1 , $switch_options_count ) ) } ]
+                lappend dice_list $dice
+            }
+            set dice_list [hf_shuffle $dice_list]
             foreach hw_asset_id $hw_asset_id_list {
-                set dice [randomRange 11]
+                set dice [hf_peek_pop_stack dice_list]
                 ns_log Notice "hosting-farm-test-api-procs.tcl: starting switch '${dice}'"
                 switch -glob -- $dice {
                     0 {
@@ -621,6 +629,153 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             # verify
             # move vh from 2 to 1
             # verify
+            # etc
+
+            foreach hw_asset_id $hw_asset_id_list {
+                set dice [randomRange 11]
+                ns_log Notice "hosting-farm-test-api-procs.tcl: starting switch '${dice}'"
+                switch -glob -- $dice {
+                    0 {
+                        set sh_id [hfdt_vm_create $hw_asset_id]
+                        if { $sh_id eq "" } {
+                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 0 failed to create asset."
+                        }
+
+                    }
+                    1 {
+                        # create shared host base
+                        # add a few shared hosting clients
+                        set sh_id [hfdt_vm_base_create $hw_asset_id]
+                        if { $sh_id ne "" } {
+                            set user_count [expr { [randomRange 5] + 1 } ]
+                            for { set i 0} {$i < $user_count} {incr i} {
+                                hfdt_shared_hosting_client_create $sh_id
+                            }
+                        } else {
+                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 1 failed to create asset."
+                        }
+                    }
+                    2 {
+                        # add vh asset + ua to a vm attribute + ua
+                        set sh_id [hfdt_vm_attr_create $hw_asset_id]
+                        if { $sh_id ne "" } {
+                            hfdt_shared_hosting_client_create $asset_arr(f_id)
+                        } else {
+                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 2 failed to create vm attribute."
+                        }
+                    }
+                    3 {
+
+                        # add ss + ua asset to a vh attribute + ua
+
+                        # First, create vh attribute
+                        set vh_id [hfdt_vh_base_create $hw_asset_id]
+                        if { $vh_id ne "" } {
+                            # create ss and ua asset
+                            hfdt_ss_base_create $vh_id
+                        } else {
+                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 3 failed to create asset."
+                        }
+                    }
+                    4 {
+
+                        # create vm
+                        set vm_id [hfdt_vm_base_create $hw_asset_id]
+                        if { $vm_id ne "" } {
+                            # add ss + ua attribute to a vm
+                            hfdt_ss_attr_create $vm_id
+                        } else {
+                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 4 failed to create asset."
+                        }
+                    }
+                    5 {
+
+                        # add ss asset + ua*N (asterix, wiki, db)
+                        set f_id [hfdt_ss_base_create $hw_asset_id]
+                        if { $f_id ne "" } {
+                            set user_count [randomRange 25]
+                            for {set i 0} {$i < $user_count} {incr i} {
+                                hfdt_ua_asset_create $f_id
+                            }
+                        } else {
+                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 5 failed to create asset."
+                        }
+                    }
+                    6 - 
+                    7 - 
+                    8 {
+                        # Add a rack or shelf of equipment
+                        set f_id [hfdt_hw_base_create $hw_asset_id]
+                        if { $f_id ne "" } {
+
+                                # add hw asset + ua  as 1u unit botbox etc.
+                                set box_id [hfdt_hw_1u_create $f_id]
+                                if { $box_id ne "" } {
+                                    set c [randomRange 8]
+                                    incr c 5
+                                    for {set i 0} {$i < $c } {incr i} {
+                                        # add hw asset + ua  as colo unit botbox etc.
+                                        set box_id [hfdt_hw_1u_create $f_id]
+                                    }
+                                } else {
+                                    ns_log Warning "hosting-farm-test-api-procs.tcl dice= 6,7,8 failed to create colo assets."
+                                }
+                        } else {
+                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 6,7,8 failed to create asset."
+                        }
+                    }
+                    9 {
+                        
+                        # add ss asset as killer app
+                        set f_id [hfdt_ss_base_create $hw_asset_id]
+                        if { $f_id eq "" } {
+                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 9 failed to create asset."
+                        }
+                    }
+                    10 {
+
+                        # add hw network device to dc attr
+                        set f_id [hfdt_hw_base_create $hw_asset_id]
+                        if { $f_id eq "" } {
+                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 10 failed to create asset."
+                        }
+                    }
+                    11 {
+
+                        # add a vm attr + 100+ ua assets with multiple ns to ua Think domain leasing service
+                        set f_id [hfdt_vm_attr_create $hw_asset_id]
+
+                        if { $f_id ne "" } {
+                            set i_count [randomRange 30]
+                            incr $i_count 1
+                            for {set i 0} {$i < $i_count} {incr i} {
+                                set ua_id [hf_dt_ua_asset_create $f_id]
+                                for {set j 0} {$j < $j_count} {incr j} {
+
+                                    # add a ns
+                                    set domain [hf_domain_example]
+                                    set ipn [expr { int( fmod( $audit_atc_arr(ua), 256) ) } ]
+                                    set ipn2 [expr { int( $audit_atc_arr(ua) / 256 ) } ]
+                                    set ipv4_addr "10.0.${ipn2}.${ipn}"
+                                    array set ns_arr [list \
+                                                          f_id $ua_arr(f_id) \
+                                                          active_p "0" \
+                                                          name_record "${domain}. A ${ipv4_addr}" ]
+                                    set ns_arr(ns_id) [hf_ns_write ns_arr]
+                                    incr audit_atc_arr(ns)
+                                    array unset ns_arr
+                                }
+                            }
+                        } else {
+                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 11 failed to create vm attr."
+                        }
+                    }
+                }
+                ns_log Notice "hosting-farm-test-api-procs.tcl: end switch '${dice}'"
+                #end switch
+            }
+            # end foreach
+
 
             # + - + - + - # AUDIT CODE # + - + - + - #
             # assets (from hf_asset_rev_map)
