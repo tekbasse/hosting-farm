@@ -701,6 +701,61 @@ ad_proc -private hf_ss_trash {
     return 1
 }
 
+ad_proc -private hf_attribute_trash {
+    sub_f_id
+    {trashed "1"}
+} {
+    Trashes attribute referenced by sub_f_id
+} {
+    set success_p 0
+    set sub_assets_lists [hf_sub_asset $sub_f_id]
+    set sub_asset_list [lindex $sub_assets_lists 0]
+    if { [llength $sub_asset_list] > 0 } {
+        qf_lists_to_array sub_arr $sub_list [hf_sub_asset_map_keys]
+        if { $sub_type_id in [list vh vm dc hw ss ip ni ns] } {
+            set trashed_p [qf_is_true $trashed]
+            db_transaction {
+                db_dml hf_sub_asset_map_trash_u {update hf_sub_asset_map
+                    set trashed_p=:trashed
+                    where sub_f_id=:sub_f_id
+                }
+                switch -exact $sub_type_id {
+                    vh {
+                        hf_vh_trash $sub_f_id
+                    }
+                    vm {
+                        hf_vm_trash $sub_f_id
+                    }
+                    dc {
+                        hf_dc_trash $sub_f_id
+                    }
+                    hw {
+                        hf_hw_trash $sub_f_id
+                    }
+                    ss {
+                        hf_ss_trash $sub_f_id
+                    }
+                    ip {
+                        hf_ip_trash $sub_f_id
+                    }
+                    ni {
+                        hf_ni_trash $sub_f_id
+                    }
+                    ns {
+                        hf_ns_trash $sub_f_id
+                    }
+                }
+            }
+            set success_p 1
+        } else {
+            ns_log Warning "hf_attribute_trash.749: unable to trash sub_f_id '${sub_f_id}' sub_type_id '${sub_type_id}'"
+        }
+    } else {
+        ns_log Warning "hf_attribute_trash.751: unable to trash sub_f_id '${sub_f_id}'"
+    }
+    return $success_p
+}
+
 
 ad_proc -private hf_vh_write {
     vh_arr_name
