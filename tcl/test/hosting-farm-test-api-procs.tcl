@@ -635,24 +635,42 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                 set hw_asset_id_list [hf_shuffle $hw_asset_id_list]
                 
                 foreach hw_asset_id $hw_asset_id_list {
-
+                    # pick operations and target type
                     set op_type [lindex [list trash create update ] [randomRange 3]]
+                    set target [lindex [list asset attribute] [randomRange 2]]
+                    # pick primary target
                     set sub_assets_list [hf_asset_subassets_cascade $hw_asset_id]
                     set sub_assets_list [lrange $sub_assets_list 1 end]
                     set sub_assets_count [llength $sub_assets_list ]
                     set sub_asset_id [lindex $sub_assets_list [randomRange $sub_assets_count]]
 
-                    ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve op_type '${op_type}' on sub_asset_id '${sub_asset_id}'"
-
-                    switch -exact -- $op_type {
-                        trash {
-
+                    if { $target eq "asset" } {
+                        ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve op_type '${op_type}' on sub_asset_id '${sub_asset_id}'"
+                        
+                        switch -exact -- $op_type {
+                            trash {
+                                
+                            }
+                            create {
+                                # hfdt_vm_att..
+                                    hfdt_vm _create
+                            }
+                            update {
+                                # change label, active / inactive, monitor_p on or off
+                            }
                         }
-                        create {
-
-                        }
-                        update {
-
+                    } else {
+                        # target is an attribute of sub_asset_id
+                        switch -exact -- $op_type {
+                            trash {
+                                
+                            }
+                            create {
+                                # hfdt_vm_att..
+                            }
+                            update {
+                                # change label, active / inactive, monitor_p on or off
+                            }
                         }
                     }
                     ns_log Notice "hosting-farm-test-api-procs.tcl: end switch '${dice}'"
