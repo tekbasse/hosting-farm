@@ -14,6 +14,7 @@
 # Nightly pi time + 1 = 4:14am
 
 set debug_p 0
+randomInit [clock clicks]
 
 #ns_schedule_daily -thread 4 14 hf::proc...
 hf::schedule::check

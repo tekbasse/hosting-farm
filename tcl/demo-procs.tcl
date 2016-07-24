@@ -1270,20 +1270,4 @@ ad_proc -public hfdt_vh_base_create {
     #array unset asset_arr
     return $asset_arr(f_id)
 }
-
-ad_proc -public hf_shuffle {
-    a_list
-} {
-    Returns a randomized or shuffled list.
-} {
-    # based con code from http://www.wiki.tcl.tk/unsort
-    set count [llength $a_list]
-    
-    for {set idx_1 0} {$idx_1 < $count} {incr idx_1} {
-        set idx_2 [expr {int($count * [random])}]
-        set temp [lindex $a_list $idx_1]
-        lset a_list $idx_1 [lindex $a_list $idx_2]
-        lset a_list $idx_2 $temp
-    }
-    return $a_list
 }

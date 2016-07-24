@@ -422,7 +422,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                 set dice [expr { int( fmod( $dice + 1 , $switch_options_count ) ) } ]
                 lappend dice_list $dice
             }
-            set dice_list [hf_shuffle $dice_list]
+            set dice_list [acc_fin::shuffle_list $dice_list]
             foreach hw_asset_id $hw_asset_id_list {
                 set dice [hf_peek_pop_stack dice_list]
                 ns_log Notice "hosting-farm-test-api-procs.tcl: starting switch '${dice}'"
@@ -632,19 +632,20 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             # etc
             set cycle_count [expr { pow($switch_options_count,2) } ]
             for {set cycle_nbr 0} {$cycle_nbr < $cycle_count} {incr $cycle_nbr} {
-                set hw_asset_id_list [hf_shuffle $hw_asset_id_list]
+                set hw_asset_id_list [acc_fin::shuffle_list $hw_asset_id_list]
                 
                 foreach hw_asset_id $hw_asset_id_list {
-                    # pick operations and target type
+                    # Choose operations and target type
                     set op_type [lindex [list trash create update ] [randomRange 3]]
                     set target [lindex [list asset attribute] [randomRange 2]]
-                    # pick primary target
+                    # Choose primary target
                     set sub_assets_list [hf_asset_subassets_cascade $hw_asset_id]
                     set sub_assets_list [lrange $sub_assets_list 1 end]
                     set sub_assets_count [llength $sub_assets_list ]
                     set sub_asset_id [lindex $sub_assets_list [randomRange $sub_assets_count]]
 
                     if { $target eq "asset" } {
+
                         ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve op_type '${op_type}' on sub_asset_id '${sub_asset_id}'"
                         
                         switch -exact -- $op_type {
@@ -660,16 +661,22 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                             }
                         }
                     } else {
-                        # target is an attribute of sub_asset_id
-                        switch -exact -- $op_type {
-                            trash {
-                                
-                            }
-                            create {
-                                # hfdt_vm_att..
-                            }
-                            update {
-                                # change label, active / inactive, monitor_p on or off
+                        # Target is an attribute of sub_asset_id
+                        # Choose an attribute
+                        set attr_id_list [hf_attributes_cascade $sub_asset_id]
+                        set set attr_id_count [llength $attr_id_list]
+                        set attr_id [lindex $attr_id_list [randomRange $attr_id_count]]
+                        if { $attr_id ne "" } {
+                            switch -exact -- $op_type {
+                                trash {
+                                    
+                                }
+                                create {
+                                    # hfdt_vm_att..
+                                }
+                                update {
+                                    # change label, active / inactive, monitor_p on or off
+                                }
                             }
                         }
                     }
