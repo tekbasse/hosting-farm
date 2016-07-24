@@ -630,13 +630,21 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             # move vh from 2 to 1
             # verify
             # etc
+            set update_list [lrepeat 2 "update"]
             set cycle_count [expr { pow($switch_options_count,2) } ]
             for {set cycle_nbr 0} {$cycle_nbr < $cycle_count} {incr $cycle_nbr} {
+                set t [expr { $cycle_nbr * 360. / $cycle_count } ]
+                # balance of creates to trashes ie creates - trashes. This simmulates a life cycle..
+                set td [expr { int( [acc_fin::pos_sin_cycle_rate $t] * 10 ) } ]
+                set tr_count [expr { 10 - $td } ]
+                set create_list [lrepeat $td "create"]
+                set trash_list [lrepeat $tr_count "trash"]
+
                 set hw_asset_id_list [acc_fin::shuffle_list $hw_asset_id_list]
                 
                 foreach hw_asset_id $hw_asset_id_list {
                     # Choose operations and target type
-                    set op_type [lindex [list trash create update ] [randomRange 3]]
+                    set op_type [lindex [concat $update_list $create_list $trash_list] [randomRange 12]]
                     set target [lindex [list asset attribute] [randomRange 2]]
                     # Choose primary target
                     set sub_assets_list [hf_asset_subassets_cascade $hw_asset_id]
@@ -667,11 +675,13 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         set set attr_id_count [llength $attr_id_list]
                         set attr_id [lindex $attr_id_list [randomRange $attr_id_count]]
                         if { $attr_id ne "" } {
+                            ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve op_type '${op_type}' on attr_id '${attr_id}'"
                             switch -exact -- $op_type {
                                 trash {
                                     
                                 }
                                 create {
+                                    # add attribute below it.
                                     # hfdt_vm_att..
                                 }
                                 update {
