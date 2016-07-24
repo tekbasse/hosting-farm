@@ -630,13 +630,13 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             # move vh from 2 to 1
             # verify
             # etc
-            set update_list [lrepeat 2 "update"]
+            set update_list [lrepeat 4 "update"]
             set cycle_count [expr { pow($switch_options_count,2) } ]
             for {set cycle_nbr 0} {$cycle_nbr < $cycle_count} {incr $cycle_nbr} {
                 set t [expr { $cycle_nbr * 360. / $cycle_count } ]
                 # balance of creates to trashes ie creates - trashes. This simmulates a life cycle..
-                set td [expr { int( [acc_fin::pos_sin_cycle_rate $t] * 10 ) } ]
-                set tr_count [expr { 10 - $td } ]
+                set td [expr { round( [acc_fin::pos_sin_cycle_rate $t] * 10 + 10. ) } ]
+                set tr_count [expr { 20 - $td } ]
                 set create_list [lrepeat $td "create"]
                 set trash_list [lrepeat $tr_count "trash"]
 
@@ -644,7 +644,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                 
                 foreach hw_asset_id $hw_asset_id_list {
                     # Choose operations and target type
-                    set op_type [lindex [concat $update_list $create_list $trash_list] [randomRange 12]]
+                    set op_type [lindex [concat $update_list $create_list $trash_list] [randomRange 24]]
                     set target [lindex [list asset attribute] [randomRange 2]]
                     # Choose primary target
                     set sub_assets_list [hf_asset_subassets_cascade $hw_asset_id]
@@ -658,14 +658,29 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         
                         switch -exact -- $op_type {
                             trash {
-                                
+                                hf_asset_trash $sub_asset_id
                             }
                             create {
                                 # hfdt_vm_att..
-                                    hfdt_vm _create
+                                    hfdt_vm _create etc.
                             }
                             update {
                                 # change label, active / inactive, monitor_p on or off
+                                set k [randomRange 2]
+                                switch $k { 
+                                    0 {
+                                        hf_asset_label_change $sub_asset_id [hf_domain_example]
+                                    }
+                                    1 {
+                                        # change op_status of asset (varchar(20) ) 
+                                        
+                                    }
+                                    2 {
+                                        # Switch monitor on or off
+                                    }
+                                    3 {
+                                        # switch publish on /off
+                                    }
                             }
                         }
                     } else {
@@ -678,7 +693,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                             ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve op_type '${op_type}' on attr_id '${attr_id}'"
                             switch -exact -- $op_type {
                                 trash {
-                                    
+                                    hf_attribute_trash $attr_id
                                 }
                                 create {
                                     # add attribute below it.
