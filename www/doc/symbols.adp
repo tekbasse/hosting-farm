@@ -9,6 +9,7 @@
 <h2>Account</h2>
 
 <p>Time</p>
+<p>These images represent time as blocks or chips.</p>
 <ul><li>
 <img src="../resources/icons/2-hours.png" width="2" height="1" title="2 hours">
 2 hours
@@ -26,12 +27,17 @@
 1 year
 
 </li></ul>
+<p>
+They are used in hosting-farm/lib/time-interval-remaining as seen in <a href="menu1">menu1</a> example.
+</p><p>
+Alternately, time could be portrayed as a kind of battery status block using a block format of usage in 
+hosting-farm/lib/resource-status-summary-2 and also seen in the menu1 example.</p>
 
 <h2>Monitor</h2>
 <p>
-These faces are meant to convey health status etc using primary expressions.
+These faces are meant to indicate health status, alert importance etc using primary expressions.
 The expressions are described by Scott McCloud on pages 80 to 86 in his book "Making Comics" (c)2006.
-They provide a way of converting an index value to expression.
+The four levels of intensity provide a way of converting an index value to expression.
 Some users may find facial expressions more appealing than interpreting a number.
 </p>
 <h3>Rock style</h3>

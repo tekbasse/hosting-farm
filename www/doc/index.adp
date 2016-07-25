@@ -37,5 +37,13 @@ email: tekbasse@yahoo.com</pre>
 <a href="data-model">data model</a>
 </li><li>
 <a href="glossary">glossary</a>
+</li><li>
+<a href="symbols">symbols</a>
+</li><li>
+<a href="icons">icons</a>
+</li><li>
+<a href="menu1">example menu1</a>
+</li><li>
+<a href="assets">example sortable, many assets list</a>
 </li>
 </ul>
