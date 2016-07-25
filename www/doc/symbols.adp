@@ -109,6 +109,38 @@ Some users may find facial expressions more appealing than interpreting a number
 <br>shock
 </td></tr>
 </table>
+<p>asset active or inactive</p>
+<img src="../resources/icons/eye-active.png" width="108" height="108" title="eye-active.png">
+<img src="../resources/icons/eye-inactive.png" width="108" height="108" title="eye-inactive.png">
+
+
+<h3>Asset types</h3>
+<p>As background and symbol</p>
+
+<p>Data center</p>
+<img src="../resources/icons/dc-background.png" width="108" height="108" title="dc background">
+<img src="../resources/icons/dc.png" width="108" height="108" title="dc">
+
+<p>Hardware</p>
+<img src="../resources/icons/hw-background.png" width="108" height="108" title="hw background">
+<img src="../resources/icons/hw.png" width="108" height="108" title="hw">
+
+<p>Virtual machine</p>
+<img src="../resources/icons/vm-background.png" width="108" height="108" title="vm background">
+<img src="../resources/icons/vm.png" width="108" height="108" title="vm">
+
+
+<p>Virtual host</p>
+<img src="../resources/icons/vh-background.png" width="108" height="108" title="vh background">
+<img src="../resources/icons/vh.png" width="108" height="108" title="vh">
+
+<p>Software as a service</p>
+<img src="../resources/icons/ss-background.png" width="108" height="108" title="ss background">
+<img src="../resources/icons/ss.png" width="108" height="108" title="ss">
+
+
+
+
 <h3>Monitor types</h3>
 <p><img src="../resources/icons/hf-backup.png" width="108" height="108" title="backup">
 <br>backup</p>
@@ -126,12 +158,7 @@ Some users may find facial expressions more appealing than interpreting a number
 
 
 <h3>other expressions</h3>
-<p>active
-<br><img src="../resources/icons/rock-active.png" width="108" height="108" title="active">
-</p><p>
-inactive
-<br><img src="../resources/icons/rock-inactive.png" width="108" height="108" title="inactive">
-</p><p>
+<p>
 blank
 <br><img src="../resources/icons/rock-blank.png" width="108" height="108" title="blank">
 </p>

@@ -32,33 +32,9 @@
 
 
 
-<p>Asset active or inactive</p>
-
-eye-active.png
-eye-inactive.png
-<p>warning</p>
-
-
-<h2>Assets</h2>
-<p>Data center</p>
-dc-background.png
-dc.png
-
-<p>Hardware</p>
-hw-background.png
-hw.png
-
-<p>Virtual machine</p>
-vm-background.png
-vm.png
-
-<p>Virtual host</p>
-vh-background.png
-vh.png
-
-<p>Software as a service</p>
-ss-background.png
-ss.png
+<p>asset active or inactive. See <a href="symbols">Rock style symbols</a> </p>
+<img src="../resources/icons/eye-active.png" width="108" height="108" title="eye-active.png">
+<img src="../resources/icons/eye-inactive.png" width="108" height="108" title="eye-inactive.png">
 
 
 
