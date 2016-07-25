@@ -74,9 +74,9 @@ set table_cols_count [llength [lindex $table_lists 0]]
 set table_index_last [expr { $table_cols_count - 1 } ]
 #set table_titles_list [list "Item&nbsp;ID" "Title" "Status" "Description" "Due&nbsp;Date" "Creation&nbsp;Date"]
 # Replace #hosting-farm.Metric# with #acs-subsite.parameters# ?
-# Replace #hosting-farm.Health_Score# with acs-subsite.status ?
+# Replace #hosting-farm.Health_score# with acs-subsite.status ?
 # Replace #accounts-ledger.Amount# with #hosting-farm.Sample# ?
-set table_titles_list [list "#acs-lang.Label#" "#accounts-ledger.Name#" "#accounts-ledger.Type#" "#hosting-farm.Metric#" "#accounts-ledger.Amount#" "#hosting-farm.Quota#" "#hosting-farm.Projected#" "#hosting-farm.Health_Score#" "#accounts-ledger.Message#"]
+set table_titles_list [list "#acs-lang.Label#" "#accounts-ledger.Name#" "#accounts-ledger.Type#" "#hosting-farm.Metric#" "#accounts-ledger.Amount#" "#hosting-farm.Quota#" "#hosting-farm.Projected#" "#hosting-farm.Health_score#" "#accounts-ledger.Message#"]
 # as_label as_name as_type metric latest_sample percent_quota projected_eop score score_message
 #ns_log Notice "resource-status-summary-1(45): table_cols_count $table_cols_count table_index_last $table_index_last "
 
@@ -418,7 +418,7 @@ set table_sorted_lists [linsert $table_formatted_lists 0 [lrange $table_titles_l
 # 2. Reset table_cols_count
 # Following additional requirements are for the compact_p option:
 # 3. Remove the column reference from table_titles_list
-#    set table_titles_list \[list "#acs-lang.Label#" "#accounts-ledger.Name#" "#accounts-ledger.Type#" "#hosting-farm.Metric#" "#accounts-ledger.Amount#" "#hosting-farm.Quota#" "#hosting-farm.Projected#" "#hosting-farm.Health_Score#" "#accounts-ledger.Message#"]
+#    set table_titles_list \[list "#acs-lang.Label#" "#accounts-ledger.Name#" "#accounts-ledger.Type#" "#hosting-farm.Metric#" "#accounts-ledger.Amount#" "#hosting-farm.Quota#" "#hosting-farm.Projected#" "#hosting-farm.Health_score#" "#accounts-ledger.Message#"]
 
 # Blank the column reference: Name ref 1
 set sort_stack_list [lreplace $sort_stack_list 1 1 ""]
