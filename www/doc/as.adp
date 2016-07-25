@@ -1,9 +1,9 @@
-<!-- <master src="/packages/hosting-farm/www/doc/responsive-master3"> -->
-<master src="/packages/b-responsive-theme/lib/plain-master">
-
+<!--<master src="/packages/hosting-farm/www/doc/responsive-master3"> -->
+<!-- <master src="/packages/b-responsive-theme/lib/plain-master"> -->
+<master>
   <property name="title">@title;noquote@</property>
   <property name="context">@context;noquote@</property>
-
+<p>This page is an example of how to use responsive grids</p>
 <div class="page-wrap">
 
   <section id="main" role="main">
