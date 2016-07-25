@@ -650,30 +650,45 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     set sub_assets_list [hf_asset_subassets_cascade $hw_asset_id]
                     set sub_assets_list [lrange $sub_assets_list 1 end]
                     set sub_assets_count [llength $sub_assets_list ]
+                    
                     set sub_asset_id [lindex $sub_assets_list [randomRange $sub_assets_count]]
 
                     if { $target eq "asset" } {
 
                         ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve op_type '${op_type}' on sub_asset_id '${sub_asset_id}'"
-                        
                         switch -exact -- $op_type {
                             trash {
                                 hf_asset_trash $sub_asset_id
                             }
                             create {
-                                # hfdt_vm_att..
-                                    hfdt_vm _create etc.
+                                set sub_asset_type_id [hf_asset_type_id_of_asset_id $sub_asset_id]
+                                if { $sub_sub_asset_type_id eq "vm" && [random] > .5 } {
+                                    hfdt_shared_hosting_client_create $sub_asset_id
+                                } else {
+                                    set r [randomRange 10]
+                                    switch -exact -- $r {
+                                        0 { hfdt_vh_attr_create $sub_asset_id }
+                                        1 { hfdt_ss_attr_create $sub_asset_id }
+                                        2 { hfdt_ss_base_create $sub_asset_id }
+                                        3 { hfdt_vm_create $hw_asset_id }
+                                        4 { hfdt_vm_base_create $sub_asset_id }
+                                        5 { hfdt_vm_attr_create $sub_asset_id }
+                                        6 { hfdt_hw_1u_create $sub_asset_id }
+                                        7 { hfdt_vh_base_create $sub_asset_id }
+                                        8 { hfdt_hw_base_create $sub_asset_id }
+                                        9 { hfdt_ua_asset_create $sub_asset_id }
+                                    }
+                                }
                             }
                             update {
                                 # change label, active / inactive, monitor_p on or off
                                 set k [randomRange 2]
                                 switch $k { 
-                                    0 {
-                                        hf_asset_label_change $sub_asset_id [hf_domain_example]
-                                    }
-                                    1 {
-                                        # change op_status of asset (varchar(20) ) 
-                                        
+                                    0 { hf_asset_label_change $sub_asset_id [hf_domain_example] }
+                                    1 { # change op_status of asset (varchar(20) ) 
+                                        # active,inactive,alert,disabled,suspended
+## code, what are common, minimum op_status types?
+
                                     }
                                     2 {
                                         # Switch monitor on or off
@@ -689,6 +704,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         set attr_id_list [hf_attributes_cascade $sub_asset_id]
                         set set attr_id_count [llength $attr_id_list]
                         set attr_id [lindex $attr_id_list [randomRange $attr_id_count]]
+                        set sam_list [hf_sub_asset $attr_id]
+                        qf_lists_to_vars $sam_list [hf_sub_asset_map_keys] sub_type_id
+
                         if { $attr_id ne "" } {
                             ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve op_type '${op_type}' on attr_id '${attr_id}'"
                             switch -exact -- $op_type {
@@ -697,10 +715,11 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                 }
                                 create {
                                     # add attribute below it.
-                                    # hfdt_vm_att..
+                                    hfdt_ua_asset_create
+                                    
                                 }
                                 update {
-                                    # change label, active / inactive, monitor_p on or off
+                                    # change label?
                                 }
                             }
                         }
