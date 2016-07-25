@@ -16,7 +16,136 @@ ad_library {
 }
 
 
-##code ..make asset state  update procs for hf_assets.op_status,popularity,monitor_p,publish_p, triage_priority.. that don't create a new asset_id..
+
+
+ad_proc -private hf_asset_op_status_change {
+    asset_id
+    new_op_status
+} {
+    Changes the asset_name where the asset is referenced from asset_id. Returns 1 if successful, otherwise 0.
+
+    @param asset_id  The op_status of the asset.
+    @param new_op_status   The new op_status.
+} {
+    # What are common, minimum op_status types?
+    # active,inactive,terminated,suspended,wip?
+    # active = on
+    # inactive = off
+    # terminated = off permanently
+    # suspended = off, waiting for something external
+    # wip = on, partially.. maybe extended fsck, app/configuration/upgrade build etc.
+    # 
+
+
+    upvar 1 instance_id instance_id
+    upvar 1 user_id user_id
+    set write_p 0
+    set new_op_status_len [string length $new_op_status]
+    if { $new_op_status_len < 21 } {
+        set write_p [hf_ui_go_ahead_q write]
+        if { $write_p } {
+            db_dml hf_op_status_change_hf_assets { update hf_assets
+                set last_modified = current_timestamp, op_status=:new_op_status where asset_id=:asset_id and instance_id=:instance_id 
+            }
+        }
+    }
+    return $write_p
+}
+
+
+ad_proc -private hf_asset_monitor {
+    asset_id
+    monitor_p
+} {
+    Changes the state of monitoring for an asset where the asset is referenced from asset_id. Returns 1 if successful, otherwise 0.
+
+    @param asset_id  The asset_id of the asset.
+    @param monitor_p   Answers question: Activate monitors? 1 = yes, 0 = no.
+} {
+    upvar 1 instance_id instance_id
+    upvar 1 user_id user_id
+    set monitor_p [qf_is_true $monitor_p]
+    set write_p [hf_ui_go_ahead_q write]
+    if { $write_p } {
+        db_dml hf_monitors_change_hf_assets { update hf_assets
+            set last_modified = current_timestamp, monitor_p=:monitor_p where asset_id=:asset_id and instance_id=:instance_id 
+        }
+    }
+    return $write_p
+}
+
+ad_proc -private hf_asset_publish {
+    asset_id
+    publish_p
+} {
+    Changes the state of publishing for an asset where the asset is referenced from asset_id. Returns 1 if successful, otherwise 0.
+
+    @param asset_id  The asset_id of the asset.
+    @param publish_p   Answers question: Activate publishs? 1 = yes, 0 = no.
+} {
+    upvar 1 instance_id instance_id
+    upvar 1 user_id user_id
+    set publish_p [qf_is_true $publish_p]
+    set write_p [hf_ui_go_ahead_q write]
+    if { $write_p } {
+        db_dml hf_publishs_change_hf_assets { update hf_assets
+            set last_modified = current_timestamp, publish_p=:publish_p where asset_id=:asset_id and instance_id=:instance_id 
+        }
+    }
+    return $write_p
+}
+
+
+ad_proc -private hf_asset_popularity_change {
+    asset_id
+    new_popularity
+} {
+    Changes the asset_name where the asset is referenced from asset_id. Returns 1 if successful, otherwise 0.
+
+    @param asset_id  The popularity of the asset.
+    @param new_popularity   The new popularity value.
+} {
+    upvar 1 instance_id instance_id
+    upvar 1 user_id user_id
+    set write_p 0
+    set new_popularity_len [string length $new_popularity]
+    if { $new_popularity_len < 21 } {
+        set write_p [hf_ui_go_ahead_q write]
+        if { $write_p } {
+            db_dml hf_popularity_change_hf_assets { update hf_assets
+                set last_modified = current_timestamp, popularity=:new_popularity where asset_id=:asset_id and instance_id=:instance_id 
+            }
+        }
+    }
+    return $write_p
+}
+
+
+ad_proc -private hf_asset_triage_priority_change {
+    asset_id
+    new_triage_priority
+} {
+    Changes the asset_name where the asset is referenced from asset_id. Returns 1 if successful, otherwise 0.
+
+    @param asset_id  The triage_priority of the asset.
+    @param new_triage_priority   The new triage_priority value.
+} {
+    upvar 1 instance_id instance_id
+    upvar 1 user_id user_id
+    set write_p 0
+    set new_triage_priority_len [string length $new_triage_priority]
+    if { $new_triage_priority_len < 21 } {
+        set write_p [hf_ui_go_ahead_q write]
+        if { $write_p } {
+            db_dml hf_triage_priority_change_hf_assets { update hf_assets
+                set last_modified = current_timestamp, triage_priority=:new_triage_priority where asset_id=:asset_id and instance_id=:instance_id 
+            }
+        }
+    }
+    return $write_p
+}
+
+
 
 ad_proc -public hf_asset_create { 
     asset_arr_name

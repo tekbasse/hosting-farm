@@ -687,7 +687,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                     0 { hf_asset_label_change $sub_asset_id [hf_domain_example] }
                                     1 { # change op_status of asset (varchar(20) ) 
                                         # active,inactive,alert,disabled,suspended
-## code, what are common, minimum op_status types?
+##code, what are common, minimum op_status types?
 
                                     }
                                     2 {
