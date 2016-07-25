@@ -9,25 +9,27 @@
 
 <h2>Indicators and alarms</h2>
 <p>These can be used with a css layer to represent different colored LEDs.</p>
-circle-led-000000.png
-circle-led-cccccc.png
-cog-cccccc.png
+<img src="../resources/icons/circle-led-000000.png" width="108" height="108" title="circle-led-000000.png">
+<img src="../resources/icons/circle-led-cccccc.png" width="108" height="108" title="circle-led-cccccc.png">
+<img src="../resources/icons/cog-cccccc.png" width="108" height="108" title="cog-cccccc.png">
+
 <p>Add, increase</p>
-grey-plus.png
-
+<img src="../resources/icons/grey-plus.png" width="108" height="108" title="grey-plus.png">
 <p>Decrease, Counterclockwise </p>
-refresh-cccccc.png
+<img src="../resources/icons/refresh-cccccc.png" width="108" height="108" title="refresh-cccccc.png">
 
-<p>Exit (overlay)</p>
-green-backslash.png
-<p>help?</p>
-plus-circle.png
+<p>Go (overlay)</p>
+<img src="../resources/icons/green-backslash.png" width="108" height="108" title="green-backslash.png">
+<p>Go (with caution)</p>
+<img src="../resources/icons/suspended.png" width="108" height="108" title="suspended.png">
+<p>Warning</p>
+<img src="../resources/icons/red-circle.png" width="108" height="108" title="red-circle.png">
+<img src="../resources/icons/plus-circle.png" width="108" height="108" title="plus-circle.png">
+
 <p>Item disabled (overlay) ie not allowed</p>
-disabled.png
-grey-x.png
-red-circle.png
-<p>Suspended</p>
-suspended.png
+<img src="../resources/icons/disabled.png" width="108" height="108" title="disabled.png">
+<img src="../resources/icons/grey-x.png" width="108" height="108" title="grey-x.png">
+
 
 
 <p>Asset active or inactive</p>

@@ -40,6 +40,8 @@ The expressions are described by Scott McCloud on pages 80 to 86 in his book "Ma
 The four levels of intensity provide a way of converting an index value to expression.
 Some users may find facial expressions more appealing than interpreting a number.
 </p>
+<p>These symbols have names with a consistent prefix to ease the process of swapping styles.</p>
+
 <h3>Rock style</h3>
 <p>Table showing intensity vs primary expression</p>
 <table>
