@@ -41,7 +41,8 @@ The four levels of intensity provide a way of converting an index value to expre
 Some users may find facial expressions more appealing than interpreting a number.
 </p>
 <p>These symbols have names with a consistent prefix to ease the process of swapping styles.</p>
-
+<p>A background has been added to show flexibility of images in styles.</p>
+<div style="background-color: #cc99ff;">
 <h3>Rock style</h3>
 <p>Table showing intensity vs primary expression</p>
 <table>
@@ -166,3 +167,5 @@ blank
 experiment
 <br><img src="../resources/icons/rock-experiment.png" width="108" height="108" title="experiment">
 </p>
+
+</div>
