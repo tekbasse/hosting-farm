@@ -16,7 +16,6 @@ Highlighted application packages include forum, file-storage, and xowiki.</p>
 This is primarily a web interface for a hosting-farm system 
 made by one hosting farm company for system admins and their customers. 
 </p>
-
 <h3>features</h3>
 <ul><li>
 a consistent, secure, small-device friendly UI for local, custom services
@@ -24,10 +23,6 @@ a consistent, secure, small-device friendly UI for local, custom services
 works with OpenACS on linux and FreeBSD. Should also work with OpenACS on other OSes with limited changes
 </li><li>
 programmed in TCL with OpenACS' TCL API and Postgresql database integration
-</li><li>
-can be ported to Oracle or other databases
-</li><li>
-integrates with perl and php server scripts
 </li><li>
 avoids pitfalls of other web-based admin panels that add an additional technology layer to
 administration support
@@ -50,6 +45,17 @@ ticket tracker with built-in streamlining for outages/disruptions that deal with
 </li><li>
 SEO ready wiki for publishable content generated from system
 </li></ul>
+
+
+<h3>features of OpenACS application framework</h3>
+<ul><li>
+can be ported to Oracle or other databases
+</li><li>
+integrates with perl and php server scripts
+</li><li>
+additional features detailed at <a href="http://openacs.org/xowiki/docs-end-user">http://openacs.org/xowiki/docs-end-user</a>
+</li></ul>
+
 <h3>features in development</h3>
 <p>billing - general invoicing utility for handling initial orders, recurring billing, and quota overages.</p>
 <p>marketing / lead performance metrics that imports openacs.log statistical session activity</p>
