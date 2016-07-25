@@ -56,41 +56,73 @@ Some users may find facial expressions more appealing than interpreting a number
 </tr>
 <tr><td>
 <img src="../resources/icons/rock-concern.png" width="108" height="108" title="concern">
+<br>concern
 </td><td>
 <img src="../resources/icons/rock-anxiety.png" width="108" height="108" title="anxiety">
+<br>anxiety
 </td><td>
 <img src="../resources/icons/rock-fear.png" width="108" height="108" title="fear">
+<br>fear
 </td><td>
 <img src="../resources/icons/rock-terror.png" width="108" height="108" title="terror">
+<br>terror
 </td></tr>
 <tr><td>
 <img src="../resources/icons/rock-satisfaction.png" width="108" height="108" title="satisfaction">
+<br>satisfaction
 </td><td>
 <img src="../resources/icons/rock-amusement.png" width="108" height="108" title="amusement">
+<br>amusement
 </td><td>
 <img src="../resources/icons/rock-joy.png" width="108" height="108" title="joy">
+<br>joy
 </td><td>
 <img src="../resources/icons/rock-laughter.png" width="108" height="108" title="laughter">
+<br>laughter
 </td></tr>
 <tr><td>
 <img src="../resources/icons/rock-dejection.png" width="108" height="108" title="dejection">
+<br>dejection
 </td><td>
 <img src="../resources/icons/rock-melancholy.png" width="108" height="108" title="melancholy">
+<br>melancholy
 </td><td>
 <img src="../resources/icons/rock-sadness.png" width="108" height="108" title="sadness">
+<br>sadness
 </td><td>
 <img src="../resources/icons/rock-grief.png" width="108" height="108" title="grief">
+<br>grief
 </td></tr>
 <tr><td>
 <img src="../resources/icons/rock-alert.png" width="108" height="108" title="alert">
+<br>alert
 </td><td>
 <img src="../resources/icons/rock-wonder.png" width="108" height="108" title="wonder">
+<br>wonder
 </td><td>
 <img src="../resources/icons/rock-surprise.png" width="108" height="108" title="surprise">
+<br>surprise
 </td><td>
 <img src="../resources/icons/rock-shock.png" width="108" height="108" title="shock">
+<br>shock
 </td></tr>
 </table>
+<h3>Monitor types</h3>
+<p><img src="../resources/icons/hf-backup.png" width="108" height="108" title="backup">
+<br>backup</p>
+<p><img src="../resources/icons/hf-memory.png" width="108" height="108" title="memory">
+<br>memory</p>
+<p><img src="../resources/icons/hf-other.png" width="108" height="108" title="other">
+<br>other</p>
+<p><img src="../resources/icons/hf-power.png" width="108" height="108" title="power">
+<br>power</p>
+<p><img src="../resources/icons/hf-storage.png" width="108" height="108" title="storage">
+<br>storage</p>
+<p><img src="../resources/icons/hf-traffic.png" width="108" height="108" title="traffic">
+<br>traffic</p>
+
+
+
 <h3>other expressions</h3>
 <p>active
 <br><img src="../resources/icons/rock-active.png" width="108" height="108" title="active">
