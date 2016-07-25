@@ -30,9 +30,9 @@
 <h2>Monitor</h2>
 <p>
 These faces are meant to convey health status etc using primary expressions.
-The expressions are described by Scott McCloud on pages 80 to 86 in his book "Making Comics".
+The expressions are described by Scott McCloud on pages 80 to 86 in his book "Making Comics" (c)2006.
 They provide a way of converting an index value to expression.
-Some users may find these expressions easier to interpret than a number.
+Some users may find facial expressions more appealing than interpreting a number.
 </p>
 <h3>Rock style</h3>
 <p>Table showing intensity vs primary expression</p>
