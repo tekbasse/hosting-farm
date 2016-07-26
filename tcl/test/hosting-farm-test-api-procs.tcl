@@ -630,6 +630,19 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             # move vh from 2 to 1
             # verify
             # etc
+            set op_status_list [list \
+                                    active \
+                                    inactive \
+                                    terminated \
+                                    suspended \
+                                    wip \
+                                    suspended-active \
+                                    suspended-config \
+                                    suspended-inactive \
+                                    config-active \
+                                    wip-inactive \
+                                    wip-active ]
+            set op_status_list_len [llength $op_status_list]
             set update_list [lrepeat 4 "update"]
             set cycle_count [expr { pow($switch_options_count,2) } ]
             for {set cycle_nbr 0} {$cycle_nbr < $cycle_count} {incr $cycle_nbr} {
@@ -659,6 +672,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         switch -exact -- $op_type {
                             trash {
                                 hf_asset_trash $sub_asset_id
+                                incr audit_at_arr(${sub_asset_id}) -1
                             }
                             create {
                                 set sub_asset_type_id [hf_asset_type_id_of_asset_id $sub_asset_id]
@@ -685,16 +699,17 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                 set k [randomRange 2]
                                 switch $k { 
                                     0 { hf_asset_label_change $sub_asset_id [hf_domain_example] }
-                                    1 { # change op_status of asset (varchar(20) ) 
-                                        # active,inactive,alert,disabled,suspended
-                                        ##code, what are common, minimum op_status types?
-
+                                    1 { 
+                                        set op_status [lindex $op_status_list [randomRange $op_status_list_len ]]
+                                        hf_asset_op_status_change $sub_asset_id $op_status
                                     }
                                     2 {
                                         # Switch monitor on or off
+                                        hf_asset_monitor $sub_asset_id [randomRange 1]
                                     }
                                     3 {
                                         # switch publish on /off
+                                        hf_asset_publish $sub_asset_id [randomRange 1]
                                     }
                                 }
                             }
@@ -713,14 +728,15 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                             switch -exact -- $op_type {
                                 trash {
                                     hf_attribute_trash $attr_id
+                                    incr audit_atc_arr(${sub_type_id}) -1
                                 }
                                 create {
                                     # add attribute below it.
-                                    hfdt_ua_asset_create
-                                    
+                                    hfdt_ua_asset_create $attr_id
                                 }
                                 update {
                                     # change label?
+                                    hf_attribute_sub_label_update $attr_id [ad_generate_random_string]
                                 }
                             }
                         }
