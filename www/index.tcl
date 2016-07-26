@@ -12,6 +12,7 @@ if { !$app_read_p } {
     ad_redirect_for_registration
     ad_script_abort
 }
+set site_developer_p 0
 
 set app_admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
 set customer_id ""
@@ -37,8 +38,12 @@ if { $app_admin_p } {
     set create_p 1
     set user_roles_list $app_roles_list
 } else {
-    set user_roles_list [hf_roles_of_user $user_id $instance_id $customer_id]
+    set user_roles_list [hf_roles_of_user $user_id $customer_id]
 }
+if { "site_developer" in $user_roles_list } {
+    set site_developer_p 1
+} 
+
 ns_log Notice "index.tcl user_roles_list '${user_roles_list}' app_roles_list '${app_roles_list}'"
  
 # create more flags for conditional adp content

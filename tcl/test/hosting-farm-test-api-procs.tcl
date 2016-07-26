@@ -500,18 +500,18 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         set f_id [hfdt_hw_base_create $hw_asset_id]
                         if { $f_id ne "" } {
 
-                                # add hw asset + ua  as 1u unit botbox etc.
-                                set box_id [hfdt_hw_1u_create $f_id]
-                                if { $box_id ne "" } {
-                                    set c [randomRange 8]
-                                    incr c 5
-                                    for {set i 0} {$i < $c } {incr i} {
-                                        # add hw asset + ua  as colo unit botbox etc.
-                                        set box_id [hfdt_hw_1u_create $f_id]
-                                    }
-                                } else {
-                                    ns_log Warning "hosting-farm-test-api-procs.tcl dice= 6,7,8 failed to create colo assets."
+                            # add hw asset + ua  as 1u unit botbox etc.
+                            set box_id [hfdt_hw_1u_create $f_id]
+                            if { $box_id ne "" } {
+                                set c [randomRange 8]
+                                incr c 5
+                                for {set i 0} {$i < $c } {incr i} {
+                                    # add hw asset + ua  as colo unit botbox etc.
+                                    set box_id [hfdt_hw_1u_create $f_id]
                                 }
+                            } else {
+                                ns_log Warning "hosting-farm-test-api-procs.tcl dice= 6,7,8 failed to create colo assets."
+                            }
                         } else {
                             ns_log Warning "hosting-farm-test-api-procs.tcl dice= 6,7,8 failed to create asset."
                         }
@@ -687,7 +687,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                     0 { hf_asset_label_change $sub_asset_id [hf_domain_example] }
                                     1 { # change op_status of asset (varchar(20) ) 
                                         # active,inactive,alert,disabled,suspended
-##code, what are common, minimum op_status types?
+                                        ##code, what are common, minimum op_status types?
 
                                     }
                                     2 {
@@ -696,6 +696,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                     3 {
                                         # switch publish on /off
                                     }
+                                }
                             }
                         }
                     } else {

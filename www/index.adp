@@ -9,7 +9,7 @@
   <a href="c">#accounts-ledger.Customers#</a>
 </if>
 
-<if @technical_p@ or @main_p@ or @site_developer@>
+<if @technical_p@ or @main_p@ or @site_developer_p@>
   <a href="assets">#accounts-ledger.Assets#</a>
 </if>
 

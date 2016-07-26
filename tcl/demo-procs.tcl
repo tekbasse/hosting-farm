@@ -1270,4 +1270,3 @@ ad_proc -public hfdt_vh_base_create {
     #array unset asset_arr
     return $asset_arr(f_id)
 }
-}
