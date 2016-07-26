@@ -643,6 +643,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                     wip-inactive \
                                     wip-active ]
             set op_status_list_len [llength $op_status_list]
+            set op_type_list [concat $update_list $create_list $trash_list]
+            set op_type_list_len [llength $op_type_list]
+
             set update_list [lrepeat 4 "update"]
             set cycle_count [expr { pow($switch_options_count,2) } ]
             for {set cycle_nbr 0} {$cycle_nbr < $cycle_count} {incr $cycle_nbr} {
@@ -654,10 +657,10 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                 set trash_list [lrepeat $tr_count "trash"]
 
                 set hw_asset_id_list [acc_fin::shuffle_list $hw_asset_id_list]
-                
+                s
                 foreach hw_asset_id $hw_asset_id_list {
                     # Choose operations and target type
-                    set op_type [lindex [concat $update_list $create_list $trash_list] [randomRange 24]]
+                    set op_type [lindex $op_type_list [randomRange $op_type_list_len]]
                     set target [lindex [list asset attribute] [randomRange 2]]
                     # Choose primary target
                     set sub_assets_list [hf_asset_subassets_cascade $hw_asset_id]
