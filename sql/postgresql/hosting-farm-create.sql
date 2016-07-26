@@ -59,6 +59,42 @@ create index hf_asset_type_label_idx on hf_asset_type (label);
 -- which has resulted in a name collision with template_id
 -- q-wiki ref template_id is now f_id.
 
+-- hf_assets.op_status discussion
+-- What are common, minimum op_status types?
+-- These are largely determined by the biz logic of the sys admin.
+-- One paradigm is:
+-- active,inactive
+-- active = on
+-- inactive = off
+
+-- Another is:
+-- active,inactive,terminated,suspended,wip,config
+-- active = on (user controlled)
+-- inactive = off (user controlled)
+-- terminated = off permanently ie do not continue (except by sysadmin)
+-- suspended = off, waiting for something external, maybe user input
+-- wip = on, partially.. maybe extended fsck, app/configuration/upgrade build etc. 
+-- These could be augmented to a kind of a-b stack:
+-- suspended and wip may be followed by a suffix of the next state to try, if continuing
+-- for example:
+-- suspended-active   to reactivate an asset when client resumes paying for service.
+-- suspended-config   to activate after asset has been configured.
+-- suspended-inactive to leave asset inactive after the suspended assets get a resume or continue
+-- config-active      waiting for sysadmin input to config, then activate (think new complex asset)
+-- wip-inactive       to wait for further admin attention after wip process completes.
+-- wip-active         start a normal process upon completion of wip process (restart etc)..
+-- These status types are somewhat akin to Job Control (man jcobs 
+--   or https://www.gnu.org/software/libc/manual/html_node/index.html#toc-Job-Control-1 )
+--   which uses these states:
+-- running
+-- done
+-- done (code)
+-- stopped
+-- stopped(SIGTSTP) via user request? stopped gracefully
+-- stopped(SIGSTOP) via overriding authority
+-- stopped(SIGTTIN) via waiting for input to be specified
+-- stopped(SIGTTOU) via waiting for output to be specified
+
 CREATE TABLE hf_assets (
     instance_id    integer,
     -- An asset_id. See hf_asset_label_map.asset_id
