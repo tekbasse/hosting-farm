@@ -362,7 +362,7 @@ ad_proc -private hf_asset_trash_f_id {
         where f_id=:f_id 
         and instance_id=:instance_id }
     db_dml hf_assets_trash_f {update hf_assets 
-        set trash_p='1'
+        set trashed_p='1'
         where f_id=:f_id
         and instance_id=:instance_id }
     return 1
@@ -383,7 +383,7 @@ ad_proc -public hf_asset_trash {
             set nowts [dt_systime -gmt 1]
             set last_modified $nowts
             db_transaction {
-                db_dml hf_asset_trash "update hf_assets set trash_p='1' where asset_id=:asset_id and instance_id=:instance_id"
+                db_dml hf_asset_trash "update hf_assets set trashed_p='1' where asset_id=:asset_id and instance_id=:instance_id"
                 if { [hf_asset_id_current_q $asset_id ] } {
                     set f_id [hf_f_id_of_asset_id $asset_id]
                     hf_asset_trash_f_id $f_id
@@ -413,7 +413,7 @@ ad_proc -public hf_asset_untrash {
             set nowts [dt_systime -gmt 1]
             set last_modified $nowts
             db_transaction {
-                db_dml hf_asset_untrash "update hf_assets set trash_p='0' where asset_id=:asset_id and instance_id=:instance_id"
+                db_dml hf_asset_untrash "update hf_assets set trashed_p='0' where asset_id=:asset_id and instance_id=:instance_id"
                 if { [hf_asset_id_current_q $asset_id ] } {
                     db_dml hf_asset_rev_map_trash "update hf_asset_rev_map set trashed_p='0' where asset_id=:asset_id and instance_id=:instance_id"
                 }
@@ -442,7 +442,7 @@ ad_proc -public hf_f_id_trash {
             set nowts [dt_systime -gmt 1]
             set last_modified $nowts
             db_transaction {
-                db_dml hf_assets_f_id_trash "update hf_assets set trash_p='1' where f_id=:f_id and instance_id=:instance_id and trashed_p!='1'"
+                db_dml hf_assets_f_id_trash "update hf_assets set trashed_p='1' where f_id=:f_id and instance_id=:instance_id and trashed_p!='1'"
                 if { [hf_asset_id_current_q $f_id ] } {
                     db_dml hf_asset_rev_map_trash "update hf_asset_rev_map set trashed_p='0' where asset_id=:asset_id and instance_id=:instance_id"
                 }
@@ -471,7 +471,7 @@ ad_proc -public hf_f_id_untrash {
             set nowts [dt_systime -gmt 1]
             set last_modified $nowts
             db_transaction {
-                db_dml hf_asset_untrash "update hf_assets set trash_p='0' where asset_id=:asset_id and instance_id=:instance_id"
+                db_dml hf_asset_untrash "update hf_assets set trashed_p='0' where asset_id=:asset_id and instance_id=:instance_id"
                 db_dml hf_asset_rev_map_trash "update hf_asset_rev_map set trashed_p='0' where asset_id=:asset_id and instance_id=:instance_id"
             } on_error {
                 ns_log Warning "hf_f_id_untrash: error for f_id '${f_id}'"

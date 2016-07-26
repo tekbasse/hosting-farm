@@ -505,7 +505,7 @@ ad_proc -private hf_attribute_sub_label_update {
     set new_sub_label_len [string length $new_sub_label]
     if { $new_sub_label_len != 0 && $new_sub_label_len < 65 } {
         set sub_f_id_new ""
-        set sub_asset_list [hf_sb_asset $sub_f_id]
+        set sub_asset_list [hf_sub_asset $sub_f_id]
         qf_lists_to_vars $sub_asset_list [hf_sub_asset_map_keys]
         if { [llength $sub_asset_list] > 0 } {
             # trash old asset_type_id record also
@@ -707,11 +707,12 @@ ad_proc -private hf_attribute_trash {
 } {
     Trashes attribute referenced by sub_f_id
 } {
+    upvar 1 instance_id instance_id
     set success_p 0
     set sub_assets_lists [hf_sub_asset $sub_f_id]
     set sub_asset_list [lindex $sub_assets_lists 0]
     if { [llength $sub_asset_list] > 0 } {
-        qf_lists_to_array sub_arr $sub_list [hf_sub_asset_map_keys]
+        qf_lists_to_vars $sub_asset_list [hf_sub_asset_map_keys]
         if { $sub_type_id in [list vh vm dc hw ss ip ni ns] } {
             set trashed_p [qf_is_true $trashed]
             db_transaction {

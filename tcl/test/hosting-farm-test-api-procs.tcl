@@ -648,7 +648,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             for {set cycle_nbr 0} {$cycle_nbr < $cycle_count} {incr $cycle_nbr} {
                 set t [expr { $cycle_nbr * 360. / $cycle_count } ]
                 # balance of creates to trashes ie creates - trashes. This simmulates a life cycle..
-                set td [expr { round( [acc_fin::pos_sin_cycle_rate $t] * 10 + 10. ) } ]
+                set td [expr { round( [acc_fin::pos_sine_cycle_rate $t] * 10 + 10. ) } ]
                 set tr_count [expr { 20 - $td } ]
                 set create_list [lrepeat $td "create"]
                 set trash_list [lrepeat $tr_count "trash"]
@@ -676,7 +676,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                             }
                             create {
                                 set sub_asset_type_id [hf_asset_type_id_of_asset_id $sub_asset_id]
-                                if { $sub_sub_asset_type_id eq "vm" && [random] > .5 } {
+                                if { $sub_asset_type_id eq "vm" && [random] > .5 } {
                                     hfdt_shared_hosting_client_create $sub_asset_id
                                 } else {
                                     set r [randomRange 10]
@@ -700,7 +700,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                 switch $k { 
                                     0 { hf_asset_label_change $sub_asset_id [hf_domain_example] }
                                     1 { 
-                                        set op_status [lindex $op_status_list [randomRange $op_status_list_len ]]
+                                        set op_status [lindex $op_status_list [randomRange $op_status_list_len]]
                                         hf_asset_op_status_change $sub_asset_id $op_status
                                     }
                                     2 {
@@ -717,8 +717,8 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     } else {
                         # Target is an attribute of sub_asset_id
                         # Choose an attribute
-                        set attr_id_list [hf_attributes_cascade $sub_asset_id]
-                        set set attr_id_count [llength $attr_id_list]
+                        set attr_id_list [hf_asset_attributes_cascade $sub_asset_id]
+                        set attr_id_count [llength $attr_id_list]
                         set attr_id [lindex $attr_id_list [randomRange $attr_id_count]]
                         set sam_list [hf_sub_asset $attr_id]
                         qf_lists_to_vars $sam_list [hf_sub_asset_map_keys] sub_type_id
