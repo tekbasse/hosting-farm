@@ -671,12 +671,20 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
                     if { $target eq "asset" } {
                         if { $sub_asset_id eq "" } {
-                            set op_type create
+                            set op_type "create"
                         }
+
+                        if { $op_type eq "trash" } {
+                            hf_asset_stats $sub_asset_id trashed_p
+                            if { $trashed_p eq "" } {
+                                ns_log Warning "hosting-farm-test-api-procs.tcl: sub_asset_id '${sub_asset_id}' trashed_p '${trashed_p}'"
+                                set op_type "create"
+                            }
+                        }
+
                         ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve op_type '${op_type}' on sub_asset_id '${sub_asset_id}'"
                         switch -exact -- $op_type {
                             trash {
-                                hf_asset_stats $sub_asset_id trashed_p
                                 if { $trashed_p } { 
                                     hf_asset_untrash $sub_asset_id
                                     incr audit_at_arr(${sub_asset_id})
@@ -732,8 +740,14 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         set attr_id_count [llength $attr_id_list]
                         set attr_id [lindex $attr_id_list [randomRange $attr_id_count]]
                         set sam_list [hf_sub_asset $attr_id]
-                        qf_lists_to_vars $sam_list [hf_sub_asset_map_keys] sub_type_id trashed_p
-
+                        qf_lists_to_vars $sam_list [hf_sub_asset_map_keys] [list sub_type_id trashed_p]
+                        if { $attr_id eq "" || $trashed_p eq "" } {
+                            set op_type "create"
+                            if { $trashed_p eq "" } {
+                                ns_log Notice "hosting-farm-test-api-procs.tcl: attr_id '${attr_id}' trashed_p '${trashed_p}'"
+                            }
+                        }
+                        
                         if { $attr_id ne "" } {
                             ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve op_type '${op_type}' on attr_id '${attr_id}'"
                             switch -exact -- $op_type {

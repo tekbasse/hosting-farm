@@ -503,7 +503,7 @@ ad_proc -private hf_asset_subassets_cascade {
             }
         }
         incr count
-        if { [expr { int( $count / 1000 ) } ] == [expr { $count / 1000 } ] } {
+        if { [expr { int( $count / 1000. ) } ] == [expr { $count / 1000. } ] } {
             ns_log Notice "hf_asset_subassets_cascade.465: count '${count}'"
         }
         set current_id_list $next_id_list
@@ -523,7 +523,8 @@ ad_proc -private hf_asset_cascade_count {
     set current_id_list_len 1
     set final_id_list [list ]
     set not_error_p 1
-    ns_log Notice "hf_asset_cascade_count.492: begin while.."
+    #ns_log Notice "hf_asset_cascade_count.492: begin while.."
+    set count 0
     while { $current_id_list_len > 0 && $not_error_p } {
         set next_id_list [list ]
         foreach s_id $current_id_list {
@@ -539,6 +540,11 @@ ad_proc -private hf_asset_cascade_count {
                 }
             }
         }
+        incr count
+        if { [expr { int( $count / 1000. ) } ] == [expr { $count / 1000. } ] } {
+            ns_log Notice "hf_asset_cascade_count.545: count '${count}'"
+        }
+
         set current_id_list $next_id_list
         set current_id_list_len [llength $current_id_list]
     }
@@ -558,7 +564,8 @@ ad_proc -private hf_asset_subassets_by_type_cascade {
     set current_id_list_len 1
     set final_id_list [list ]
     set not_error_p 1
-    ns_log Notice "hf_asset_subassets_by_type_cascade.522: begin while.."
+    #ns_log Notice "hf_asset_subassets_by_type_cascade.522: begin while.."
+    set count 0
     while { $current_id_list_len > 0 && $not_error_p } {
         set next_id_list [list ]
         foreach s_id $current_id_list {
@@ -574,6 +581,11 @@ ad_proc -private hf_asset_subassets_by_type_cascade {
                 }
             }
         }
+        incr count
+        if { [expr { int( $count / 1000. ) } ] == [expr { $count / 1000. } ] } {
+            ns_log Notice "hf_asset_subassets_by_type_cascade.586: count '${count}'"
+        }
+
         set current_id_list $next_id_list
         set current_id_list_len [llength $current_id_list]
     }
@@ -609,7 +621,7 @@ ad_proc -private hf_asset_attributes_cascade {
             }
         }
         incr count
-        if { [expr { int( $count / 1000 ) } ] == [expr { $count / 1000 } ] } {
+        if { [expr { int( $count / 1000. ) } ] == [expr { $count / 1000. } ] } {
             ns_log Notice "hf_asset_attributes_cascade.613: count '${count}'"
         }
 
@@ -635,7 +647,8 @@ ad_proc -private hf_asset_attributes_by_type_cascade {
     set final_id_list [list ]
     set not_error_p 1
     set f_id_is_asset_p [hf_f_id_exists_q $f_id]
-    ns_log Notice "hf_asset_attributes_by_type_cascade.579: begin while.."
+    #ns_log Notice "hf_asset_attributes_by_type_cascade.579: begin while.."
+    set count 0
     while { $current_id_list_len > 0 && $not_error_p } {
         set next_id_list [list ]
         foreach s_id $current_id_list {
@@ -651,6 +664,11 @@ ad_proc -private hf_asset_attributes_by_type_cascade {
                 }
             }
         }
+        incr count
+        if { [expr { int( $count / 1000. ) } ] == [expr { $count / 1000. } ] } {
+            ns_log Notice "hf_asset_attributes_by_type_cascade.669: count '${count}'"
+        }
+
         set current_id_list $next_id_list
         set current_id_list_len [llength $current_id_list]
     }
@@ -690,7 +708,7 @@ ad_proc -private hf_asset_cascade {
             }
         }
         incr count
-        if { [expr { int( $count / 1000 ) } ] == [expr { $count / 1000 } ] } {
+        if { [expr { int( $count / 1000. ) } ] == [expr { $count / 1000. } ] } {
             ns_log Notice "hf_asset_subassets_cascade.693: count '${count}'"
         }
 
