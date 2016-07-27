@@ -29,7 +29,7 @@ ad_proc -private hf_asset_defaults {
                    trashed_p "0" \
                    trashed_by "" \
                    template_p "0" \
-                   templated_p "" \
+                   templated_p "0" \
                    publish_p "0" \
                    monitor_p "0" \
                    popularity "" \
@@ -451,7 +451,7 @@ ad_proc -private hf_ns_defaults {
     set nowts [dt_systime -gmt 1]
     set ns [list instance_id $instance_id \
                 ns_id "" \
-                active_p "" \
+                active_p "0" \
                 name_record "" \
                 time_trashed "" \
                 time_created $nowts]
