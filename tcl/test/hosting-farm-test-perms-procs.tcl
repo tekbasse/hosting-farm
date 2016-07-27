@@ -3,7 +3,7 @@ ad_library {
     @creation-date 2015-03-19
 }
 
-aa_register_case -cats {db smoke} asset_attr_permutation_check {
+aa_register_case -cats {db smoke} asset_permutations_check {
     tests permutations of each asset and attribute via api
 } {
     aa_run_with_teardown \
