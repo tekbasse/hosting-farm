@@ -542,19 +542,25 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                             incr $i_count 1
                             for {set i 0} {$i < $i_count} {incr i} {
                                 set ua_id [hfdt_ua_asset_create $f_id]
+
+                                set ipn [expr { int( fmod( $audit_atc_arr(ua), 256) ) } ]
+                                set ipn2 [expr { int( $audit_atc_arr(ua) / 256 ) } ]
+                                
+                                set j_count [randomRange 30]
+
                                 for {set j 0} {$j < $j_count} {incr j} {
 
                                     # add a ns
                                     set domain [hf_domain_example]
-                                    set ipn [expr { int( fmod( $audit_atc_arr(ua), 256) ) } ]
-                                    set ipn2 [expr { int( $audit_atc_arr(ua) / 256 ) } ]
                                     set ipv4_addr "10.0.${ipn2}.${ipn}"
                                     array set ns_arr [list \
-                                                          f_id $ua_arr(f_id) \
+                                                          f_id ${ua_id} \
                                                           active_p "0" \
                                                           name_record "${domain}. A ${ipv4_addr}" ]
                                     set ns_arr(ns_id) [hf_ns_write ns_arr]
-                                    incr audit_atc_arr(ns)
+                                    if { $ns_arr(ns_id) ne "" } {
+                                        incr audit_atc_arr(ns)
+                                    }
                                     array unset ns_arr
                                 }
                             }
