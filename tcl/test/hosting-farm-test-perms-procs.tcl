@@ -9,7 +9,7 @@ aa_register_case -cats {db smoke} asset_permutations_check {
     aa_run_with_teardown \
         -test_code {
             #        -rollback \
-            ns_log Notice "aa_register_case.12: Begin test assets_attr_permutation_check"
+            ns_log Notice "aa_register_case.12: Begin test assets_attr_perms_check"
             # Use default permissions provided by tcl/hosting-farm-init.tcl
             # Yet, users must have read access permissions or test fails
             # Some tests will fail (predictably) in a hardened system
@@ -29,15 +29,17 @@ aa_register_case -cats {db smoke} asset_permutations_check {
             
             # Generate permutations
             # hf_asset_type_id dc hw vm vh ss ip ni ns ot ua
+
             foreach type_id [hf_asset_type_id_list] {
                 # create asset record
                 array set asset_arr [list \
                                          asset_type_id ${type_id} \
                                          label $domain \
-                                         name "test ${asset_type_id} by hosting-farm-test-perm-procs.tcl" \
+                                         name "test ${type_id} by hosting-farm-test-perms-procs.tcl" \
                                          user_id $sysowner_user_id ]
                 set asset_arr(f_id) [hf_asset_create asset_arr ]
                 aa_log "'[string toupper ${type_id}]' asset with f_id '$asset_arr(f_id)' created"
+                ns_log Notice "hosting-farm-test-perms-procs.tcl: created asset_arr(f_id) '$asset_arr(f_id)'"
                 array set asset_arr [list \
                                          sub_label $domain \
                                          system_name $domain \
@@ -48,6 +50,7 @@ aa_register_case -cats {db smoke} asset_permutations_check {
                                          description $asset_arr(name) \
                                          details $asset_arr(name) ]
                 foreach sub_type_id [hf_asset_type_id_list] {
+                    ns_log Notice "hosting-farm-test-perms-procs.tcl: trying sub_type_id '${sub_type_id}' attribute on type_id '${type_id}' '$asset_arr(f_id)'"
                     switch -exact $sub_type_id {
                         dc {
                             set asset_arr(sub_f_id) [hf_dc_write asset_arr]
@@ -86,7 +89,7 @@ aa_register_case -cats {db smoke} asset_permutations_check {
                         }
                     }
                     # end switch
-                    if { $sub_type_id in [hf_types_allowedby $type_id] || $sub_type_id eq $type_id } {
+                    if { $sub_type_id in [hf_types_allowed_by $type_id] || ( $sub_type_id eq $type_id && $sub_type_id ni [list ot] ) } {
                         set allowed_p 1
                     } else {
                         set allowed_p 0
@@ -98,6 +101,7 @@ aa_register_case -cats {db smoke} asset_permutations_check {
                     }
                     aa_equals "'${type_id}' with attribute '${sub_type_id}' (sub_f_id '$asset_arr(sub_f_id)')" $did_it_p $allowed_p
                     array unset asset_arr sub_f_id
+                    ns_log Notice "hosting-farm-test-perms-procs.tcl: done trying sub_type_id '${sub_type_id}' attribute on type_id '${type_id}' '$asset_arr(f_id)'"
                 }
             }
         } \
