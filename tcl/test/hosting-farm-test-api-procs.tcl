@@ -657,7 +657,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                 set op_type_list_len [llength $op_type_list]
 
                 set hw_asset_id_list [acc_fin::shuffle_list $hw_asset_id_list]
-                ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve cycle_nbr '${cycle_nbr}'"
+                ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve cycle_nbr '${cycle_nbr}' of '${cycle_count}'"
                 foreach hw_asset_id $hw_asset_id_list {
                     # Choose operations and target type
                     set op_type [lindex $op_type_list [randomRange $op_type_list_len]]
@@ -705,7 +705,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                             }
                             update {
                                 # change label, active / inactive, monitor_p on or off
-                                set k [randomRange 2]
+                                set k [randomRange 4]
                                 switch $k { 
                                     0 { hf_asset_label_change $sub_asset_id [hf_domain_example] }
                                     1 { 
@@ -755,11 +755,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                             }
                         }
                     }
-                    ns_log Notice "hosting-farm-test-api-procs.tcl: end switch '${dice}'"
-                    #end switch
+                    #end if asset/attr
                 }
                 # end foreach
-
             }
             # end cycle_nbr loop
 
