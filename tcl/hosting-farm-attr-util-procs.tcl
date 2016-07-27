@@ -1383,7 +1383,8 @@ ad_proc -private hf_asset_type_id_of_f_id {
         select f_id,type_id,sub_f_id,sub_type_id 
         from hf_sub_asset_map
         where ( f_id=:f_id or sub_f_id=:f_id )
-        and instance_id=:instance_id limit 1 } ]
+        and instance_id=:instance_id
+        order by last_updated desc limit 1} ]
     if { $exists_p } {
         if { $f_id eq $f_id_orig } {
             set asset_type_id $type_id

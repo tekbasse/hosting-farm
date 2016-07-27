@@ -223,7 +223,8 @@ ad_proc -private hf_asset_type_id_of_asset_id {
         select asset_type_id 
         from hf_assets 
         where f_id=:f_id 
-        and instance_id=:instance_id limit 1 } ]
+        and instance_id=:instance_id 
+        order by created desc limit 1 } ]
     if { !$exists_p } {
         ns_log Notice "hf_asset_type_id_of_asset_id: asset_type_id does not exist for asset_id '${asset_id}' instance_id '${instance_id}'"
     }
