@@ -703,7 +703,6 @@ ad_proc -private hf_ss_trash {
 
 ad_proc -private hf_attribute_trash {
     sub_f_id
-    {trashed "1"}
 } {
     Trashes attribute referenced by sub_f_id
 } {

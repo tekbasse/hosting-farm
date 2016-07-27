@@ -643,8 +643,6 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                     wip-inactive \
                                     wip-active ]
             set op_status_list_len [llength $op_status_list]
-            set op_type_list [concat $update_list $create_list $trash_list]
-            set op_type_list_len [llength $op_type_list]
 
             set update_list [lrepeat 4 "update"]
             set cycle_count [expr { pow($switch_options_count,2) } ]
@@ -655,9 +653,11 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                 set tr_count [expr { 20 - $td } ]
                 set create_list [lrepeat $td "create"]
                 set trash_list [lrepeat $tr_count "trash"]
+                set op_type_list [concat $update_list $create_list $trash_list]
+                set op_type_list_len [llength $op_type_list]
 
                 set hw_asset_id_list [acc_fin::shuffle_list $hw_asset_id_list]
-                s
+                ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve cycle_nbr '${cycle_nbr}'"
                 foreach hw_asset_id $hw_asset_id_list {
                     # Choose operations and target type
                     set op_type [lindex $op_type_list [randomRange $op_type_list_len]]
@@ -674,8 +674,14 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve op_type '${op_type}' on sub_asset_id '${sub_asset_id}'"
                         switch -exact -- $op_type {
                             trash {
-                                hf_asset_trash $sub_asset_id
-                                incr audit_at_arr(${sub_asset_id}) -1
+                                hf_asset_stats $sub_asset_id trashed_p
+                                if { $trashed_p } { 
+                                    hf_asset_untrash $sub_asset_id
+                                    incr audit_at_arr(${sub_asset_id})
+                                } else {
+                                    hf_asset_trash $sub_asset_id
+                                    incr audit_at_arr(${sub_asset_id}) -1
+                                }
                             }
                             create {
                                 set sub_asset_type_id [hf_asset_type_id_of_asset_id $sub_asset_id]
@@ -730,8 +736,13 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                             ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve op_type '${op_type}' on attr_id '${attr_id}'"
                             switch -exact -- $op_type {
                                 trash {
-                                    hf_attribute_trash $attr_id
-                                    incr audit_atc_arr(${sub_type_id}) -1
+                                    set sam_list [hf_sub_asset $attr_id]
+                                    qf_lists_to_vars $sam_list [hf_sub_asset_map_keys] trashed_p
+                                    if { !$trashed_p } {
+                                        if { [hf_attribute_trash $attr_id ] } {
+                                            incr audit_atc_arr(${sub_type_id}) -1
+                                        }
+                                    }
                                 }
                                 create {
                                     # add attribute below it.
