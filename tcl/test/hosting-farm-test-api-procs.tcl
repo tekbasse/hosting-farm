@@ -451,7 +451,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         # add vh asset + ua to a vm attribute + ua
                         set sh_id [hfdt_vm_attr_create $hw_asset_id]
                         if { $sh_id ne "" } {
-                            hfdt_shared_hosting_client_create $asset_arr(f_id)
+                            hfdt_shared_hosting_client_create $sh_id
                         } else {
                             ns_log Warning "hosting-farm-test-api-procs.tcl dice= 2 failed to create vm attribute."
                         }
@@ -541,7 +541,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                             set i_count [randomRange 30]
                             incr $i_count 1
                             for {set i 0} {$i < $i_count} {incr i} {
-                                set ua_id [hf_dt_ua_asset_create $f_id]
+                                set ua_id [hfdt_ua_asset_create $f_id]
                                 for {set j 0} {$j < $j_count} {incr j} {
 
                                     # add a ns
