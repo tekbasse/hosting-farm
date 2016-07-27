@@ -342,10 +342,10 @@ ad_proc -private hf_sub_f_id_current_q {
             where sub_f_id=:sub_f_id 
             and trashed_p!='1'
             and instance_id=:instance_id } ]
-        if { !$current_p } {
-            ns_log Notice "hf_sub_f_id_current_q: not current. \
- sub_f_id '${sub_f_id}' instance_id '${instance_id}'"
-        }
+        #if { !$current_p } {
+        #    ns_log Notice "hf_sub_f_id_current_q: not current. \
+# sub_f_id '${sub_f_id}' instance_id '${instance_id}'"
+        #}
     }
     return $current_p
 
@@ -847,9 +847,9 @@ ad_proc -private hf_sub_asset_map_update {
             set sub_f_id_attr_p [hf_sub_f_id_current_q $sub_f_id]
         }
         if { !$sub_f_id_asset_p && !$sub_f_id_attr_p } {
-            ns_log Warning "hf_sub_asset_map_update.735: sub_f_id '${sub_f_id}' supplied, but not f_id or current sub_f_id."
+            ns_log Warning "hf_sub_asset_map_update.850: sub_f_id '${sub_f_id}' supplied, but not f_id or current sub_f_id."
         }
-    }
+    } 
     if { !$sub_f_id_asset_p && !$sub_f_id_attr_p } {
         set sub_f_id ""
         set sub_f_id_attr_new_p 1
@@ -871,15 +871,15 @@ ad_proc -private hf_sub_asset_map_update {
         if { $sub_f_id ne "" } {
             set sub_f_id_new [hf_attribute_map_update $sub_f_id]    
         } else {
-            ns_log Warning "hf_sub_asset_map_update.743: empty sub_f_id  f_id '${f_id}' sub_f_id '${sub_f_id}'"
+            ns_log Warning "hf_sub_asset_map_update.874: empty sub_f_id. f_id '${f_id}' asset_type_id '${asset_type_id}' sub_f_id '${sub_f_id}' '${sub_asset_type_id}' sub_label '${sub_label}'"
         }
     } elseif { $f_id_attr_p && $sub_f_id_asset_p && !$sub_f_id_attr_new_p } {
         # case 5  Not recommended, but hey, okay let's do it.
-        ns_log Notice "hf_sub_asset_map_update.746: mapping an asset to an attribute. f_id '${f_id}' sub_f_id '${sub_f_id}'"
+        ns_log Notice "hf_sub_asset_map_update.878: mapping an asset to an attribute. f_id '${f_id}' asset_type_id '${asset_type_id}' sub_f_id '${sub_f_id}' '${sub_asset_type_id}' sub_label '${sub_label}'"
 
         set sub_f_id_new [hf_attribute_asset_map_create $f_id $sub_f_id]
     } else {
-        ns_log Warning "hf_sub_asset_map_update.747: case not found for f_id '${f_id}' sub_f_id '${sub_f_id}'"
+        ns_log Warning "hf_sub_asset_map_update.882: case not found for f_id '${f_id}' asset_type_id '${asset_type_id}' sub_f_id '${sub_f_id}' '${sub_asset_type_id}' sub_label '${sub_label}'"
     }
     return $sub_f_id_new
 }
