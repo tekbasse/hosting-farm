@@ -645,7 +645,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             set op_status_list_len [llength $op_status_list]
 
             set update_list [lrepeat 4 "update"]
-            set cycle_count [expr { pow($switch_options_count,2) } ]
+            set cycle_count [expr { round( pow($switch_options_count,2) ) } ]
             for {set cycle_nbr 0} {$cycle_nbr < $cycle_count} {incr $cycle_nbr} {
                 set t [expr { $cycle_nbr * 360. / $cycle_count } ]
                 # balance of creates to trashes ie creates - trashes. This simmulates a life cycle..
@@ -670,7 +670,9 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     set sub_asset_id [lindex $sub_assets_list [randomRange $sub_assets_count]]
 
                     if { $target eq "asset" } {
-
+                        if { $sub_asset_id eq "" } {
+                            set op_type create
+                        }
                         ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve op_type '${op_type}' on sub_asset_id '${sub_asset_id}'"
                         switch -exact -- $op_type {
                             trash {
@@ -730,14 +732,12 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         set attr_id_count [llength $attr_id_list]
                         set attr_id [lindex $attr_id_list [randomRange $attr_id_count]]
                         set sam_list [hf_sub_asset $attr_id]
-                        qf_lists_to_vars $sam_list [hf_sub_asset_map_keys] sub_type_id
+                        qf_lists_to_vars $sam_list [hf_sub_asset_map_keys] sub_type_id trashed_p
 
                         if { $attr_id ne "" } {
                             ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve op_type '${op_type}' on attr_id '${attr_id}'"
                             switch -exact -- $op_type {
                                 trash {
-                                    set sam_list [hf_sub_asset $attr_id]
-                                    qf_lists_to_vars $sam_list [hf_sub_asset_map_keys] trashed_p
                                     if { !$trashed_p } {
                                         if { [hf_attribute_trash $attr_id ] } {
                                             incr audit_atc_arr(${sub_type_id}) -1
