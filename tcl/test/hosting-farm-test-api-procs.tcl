@@ -649,24 +649,24 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             for {set cycle_nbr 0} {$cycle_nbr < $cycle_count} {incr cycle_nbr} {
                 set t [expr { $cycle_nbr * 360. / $cycle_count } ]
                 # balance of creates to trashes ie creates - trashes. This simmulates a life cycle..
-                set td [expr { round( [acc_fin::pos_sine_cycle_rate $t] * 10 + 10. ) } ]
-                set tr_count [expr { 20 - $td } ]
+                set td [expr { round( [acc_fin::pos_sine_cycle_rate $t] * 10 + 11. ) } ]
+                set tr_count [expr { 22 - $td } ]
                 set create_list [lrepeat $td "create"]
                 set trash_list [lrepeat $tr_count "trash"]
                 set op_type_list [concat $update_list $create_list $trash_list]
                 set op_type_list_len [llength $op_type_list]
-
+                incr op_type_list_len -1
                 set hw_asset_id_list [acc_fin::shuffle_list $hw_asset_id_list]
                 ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve cycle_nbr '${cycle_nbr}' of '${cycle_count}'"
                 foreach hw_asset_id $hw_asset_id_list {
                     # Choose operations and target type
                     set op_type [lindex $op_type_list [randomRange $op_type_list_len]]
-                    set target [lindex [list asset attribute] [randomRange 2]]
+                    set target [lindex [list asset attribute] [randomRange 1]]
                     # Choose primary target
                     set sub_assets_list [hf_asset_subassets_cascade $hw_asset_id]
                     set sub_assets_list [lrange $sub_assets_list 1 end]
                     set sub_assets_count [llength $sub_assets_list ]
-                    
+                    incr sub_assets_count -1
                     set sub_asset_id [lindex $sub_assets_list [randomRange $sub_assets_count]]
 
                     if { $target eq "asset" } {
@@ -687,10 +687,10 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                             trash {
                                 if { $trashed_p } { 
                                     hf_asset_untrash $sub_asset_id
-                                    incr audit_at_arr(${sub_asset_id})
+                                    incr audit_ac_arr(${sub_asset_id})
                                 } else {
                                     hf_asset_trash $sub_asset_id
-                                    incr audit_at_arr(${sub_asset_id}) -1
+                                    incr audit_ac_arr(${sub_asset_id}) -1
                                 }
                             }
                             create {
@@ -698,7 +698,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                                 if { $sub_asset_type_id eq "vm" && [random] > .5 } {
                                     hfdt_shared_hosting_client_create $sub_asset_id
                                 } else {
-                                    set r [randomRange 10]
+                                    set r [randomRange 9]
                                     switch -exact -- $r {
                                         0 { hfdt_vh_attr_create $sub_asset_id }
                                         1 { hfdt_ss_attr_create $sub_asset_id }
@@ -715,7 +715,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                             }
                             update {
                                 # change label, active / inactive, monitor_p on or off
-                                set k [randomRange 4]
+                                set k [randomRange 3]
                                 switch $k { 
                                     0 { hf_asset_label_change $sub_asset_id [hf_domain_example] }
                                     1 { 
@@ -738,6 +738,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         # Choose an attribute
                         set attr_id_list [hf_asset_attributes_cascade $sub_asset_id]
                         set attr_id_count [llength $attr_id_list]
+                        incr attr_id_count -1
                         set attr_id [lindex $attr_id_list [randomRange $attr_id_count]]
                         set sam_list [hf_sub_asset $attr_id]
                         qf_lists_to_vars $sam_list [hf_sub_asset_map_keys] [list sub_type_id trashed_p]
