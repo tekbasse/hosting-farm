@@ -667,8 +667,11 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     set sub_assets_list [lrange $sub_assets_list 1 end]
                     set sub_assets_count [llength $sub_assets_list ]
                     incr sub_assets_count -1
-                    set sub_asset_id [lindex $sub_assets_list [randomRange $sub_assets_count]]
-
+                    if { $sub_assets_count > 0 } {
+                        set sub_asset_id [lindex $sub_assets_list [randomRange $sub_assets_count]]
+                    } else {
+                        set sub_asset_id [lindex $sub_assets_list 0]
+                    }
                     if { $target eq "asset" } {
                         if { $sub_asset_id eq "" } {
                             set op_type "create"
@@ -739,7 +742,11 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         set attr_id_list [hf_asset_attributes_cascade $sub_asset_id]
                         set attr_id_count [llength $attr_id_list]
                         incr attr_id_count -1
-                        set attr_id [lindex $attr_id_list [randomRange $attr_id_count]]
+                        if { $attr_id_count > 0 } {
+                            set attr_id [lindex $attr_id_list [randomRange $attr_id_count]]
+                        } else {
+                            set attr_id [lindex $attr_id_list 0]
+                        }
                         set sam_list [hf_sub_asset $attr_id]
                         qf_lists_to_vars $sam_list [hf_sub_asset_map_keys] [list sub_type_id trashed_p]
                         if { $attr_id eq "" || $trashed_p eq "" } {
