@@ -646,7 +646,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
             set update_list [lrepeat 4 "update"]
             set cycle_count [expr { round( pow($switch_options_count,2) ) } ]
-            for {set cycle_nbr 0} {$cycle_nbr < $cycle_count} {incr $cycle_nbr} {
+            for {set cycle_nbr 0} {$cycle_nbr < $cycle_count} {incr cycle_nbr} {
                 set t [expr { $cycle_nbr * 360. / $cycle_count } ]
                 # balance of creates to trashes ie creates - trashes. This simmulates a life cycle..
                 set td [expr { round( [acc_fin::pos_sine_cycle_rate $t] * 10 + 10. ) } ]
