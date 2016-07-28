@@ -620,7 +620,7 @@ ad_proc -private hf_vh_trash {
     upvar 1 instance_id instance_id
     set nowts [dt_systime -gmt 1]
     db_dml hf_vh_trash {
-        update hf_vhost
+        update hf_vhosts
         set time_trashed=:nowts
         where vh_id=:vh_id
         and instance_id=:instance_id }
@@ -702,6 +702,37 @@ ad_proc -private hf_ss_trash {
     return 1
 }
 
+ad_proc -private hf_ni_trash {
+    ni_id
+} {
+    Trashes a ni record
+} {
+    upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
+    db_dml hf_ni_trash {
+        update hf_network_interfaces
+        set time_trashed=:nowts
+        where ni_id=:ni_id
+        and instance_id=:instance_id }
+    return 1
+}
+
+
+ad_proc -private hf_ns_trash {
+    ns_id
+} {
+    Trashes a ns record
+} {
+    upvar 1 instance_id instance_id
+    set nowts [dt_systime -gmt 1]
+    db_dml hf_ns_trash {
+        update hf_ns_records
+        set time_trashed=:nowts
+        where ns_id=:ns_id
+        and instance_id=:instance_id }
+    return 1
+}
+
 ad_proc -private hf_attribute_trash {
     sub_f_id
 } {
@@ -709,15 +740,14 @@ ad_proc -private hf_attribute_trash {
 } {
     upvar 1 instance_id instance_id
     set success_p 0
-    set sub_assets_lists [hf_sub_asset $sub_f_id]
-    set sub_asset_list [lindex $sub_assets_lists 0]
+    set sub_asset_list [hf_sub_asset $sub_f_id]
     if { [llength $sub_asset_list] > 0 } {
         qf_lists_to_vars $sub_asset_list [hf_sub_asset_map_keys]
-        if { $sub_type_id in [list vh vm dc hw ss ip ni ns] } {
-            set trashed_p [qf_is_true $trashed]
+        if { $sub_type_id in [list vh vm dc hw ss ip ni ns ua] } {
+            set trashed_p [qf_is_true $trashed_p]
             db_transaction {
                 db_dml hf_sub_asset_map_trash_u {update hf_sub_asset_map
-                    set trashed_p=:trashed
+                    set trashed_p=:trashed_p
                     where sub_f_id=:sub_f_id
                 }
                 switch -exact $sub_type_id {
@@ -745,6 +775,10 @@ ad_proc -private hf_attribute_trash {
                     ns {
                         hf_ns_trash $sub_f_id
                     }
+                    ua {
+                        # Trash is reversable, otherwise 
+                        # hf_ua_delete \[list $sub_f_id\]
+                    }
                 }
             }
             set success_p 1
@@ -761,8 +795,8 @@ ad_proc -private hf_attribute_trash {
 ad_proc -private hf_vh_write {
     vh_arr_name
 } {
-    Writes a new revision to an existing hf_vhost record.
-    If vh_id is empty, creates a new hf_vhost record.
+    Writes a new revision to an existing hf_vhosts record.
+    If vh_id is empty, creates a new hf_vhosts record.
     A new sub_f_id is returned if successful.
     Otherwise empty string is returned.
     @param array_name

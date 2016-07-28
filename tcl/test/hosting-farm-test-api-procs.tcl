@@ -69,7 +69,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
             # get pre-db mod table counts
             # assets (from hf_asset_rev_map)
-            db_1row hf_arm_recs_count { select count(*) as hf_arm_count_0 from hf_asset_rev_map where trashed_p!='1' }
+            db_1row hf_arm_recs_count { select count(*) as hf_arm_count_d from hf_asset_rev_map where trashed_p!='1' }
             set audit_arm_d_lists [db_list_of_lists hf_audit_asset_type_id_arm_d { select asset_type_id, count(*) as ct from hf_assets where f_id in ( select f_id from hf_asset_rev_map where trashed_p!='1') group by asset_type_id } ]
             set audit_arm_d_list [list ]
             foreach row $audit_arm_d_lists {
@@ -80,7 +80,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             array set audit_arm_d_arr [array get audit_zero_arr]
             array set audit_arm_d_arr $audit_arm_d_list
             # asset revisions (from hf_assets)
-            db_1row hf_ast_recs_count { select count(*) as hf_ast_count_0 from hf_assets where trashed_p!='1' }
+            db_1row hf_ast_recs_count { select count(*) as hf_ast_count_d from hf_assets where trashed_p!='1' }
             set audit_ast_d_lists [db_list_of_lists hf_audit_asset_type_id_a_d { select asset_type_id, count(*) as ct from hf_assets where trashed_p!='1' group by asset_type_id }]
             set audit_ast_d_list [list ]
             foreach row $audit_ast_d_lists {
@@ -91,7 +91,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             array set audit_ast_d_arr [array get audit_zero_arr]
             array set audit_ast_d_arr $audit_ast_d_list
             # attributes (from hf_sub_asset_map)
-            db_1row hf_sam_recs_count { select count(*) as hf_sam_count_0 from hf_sub_asset_map where trashed_p!='1' }
+            db_1row hf_sam_recs_count { select count(*) as hf_sam_count_d from hf_sub_asset_map where trashed_p!='1' and attribute_p!='0' }
             set audit_sam_d_lists [db_list_of_lists hf_audit_asset_type_id_sam_d { select sub_type_id, count(*) as ct from hf_sub_asset_map where trashed_p!='1' and attribute_p!='0' group by sub_type_id }]
             set audit_sam_d_list [list ]
             foreach row $audit_sam_d_lists {
