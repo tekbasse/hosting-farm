@@ -541,7 +541,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
                         if { $f_id ne "" } {
                             set i_count [randomRange 30]
-                            incr $i_count 1
+                            incr i_count
                             for {set i 0} {$i < $i_count} {incr i} {
                                 set ua_id [hfdt_ua_asset_create $f_id]
                                 if { $ua_id ne "" } {
@@ -689,7 +689,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         }
 
                         if { $op_type eq "trash" } {
-                            hf_asset_stats $sub_asset_id trashed_p
+                            hf_asset_stats $sub_asset_id [list trashed_p asset_type_id]
                             if { $trashed_p eq "" } {
                                 ns_log Warning "hosting-farm-test-api-procs.tcl: sub_asset_id '${sub_asset_id}' trashed_p '${trashed_p}'"
                                 set op_type "create"
@@ -701,13 +701,13 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                             trash {
                                 if { $trashed_p } { 
                                     if { [hf_asset_untrash $sub_asset_id] } {
-                                        incr audit_ac_arr(${sub_asset_id})
+                                        incr audit_ac_arr(${asset_type_id})
                                     } else {
                                         ns_log Warning "hosting-farm-test-api-procs.tcl: failed hf_asset_untrash sub_asset_id '${sub_asset_id}' trashed_p '${trashed_p}'"
                                     }
                                 } else {
                                     if { [hf_asset_trash $sub_asset_id] } {
-                                        incr audit_ac_arr(${sub_asset_id}) -1
+                                        incr audit_ac_arr(${asset_type_id}) -1
                                     } else {
                                         ns_log Warning "hosting-farm-test-api-procs.tcl: failed hf_asset_trash sub_asset_id '${sub_asset_id}' trashed_p '${trashed_p}'"
                                     }
