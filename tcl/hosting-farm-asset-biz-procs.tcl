@@ -502,7 +502,7 @@ ad_proc -public hf_f_id_trash {
                         and instance_id=:instance_id }
                 }
             } on_error {
-                ns_log Warning "hf_asset_untrash: error for asset_id '${asset_id}'"
+                ns_log Warning "hf_f_id_trash: error for f_id '${f_id}'"
                 set success_p 0
             }
         } 
