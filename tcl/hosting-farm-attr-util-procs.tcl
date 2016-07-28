@@ -871,15 +871,15 @@ ad_proc -private hf_sub_asset_map_update {
         if { $sub_f_id ne "" } {
             set sub_f_id_new [hf_attribute_map_update $sub_f_id]    
         } else {
-            ns_log Warning "hf_sub_asset_map_update.874: empty sub_f_id. f_id '${f_id}' asset_type_id '${asset_type_id}' sub_f_id '${sub_f_id}' '${sub_asset_type_id}' sub_label '${sub_label}'"
+            ns_log Warning "hf_sub_asset_map_update.874: empty sub_f_id. f_id '${f_id}' asset_type_id '${asset_type_id}' sub_f_id '${sub_f_id}' '${sub_asset_type_id}' sub_label '${sub_label}' f_id_asset_p '${f_id_asset_p}' f_id_attr_p '${f_id_attr_p}' sub_f_id_asset_p '${sub_f_id_asset_p}' sub_f_id_attr_new_p '${sub_f_id_attr_new_p}'"
         }
     } elseif { $f_id_attr_p && $sub_f_id_asset_p && !$sub_f_id_attr_new_p } {
         # case 5  Not recommended, but hey, okay let's do it.
-        ns_log Notice "hf_sub_asset_map_update.878: mapping an asset to an attribute. f_id '${f_id}' asset_type_id '${asset_type_id}' sub_f_id '${sub_f_id}' '${sub_asset_type_id}' sub_label '${sub_label}'"
+        ns_log Notice "hf_sub_asset_map_update.878: mapping an asset to an attribute. f_id '${f_id}' asset_type_id '${asset_type_id}' sub_f_id '${sub_f_id}' '${sub_asset_type_id}' sub_label '${sub_label}' f_id_asset_p '${f_id_asset_p}' f_id_attr_p '${f_id_attr_p}' sub_f_id_asset_p '${sub_f_id_asset_p}' sub_f_id_attr_new_p '${sub_f_id_attr_new_p}'"
 
         set sub_f_id_new [hf_attribute_asset_map_create $f_id $sub_f_id]
     } else {
-        ns_log Warning "hf_sub_asset_map_update.882: case not found for f_id '${f_id}' asset_type_id '${asset_type_id}' sub_f_id '${sub_f_id}' '${sub_asset_type_id}' sub_label '${sub_label}'"
+        ns_log Warning "hf_sub_asset_map_update.882: case not found for f_id '${f_id}' asset_type_id '${asset_type_id}' sub_f_id '${sub_f_id}' '${sub_asset_type_id}' sub_label '${sub_label}' f_id_asset_p '${f_id_asset_p}' f_id_attr_p '${f_id_attr_p}' sub_f_id_asset_p '${sub_f_id_asset_p}' sub_f_id_attr_new_p '${sub_f_id_attr_new_p}'"
     }
     return $sub_f_id_new
 }
