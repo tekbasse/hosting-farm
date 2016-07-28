@@ -29,8 +29,9 @@ aa_register_case -cats {db smoke} asset_permutations_check {
             
             # Generate permutations
             # hf_asset_type_id dc hw vm vh ss ip ni ns ot ua
-
-            foreach type_id [hf_asset_type_id_list] {
+            set asset_type_a_list [acc_fin::shuffle_list [hf_asset_type_id_list]]
+            set asset_type_b_list [acc_fin::shuffle_list [hf_asset_type_id_list]]
+            foreach type_id $asset_type_a_list {
                 # create asset record
                 array set asset_arr [list \
                                          asset_type_id ${type_id} \
@@ -49,7 +50,7 @@ aa_register_case -cats {db smoke} asset_permutations_check {
                                          name_record $asset_arr(name) \
                                          description $asset_arr(name) \
                                          details $asset_arr(name) ]
-                foreach sub_type_id [hf_asset_type_id_list] {
+                foreach sub_type_id $asset_type_b_list {
                     ns_log Notice "hosting-farm-test-perms-procs.tcl: trying sub_type_id '${sub_type_id}' attribute on type_id '${type_id}' '$asset_arr(f_id)'"
                     switch -exact $sub_type_id {
                         dc {
