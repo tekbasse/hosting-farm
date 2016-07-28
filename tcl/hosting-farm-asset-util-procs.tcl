@@ -418,7 +418,7 @@ ad_proc -private hf_asset_rev_map_update {
         db_dml hf_asset_label_update { update hf_asset_rev_map
             set asset_id=:asset_id, label=:label where f_id=:f_id and instance_id=:instance_id }
     } else {
-        if { ![qf_is_natural_number $f_id] } {
+        if { [qf_is_natural_number $f_id] } {
             ns_log Notice "hf_asset_rev_map_update: create label '${label}' asset_id '${asset_id}' trashed_p '${trashed_p}' instance_id '${instance_id}'"
             set success_p 1
             db_dml hf_asset_label_create { insert into hf_asset_rev_map
