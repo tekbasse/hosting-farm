@@ -499,6 +499,7 @@ ad_proc -private hf_attribute_sub_label_update {
     Returns new sub_f_id; Or empty string if sub_f_id not found.
     @param sub_f_id  The sub_f_id of the asset.
     @param new_sub_label   The new sub_label.
+    @return sub_f_id or ""
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -764,6 +765,8 @@ ad_proc -private hf_vh_write {
     If vh_id is empty, creates a new hf_vhost record.
     A new sub_f_id is returned if successful.
     Otherwise empty string is returned.
+    @param array_name
+    @return sub_f_id or ""
 } {
     # requires f_id
     upvar 1 $vh_arr_name arr_name
@@ -806,6 +809,9 @@ ad_proc -private hf_dc_write {
     If dc_id is empty, creates a new hf_data_centers record.
     A new sub_f_id is returned if successful.
     Otherwise empty string is returned.
+    @param array_name
+    @return sub_f_id or ""
+
 } {
     # requires f_id
     upvar 1 $dc_arr_name arr_name
@@ -842,6 +848,9 @@ ad_proc -private hf_hw_write {
     If hw_id is empty, creates a new hf_hardware record.
     A new sub_f_id is returned if successful.
     Otherwise empty string is returned.
+    @param array_name
+    @return sub_f_id or ""
+
 } {
     # requires f_id
     upvar 1 $hw_arr_name arr_name
@@ -877,6 +886,9 @@ ad_proc -private hf_vm_write {
     If vm_id is empty, creates a new hf_virtual_machines record.
     A new sub_f_id is returned if successful.
     Otherwise empty string is returned.
+    @param array_name
+    @return sub_f_id or ""
+
 } {
     # requires f_id
     upvar 1 $vm_arr_name arr_name
@@ -912,6 +924,9 @@ ad_proc -private hf_ss_write {
     If ss_id is empty, creates a new hf_services record.
     A new sub_f_id is returned if successful.
     Otherwise empty string is returned.
+    @param array_name
+    @return sub_f_id or ""
+
 } {
     # requires f_id
     upvar 1 $ss_arr_name arr_name
@@ -945,6 +960,9 @@ ad_proc -private hf_ip_write {
     If ip_id is empty, creates a new hf_ip_addresses record.
     A new sub_f_id is returned if successful.
     Otherwise empty string is returned.
+    @param array_name
+    @return sub_f_id or ""
+
 } {
     # requires f_id
     upvar 1 $ip_arr_name arr_name
@@ -997,6 +1015,9 @@ ad_proc -private hf_ni_write {
     If ni_id is empty, creates a new hf_network_interfaces record.
     A new sub_f_id is returned if successful.
     Otherwise empty string is returned.
+    @param array_name
+    @return sub_f_id or ""
+
 } {
     # requires f_id
     upvar 1 $ni_arr_name arr_name
@@ -1032,6 +1053,9 @@ ad_proc -private hf_os_write {
     Writes an hf_operating_systems record.
     If os_id is empty, creates a new hf_operating_systems record.
     Otherwise empty string is returned.
+    @param array_name
+    @return sub_f_id or ""
+
 } {
     upvar 1 $os_arr_name arr_name
     upvar 1 instance_id instance_id
@@ -1063,6 +1087,9 @@ ad_proc -private hf_ns_write {
     If ns_id is empty, creates a new hf_ns_records record.
     A new sub_f_id is returned if successful.
     Otherwise empty string is returned.
+    @param array_name
+    @return sub_f_id or ""
+
 } {
     # requires f_id
     upvar 1 $ns_arr_name arr_name
@@ -1100,6 +1127,9 @@ ad_proc -private hf_vm_quota_write {
     If vm_quota_id is empty, creates a new hf_vm_quotas record.
     A new sub_f_id is returned if successful.
     Otherwise empty string is returned.
+    @param array_name
+    @return sub_f_id or ""
+
 } {
     upvar 1 $vm_quota_arr_name arr_name
     upvar 1 instance_id instance_id
@@ -1145,6 +1175,8 @@ ad_proc -private hf_user_add {
     connection_type (optional);
     ua_id or sub_f_id (optional) references for updating an existing account;
     up (optional) Set if adding a password.
+    @param array_name
+    @return sub_f_id or ""
 } {
     # requires f_id, ua
     # hf_ua_write does not fit hf_sub_asset_map_update paradigms
@@ -1225,6 +1257,8 @@ ad_proc -private hf_ua_write {
     If ua_id is blank, a new one is created.
     If successful,  ua_id is returned, otherwise 0.
     If up is nonempty, associates a up with ua.
+    @return ua_id or 0
+
 } {
     upvar 1 instance_id instance_id
 

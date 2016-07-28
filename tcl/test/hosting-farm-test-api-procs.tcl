@@ -537,7 +537,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         # add a vm attr + 100+ ua assets with multiple ns to ua Think domain leasing service
                         set f_id [hfdt_vm_attr_create $hw_asset_id]
 
-                        if { $f_id ne "" } {
+                        if { $f_id ne "" && $f_id ne "0" } {
                             set i_count [randomRange 30]
                             incr $i_count 1
                             for {set i 0} {$i < $i_count} {incr i} {
