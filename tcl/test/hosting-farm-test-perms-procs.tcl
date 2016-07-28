@@ -49,6 +49,8 @@ aa_register_case -cats {db smoke} asset_permutations_check {
                                          server_name $domain \
                                          name_record $asset_arr(name) \
                                          description $asset_arr(name) \
+                                         ipv4_status 0 \
+                                         ipv6_status 0 \
                                          details $asset_arr(name) ]
                 foreach sub_type_id $asset_type_b_list {
                     ns_log Notice "hosting-farm-test-perms-procs.tcl: trying sub_type_id '${sub_type_id}' attribute on type_id '${type_id}' '$asset_arr(f_id)'"
