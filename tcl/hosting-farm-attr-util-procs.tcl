@@ -837,9 +837,9 @@ ad_proc -private hf_sub_asset_map_update {
     set sub_f_id_attr_new_p 0
     set sub_f_id_asset_p 0
     set sub_f_id_attr_p 0
-    if { [qf_is_natural_number $sub_f_id] } {
+    if { [qf_is_natural_number $sub_f_id] && $sub_f_id ne "0" } {
         # expected to be asset XOR attribute
-        # If this frequencly fails because asset_id is commonly passed,
+        # If this frequently fails because asset_id is commonly passed,
         # then consider changing hf_f_id_exists_q to
         # use hf_f_id_of_asset_id
         set sub_f_id_asset_p [hf_f_id_exists_q $sub_f_id]
