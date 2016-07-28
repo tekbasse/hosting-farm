@@ -396,7 +396,7 @@ ad_proc -public hfdt_vm_create {
                              name "${domain} ${asset_type_id} asset + ua" \
                              user_id $sysowner_user_id ]
     set asset_arr(f_id) [hf_asset_create asset_arr ]
-    if { $asset_arr(f_id) > 0 } {
+    if { $asset_arr(f_id) ne "" } {
         incr ac
         incr audit_ac_arr(vm)
         if { $head_type_id ne "" } {
