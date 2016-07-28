@@ -745,39 +745,41 @@ ad_proc -private hf_attribute_trash {
         qf_lists_to_vars $sub_asset_list [hf_sub_asset_map_keys]
         if { $sub_type_id in [list vh vm dc hw ss ip ni ns ua] } {
             set trashed_p [qf_is_true $trashed_p]
-            db_transaction {
-                db_dml hf_sub_asset_map_trash_u {update hf_sub_asset_map
-                    set trashed_p=:trashed_p
-                    where sub_f_id=:sub_f_id
-                }
-                switch -exact $sub_type_id {
-                    vh {
-                        hf_vh_trash $sub_f_id
+            if { !$trashed_p } {
+                db_transaction {
+                    db_dml hf_sub_asset_map_trash_u {update hf_sub_asset_map
+                        set trashed_p='1'
+                        where sub_f_id=:sub_f_id
                     }
-                    vm {
-                        hf_vm_trash $sub_f_id
-                    }
-                    dc {
-                        hf_dc_trash $sub_f_id
-                    }
-                    hw {
-                        hf_hw_trash $sub_f_id
-                    }
-                    ss {
-                        hf_ss_trash $sub_f_id
-                    }
-                    ip {
-                        hf_ip_trash $sub_f_id
-                    }
-                    ni {
-                        hf_ni_trash $sub_f_id
-                    }
-                    ns {
-                        hf_ns_trash $sub_f_id
-                    }
-                    ua {
-                        # Trash is reversable, otherwise 
-                        # hf_ua_delete \[list $sub_f_id\]
+                    switch -exact $sub_type_id {
+                        vh {
+                            hf_vh_trash $sub_f_id
+                        }
+                        vm {
+                            hf_vm_trash $sub_f_id
+                        }
+                        dc {
+                            hf_dc_trash $sub_f_id
+                        }
+                        hw {
+                            hf_hw_trash $sub_f_id
+                        }
+                        ss {
+                            hf_ss_trash $sub_f_id
+                        }
+                        ip {
+                            hf_ip_trash $sub_f_id
+                        }
+                        ni {
+                            hf_ni_trash $sub_f_id
+                        }
+                        ns {
+                            hf_ns_trash $sub_f_id
+                        }
+                        ua {
+                            # Trash is reversable, otherwise 
+                            # hf_ua_delete \[list $sub_f_id\]
+                        }
                     }
                 }
             }
