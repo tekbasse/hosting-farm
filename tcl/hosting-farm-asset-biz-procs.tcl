@@ -159,9 +159,9 @@ ad_proc -public hf_asset_create {
     set asset_id 0
     if { $create_p } {
         set asset_id [db_nextval hf_id_seq]
-        if { $f_id eq "" } {
-            set f_id $asset_id
-        }
+        # Always create a new asset. Updates are for hf_asset_write.
+        # Not just when: if  $f_id eq ""
+        set f_id $asset_id
         set nowts [dt_systime -gmt 1]
         set last_modified $nowts
         set created $nowts
