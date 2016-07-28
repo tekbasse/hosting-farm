@@ -813,7 +813,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             array set audit_arm_2_arr $audit_arm_2_list
             foreach i $hf_asset_type_id_list {
                 set audit_arm_2_arr($i) [expr { $audit_arm_2_arr($i) - $audit_arm_d_arr($i) } ]
-                aa_equals "2. Asset revisions $i created" $audit_arm_2_arr($i) $audit_ac_arr($i)
+                aa_equals "2. Asset revisions $i net created" $audit_arm_2_arr($i) $audit_ac_arr($i)
             }
             # asset revisions (from hf_assets)
             db_1row hf_ast_recs_count { select count(*) as hf_ast_count_2 from hf_assets where trashed_p!='1' }
@@ -827,7 +827,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             array set audit_ast_2_arr $audit_ast_2_list
             foreach i $hf_asset_type_id_list {
                 set audit_ast_2_arr($i) [expr { $audit_ast_2_arr($i) - $audit_ast_d_arr($i) } ]
-                aa_equals "2. Assets $i created" $audit_ast_2_arr($i) $audit_ac_arr($i)
+                aa_equals "2. Assets $i net created" $audit_ast_2_arr($i) $audit_ac_arr($i)
             }
             # attributes (from hf_sub_asset_map)
             db_1row hf_sam_recs_count { select count(*) as hf_sam_count_2 from hf_sub_asset_map where trashed_p!='1' and attribute_p!='0' }
@@ -841,7 +841,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             array set audit_sam_2_arr $audit_sam_2_list
             foreach i $hf_asset_type_id_list {
                 set audit_sam_2_arr($i) [expr { $audit_sam_2_arr($i) - $audit_sam_d_arr($i) } ]
-                aa_equals "2. Attributes $i created" $audit_sam_2_arr($i) $audit_atc_arr($i)
+                aa_equals "2. Attributes $i net created" $audit_sam_2_arr($i) $audit_atc_arr($i)
             }
 
 
@@ -852,8 +852,21 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             aa_log "3. Clear 2 DCs of managed assets and attributes."
 
             # delete everything below a hw
-            # verify
 
+            
+            set hw_asset_id_list [acc_fin::shuffle_list $hw_asset_id_list]
+            ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve cycle_nbr '${cycle_nbr}' of '${cycle_count}'"
+            foreach hw_asset_id $hw_asset_id_list {
+                set sub_assets_list [hf_asset_subassets_cascade $hw_asset_id]
+                set sub_assets_list [lrange $sub_assets_list 1 end]
+                set sub_assets_count [llength $sub_assets_list ]
+                incr sub_assets_count -1
+            }
+            # end foreach
+
+
+
+            # verify
             # + - + - + - # AUDIT CODE # + - + - + - #
             # asset revisions (from hf_assets)
             db_1row hf_arm_recs_count { select count(*) as hf_arm_count_3 from hf_asset_rev_map where trashed_p!='1' }
