@@ -49,10 +49,12 @@ ad_proc -private hf_asset_monitor {
     asset_id
     monitor_p
 } {
-    Changes the state of monitoring for an asset where the asset is referenced from asset_id. Returns 1 if successful, otherwise 0.
+    Changes the state of monitoring for an asset where the asset is referenced from asset_id. 
+    Returns 1 if successful, otherwise 0.
 
     @param asset_id  The asset_id of the asset.
     @param monitor_p   Answers question: Activate monitors? 1 = yes, 0 = no.
+    @return 1 or 0
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -70,10 +72,12 @@ ad_proc -private hf_asset_publish {
     asset_id
     publish_p
 } {
-    Changes the state of publishing for an asset where the asset is referenced from asset_id. Returns 1 if successful, otherwise 0.
+    Changes the state of publishing for an asset where the asset is referenced from asset_id. 
+    Returns 1 if successful, otherwise 0.
 
     @param asset_id  The asset_id of the asset.
     @param publish_p   Answers question: Activate publishs? 1 = yes, 0 = no.
+    @return 1 or 0
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -92,10 +96,12 @@ ad_proc -private hf_asset_popularity_change {
     asset_id
     new_popularity
 } {
-    Changes the asset_name where the asset is referenced from asset_id. Returns 1 if successful, otherwise 0.
+    Changes the asset_name where the asset is referenced from asset_id. 
+    Returns 1 if successful, otherwise 0.
 
     @param asset_id  The popularity of the asset.
     @param new_popularity   The new popularity value.
+    @return 1 or 0
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -117,10 +123,12 @@ ad_proc -private hf_asset_triage_priority_change {
     asset_id
     new_triage_priority
 } {
-    Changes the asset_name where the asset is referenced from asset_id. Returns 1 if successful, otherwise 0.
+    Changes the asset_name where the asset is referenced from asset_id. 
+    Returns 1 if successful, otherwise 0.
 
     @param asset_id  The triage_priority of the asset.
     @param new_triage_priority   The new triage_priority value.
+    @return 1 or 0
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -144,10 +152,10 @@ ad_proc -public hf_asset_create {
 } {
     Creates hf asset from array, where values are passed using the array
     index names that coorrespond with hf_asset_keys.
-    Returns asset_id, or 0 if error. See hf_asset_keys for element names.
+    Returns asset_id, or "" if error. See hf_asset_keys for element names.
 
     @param asset_array_name
-    @return asset_id, or 0 if error
+    @return asset_id, or "" if error
     @see hf_asset_keys
 
 } {
@@ -156,7 +164,7 @@ ad_proc -public hf_asset_create {
     upvar 1 user_id user_id
     qf_array_to_vars asset_arr [hf_asset_keys]
     set create_p [hf_ui_go_ahead_q create f_id "" 0]
-    set asset_id 0
+    set asset_id ""
     if { $create_p } {
         set asset_id [db_nextval hf_id_seq]
         # Always create a new asset. Updates are for hf_asset_write.
@@ -189,6 +197,8 @@ ad_proc -public hf_asset_write {
     Writes a new revision of an existing asset.
     asset_id is an existing revision of template_id.
     Returns the new asset_id or a blank asset_id if unsuccessful.
+    @param array_name
+    @return asset_id or ""
 } {
     upvar 1 $asset_arr_name asset_arr
     upvar 1 instance_id instance_id
@@ -227,10 +237,10 @@ ad_proc -public hf_asset_delete {
     asset_id
 } {
     Deletes a revision of an asset. Revision must already have been trashed.
-
+    Returns  1 if successful, otherwise returns 0.
     @param asset_id
 
-    @return 1 if successful, otherwise returns 0.
+    @return 1 or 0
 
 } {
     upvar 1 instance_id instance_id
@@ -279,6 +289,8 @@ ad_proc -public hf_f_id_delete {
 } {
     Deletes all revisions of asset. Package admins only.
     Returns 1 if deleted. Returns 0 if there were any issues.
+    @param f_id
+    @return 1 or 0
 } {
     upvar 1 instance_id instance_id
     set user_id [ad_conn user_id]
@@ -355,16 +367,20 @@ ad_proc -private hf_asset_trash_f_id {
     f_id
 } {
     Trashes all revisions of an asset.
+    @param f_id
+    @return 1
 } {
     upvar 1 instance_id instance_id
-    db_dml hf_asset_rev_map_trash_f {update hf_asset_rev_map 
-        set trashed_p='1' 
-        where f_id=:f_id 
-        and instance_id=:instance_id }
-    db_dml hf_assets_trash_f {update hf_assets 
-        set trashed_p='1'
-        where f_id=:f_id
-        and instance_id=:instance_id }
+    db_transaction {
+        db_dml hf_asset_rev_map_trash_f {update hf_asset_rev_map 
+            set trashed_p='1' 
+            where f_id=:f_id 
+            and instance_id=:instance_id }
+        db_dml hf_assets_trash_f {update hf_assets 
+            set trashed_p='1'
+            where f_id=:f_id
+            and instance_id=:instance_id }
+    }
     return 1
 }
 
@@ -372,6 +388,9 @@ ad_proc -public hf_asset_trash {
     asset_id
 } {
     Trashes an asset revision ie asset_id. Returns 1 if succeeds, else returns 0.
+    @param asset_id
+    @return 1 or 0
+
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -401,7 +420,10 @@ ad_proc -public hf_asset_trash {
 ad_proc -public hf_asset_untrash {
     asset_id
 } {
-    Untrashes an asset revision ie asset_id. Returns 1 if succeeds, else returns 0.
+    Untrashes an asset revision ie asset_id. 
+    Returns 1 if succeeds, else returns 0.
+    @param asset_id
+    @return 1 or 0
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -431,6 +453,8 @@ ad_proc -public hf_f_id_trash {
 } {
     Trashes all revisions of f_id.
     Returns 1 if successful, otherwise returns 0
+    @param f_id
+    @return 1 or 0
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -460,6 +484,8 @@ ad_proc -public hf_f_id_untrash {
 } {
     Untrashes most recently active asset_id of f_id
     Returns 1 if successful, otherwise returns 0
+    @param f_id
+    @return 1 or 0
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -487,10 +513,12 @@ ad_proc -private hf_asset_label_change {
     asset_id
     new_label
 } {
-    Changes the asset_name where the asset is referenced from asset_id. Returns 1 if successful, otherwise 0.
+    Changes the asset_name where the asset is referenced from asset_id. 
+    Returns 1 if successful, otherwise 0.
 
     @param asset_id  The label of the asset.
     @param new_label   The new label.
+    @return 1 or 0
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -521,6 +549,8 @@ ad_proc -private hf_asset_create_from_asset_template {
     {instance_id ""}
 } {
     Creates a new asset record based on an existing template. Also schedules a scheduled proc for system maintenance part of process.
+    Returns 1 if successful, otherwise returns 0.
+    @return 1 or 0
 } {
 
 
@@ -607,7 +637,10 @@ ad_proc -private hf_asset_create_from_asset_label {
     asset_label_new
     {instance_id ""}
 } {
-    Creates a new asset with asset_label based on an existing asset. Also scheduels a scheduled proc for system maintenance part of process. Returns 1 if successful, otherwise 0.
+    Creates a new asset with asset_label based on an existing asset. 
+    Also scheduels a scheduled proc for system maintenance part of process.
+    Returns 1 if successful, otherwise 0.
+    @return 1 or 0
 } {
     set asset_id_orig [hf_asset_id_of_label $asset_label_orig $instance_id]
     set status_p [hf_asset_create_from_asset_template $customer_id $asset_label_orig $asset_label_new $instance_id]
@@ -621,6 +654,7 @@ ad_proc -private hf_asset_templates {
     {instance_id ""}
 } {
     returns active template references (id) and other info via a list of lists, where each list is an ordered tcl list of asset related values: see hf_asset_keys
+    @return lists
 } {
     # This needs re-worked using revised api
     # scope to user_id
@@ -667,6 +701,8 @@ ad_proc -private hf_asset_do {
     {instance_id ""}
 } {
     Process an hfl_ procedure on asset_id.
+    Returns 1 if successful, or 0 if there is an error.
+    @return 1 or 0
 } {
     set admin_p [hf_ui_go_ahead_q admin "" "" 0]
 
