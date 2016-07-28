@@ -62,7 +62,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             array set audit_sam_arr [array get audit_zero_arr]
             array set audit_ast_arr [array get audit_zero_arr]
 
-
+            
             # direct accounting
             array set audit_ac_arr [array get audit_zero_arr]
             array set audit_atc_arr [array get audit_zero_arr]
@@ -156,6 +156,8 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             # audit_atc_arr(ni) = ni attribute counts
             # audit_atc_arr(ua) = ns + ua attribute counts
             # ss_tc
+
+            
 
             set ac 0
             # atc# = attribute counter
@@ -698,11 +700,17 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                         switch -exact -- $op_type {
                             trash {
                                 if { $trashed_p } { 
-                                    hf_asset_untrash $sub_asset_id
-                                    incr audit_ac_arr(${sub_asset_id})
+                                    if { [hf_asset_untrash $sub_asset_id] } {
+                                        incr audit_ac_arr(${sub_asset_id})
+                                    } else {
+                                        ns_log Warning "hosting-farm-test-api-procs.tcl: failed hf_asset_untrash sub_asset_id '${sub_asset_id}' trashed_p '${trashed_p}'"
+                                    }
                                 } else {
-                                    hf_asset_trash $sub_asset_id
-                                    incr audit_ac_arr(${sub_asset_id}) -1
+                                    if { [hf_asset_trash $sub_asset_id] } {
+                                        incr audit_ac_arr(${sub_asset_id}) -1
+                                    } else {
+                                        ns_log Warning "hosting-farm-test-api-procs.tcl: failed hf_asset_trash sub_asset_id '${sub_asset_id}' trashed_p '${trashed_p}'"
+                                    }
                                 }
                             }
                             create {

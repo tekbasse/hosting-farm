@@ -37,7 +37,10 @@ ad_proc -private hf_asset_op_status_change {
         set write_p [hf_ui_go_ahead_q write]
         if { $write_p } {
             db_dml hf_op_status_change_hf_assets { update hf_assets
-                set last_modified = current_timestamp, op_status=:new_op_status where asset_id=:asset_id and instance_id=:instance_id 
+                set last_modified=current_timestamp, 
+                op_status=:new_op_status 
+                where asset_id=:asset_id 
+                and instance_id=:instance_id 
             }
         }
     }
@@ -62,7 +65,10 @@ ad_proc -private hf_asset_monitor {
     set write_p [hf_ui_go_ahead_q write]
     if { $write_p } {
         db_dml hf_monitors_change_hf_assets { update hf_assets
-            set last_modified = current_timestamp, monitor_p=:monitor_p where asset_id=:asset_id and instance_id=:instance_id 
+            set last_modified=current_timestamp, 
+            monitor_p=:monitor_p 
+            where asset_id=:asset_id 
+            and instance_id=:instance_id 
         }
     }
     return $write_p
@@ -85,7 +91,10 @@ ad_proc -private hf_asset_publish {
     set write_p [hf_ui_go_ahead_q write]
     if { $write_p } {
         db_dml hf_publishs_change_hf_assets { update hf_assets
-            set last_modified = current_timestamp, publish_p=:publish_p where asset_id=:asset_id and instance_id=:instance_id 
+            set last_modified=current_timestamp, 
+            publish_p=:publish_p 
+            where asset_id=:asset_id 
+            and instance_id=:instance_id 
         }
     }
     return $write_p
@@ -111,7 +120,10 @@ ad_proc -private hf_asset_popularity_change {
         set write_p [hf_ui_go_ahead_q write]
         if { $write_p } {
             db_dml hf_popularity_change_hf_assets { update hf_assets
-                set last_modified = current_timestamp, popularity=:new_popularity where asset_id=:asset_id and instance_id=:instance_id 
+                set last_modified=current_timestamp, 
+                popularity=:new_popularity 
+                where asset_id=:asset_id 
+                and instance_id=:instance_id 
             }
         }
     }
@@ -138,7 +150,10 @@ ad_proc -private hf_asset_triage_priority_change {
         set write_p [hf_ui_go_ahead_q write]
         if { $write_p } {
             db_dml hf_triage_priority_change_hf_assets { update hf_assets
-                set last_modified = current_timestamp, triage_priority=:new_triage_priority where asset_id=:asset_id and instance_id=:instance_id 
+                set last_modified=current_timestamp, 
+                triage_priority=:new_triage_priority 
+                where asset_id=:asset_id 
+                and instance_id=:instance_id 
             }
         }
     }
@@ -402,7 +417,10 @@ ad_proc -public hf_asset_trash {
             set nowts [dt_systime -gmt 1]
             set last_modified $nowts
             db_transaction {
-                db_dml hf_asset_trash "update hf_assets set trashed_p='1' where asset_id=:asset_id and instance_id=:instance_id"
+                db_dml hf_asset_trash {update hf_assets
+                    set trashed_p='1' 
+                    where asset_id=:asset_id 
+                    and instance_id=:instance_id}
                 if { [hf_asset_id_current_q $asset_id ] } {
                     set f_id [hf_f_id_of_asset_id $asset_id]
                     hf_asset_trash_f_id $f_id
@@ -435,9 +453,15 @@ ad_proc -public hf_asset_untrash {
             set nowts [dt_systime -gmt 1]
             set last_modified $nowts
             db_transaction {
-                db_dml hf_asset_untrash "update hf_assets set trashed_p='0' where asset_id=:asset_id and instance_id=:instance_id"
+                db_dml hf_asset_untrash {update hf_assets 
+                    set trashed_p='0' 
+                    where asset_id=:asset_id 
+                    and instance_id=:instance_id }
                 if { [hf_asset_id_current_q $asset_id ] } {
-                    db_dml hf_asset_rev_map_trash "update hf_asset_rev_map set trashed_p='0' where asset_id=:asset_id and instance_id=:instance_id"
+                    db_dml hf_asset_rev_map_trash { update hf_asset_rev_map 
+                        set trashed_p='0' 
+                        where asset_id=:asset_id 
+                        and instance_id=:instance_id }
                 }
             } on_error {
                 ns_log Warning "hf_asset_untrash: error for asset_id '${asset_id}'"
@@ -466,9 +490,16 @@ ad_proc -public hf_f_id_trash {
             set nowts [dt_systime -gmt 1]
             set last_modified $nowts
             db_transaction {
-                db_dml hf_assets_f_id_trash "update hf_assets set trashed_p='1' where f_id=:f_id and instance_id=:instance_id and trashed_p!='1'"
+                db_dml hf_assets_f_id_trash { update hf_assets 
+                    set trashed_p='1' 
+                    where f_id=:f_id 
+                    and instance_id=:instance_id 
+                    and trashed_p!='1' }
                 if { [hf_asset_id_current_q $f_id ] } {
-                    db_dml hf_asset_rev_map_trash "update hf_asset_rev_map set trashed_p='0' where asset_id=:asset_id and instance_id=:instance_id"
+                    db_dml hf_asset_rev_map_trash { update hf_asset_rev_map 
+                        set trashed_p='0' 
+                        where asset_id=:asset_id 
+                        and instance_id=:instance_id }
                 }
             } on_error {
                 ns_log Warning "hf_asset_untrash: error for asset_id '${asset_id}'"
@@ -497,8 +528,14 @@ ad_proc -public hf_f_id_untrash {
             set nowts [dt_systime -gmt 1]
             set last_modified $nowts
             db_transaction {
-                db_dml hf_asset_untrash "update hf_assets set trashed_p='0' where asset_id=:asset_id and instance_id=:instance_id"
-                db_dml hf_asset_rev_map_trash "update hf_asset_rev_map set trashed_p='0' where asset_id=:asset_id and instance_id=:instance_id"
+                db_dml hf_asset_untrash { update hf_assets 
+                    set trashed_p='0' 
+                    where asset_id=:asset_id 
+                    and instance_id=:instance_id }
+                db_dml hf_asset_rev_map_trash { update hf_asset_rev_map 
+                    set trashed_p='0' 
+                    where asset_id=:asset_id 
+                    and instance_id=:instance_id }
             } on_error {
                 ns_log Warning "hf_f_id_untrash: error for f_id '${f_id}'"
                 set success_p 0
@@ -530,8 +567,10 @@ ad_proc -private hf_asset_label_change {
                 set label=:new_label where asset_id=:asset_id and instance_id=:instance_id 
             }
             db_dml hf_label_change_hf_assets { update hf_assets
-                set last_modified = current_timestamp, label=:new_label where asset_id=:asset_id and instance_id=:instance_id 
-            }
+                set last_modified=current_timestamp, 
+                label=:new_label 
+                where asset_id=:asset_id 
+                and instance_id=:instance_id }
             set success_p 1
         } on_error {
             set success_p 0
