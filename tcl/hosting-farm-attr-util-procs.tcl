@@ -82,9 +82,10 @@ ad_proc -private hf_asset_type_write {
     id
 } {
     Creates or writes asset type.
-    If id record exists, updates id. Otherwise creates a new record.
+    If id record exists, updates id. 
+    Otherwise creates a new record.
     User must be a site admin.
-    @return 1 if successful. Otherwise returns 0.
+    Returns 1 if successful. Otherwise returns 0.
 } {
     set user_id [ad_conn user_id]
     set instance_id [ad_conn package_id]
@@ -303,10 +304,10 @@ ad_proc -private hf_f_id_of_sub_f_id {
     sub_f_id
     {primary_p "0"}
 } {
-    Returns the f_id of sub_f_id. f_id is the asset connected to attribute sub_f_id.
+    Returns the f_id of sub_f_id, or "" if f_id does not exist. 
+    f_id is the asset connected to attribute sub_f_id.
     If primary_p is 1, returns the f_id only if sub_f_id is the primary attribute for f_id.
-
-    @return f_id, or "" if does not exist
+    @return f_id
 } {
     upvar 1 instance_id instance_id
     set f_id ""
@@ -328,11 +329,10 @@ ad_proc -private hf_f_id_of_sub_f_id {
 ad_proc -private hf_sub_f_id_current_q { 
     sub_f_id
 } {
-    Returns 1 if sub_f_id is the current revision for sub_f_id.
+    Returns 1 if sub_f_id is the current revision for sub_f_id, otherwise returns 0.
 
     @param sub_f_id      The sub_f_id to check.
-
-    @return  1 if true, otherwise returns 0.
+    @return 0 or 1
 } {
     upvar 1 instance_id instance_id
     set current_p 0
@@ -372,11 +372,12 @@ ad_proc -private hf_sub_f_id_current {
     sub_f_id
     {f_id ""}
 } {
-    Returns current sub_f_id if sub_f_id references current or trashed sub_f_id, else returns 0. This assumes hf_sub_asset_map.sub_label has not changed between revisions.  If f_id is supplied, also confirms sub_f_id is dependent on f_id.
+    Returns current sub_f_id of same sub_label and sub_type_id if sub_f_id references an untrashed sub_f_id, else returns 0. 
+    This assumes hf_sub_asset_map.sub_label has not changed between revisions.  
+    If f_id is supplied, also confirms sub_f_id is dependent on f_id.
 
     @param sub_f_id      The sub_f_id to check.
-
-    @return sub_f_id one sub_f_id exists and untrashed, otherwise 0.
+    @return sub_f_id 
 } {
     upvar 1 instance_id instance_id
     set sub_f_id_orig $sub_f_id
@@ -392,7 +393,8 @@ ad_proc -private hf_sub_f_id_current {
             and sub_type_id=:sub_type_id
             and attribute_p=:attribute_p
             and trashed_p!='1'
-            and instance_id=:instance_id } ]
+            and instance_id=:instance_id
+        order by last_updated desc limit 1 } ]
         if { !$exists_p } {
             ns_log Notice "hf_sub_f_id_current: not found. \
  sub_f_id '${sub_f_id}' instance_id '${instance_id}'"
@@ -405,9 +407,10 @@ ad_proc -private hf_sub_f_id_current {
 ad_proc -private hf_label_of_sub_f_id {
     sub_f_id
 } {
+    Returns label of attribute with sub_f_id, or empty string if not exists.
     @param sub_f_id  
 
-    @return label of attribute with sub_f_id, or empty string if not exists.
+    @return label
 } {
     upvar 1 instance_id instance_id
     set sub_label ""
@@ -591,9 +594,10 @@ ad_proc -private hf_assets_map_create {
     {sub_label ""}
 } {
     Link existing asset to another existing asset.
+    Returns 1 if successful, otherwwise returns 0.
     @param f_id The asset f_id that will be parent of the two.
     @param sub_f_id The asset f_id that will be child of the two.
-    @return 1 if success, otherwwise returns 0.
+    @return 1 or 0
 } {
     upvar 1 instance_id instance_id
     set success_p 0
@@ -649,6 +653,7 @@ ad_proc -private hf_attributes_map_create {
     The existing attribute's sub_f_id is called an f_id here
     because the sub_f_id becomes an f_id for purposes of this map.
     These attributes must have different labels.
+    Returns empty string if f_id not found.
     @param f_id ie sub_f_id of existing attribute
     @param sub_label of new attribute
     @param sub_asset_type_id of new attribute
@@ -673,24 +678,26 @@ ad_proc -private hf_attributes_map_create {
     set sub_f_id ""
     set sub_label_new $sub_label
     set sam_list [hf_sub_asset $f_id]
-    qf_lists_to_vars $sam_list [hf_sub_asset_map_keys]
-    set sub_type_id $sub_asset_type_id
-    if { $sub_label ne "" && $sub_label ne $sub_label_new } {
-        set allowed_sub_type_id_list [hf_types_allowed_by $type_id]
-        if { $sub_asset_type_id in $allowed_sub_type_id_list } {
-            set nowts [dt_systime -gmt 1]
-            set sub_f_id [db_nextval hf_id_seq]
-            set sub_sort_order [expr { [hf_asset_cascade_count $f_id ] * 20 } ]
-            set last_updated $nowts
-            # translate api conventions to internal map refs
-            set trashed_p 0
-            set attribute_p 1
-            ns_log Notice "hf_attributes_map_create.652: f_id '${f_id}' sub_f_id '${sub_f_id}' sub_sort_order '${sub_sort_order}'"
-            db_dml hf_attributes_map_cr "insert into hf_sub_asset_map \
+    if { [llength $sam_list ] > 0 } {
+        qf_lists_to_vars $sam_list [hf_sub_asset_map_keys]
+        set sub_type_id $sub_asset_type_id
+        if { $sub_label ne "" && $sub_label ne $sub_label_new } {
+            set allowed_sub_type_id_list [hf_types_allowed_by $type_id]
+            if { $sub_asset_type_id in $allowed_sub_type_id_list } {
+                set nowts [dt_systime -gmt 1]
+                set sub_f_id [db_nextval hf_id_seq]
+                set sub_sort_order [expr { [hf_asset_cascade_count $f_id ] * 20 } ]
+                set last_updated $nowts
+                # translate api conventions to internal map refs
+                set trashed_p 0
+                set attribute_p 1
+                ns_log Notice "hf_attributes_map_create.652: f_id '${f_id}' sub_f_id '${sub_f_id}' sub_sort_order '${sub_sort_order}'"
+                db_dml hf_attributes_map_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
-        } else {
-            ns_log Warning "hf_attributes_map_create.666: sub_asset_type_id '${sub_asset_type_id}' cannot be dependent of type_id '${type_id}'"
-        }
+            } else {
+                ns_log Warning "hf_attributes_map_create.666: sub_asset_type_id '${sub_asset_type_id}' cannot be dependent of type_id '${type_id}'"
+            }
+        } 
     }
     return $sub_f_id
 }
@@ -702,9 +709,10 @@ ad_proc -private hf_attribute_asset_map_create {
     {sub_label ""}
 } {
     Link existing asset (dependent) to an existing attribute (parent).
+    Returns 1 if successful, otherwwise returns 0.
     @param f_id The asset f_id that will be parent of the two.
     @param sub_f_id The asset f_id that will be child of the two.
-    @return 1 if success, otherwwise returns 0.
+    @return 1 or 0.
 } {
     # 5. An existing asset linked to an existing attribute.
     #    hf_attribute_asset_create
@@ -776,9 +784,11 @@ ad_proc -private hf_sub_asset_map_update {
     sub_asset_type_id
     {attribute_p ""}
 } {
-    Updates or creates a new map record.
+    Updates or creates a new map record. 
+    Returns a new sub_f_id to assign to new attribute record. 
+    Otherwise returns an empty string if unsuccessful.
 
-    @return sub_f_id_new Returns a new sub_f_id to assign to new attribute record. Otherwise returns an empty string if unsuccessful.
+    @return sub_f_id_new 
 } {
     # This proc is the heart of asset / attribute inheritance behavior.
     # It needs to handle these cases:
@@ -901,12 +911,13 @@ ad_proc -private hf_ua_id_of_f_id_label {
     f_id
     sub_label
 } {
-    f_id of the asset or attribute. sub_label is the label assigned to the ua.
+    f_id of the asset or attribute; Or returns empty string if none found.
+    sub_label is the label assigned to the ua.
 
     @param f_id
     @param sub_label
 
-    @return ua_id, or empty string if none found.
+    @return ua_id or ""
 } {
     upvar 1 instance_id instance_id
     set sub_f_id ""

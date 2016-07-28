@@ -74,7 +74,7 @@ ad_proc -private hf_asset_id_exists_q {
     @param asset_id      The asset_id to check.
     @param asset_type_id If not blank, also verifies that asset is of this type.
 
-    @return  1 if asset_id exists, otherwise 0.
+    @return 1 or 0
 } {
     upvar 1 instance_id instance_id
     set asset_type_id_q $asset_type_id
@@ -118,7 +118,7 @@ ad_proc -private hf_f_id_active_q {
 
     @param f_id      The f_id of asset_id to check.
 
-    @return  asset_id , or 0
+    @return  1 or 0
 } {
     upvar 1 instance_id instance_id
     set active_q 0
@@ -126,7 +126,7 @@ ad_proc -private hf_f_id_active_q {
     if { $exists_and_is_untrashed_p } {
         hf_asset_stats $asset_id "time_stop"
         if { $time_stop ne "" } {
-            set active_q 1
+            set active_p 1
         }
     } 
     return $active_p
@@ -136,11 +136,11 @@ ad_proc -private hf_f_id_active_q {
 ad_proc -private hf_asset_id_current_q { 
     asset_id
 } {
-    Returns 1 if asset_id is the current revision for asset_id.
+    Returns 1 if asset_id is the current revision for asset_id; Otherwise returns 0
 
     @param asset_id      The asset_id to check.
 
-    @return  1 if true, otherwise returns 0.
+    @return  1 or 0
 } {
     upvar 1 instance_id instance_id
     set active_q 0
@@ -158,7 +158,7 @@ ad_proc -private hf_asset_id_of_f_id_if_untrashed {
 
     @param f_id      The f_id to check.
 
-    @return asset_id if f_id exists and untrashed, otherwise 0.
+    @return asset_id or 0
 } {
     upvar 1 instance_id instance_id
     set asset_id 0
@@ -173,9 +173,10 @@ ad_proc -private hf_asset_id_of_f_id_if_untrashed {
 ad_proc -private hf_label_of_asset_id {
     asset_id
 } {
+    Returns label of asset with asset_id, or empty string if not exists or not current revision.
     @param asset_id  
 
-    @return label of asset with asset_id, or empty string if not exists or not current revision.
+    @return label or ""
 } {
     upvar 1 instance_id instance_id
     set label ""
@@ -191,9 +192,11 @@ ad_proc -private hf_label_of_asset_id {
 ad_proc -private hf_label_of_f_id {
     f_id
 } {
+    Returns label of asset with f_id, or empty string if not exists.
+
     @param f_id  
 
-    @return label of asset with f_id, or empty string if not exists.
+    @return label or ""
 } {
     upvar 1 instance_id instance_id
     set label ""
@@ -209,9 +212,11 @@ ad_proc -private hf_label_of_f_id {
 ad_proc -private hf_asset_type_id_of_asset_id {
     asset_id
 } {
+    Returns asset_type_id of asset with asset_id, or empty string if it does not exist.
+
     @param asset_id  
 
-    @return asset_type_id of asset with asset_id, or empty string if not exists.
+    @return asset_type_id or ""
 } {
     upvar 1 instance_id instance_id
     set asset_type_id ""
@@ -235,9 +240,11 @@ ad_proc -private hf_asset_type_id_of_asset_id {
 ad_proc -private hf_asset_id_of_label {
     label
 } {
+    Returns asset_id of asset with label, or empty string if not exists or active.
+
     @param label  Label of asset
 
-    @return asset_id of asset with label, or empty string if not exists or active.
+    @return asset_id or ""
 } {
     upvar 1 instance_id instance_id
     set asset_id ""
@@ -256,12 +263,12 @@ ad_proc -private hf_asset_id_change {
     {asset_id ""}
 } {
     Changes the active revision of asset with asset_label to asset_id. 
-
+    Returns 1 if success, otherwise returns 0.
     @param asset_id_new   The new asset_id
     @param label         The label of the asset.
     @param asset_id      An asset_id of the asset.
 
-    @return   Returns 1 if success, otherwise returns 0.
+    @return 1 or 0
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -288,9 +295,10 @@ ad_proc -private hf_asset_id_change {
 ad_proc -private hf_f_id_exists_q {
     f_id
 } {
+    Returns 1 if exists, otherwise returns 0.
     @param f_id of an asset
 
-    @return 1 if exists, otherwise returns 0.
+    @return 1 or 0
 } {
     upvar 1 instance_id instance_id
     set exists_p [db_0or1row hf_f_id_exists_p {
@@ -308,7 +316,7 @@ ad_proc -private hf_f_id_of_asset_id {
 
     @param asset_id
 
-    @return f_id
+    @return f_id or ""
 } {
     upvar 1 instance_id instance_id
     set f_id ""
@@ -319,11 +327,11 @@ ad_proc -private hf_f_id_of_asset_id {
 ad_proc -private hf_asset_id_current_of_f_id { 
     f_id
 } {
-    Returns current asset_id given f_id, otherwise returns empty string.
+    Returns current asset_id mapped to the label and f_id, otherwise returns empty string.
 
     @param f_id  hf_asset.f_id for an asset.
 
-    @return asset_id The current asset_id mapped to the label and f_id, else returns empty string.
+    @return asset_id  or ""
 } {
     upvar 1 instance_id instance_id
     set asset_id ""
@@ -337,6 +345,10 @@ ad_proc -private hf_asset_id_current_of_label {
     label
 } {
     Returns asset_id if asset is published (untrashed) for instance_id, else returns empty string.
+
+    @param label
+
+    @return asset_id or ""
 } {
     upvar 1 instance_id instance_id
     set asset_id ""
@@ -348,11 +360,11 @@ ad_proc -private hf_asset_id_current_of_label {
 ad_proc -private hf_asset_id_current {
     asset_id
 } {
-    Returns current asset_id given any revision asset_id of asset.
+    Returns current asset_id given any revision asset_id of asset, or empty string if not found.
 
     @param asset_id  One of any revision of asset_id
 
-    @return asset_id The current, active asset_id, otherwise empty string.
+    @return asset_id or ""
 } {
     upvar 1 instance_id instance_id
     set asset_id_current ""
@@ -406,7 +418,11 @@ ad_proc -private hf_asset_rev_map_update {
     asset_id
     trashed_p
 } {
-    Creates or updates an asset map given f_id exists. If f_id does not exist, creates a new map record.
+    Creates or updates an asset map given f_id exists. 
+    If f_id does not exist, creates a new map record.
+    Returns 1 if successful, otherwise returns 0.
+
+    @return 1 or 0
 } {
     upvar 1 instance_id instance_id
     set trashed_p [qf_is_true $trashed_p]
