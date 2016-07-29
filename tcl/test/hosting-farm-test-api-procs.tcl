@@ -875,10 +875,31 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                     } else {
                         ns_log Warning "hosting-farm-test-api-procs.tcl: failed hf_asset_trash sub_asset_id '${sub_asset_id}'"
                     }
-                    hf_f_id_trash $sub_asset_id
                 }
             }
-            # end foreach
+            # catch orphaned assets
+            set keep_list [concat $hw_asset_id_list $dci(0) $dci(1)]
+            set all_list [hf_asset_ids_for_user $sysowner_user_id]
+            set trash_list [set_difference $all_list $keep_list]
+            foreach asset_id $trash_list {
+                set attr_ids_list [hf_asset_attributes_cascade $asset_id]
+                set asset_type_id [hf_asset_type_id_of_asset_id $asset_id]
+                foreach attr_id $attr_ids_list {
+                    set sub_type_id [hf_asset_type_id_of_f_id $attr_id]
+                    if { [hf_attribute_trash $attr_id ] } {
+                        incr audit_atc_arr(${sub_type_id}) -1
+                    } else {
+                        ns_log Warning "hosting-farm-test-api-procs.tcl: failed hf_attribute_trash attr_id '${attr_id}'"
+                    }
+                }
+                if { [hf_asset_trash $asset_id] } {
+                    incr audit_ac_arr(${asset_type_id}) -1
+                } else {
+                    ns_log Warning "hosting-farm-test-api-procs.tcl: failed hf_asset_trash asset_id '${asset_id}'"
+                }
+            }                
+
+
 
 
 

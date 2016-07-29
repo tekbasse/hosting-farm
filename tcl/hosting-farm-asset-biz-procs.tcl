@@ -414,20 +414,28 @@ ad_proc -public hf_asset_trash {
     if { $write_p } {
         set asset_exists_p [hf_asset_id_exists_q $asset_id]
         if { $asset_exists_p } {
-            set nowts [dt_systime -gmt 1]
-            set last_modified $nowts
-            db_transaction {
-                db_dml hf_asset_trash {update hf_assets
-                    set trashed_p='1' 
-                    where asset_id=:asset_id 
-                    and instance_id=:instance_id}
-                if { [hf_asset_id_current_q $asset_id ] } {
-                    set f_id [hf_f_id_of_asset_id $asset_id]
-                    hf_asset_trash_f_id $f_id
-                }
-            } on_error {
-                ns_log Warning "hf_asset_trash: error for asset_id '${asset_id}'"
+            hf_asset_stats $asset_id trashed_p
+            if { $trashed_p } {
+                # cannot trash a trashed asset.
+                # Need to send a fail signal for test audits
                 set success_p 0
+                ns_log Warning "hf_asset_trash: asset_id '${asset_id}' already trashed."
+            } else {
+                set nowts [dt_systime -gmt 1]
+                set last_modified $nowts
+                db_transaction {
+                    db_dml hf_asset_trash {update hf_assets
+                        set trashed_p='1' 
+                        where asset_id=:asset_id 
+                        and instance_id=:instance_id}
+                    if { [hf_asset_id_current_q $asset_id ] } {
+                        set f_id [hf_f_id_of_asset_id $asset_id]
+                        hf_asset_trash_f_id $f_id
+                    }
+                } on_error {
+                    ns_log Warning "hf_asset_trash: error for asset_id '${asset_id}'"
+                    set success_p 0
+                }
             }
         } 
     } 
