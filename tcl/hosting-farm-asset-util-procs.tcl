@@ -256,8 +256,13 @@ ad_proc -private hf_asset_id_of_label {
 } {
     upvar 1 instance_id instance_id
     set asset_id ""
-    set exists_p [db_0or1row hf_asset_id_of_label { select asset_id from hf_asset_rev_map 
-        where label=:label and instance_id=:instance_id }]
+    set exists_p [db_0or1row hf_asset_id_of_label { 
+        select asset_id 
+        from hf_asset_rev_map 
+        where label=:label 
+        and instance_id=:instance_id
+        and trashed_p!='1'
+        order by asset_id asc limit 1 }]
     if { !$exists_p } {
         ns_log Notice "hf_asset_id_of_label: asset_id does not exist for label '${label}' instance_id '${instance_id}'"
     }
