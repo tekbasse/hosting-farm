@@ -44,6 +44,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             # A user with sysadmin rights and not customer
             set sysowner_email [ad_system_owner]
             set sysowner_user_id [party::get_by_email -email $sysowner_email]
+            set prior_asset_ids_list [hf_asset_ids_for_user $sysowner_user_id]
             set i [string first "@" $sysowner_email]
             if { $i > -1 } {
                 set domain [string range $sysowner_email $i+1 end]
@@ -880,7 +881,13 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             # catch orphaned assets
             set keep_list [concat $hw_asset_id_list $dci(0) $dci(1)]
             set all_list [hf_asset_ids_for_user $sysowner_user_id]
-            set trash_list [set_difference $all_list $keep_list]
+            set this_test_list [set_difference $all_list $prior_asset_ids_list]
+            set trash_list [set_difference $this_test_list $keep_list]
+            ns_log Notice "all_list '${all_list}'"
+            ns_log Notice "prior_asset_ids_list '${prior_asset_ids_list}'"
+            ns_log Notice "keep_list '${keep_list}'"
+            ns_log Notice "this_test_list '${this_test_list}'"
+            ns_log Notice "trash_list '${trash_list}'"
             foreach asset_id $trash_list {
                 set attr_ids_list [hf_asset_attributes_cascade $asset_id]
                 set asset_type_id [hf_asset_type_id_of_asset_id $asset_id]
