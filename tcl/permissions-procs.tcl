@@ -63,7 +63,7 @@ ad_proc -public hf_active_asset_ids_of_customer {
     set read_p [hf_permission_p $user_id $customer_id assets read $instance_id]
     set asset_ids_list [list ]
     if { $read_p } {
-        set asset_ids_list [db_list asset_ids_for_customer_get "select id from hf_assets where instance_id=:instance_id and qal_customer_id=:customer_id and time_stop > current_timestamp and not (trashed_p = '1') and id in ( select asset_id from hf_asset_label_map where instance_id=:instance_id ) order by last_modified desc"]
+        set asset_ids_list [db_list asset_ids_for_customer_get "select asset_id from hf_assets where instance_id=:instance_id and qal_customer_id=:customer_id and time_stop > current_timestamp and not (trashed_p = '1') and id in ( select asset_id from hf_asset_label_map where instance_id=:instance_id ) order by last_modified desc"]
     }
     return $asset_ids_list
 }
