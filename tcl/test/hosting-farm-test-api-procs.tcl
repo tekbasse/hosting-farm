@@ -849,18 +849,34 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
 
 
             ns_log Notice "aa_register_case.327: Begin test assets_sys_clear_api_check"
-            aa_log "3. Clear 2 DCs of managed assets and attributes."
+            aa_log "3. Decommission 2 DCs of managed assets and attributes."
 
-            # delete everything below a hw
+            # trash everything below a hw
 
             
             set hw_asset_id_list [acc_fin::shuffle_list $hw_asset_id_list]
-            ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve cycle_nbr '${cycle_nbr}' of '${cycle_count}'"
             foreach hw_asset_id $hw_asset_id_list {
                 set sub_assets_list [hf_asset_subassets_cascade $hw_asset_id]
+                # remove referencing asset_id
                 set sub_assets_list [lrange $sub_assets_list 1 end]
-                set sub_assets_count [llength $sub_assets_list ]
-                incr sub_assets_count -1
+                foreach sub_asset_id $sub_assets_list {
+                    set attr_ids_list [hf_asset_attributes_cascade $sub_asset_id]
+                    set asset_type_id [hf_asset_type_id_of_asset_id $sub_asset_id]
+                    foreach attr_id $attr_ids_list {
+                        set sub_type_id [hf_asset_type_id_of_f_id $attr_id]
+                        if { [hf_attribute_trash $attr_id ] } {
+                            incr audit_atc_arr(${sub_type_id}) -1
+                        } else {
+                            ns_log Warning "hosting-farm-test-api-procs.tcl: failed hf_attribute_trash attr_id '${attr_id}'"
+                        }
+                    }
+                    if { [hf_asset_trash $sub_asset_id] } {
+                        incr audit_ac_arr(${asset_type_id}) -1
+                    } else {
+                        ns_log Warning "hosting-farm-test-api-procs.tcl: failed hf_asset_trash sub_asset_id '${sub_asset_id}'"
+                    }
+                    hf_f_id_trash $sub_asset_id
+                }
             }
             # end foreach
 
