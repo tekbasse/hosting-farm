@@ -172,12 +172,15 @@ if { ( $s_exists_p && $s ne "" ) || ( $p_exists_p && $p ne "" ) } {
 # ================================================
 # 3. Pagination_bar -- calcs including list_limit and list_offset, build UI
 # ================================================
-# if $s exists, addid to to pagination urls.
+# if $s exists, add it to to pagination urls.
 
 # Add the sort links to the titles.
 
 # urlcode sort_order_list
 set s_urlcoded ""
+if { !$s_exists_p } {
+    set s ""
+}
 foreach sort_i $sort_order_list {
     append s_urlcoded $sort_i
     append s_urlcoded a

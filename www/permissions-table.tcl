@@ -16,12 +16,12 @@ if { !$read_p } {
 ## If this could edit permissions, check permissions_properties permissions_roles or permissions_privileges
 set admin_p [hf_ui_go_ahead_q admin "" assets 0]
 if { $admin_p } {
-        # check package admin for extras
-        set pkg_admin_p [permission::permission_p \
-                             -party_id $user_id \
-                             -object_id $instance_id \
-                             -privilege admin]
-    }
+    # check package admin for extras
+    set pkg_admin_p [permission::permission_p \
+                         -party_id $user_id \
+                         -object_id $instance_id \
+                         -privilege admin]
+}
 
 
 set permissions_table_html ""

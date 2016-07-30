@@ -328,7 +328,11 @@ ad_proc -private hf_pagination_by_items {
     items_per_page
     first_item_displayed
 } {
-    returns a list of 3 pagination components, the first is a list of page_number and start_row pairs for pages before the current page, the second contains page_number and start_row for the current page, and the third is the same value pair for pages after the current page.  See hosting-farm/lib/paginiation-bar for an implementation example. 
+    Returns a list of 3 pagination components.
+    The first is a list of page_number and start_row pairs for pages before the current page.
+    The second contains page_number and start_row for the current page.
+    Third is the same value pair for pages after the current page.  
+    See hosting-farm/lib/paginiation-bar for an implementation example. 
 } {
     # based on ecds_pagination_by_items
     if { $items_per_page > 0 && $item_count > 0 && $first_item_displayed > 0 && $first_item_displayed <= $item_count } {
