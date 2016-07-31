@@ -165,9 +165,9 @@ if { ( $s_exists_p && $s ne "" ) || ( $p_exists_p && $p ne "" ) } {
         # Following lsort is in a catch statement so that if the sort errors, it defaults to ascii sort.
         # Sort table_lists by column number $col2sort_wo_sign, where 0 is left most column
         
-        if {[catch { set table_sorted_lists [lsort $sort_type $sort_order -index $col2sort_wo_sign $table_sorted_lists] } result]} {
+        if {[catch { set table_sorted_lists [lsort $sort_type -dictionary $sort_order -index $col2sort_wo_sign $table_sorted_lists] } result]} {
             # lsort errored, probably due to bad sort_type. Fall back to -ascii sort_type, or fail..
-            set table_sorted_lists [lsort -ascii $sort_order -index $col2sort_wo_sign $table_sorted_lists]
+            set table_sorted_lists [lsort -dictionary $sort_order -index $col2sort_wo_sign $table_sorted_lists]
             ns_log Notice "resource-status-summary-1(121): lsort fell back to sort_type -ascii due to error: $result"
         }
         #ns_log Notice "resource-status-summary-1.tcl(123): lsort $sort_type $sort_order -index $col2sort_wo_sign table_sorted_lists"
