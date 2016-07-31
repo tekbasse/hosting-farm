@@ -104,6 +104,7 @@
   <msg key="feature_id_def">Identifier of a feature</msg>
   <msg key="feature_type">Feature type</msg>
   <msg key="feature_type_def">A reference for feature description</msg>
+  <msg key="first">first</msg>
   <msg key="flags">Flags</msg>
   <msg key="flags_def">Customization flags</msg>
   <msg key="halt_proc">Halt proc</msg>

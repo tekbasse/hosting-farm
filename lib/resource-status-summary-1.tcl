@@ -262,14 +262,22 @@ if { $this_start_row_exists_p } {
 # Sort's abbreviated title should be context sensitive, changing depending on sort type.
 # sort_type_list is indexed by sort_column nbr (0...)
 
+# for UX, chagnged "ascending order" to "A first" or "1 First", and "Descending order" to "Z first" or "9 first".
+
+
 set text_asc "A"
 set text_desc "Z"
 set nbr_asc "1"
 set nbr_desc "9"
 # increasing
 set title_asc "#acs-templating.ascending_order#"
+set title_asc_by_nbr "'${nbr_asc}' #hosting-farm.first#"
+set title_asc_by_text "'${text_asc}' #hosting-farm.first#"
 # decreasing
+
 set title_desc "#acs-templating.descending_order#"
+set title_desc_by_nbr "'${nbr_desc}' #hosting-farm.first#"
+set title_desc_by_text "'${text_desc}' #hosting-farm.first#"
 
 set table_titles_w_links_list [list ]
 set column_count 0
@@ -302,9 +310,13 @@ foreach title $table_titles_list {
     if { $column_type eq "integer" || $column_type eq "real" } {
         set abbrev_asc $nbr_asc
         set abbrev_desc $nbr_desc
+        set title_asc $title_asc_by_nbr
+        set title_desc $title_desc_by_nbr
     } else {
         set abbrev_asc $text_asc
         set abbrev_desc $text_desc
+        set title_asc $title_asc_by_text
+        set title_desc $title_desc_by_text
     }
     # is column sort decreasing? If so, let's reverse the order of column's sort links.
     set decreasing_p [lindex $column_sort_decreases_list $column_count]
@@ -316,6 +328,7 @@ foreach title $table_titles_list {
 
     # For now, just inactivate the left most sort link that was most recently pressed (if it has been)
     set title_new $title
+
 
 
     if { $primary_sort_col eq "" || ( $primary_sort_col ne "" && $column_count ne [expr { abs($primary_sort_col) } ] ) } {
