@@ -206,6 +206,7 @@
   <msg key="over_storage_sku_def">SKU reference for pricing over base storage rate of plan_id.</msg>
   <msg key="over_traffic_sku">Extra Traffic SKU</msg>
   <msg key="over_traffic_sku_def">SKU reference for pricing over base traffic rate of plan_id.</msg>
+  <msg key="page_number">pg.</msg>
   <msg key="passed_alert_threshold">passed alert threshold</msg>
   <msg key="plan_id">Plan id</msg>
   <msg key="plan_id_def">Plan identifier</msg>

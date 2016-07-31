@@ -17,7 +17,11 @@
 # @param columns              splits the list into $columns number of columns.
 # @param before_columns_html  inserts html that goes between each column
 # @param after_columns_html   ditto
-
+# @param page_num_p           Answers Q: Use the page number in pagniation bar?
+#                             If not, uses the first value of the left-most (primary sort) column
+if { ![info exists page_num_p ] } {
+    set page_num_p 0
+}
 # General process flow:
 # 1. Get table as list_of_lists
 # 2. Sort unformatted columns by row values
@@ -27,6 +31,7 @@
 # 5. Format output -- compact_p vs. regular
 set nav_html ""
 set page_html ""
+
 
 # ================================================
 # 1. Get table as list_of_lists
@@ -178,9 +183,6 @@ if { ( $s_exists_p && $s ne "" ) || ( $p_exists_p && $p ne "" ) } {
 
 # urlcode sort_order_list
 set s_urlcoded ""
-if { !$s_exists_p } {
-    set s ""
-}
 foreach sort_i $sort_order_list {
     append s_urlcoded $sort_i
     append s_urlcoded a
@@ -199,14 +201,14 @@ set next_bar [list]
 
 set prev_bar_list [lindex $bar_list_set 0]
 foreach {page_num start_row} $prev_bar_list {
-    if { $s eq "" } {
+    if { $page_num_p } {
         set page_ref $page_num
     } else {
         set item_index [expr { ( $start_row - 1 ) } ]
         set primary_sort_field_val [lindex [lindex $table_sorted_lists $item_index] $col2sort_wo_sign]
         set page_ref [qf_abbreviate [lang::util::localize $primary_sort_field_val] 10]
         if { $page_ref eq "" } {
-            set page_ref $page_num
+            set page_ref "#hosting-farm.page_number# ${page_num}"
         }
     }
     lappend prev_bar " <a href=\"${base_url}?this_start_row=${start_row}${s_url_add}\">${page_ref}</a> "    
