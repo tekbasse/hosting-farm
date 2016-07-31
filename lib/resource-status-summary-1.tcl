@@ -225,7 +225,7 @@ if { $s eq "" } {
     set primary_sort_field_val [lindex [lindex $table_sorted_lists $item_index] $col2sort_wo_sign]
     set page_ref [qf_abbreviate [lang::util::localize $primary_sort_field_val] 10]
     if { $page_ref eq "" } {
-        set page_ref $page_num
+        set page_ref "#hosting-farm.page_number# ${page_num}"
     }
 }
 
@@ -237,11 +237,12 @@ foreach {page_num start_row} $next_bar_list {
     if { $s eq "" } {
         set page_ref $page_num
     } else {
-        set item_index [expr { ( $page_num - 1 ) * $items_per_page + 1 } ]
+#        set item_index [expr { ( $page_num - 1 ) * $items_per_page + 1 } ]
+        set item_index [expr { ( $page_num - 1 ) * $items_per_page  } ]
         set primary_sort_field_val [lindex [lindex $table_sorted_lists $item_index] $col2sort_wo_sign]
         set page_ref [qf_abbreviate [lang::util::localize $primary_sort_field_val] 10]
         if { $page_ref eq "" } {
-            set page_ref $page_num
+            set page_ref "#hosting-farm.page_number# ${page_num}"
         }
     }
     lappend next_bar " <a href=\"${base_url}?this_start_row=${start_row}${s_url_add}\">${page_ref}</a> "
