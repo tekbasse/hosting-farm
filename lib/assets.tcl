@@ -26,5 +26,9 @@
 # @param this_start_row (required) the start row for this page
 # @param separator is html used between page numbers, defaults to &nbsp;
 
-
+# assets_lists \[hf_asset_ids_for_user $user_id\]
 set content "[llength $x] $x"
+
+
+
+#  see hosting-farm/doc/assets.??? for code
