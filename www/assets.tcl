@@ -37,6 +37,10 @@ set radio_checked_url [file join $icons_path1 radiochecked.gif]
 set radio_unchecked_url [file join $icons_path1 radio.gif]
 set redirect_before_v_p 0
 set user_message_list [list ]
+#flags
+set include_view_assets_p 0
+set include_view_one_p 0
+set include_view_attrs_p 0
 
 array set input_arr \
     [list \
@@ -44,7 +48,7 @@ array set input_arr \
          asset_type_id "" \
          customer_id "" \
          f_id "" \
-         mode "v" \
+         mode "l" \
          mode_next "" \
          page_title $title \
          reset "" \
@@ -52,6 +56,10 @@ array set input_arr \
          sub_asset_id "" \
          sub_f_id "" \
          submit "" \
+         s "" \
+         p "" \
+         this_start_row "" \
+         interval_remaining "" \
          top_level_p "0"]
 
 # INPUTS
@@ -77,6 +85,10 @@ if { $form_posted_p } {
              page_title \
              state \
              sub_asset_id \
+             s \
+             p \
+             this_start_row \
+             interval_remaining \
              sub_f_id ]
     # x,y elements in input_arr holds position of image-based submit
     array unset input_arr x
@@ -400,7 +412,6 @@ if { $form_posted_p } {
 
 set menu_list [list ]
 
- ##code
 
 # OUTPUT / VIEW
 # using switch, because there's only one view at a time
@@ -420,7 +431,7 @@ switch -exact -- $mode {
                 ad_returnredirect "${url}?mode=l"
                 ad_script_abort
             }
-            set include_assets_p 1
+            set include_view_assets_p 1
             set asset_ids_list [hf_asset_ids_for_user $user_id $top_level_p]
             set assets_lists [hf_assets_read $asset_ids_list]
         } 

@@ -56,7 +56,8 @@ ad_proc -public hf_assets_read {
     foreach asset_id $asset_ids_list {
         set read_p [hf_ui_go_ahead_q read "" "" 0]
         if { $read_p } {
-            set rows_lists [db_list_of_lists hf_asset_get "select [hf_asset_keys ","] from hf_assets where asset_id=:asset_id and instance_id=:instance_id " ] 
+            set rows_lists [db_list_of_lists hf_asset_get "select [hf_asset_keys ","] from hf_assets where asset_id=:asset_id and instance_id=:instance_id " ]
+            # should return only 1 row max
             set row_list [lindex $rows_lists 0]
             if { [llength $row_list] > 0 } {
                 lappend return_lists $row_list
