@@ -45,16 +45,17 @@ ad_proc -public hf_customer_ids_for_user {
 
 ad_proc -public hf_active_asset_ids_of_customer {
     customer_id
-    {instance_id ""}
+    {top_level_p "0"}
 } {
     Returns a list of active asset_ids (contracts) for customer_id
 
     @param customer_id Checks for this customer.
-    @param instance_id Checks for custome in context of instance_id if not blank, otherwise from connection.
+    @top_level_p
 
     @return Returns asset_id numbers in a list.
 
 } {
+    upvar instance_id instance_id
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
@@ -63,7 +64,29 @@ ad_proc -public hf_active_asset_ids_of_customer {
     set read_p [hf_permission_p $user_id $customer_id assets read $instance_id]
     set asset_ids_list [list ]
     if { $read_p } {
-        set asset_ids_list [db_list asset_ids_for_customer_get "select asset_id from hf_assets where instance_id=:instance_id and qal_customer_id=:customer_id and time_stop > current_timestamp and not (trashed_p = '1') and id in ( select asset_id from hf_asset_label_map where instance_id=:instance_id ) order by last_modified desc"]
+        set f_id_list [db_list f_ids_for_customer_get { select f_id from hf_assets 
+            where instance_id=:instance_id 
+            and qal_customer_id=:customer_id
+            and trashed_p!='1'} ]
+        if { [qf_is_true $top_level_p] } {
+            # This is trickier than for sys admins, because top level may
+            # very well be dependent on a system asset or asset
+            # of another customer
+            set asset_tla_list [db_list asset_ids_for_customer_get_tla_f_id "
+                select f_id from hf_sub_asset_map
+                where instance_id=:instance_id
+                and trashed_p!='1'
+                and f_id in ( [template::util::tcl_to_sql_list $f_id_list] )
+                and f_id not in ( select sub_f_id from hf_sub_asset_map
+                                  where sub_f_id in [template::util::tcl_to_sql_list $f_id_list] ) " ]
+            set asset_ids_list [db_list asset_ids_for_customer_get_tla_id "select asset_id
+                from hf_asset_rev_map
+                where instance_id=:instance_id
+                and trashed_p!='1'
+                and f_id in ( [template::util::tcl_to_sql_list $asset_tla_list] )" ]
+        } else {
+            set asset_ids_list [db_list asset_ids_for_customer_get "select asset_id from hf_asset_rev_map where instance_id=:instance_id and trashed_p!='1' and f_id in ( [template::util::tcl_to_sql_list $f_id_list] )"]
+        }
     }
     return $asset_ids_list
 }

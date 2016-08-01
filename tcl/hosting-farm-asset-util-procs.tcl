@@ -15,24 +15,41 @@ ad_library {
 
 ad_proc -private hf_asset_ids_for_user { 
     user_id
+    {top_level_p "0"}
 } {
-    Returns asset_ids available to user_id as list 
+    Returns asset_ids available to user_id as list.
+    If top_level_p is "1", returns only the top level assets ie not assets dependent on other assets.
 } {
     upvar 1 instance_id instance_id
     set asset_ids_list [list ]
     if { [qf_is_natural_number $user_id] } {
         set sys_admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
         if { $sys_admin_p } {
-            set asset_ids_list [db_list hf_asset_ids_all {
-                select asset_id from hf_assets 
-                where trashed_p!='1'
-                and instance_id=:instance_id }]
+
+            if { [qf_is_true $top_level_p ] } {
+                set asset_ids_list [db_list hf_asset_ids_all_tla {
+                    select asset_id from hf_assets
+                    where trashed_p!='1'
+                    and instance_id=:instance_id
+                    and f_id not in (
+                                     select sub_f_id
+                                     from hf_sub_asset_map
+                                     where attribute_p!='1'
+                                     and trashed_p!='1'
+                                     and instance_id=:instance_id )
+                }
+            } else {
+                set asset_ids_list [db_list hf_asset_ids_all {
+                    select asset_id from hf_assets 
+                    where trashed_p!='1'
+                    and instance_id=:instance_id }]
+            }
 
         } else {
             set customer_ids_list [hf_customer_ids_for_user $user_id]
             # get asset_ids assigned to customer_ids
             foreach customer_id $customer_ids_list {
-                set assets_list [hf_asset_ids_for_customer $instance_id $customer_id]
+                set assets_list [hf_active_asset_ids_of_customer $customer_id $top_level_p ]
                 foreach asset_id $assets_list {
                     lappend asset_ids_list $asset_id
                 }
