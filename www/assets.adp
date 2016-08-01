@@ -19,7 +19,7 @@
 <!-- one col on l, m, s  -->
 <div class="l-grid-whole m-grid-whole s-grid-whole padded">
   <div class="content-box">
-  <include src="/packages/hosting-farm/lib/assets" &assets_lists=assets_lists interval_remaining="@interval_remaining;noquote@" s="@s;noquote@" p="@p;noquote@" this_start_row="@this_start_row;noquote@" base_url="assets">
+  <include src="/packages/hosting-farm/lib/assets-view" &assets_lists=assets_lists interval_remaining="@interval_remaining;noquote@" s="@s;noquote@" p="@p;noquote@" this_start_row="@this_start_row;noquote@" base_url="assets">
 
   </div>
 </div>
@@ -34,7 +34,10 @@
   <include src="/packages/hosting-farm/lib/view-one" &asset_arr=obj_arr>
 </if>
 <if @include_view_attrs_p@ true>
-  <include src="/packages/hosting-farm/lib/attrs" &attrs_lists=attrs_lists>
+  <include src="/packages/hosting-farm/lib/attributes-view" &attrs_lists=attrs_lists>
+</if>
+<if @include_view_sub_assets_p@ true>
+  <include src="/packages/hosting-farm/lib/sub-assets-view" &sub_assets_lists=sub_assets_lists>
 </if>
 
 <if @form_html@ not nil>

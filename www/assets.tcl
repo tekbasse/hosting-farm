@@ -41,6 +41,7 @@ set user_message_list [list ]
 set include_view_assets_p 0
 set include_view_one_p 0
 set include_view_attrs_p 0
+set include_view_sub_assets_p 0
 
 array set input_arr \
     [list \
@@ -431,9 +432,10 @@ switch -exact -- $mode {
                 ad_returnredirect "${url}?mode=l"
                 ad_script_abort
             }
-            set include_view_assets_p 1
             set asset_ids_list [hf_asset_ids_for_user $user_id $top_level_p]
             set assets_lists [hf_assets_read $asset_ids_list]
+            set include_view_assets_p 1
+
         } 
     }
     r {
