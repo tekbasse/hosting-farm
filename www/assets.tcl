@@ -51,7 +51,8 @@ array set input_arr \
          state "" \
          sub_asset_id "" \
          sub_f_id "" \
-         submit "" ]
+         submit "" \
+         top_level_p "0"]
 
 # INPUTS
 
@@ -420,7 +421,7 @@ switch -exact -- $mode {
                 ad_script_abort
             }
             set include_assets_p 1
-            set asset_ids_list [hf_asset_ids_for_user $user_id]
+            set asset_ids_list [hf_asset_ids_for_user $user_id $top_level_p]
             set assets_lists [hf_assets_read $asset_ids_list]
         } 
     }
