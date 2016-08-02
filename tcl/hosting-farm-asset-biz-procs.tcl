@@ -177,6 +177,7 @@ ad_proc -public hf_asset_create {
     upvar 1 $asset_arr_name asset_arr
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
+    hf_asset_defaults asset_arr
     qf_array_to_vars asset_arr [hf_asset_keys]
     set create_p [hf_ui_go_ahead_q create f_id "" 0]
     set asset_id ""
@@ -189,6 +190,7 @@ ad_proc -public hf_asset_create {
         set last_modified $nowts
         set created $nowts
         set trashed_p [qf_is_true $trashed_p]
+        
         db_transaction {
             db_dml hf_asset_create "insert into hf_assets
                 ([hf_asset_keys ","])
@@ -218,6 +220,7 @@ ad_proc -public hf_asset_write {
     upvar 1 $asset_arr_name asset_arr
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
+    hf_asset_defaults
     qf_array_to_vars asset_arr [hf_asset_keys]
     set write_p [hf_ui_go_ahead_q write f_id "" 0]
     set new_asset_id ""
