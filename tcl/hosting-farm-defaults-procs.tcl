@@ -47,7 +47,7 @@ ad_proc -private hf_asset_defaults {
     set asset_list [list ]
     foreach {key value} $asset {
         lappend asset_list $key
-        if { ![info exists asset_arr(${key}) ] } {
+        if { ![exists_and_not_null asset_arr(${key}) ] } {
             set asset_arr(${key}) $value
         }
     }
@@ -80,7 +80,7 @@ ad_proc -private hf_sub_asset_map_defaults {
                       trashed_p "0" \
                       last_updated $nowts ]
     foreach {key value} $sam_list {
-        if { ![info exists sam_arr(${key}) ] } {
+        if { ![exists_and_not_null sam_arr(${key}) ] } {
             set sam_arr(${key}) $value
         }
     }
@@ -116,7 +116,7 @@ ad_proc -private hf_ss_defaults {
     set ss_list [list ]
     foreach {key value} $ss {
         lappend ss_list $key
-        if { ![info exists ss_arr(${key}) ] } {
+        if { ![exists_and_not_null ss_arr(${key}) ] } {
             set ss_arr(${key}) $value
         }
     }
@@ -152,7 +152,7 @@ ad_proc -private hf_monitor_configs_defaults {
     set monitor_configs_list [list ]
     foreach {key value} $monitor_configs {
         lappend monitor_configs_list $key
-        if { ![info exists monitor_configs_arr(${key}) ] } {
+        if { ![exists_and_not_null monitor_configs_arr(${key}) ] } {
             set monitor_configs_arr(${key}) $value
         }
     }
@@ -188,7 +188,7 @@ ad_proc -private hf_os_defaults {
     set os_list [list ]
     foreach {key value} $os {
         lappend os_list $key
-        if { ![info exists os_arr(${key}) ] } {
+        if { ![exists_and_not_null os_arr(${key}) ] } {
             set os_arr(${key}) $value
         }
     }
@@ -232,7 +232,7 @@ ad_proc -private hf_vm_quota_defaults {
     set vm_quota_list [list ]
     foreach {key value} $vm_quota {
         lappend vm_quota_list $key
-        if { ![info exists vm_quota_arr(${key}) ] } {
+        if { ![exists_and_not_null vm_quota_arr(${key}) ] } {
             set vm_quota_arr(${key}) $value
         }
     }
@@ -267,7 +267,7 @@ ad_proc -private hf_vm_defaults {
     set vm_list [list ]
     foreach {key value} $vm {
         lappend vm_list $key
-        if { ![info exists vm_arr(${key}) ] } {
+        if { ![exists_and_not_null vm_arr(${key}) ] } {
             set vm_arr(${key}) $value
         }
     }
@@ -297,7 +297,7 @@ ad_proc -private hf_vh_defaults {
     set vh_list [list ]
     foreach {key value} $vh {
         lappend vh_list $key
-        if { ![info exists vh_arr(${key}) ] } {
+        if { ![exists_and_not_null vh_arr(${key}) ] } {
             set vh_arr(${key}) $value
         }
     }
@@ -329,7 +329,7 @@ ad_proc -private hf_dc_defaults {
     set dc_list [list ]
     foreach {key value} $dc {
         lappend dc_list $key
-        if { ![info exists dc_arr(${key}) ] } {
+        if { ![exists_and_not_null dc_arr(${key}) ] } {
             set dc_arr(${key}) $value
         }
     }
@@ -363,7 +363,7 @@ ad_proc -private hf_hw_defaults {
     set hw_list [list ]
     foreach {key value} $hw {
         lappend hw_list $key
-        if { ![info exists hw_arr(${key}) ] } {
+        if { ![exists_and_not_null hw_arr(${key}) ] } {
             set hw_arr(${key}) $value
         }
     }
@@ -395,7 +395,7 @@ ad_proc -private hf_ip_defaults {
     set ip_list [list ]
     foreach {key value} $ip {
         lappend ip_list $key
-        if { ![info exists ip_arr(${key}) ] } {
+        if { ![exists_and_not_null ip_arr(${key}) ] } {
             set ip_arr(${key}) $value
         }
     }
@@ -428,7 +428,7 @@ ad_proc -private hf_ni_defaults {
     set ni_list [list ]
     foreach {key value} $ni {
         lappend ni_list $key
-        if { ![info exists ni_arr(${key}) ] } {
+        if { ![exists_and_not_null ni_arr(${key}) ] } {
             set ni_arr(${key}) $value
         }
     }
@@ -458,7 +458,7 @@ ad_proc -private hf_ns_defaults {
     set ns_list [list ]
     foreach {key value} $ns {
         lappend ns_list $key
-        if { ![info exists ns_arr(${key}) ] } {
+        if { ![exists_and_not_null ns_arr(${key}) ] } {
             set ns_arr(${key}) $value
         }
     }
@@ -487,7 +487,7 @@ ad_proc -private hf_ua_defaults {
     set ua_list [list ]
     foreach {key value} $ua {
         lappend ua_list $key
-        if { ![info exists ua_arr(${key}) ] } {
+        if { ![exists_and_not_null ua_arr(${key}) ] } {
             set ua_arr(${key}) $value
         }
     }
