@@ -49,6 +49,7 @@ array set input_arr \
          asset_type_id "" \
          customer_id "" \
          f_id "" \
+         name "" \
          mode "l" \
          mode_next "" \
          page_title $title \
@@ -64,6 +65,8 @@ array set input_arr \
          top_level_p "0"]
 
 # INPUTS
+# name = zsrNNNN is sort row for pagination passed by submit button
+# name = zaidNNNN is asset_id for focus, passed by submit button
 
 # Get form inputs if they exist
 set form_posted_p [qf_get_inputs_as_array input_arr hash_check 1]
