@@ -65,8 +65,6 @@ array set input_arr \
          top_level_p "0"]
 
 # INPUTS
-# name = zsrNNNN is sort row for pagination passed by submit button
-# name = zaidNNNN is asset_id for focus, passed by submit button
 
 # Get form inputs if they exist
 set form_posted_p [qf_get_inputs_as_array input_arr hash_check 1]
@@ -97,6 +95,27 @@ if { $form_posted_p } {
     # x,y elements in input_arr holds position of image-based submit
     array unset input_arr x
     array unset input_arr y
+
+
+    # following is part of dynamic menu processing using form tags instead of url/GET
+    # key,value is passed as a single name, with first letter z.
+    set input_arr_idx_list [array names input_arr]
+    ##code update this regexp
+    set modes_idx [lsearch -regexp $input_arr_idx_list {z[vprnwctde][vc]?}]
+    if { $modes_idx > -1 && $mode eq "p" } {
+        set modes [lindex $input_arr_idx_list $modes_idx]
+        # modes 0 0 is z
+        set mode [string range $modes 1 1]
+        set next_mode [string range $modes 2 2]
+        # aid=asset_id
+        # srt=start_row for pagination
+        # fid=f_id
+        #
+        # for example
+        # name = zllsrtNNNN is sort row for pagination passed by submit button
+        # name = zvvaidNNNN is asset_id for focus, passed by submit button
+
+    }
 
     # Validate input
 
