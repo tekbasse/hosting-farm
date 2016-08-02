@@ -19,7 +19,7 @@
 <!-- one col on l, m, s  -->
 <div class="l-grid-whole m-grid-whole s-grid-whole padded">
   <div class="content-box">
-  <include src="/packages/hosting-farm/lib/assets-view" &assets_lists=assets_lists interval_remaining="@interval_remaining;noquote@" s="@s;noquote@" p="@p;noquote@" this_start_row="@this_start_row;noquote@" base_url="assets">
+  <include src="/packages/hosting-farm/lib/assets-view-2" &assets_lists=assets_lists interval_remaining="@interval_remaining;noquote@" s="@s;noquote@" p="@p;noquote@" this_start_row="@this_start_row;noquote@" base_url="assets">
 
   </div>
 </div>
