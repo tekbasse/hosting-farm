@@ -1,4 +1,4 @@
-# hosting-farm/lib/assets.tcl
+# hosting-farm/lib/assets-view.tcl
 # show a list of hf assets
 #
 # requires:
@@ -33,7 +33,7 @@
 # nav_bar:  prev_bar current_bar next_bar
 
 # following from:
-# hosting-farm/lib/assets.tcl
+# hosting-farm/lib/assets-view.tcl
 # Returns summary list of assets with status, highest scores first
 # This version requires the entire table to be loaded for processing.
 # TODO: make another version that uses pg's select limit and offset.. to scale well.
@@ -56,7 +56,7 @@
 #                             If not, uses the first value of the left-most (primary sort) column
 # @param show_titles_p        (defaults to 1)
 set show_titles_p 1
-
+set s "1"
 
 if { ![info exists page_num_p ] } {
     set page_num_p 0
@@ -80,7 +80,15 @@ set page_html ""
 # 1. Get table as list_of_lists
 # ================================================
 # don't process list_offset or list_limit here.
-set asset_stts_smmry_lists $assets_lists
+#set asset_stts_smmry_lists $assets_lists
+set asset_stts_smmry_lists [list ]
+foreach row_list $assets_lists {
+    set row_new_list [list ]
+    lappend row_new_list [lindex $row_list 1]
+    lappend row_new_list [lindex $row_list 0]
+    lappend asset_stts_smmry_lists $row_new_list
+}
+
 set item_count [llength $asset_stts_smmry_lists]
 if { $item_count > 0 } {
 
@@ -121,20 +129,22 @@ if { $item_count > 0 } {
     set table_lists $asset_stts_smmry_lists
     set table_cols_count [llength [lindex $table_lists 0]]
     set table_index_last [expr { $table_cols_count - 1 } ]
-    foreach column [hf_asset_keys] {
-        lappend table_titles_list "#hosting-farm.${column}#"
-    }
+    #foreach column [hf_asset_keys] {
+    #    lappend table_titles_list "#hosting-farm.${column}#"
+    #}
+
     # asset_id  label  name  asset_type_id  trashed_p  trashed_by  template_p  templated_p  publish_p  monitor_p  popularity  triage_priority  op_status  qal_product_id  qal_customer_id  instance_id  user_id  last_modified  created  flags  template_id  f_id
     ## was:
-    #set table_titles_list [list "#acs-lang.Label#" "#accounts-ledger.Name#" "#accounts-ledger.Type#" "#hosting-farm.Metric#" "#accounts-ledger.Amount#" "#hosting-farm.Quota#" "#hosting-farm.Projected#" "#hosting-farm.Health_score#" "#accounts-ledger.Message#"]
+    #set table_titles_list \[list "#acs-lang.Label#" "#accounts-ledger.Name#" "#accounts-ledger.Type#" "#hosting-farm.Metric#" "#accounts-ledger.Amount#" "#hosting-farm.Quota#" "#hosting-farm.Projected#" "#hosting-farm.Health_score#" "#accounts-ledger.Message#"\]
     # as_label as_name as_type metric latest_sample percent_quota projected_eop score score_message
-    ns_log Notice "assets.tcl(45): table_cols_count $table_cols_count table_index_last $table_index_last "
+    ns_log Notice "assets-view.tcl(45): table_cols_count $table_cols_count table_index_last $table_index_last "
 
     # defaults and inputs
-    set sort_type_list [list "-integer" "-dictionary" "-dictionary" "-ascii" "-ascii" ]
+    # set sort_type_list \[list "-integer" "-dictionary" "-dictionary" "-ascii" "-ascii" \]
+    set sort_type_list [list "-integer" "-dictionary" ]
+
+
     #set sort_stack_list \[lrange \[list 0 1 2 3 4 5 6 7 8 9 10\] 0 $table_index_last \]
-
-
     set i 0
     set sort_stack_list [list ]
     while { $i < $table_cols_count } {
@@ -145,6 +155,8 @@ if { $item_count > 0 } {
     set sort_rev_order_list [list ]
     set table_sorted_lists $table_lists
     ns_log Notice "assets-view.tcl.129"
+
+    # ===========
     # Sort table?
     if { $s_exists_p && $s ne "" } {
         # Sort table
@@ -158,7 +170,7 @@ if { $item_count > 0 } {
         # Validate sort order, because it is user input via web
         # $s' first check and change to sort_order_scalar
         regsub -all -- {[^\-0-9a]} $s {} sort_order_scalar
-        ns_log Notice "hosting-farm/lib/assets.tcl(73): sort_order_scalar $sort_order_scalar"
+        ns_log Notice "hosting-farm/lib/assets-view.tcl(73): sort_order_scalar $sort_order_scalar"
         # Converting sort_order_scalar to a list
         set sort_order_list [split $sort_order_scalar a]
         set sort_order_list [lrange $sort_order_list 0 $table_index_last]
@@ -175,32 +187,32 @@ if { $item_count > 0 } {
         # primary_sort_col_pos = primary sort column's position
         # primary_sort_col_new = a negative or positive column position. 
         set primary_sort_col_pos [expr { abs( $primary_sort_col_new ) } ]
-        ns_log Notice "hosting-farm/lib/assets.tcl(85): primary_sort_col_new $primary_sort_col_new"
+        ns_log Notice "hosting-farm/lib/assets-view.tcl(85): primary_sort_col_new $primary_sort_col_new"
         if { $primary_sort_col_new ne "" && $primary_sort_col_pos < $table_cols_count } {
-            # ns_log Notice "hosting-farm/lib/assets.tcl(87): primary_sort_col_new $primary_sort_col_new primary_sort_col_pos $primary_sort_col_pos"
+            # ns_log Notice "hosting-farm/lib/assets-view.tcl(87): primary_sort_col_new $primary_sort_col_new primary_sort_col_pos $primary_sort_col_pos"
             # modify sort_order_list
             set sort_order_new_list [list $primary_sort_col_new]
             foreach ii $sort_order_list {
                 if { [expr { abs($ii) } ] ne $primary_sort_col_pos } {
                     lappend sort_order_new_list $ii
-                    # ns_log Notice "hosting-farm/lib/assets.tcl(93): ii '$ii' sort_order_new_list '$sort_order_new_list'"
+                    # ns_log Notice "hosting-farm/lib/assets-view.tcl(93): ii '$ii' sort_order_new_list '$sort_order_new_list'"
                 }
             }
             set sort_order_list $sort_order_new_list
-            # ns_log Notice "hosting-farm/lib/assets.tcl(97): end if primary_sort_col_new.. "
+            # ns_log Notice "hosting-farm/lib/assets-view.tcl(97): end if primary_sort_col_new.. "
         }
     }
     ns_log Notice "assets-view.tcl.175"
     if { ( $s_exists_p && $s ne "" ) || ( $p_exists_p && $p ne "" ) } {
-        # ns_log Notice "hosting-farm/lib/assets.tcl(101): sort_order_scalar '$sort_order_scalar' sort_order_list '$sort_order_list'"
+        # ns_log Notice "hosting-farm/lib/assets-view.tcl(101): sort_order_scalar '$sort_order_scalar' sort_order_list '$sort_order_list'"
         # Create a reverse index list for index countdown, because primary sort is last, secondary sort is second to last..
         # sort_stack_list 0 1 2 3..
         set sort_rev_order_list [lsort -integer -decreasing [lrange $sort_stack_list 0 [expr { [llength $sort_order_list] - 1 } ] ] ]
         # sort_rev_order_list ..3 2 1 0
-        ns_log Notice "hosting-farm/lib/assets.tcl(104): sort_rev_order_list '$sort_rev_order_list' "
+        ns_log Notice "hosting-farm/lib/assets-view.tcl(104): sort_rev_order_list '$sort_rev_order_list' "
         foreach ii $sort_rev_order_list {
             set col2sort [lindex $sort_order_list $ii]
-            # ns_log Notice "hosting-farm/lib/assets.tcl(107): ii $ii col2sort '$col2sort' llength col2sort [llength $col2sort] sort_rev_order_list '$sort_rev_order_list' sort_order_list '$sort_order_list'"
+            # ns_log Notice "hosting-farm/lib/assets-view.tcl(107): ii $ii col2sort '$col2sort' llength col2sort [llength $col2sort] sort_rev_order_list '$sort_rev_order_list' sort_order_list '$sort_order_list'"
             if { [string range $col2sort 0 0] eq "-" } {
                 set col2sort_wo_sign [string range $col2sort 1 end]
                 set sort_order "-decreasing"
@@ -215,9 +227,9 @@ if { $item_count > 0 } {
             if {[catch { set table_sorted_lists [lsort $sort_type -dictionary $sort_order -index $col2sort_wo_sign $table_sorted_lists] } result]} {
                 # lsort errored, probably due to bad sort_type. Fall back to -ascii sort_type, or fail..
                 set table_sorted_lists [lsort -dictionary $sort_order -index $col2sort_wo_sign $table_sorted_lists]
-                ns_log Notice "hosting-farm/lib/assets.tcl(121): lsort fell back to sort_type -ascii due to error: $result"
+                ns_log Notice "hosting-farm/lib/assets-view.tcl(121): lsort fell back to sort_type -ascii due to error: $result"
             }
-            #ns_log Notice "hosting-farm/lib/assets.tcl(123): lsort $sort_type $sort_order -index $col2sort_wo_sign table_sorted_lists"
+            #ns_log Notice "hosting-farm/lib/assets-view.tcl(123): lsort $sort_type $sort_order -index $col2sort_wo_sign table_sorted_lists"
         }
     }
 
@@ -394,7 +406,7 @@ if { $item_count > 0 } {
 
         if { $primary_sort_col eq "" || ( $primary_sort_col ne "" && $column_count ne [expr { abs($primary_sort_col) } ] ) } {
             if { $column_sorted_p } {
-                ns_log Notice "hosting-farm/lib/assets.tcl(150): column_count $column_count s_urlcoded '$s_urlcoded'"
+                ns_log Notice "hosting-farm/lib/assets-view.tcl(150): column_count $column_count s_urlcoded '$s_urlcoded'"
                 if { $decreasing_p } {
                     # reverse class styles
                     set sort_top "<a href=\"$base_url?s=${s_urlcoded}&amp;p=${column_count}${page_url_add}\" title=\"${title_asc}\" class=\"sortedlast\">${abbrev_asc}</a>"
@@ -411,12 +423,12 @@ if { $item_count > 0 } {
             }
         } else {
             if { $decreasing_p } {
-                # ns_log Notice "hosting-farm/lib/assets.tcl(154): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
+                # ns_log Notice "hosting-farm/lib/assets-view.tcl(154): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
                 # decreasing primary sort chosen last, no need to make the link active
                 set sort_top "<a href=\"$base_url?s=${s_urlcoded}&amp;p=${column_count}${page_url_add}\" title=\"${title_asc}\" class=\"sortedlast\">${abbrev_asc}</a>"
                 set sort_bottom "<span class=\"sortedfirst\">${abbrev_desc}</span>"
             } else {
-                # ns_log Notice "hosting-farm/lib/assets.tcl(158): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
+                # ns_log Notice "hosting-farm/lib/assets-view.tcl(158): column_count $column_count title $title s_urlcoded '$s_urlcoded'"
                 # increasing primary sort chosen last, no need to make the link active
                 set sort_top "<span class=\"sortedfirst\">${abbrev_asc}</span>"
                 set sort_bottom "<a href=\"$base_url?s=${s_urlcoded}&amp;p=-${column_count}${page_url_add}\" title=\"${title_desc}\" class=\"sortedlast\">${abbrev_desc}</a>"
@@ -490,23 +502,29 @@ if { $item_count > 0 } {
     } else {
         set table_formatted_lists $table_sorted_lists
     }
+
+    # ==========================
     # Add Row of Titles to Table
+    # ==========================
     if { $show_titles_p } {
         set table_sorted_lists [linsert $table_formatted_lists 0 [lrange $table_titles_list 0 $table_index_last]]
     }
+
+    # ==========================================================
     # To remove a column from display:
     # 1. Blank the column reference from sort_stack_list (and sort_rev_order_list if it were used..)
     #    where  sort_stack_list is a sequential list: 0 1 2 3..
     #    Don't remove the reference, or later column tracking for unsorted removals will break.
     # 2. Reset table_cols_count
-    # Following additional requirements are for the compact_p option:
+    #    Following additional requirements are for the compact_p option:
     # 3. Remove the column reference from table_titles_list
     #    set table_titles_list \[list "#acs-lang.Label#" "#accounts-ledger.Name#" "#accounts-ledger.Type#" "#hosting-farm.Metric#" "#accounts-ledger.Amount#" "#hosting-farm.Quota#" "#hosting-farm.Projected#" "#hosting-farm.Health_score#" "#accounts-ledger.Message#"]
-
+    # ==========================================================
+    
     # Blank the column reference: Name ref 1
-    set sort_stack_list [lreplace $sort_stack_list 1 1 ""]
-    #set sort_rev_order_list [lsort -integer -decreasing [lrange $sort_stack_list 0 [expr { [llength $sort_order_list] - 1 } ] ] ]
-    #set table_titles_list [lreplace $table_titles_list 1 1]
+    set sort_stack_list [lreplace $sort_stack_list 0 0 ""]
+    #set sort_rev_order_list \[lsort -integer -decreasing [lrange $sort_stack_list 0 [expr { [llength $sort_order_list] - 1 } ] ] \]
+    #set table_titles_list \[lreplace $table_titles_list 1 1\]
     incr table_cols_count -1
 
     # ================================================
@@ -540,7 +558,7 @@ if { $item_count > 0 } {
         # Confirm that all columns have been accounted for.
         set table_row_new_cols [llength $table_row_new]
         if { $table_row_new_cols != $table_cols_count } {
-            ns_log Notice "hosting-farm/lib/assets.tcl(203): Warning: table_row_new has ${table_row_new_cols} instead of ${table_cols_count} columns."
+            ns_log Notice "hosting-farm/lib/assets-view.tcl(203): Warning: table_row_new has ${table_row_new_cols} instead of ${table_cols_count} columns."
         }
         # Append new row to new table
         lappend table_col_sorted_lists $table_row_new
@@ -548,6 +566,7 @@ if { $item_count > 0 } {
 
     # ================================================
     # Add UI Options column to table?
+    # Note that if show_titles_p, first row is title
     # Not at this time. Keep here in case a variant needs the code at some point.
     if { 0 } {
         set table2_lists [list ]
@@ -574,11 +593,13 @@ if { $item_count > 0 } {
     } else {
         set table2_lists $table_col_sorted_lists
     }
+
+
     ns_log Notice "assets-view.tcl.553"
     # ================================================
     # 5. Format output -- compact_p vs. regular etc.
     # Add attributes to the TABLE tag
-    #set table2_atts_list [list border 1 cellspacing 0 cellpadding 2]
+    #set table2_atts_list \[list border 1 cellspacing 0 cellpadding 2\]
     set table2_atts_list [list style "background-color: #cec;"]
 
     # Add cell formatting to TD tags
