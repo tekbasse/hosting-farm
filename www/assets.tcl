@@ -542,6 +542,9 @@ switch -exact -- $mode {
 #    append user_message_html "<li>${user_message}</li>"
 #}
 
+# for buttons as multiple form submits within one form, example of a submit:
+# from accounts-finance: input type="submit" value="Sort by Y ascending" name="zy" class="btn"
+
 set menu_html ""
 if { $form_posted_p && $validated_p || !$form_posted_p } {
     foreach item_list $menu_list {

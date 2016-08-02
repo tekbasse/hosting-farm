@@ -26,6 +26,8 @@
 # @param this_start_row (required) the start row for this page
 # @param separator is html used between page numbers, defaults to &nbsp;
 
+
+
 # assets_lists \[hf_asset_ids_for_user $user_id\]
 # output is page_html 
 # nav_bar:  prev_bar current_bar next_bar
@@ -52,9 +54,17 @@
 # @param after_columns_html   ditto
 # @param page_num_p           Answers Q: Use the page number in pagniation bar?
 #                             If not, uses the first value of the left-most (primary sort) column
+# @param show_titles_p        (defaults to 1)
+set show_titles_p 1
+
+
 if { ![info exists page_num_p ] } {
     set page_num_p 0
 }
+if { ![info exists show_titles_p ] } {
+    set show_titles_p 1
+}
+
 # General process flow:
 # 1. Get table as list_of_lists
 # 2. Sort unformatted columns by row values
@@ -121,8 +131,10 @@ if { $item_count > 0 } {
     ns_log Notice "assets.tcl(45): table_cols_count $table_cols_count table_index_last $table_index_last "
 
     # defaults and inputs
-    set sort_type_list [list "-ascii" "-dictionary" "-ascii" "-ascii" "-real" "-real" "-real" "-integer" "-ascii"]
+    set sort_type_list [list "-integer" "-dictionary" "-dictionary" "-ascii" "-ascii" ]
     #set sort_stack_list \[lrange \[list 0 1 2 3 4 5 6 7 8 9 10\] 0 $table_index_last \]
+
+
     set i 0
     set sort_stack_list [list ]
     while { $i < $table_cols_count } {
@@ -443,40 +455,45 @@ if { $item_count > 0 } {
     # Number of sorted columns:
     set sort_cols_count [llength $sort_order_list]
 
-    ns_log Notice "assets-view.tcl.40"
+
+    ns_log Notice "assets-view.tcl.446"
     # ================================================
     # Display customizations
 
-    # loop through display table rows, formatting data
-    set table_formated_lists [list ]
-    foreach row_list $table_sorted_lists {
-        # label name type metric amount quota projected health_score message
-        set label [lindex $row_list 0]
-        set name [lindex $row_list 1]
-        set type [lindex $row_list 2]
-        set metric [lindex $row_list 3]
-        set amount [lindex $row_list 4]
-        set quota [lindex $row_list 5]
-        set projected [lindex $row_list 6]
-        set health_score [lindex $row_list 7]
-        set message [lindex $row_list 8]
-        set label2 "<a href=\"[string tolower $type]?name=$name\">$label</a>"
-        if { $metric eq "traffic" } {
-            set amount2 [qal_pretty_bytes_iec $amount]
-            set projected2 [qal_pretty_bytes_iec $projected]
-        } else {
-            set amount2 [qal_pretty_bytes_dec $amount]
-            set projected2 [qal_pretty_bytes_dec $projected]
+    if { 0 } {
+        # loop through display table rows, formatting data
+        set table_formated_lists [list ]
+        foreach row_list $table_sorted_lists {
+            # label name type metric amount quota projected health_score message
+            set label [lindex $row_list 0]
+            set name [lindex $row_list 1]
+            set type [lindex $row_list 2]
+            set metric [lindex $row_list 3]
+            set amount [lindex $row_list 4]
+            set quota [lindex $row_list 5]
+            set projected [lindex $row_list 6]
+            set health_score [lindex $row_list 7]
+            set message [lindex $row_list 8]
+            set label2 "<a href=\"[string tolower $type]?name=$name\">$label</a>"
+            if { $metric eq "traffic" } {
+                set amount2 [qal_pretty_bytes_iec $amount]
+                set projected2 [qal_pretty_bytes_iec $projected]
+            } else {
+                set amount2 [qal_pretty_bytes_dec $amount]
+                set projected2 [qal_pretty_bytes_dec $projected]
+            }
+            set quota2 [format "%d%%" $quota]
+            # keep row_new_list same length as row_list.. or subsequent sort related references break. 
+            set row_new_list [list $label2 $name $type $metric $amount2 $quota2 $projected2 $health_score $message]
+            lappend table_formatted_lists $row_new_list
         }
-        set quota2 [format "%d%%" $quota]
-        # keep row_new_list same length as row_list.. or subsequent sort related references break. 
-        set row_new_list [list $label2 $name $type $metric $amount2 $quota2 $projected2 $health_score $message]
-        lappend table_formatted_lists $row_new_list
+    } else {
+        set table_formatted_lists $table_sorted_lists
     }
-
     # Add Row of Titles to Table
-    set table_sorted_lists [linsert $table_formatted_lists 0 [lrange $table_titles_list 0 $table_index_last]]
-
+    if { $show_titles_p } {
+        set table_sorted_lists [linsert $table_formatted_lists 0 [lrange $table_titles_list 0 $table_index_last]]
+    }
     # To remove a column from display:
     # 1. Blank the column reference from sort_stack_list (and sort_rev_order_list if it were used..)
     #    where  sort_stack_list is a sequential list: 0 1 2 3..
@@ -688,7 +705,7 @@ if { $item_count > 0 } {
 
     ns_log Notice "assets-view.tcl.682"
     # this builds the html table and assigns it to table2_html
-    set table2_html [qss_list_of_lists_to_html_table $table2_lists $table2_atts_list $cell_table_sorted_lists]
+    set table2_html [qss_list_of_lists_to_html_table $table2_lists $table2_atts_list $cell_table_sorted_lists $show_titles_p]
     # add table2_html to adp output
     append page_html $table2_html
 } else {
