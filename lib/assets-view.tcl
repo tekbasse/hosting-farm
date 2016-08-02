@@ -52,14 +52,14 @@
 # @param columns              splits the list into $columns number of columns.
 # @param before_columns_html  inserts html that goes between each column
 # @param after_columns_html   ditto
-# @param page_num_p           Answers Q: Use the page number in pagniation bar?
+# @param show_page_num_p           Answers Q: Use the page number in pagniation bar?
 #                             If not, uses the first value of the left-most (primary sort) column
 # @param show_titles_p        (defaults to 1)
 set show_titles_p 1
 set s "1"
 
-if { ![info exists page_num_p ] } {
-    set page_num_p 0
+if { ![info exists show_page_num_p ] } {
+    set show_page_num_p 0
 }
 if { ![info exists show_titles_p ] } {
     set show_titles_p 1
@@ -271,7 +271,7 @@ if { $item_count > 0 } {
         
         set prev_bar_pg_sr_list [lindex $bar_list_set 0]
         foreach {page_num start_row} $prev_bar_pg_sr_list {
-            if { $page_num_p } {
+            if { $show_page_num_p } {
                 set page_ref $page_num
             } else {
                 set item_index [expr { ( $start_row - 1 ) } ]
@@ -288,7 +288,7 @@ if { $item_count > 0 } {
         set current_bar_list [lindex $bar_list_set 1]
         set page_num [lindex $current_bar_list 0]
         set start_row [lindex $current_bar_list 1]
-        if { $s eq "" } {
+        if { $show_page_num_p } {
             set page_ref $page_num
         } else {
             set item_index [expr { ( $start_row - 1 ) } ]
@@ -304,7 +304,7 @@ if { $item_count > 0 } {
         
         set next_bar_pg_sr_list [lindex $bar_list_set 2]
         foreach {page_num start_row} $next_bar_pg_sr_list {
-            if { $s eq "" } {
+            if { $show_page_num_p } {
                 set page_ref $page_num
             } else {
                 #        set item_index [expr { ( $page_num - 1 ) * $items_per_page + 1 } ]
