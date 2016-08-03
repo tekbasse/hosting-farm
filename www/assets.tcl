@@ -70,9 +70,6 @@ array set input_arr \
 set form_posted_p [qf_get_inputs_as_array input_arr hash_check 1]
 
 if { $form_posted_p } {
-    if { [qf_is_natural_number $customer_id] } {
-
-    }
     
 
     # Convert input_array to variables
@@ -101,12 +98,10 @@ if { $form_posted_p } {
     # key,value is passed as a single name, with first letter z.
     set input_arr_idx_list [array names input_arr]
     ##code update this regexp
-    set modes_idx [lsearch -regexp $input_arr_idx_list {z[vprnwctde][vc]?}]
+    set modes_idx [lsearch -regexp $input_arr_idx_list {z[vprnwctdea][ivc]?}]
     if { $modes_idx > -1 && $mode eq "p" } {
         set modes [lindex $input_arr_idx_list $modes_idx]
-        # modes 0 0 is z
-        set mode [string range $modes 1 1]
-        set next_mode [string range $modes 2 2]
+        # extract value from suffix
         # aid=asset_id
         # srt=start_row for pagination
         # fid=f_id
@@ -114,6 +109,12 @@ if { $form_posted_p } {
         # for example
         # name = zllsrtNNNN is sort row for pagination passed by submit button
         # name = zvvaidNNNN is asset_id for focus, passed by submit button
+        # otherwise, standard modes
+
+
+        # modes 0 0 is z
+        set mode [string range $modes 1 1]
+        set next_mode [string range $modes 2 2]
 
     }
 

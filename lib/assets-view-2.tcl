@@ -136,6 +136,7 @@ if { $item_count > 0 } {
             set this_start_row 1
         }
         set form_id [qf_form action $base_url method post id 20160802 hash_check 1]
+        qf_input type hidden name mode value p
 
         set bar_list_set [hf_pagination_by_items $item_count $items_per_page $this_start_row]
         set prev_bar_list [list]
