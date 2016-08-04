@@ -31,12 +31,13 @@
 
 </if>
 <if @include_view_one_p@ true>
-  <include src="/packages/hosting-farm/lib/view-one" &asset_arr=obj_arr>
+  <include src="/packages/hosting-farm/lib/asset-view" &asset_arr=obj_arr>
 </if>
 <if @include_view_attrs_p@ true>
   <include src="/packages/hosting-farm/lib/attributes-view" &attrs_lists=attrs_lists>
 </if>
 <if @include_view_sub_assets_p@ true>
+<!-- configure assets-view-2 for use with scope of sub_assets_list -->
   <include src="/packages/hosting-farm/lib/sub-assets-view" &sub_assets_lists=sub_assets_lists>
 </if>
 
