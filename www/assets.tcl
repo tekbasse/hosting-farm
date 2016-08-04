@@ -63,8 +63,9 @@ array set input_arr \
          this_start_row "" \
          interval_remaining "" \
          top_level_p "0"]
-
+template::util::array_to_vars input_arr
 # INPUTS
+
 
 # Get form inputs if they exist
 set form_posted_p [qf_get_inputs_as_array input_arr hash_check 1]
@@ -87,6 +88,7 @@ if { $form_posted_p } {
              s \
              p \
              this_start_row \
+             top_level_p \
              interval_remaining \
              sub_f_id ]
     # x,y elements in input_arr holds position of image-based submit
@@ -98,20 +100,16 @@ if { $form_posted_p } {
     # key,value is passed as a single name, with first letter z.
     set input_arr_idx_list [array names input_arr]
     ##code update this regexp
-    set modes_idx [lsearch -regexp $input_arr_idx_list {z[vprnwctdea][ivc]?}]
+    set modes_idx [lsearch -regexp $input_arr_idx_list {z[vprnwctdel][ivcrl][1-9][0-9]*}]
     if { $modes_idx > -1 && $mode eq "p" } {
         set modes [lindex $input_arr_idx_list $modes_idx]
-        # extract value from suffix
-        # aid=asset_id
-        # srt=start_row for pagination
-        # fid=f_id
-        #
-        # for example
-        # name = zllsrtNNNN is sort row for pagination passed by submit button
-        # name = zvvaidNNNN is asset_id for focus, passed by submit button
-        # otherwise, standard modes
-
-
+        set test [string range $modes 0 3]
+        if { [string match "zv*" $test] } {
+            set asset_id [string range $modes 3 end]
+        }
+        if { [string match "zl*" $test] } {
+            set this_start_row [string range $modes 3 end]
+        }
         # modes 0 0 is z
         set mode [string range $modes 1 1]
         set next_mode [string range $modes 2 2]

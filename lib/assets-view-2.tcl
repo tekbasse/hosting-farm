@@ -136,7 +136,7 @@ if { $item_count > 0 } {
             set this_start_row 1
         }
         set form_id [qf_form action $base_url method post id 20160802 hash_check 1]
-        qf_input type hidden name mode value p
+        qf_input type "hidden" name "mode" value "p"
 
         set bar_list_set [hf_pagination_by_items $item_count $items_per_page $this_start_row]
         set prev_bar_list [list]
@@ -156,7 +156,7 @@ if { $item_count > 0 } {
             }
             #lappend prev_bar_list " <a href=\"${base_url}?this_start_row=${start_row}${s_url_add}\">${page_ref}</a> "
             # from accounts-finance: input type="submit" value="Sort by Y ascending" name="zy" class="btn"
-            qf_input type submit value $page_ref name="zsr${start_row}" class btn
+            qf_input type submit value $page_ref name "zll${start_row}" class btn
         } 
         #set prev_bar \[join $prev_bar_list $separator\]
         
@@ -197,7 +197,7 @@ if { $item_count > 0 } {
             lappend table_paged_sorted_lists $row_list
             set asset_name [lindex $row_list 0]
             set asset_id [lindex $row_list 1]
-            qf_input type submit value $asset_name name "zaid${asset_id}" class btn
+            qf_input type submit value $asset_name name "zvl${asset_id}" class btn
         }
         # Result: table_page_sorted_lists
 
@@ -219,7 +219,7 @@ if { $item_count > 0 } {
                 }
             }
             #lappend next_bar_list " <a href=\"${base_url}?this_start_row=${start_row}${s_url_add}\">${page_ref}</a> "
-            qf_input type submit value $page_ref name="zsr${start_row}" class btn
+            qf_input type submit value $page_ref name "zll${start_row}" class btn
         }
         #set next_bar \[join $next_bar_list $separator\]
     }
@@ -232,7 +232,7 @@ if { $item_count > 0 } {
     }
 
 
-    qf_close fom_id $form_id
+    qf_close form_id $form_id
     append page_html [qf_read form_id $form_id]
 } else {
     append page_html "#acs-subsite.none#"
