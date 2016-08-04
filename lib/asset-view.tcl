@@ -9,6 +9,10 @@
 #  tech_p        If is 1, flags to show technical info (for admins)
 
 
+# if admin_p, show edit asset button and all details
+# if write_p, show buttons to change state of publish_p, monitor_p, trashed_p
+
+
 # provides variables of each element:
 # from hf_asset_keys:
 #  asset_id
