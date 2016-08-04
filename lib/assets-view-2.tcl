@@ -155,9 +155,11 @@ if { $item_count > 0 } {
                 }
             }
             #lappend prev_bar_list " <a href=\"${base_url}?this_start_row=${start_row}${s_url_add}\">${page_ref}</a> "
-            # from accounts-finance: input type="submit" value="Sort by Y ascending" name="zy" class="btn"
-            qf_input type submit value $page_ref name "zll${start_row}" class btn
+            # from accounts-finance: input type="submit" value="Sort by Y ascending" name="zy" class="button"
+            qf_input type submit value $page_ref name "zll${start_row}" class button
+            qf_append html "<br>"
         } 
+
         #set prev_bar \[join $prev_bar_list $separator\]
         
         set current_bar_list [lindex $bar_list_set 1]
@@ -197,10 +199,11 @@ if { $item_count > 0 } {
             lappend table_paged_sorted_lists $row_list
             set asset_name [lindex $row_list 0]
             set asset_id [lindex $row_list 1]
-            qf_input type submit value $asset_name name "zvl${asset_id}" class btn
+            qf_append html "<br> &nbsp; &nbsp;"
+            qf_input type submit value $asset_name name "zvl${asset_id}" class button
         }
         # Result: table_page_sorted_lists
-
+        qf_append html "<br>"
 
 
         # ========
@@ -219,7 +222,9 @@ if { $item_count > 0 } {
                 }
             }
             #lappend next_bar_list " <a href=\"${base_url}?this_start_row=${start_row}${s_url_add}\">${page_ref}</a> "
-            qf_input type submit value $page_ref name "zll${start_row}" class btn
+            qf_append html "<br>"
+            qf_input type submit value $page_ref name "zll${start_row}" class button
+
         }
         #set next_bar \[join $next_bar_list $separator\]
     }
