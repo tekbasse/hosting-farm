@@ -1,6 +1,6 @@
-# hosting-farm/lib/asset.tcl
+# hosting-farm/lib/asset-view.tcl
 # show an hf asset record
-#
+# for editing, see asset-input.tcl
 
 # requires:
 # @param array with elements of hf_asset_keys
@@ -11,54 +11,32 @@
 
 # provides variables of each element:
 # from hf_asset_keys:
-#
 #  asset_id
-#  
 #  label
-#  
 #  name
-#  
 #  asset_type_id
-#   and related:
-#    asset_label asset_title asset_description
-#  
 #  trashed_p
-#  
 #  trashed_by
-#  
 #  template_p
-#  
 #  templated_p
-#  
 #  publish_p
-#  
 #  monitor_p
-#  
 #  popularity
-#  
 #  triage_priority
-#  
 #  op_status
-#  
 #  qal_product_id
-#  
 #  qal_customer_id
-#  
 #  instance_id
-#  
 #  user_id
-#  
 #  last_modified
-#  
 #  created
-#  
 #  flags
-#  
 #  template_id
-#  
 #  f_id
 
-# and some related data
+
+#   and related:
+#    asset_label asset_title asset_description
 
 # to pass array via include, see: /doc/acs-templating/tagref/include
 # ie: &asset_arr="calling_page_arr_name"
@@ -91,10 +69,16 @@ if { [array exists asset_arr] } {
     template::util::array_to_vars asset_arr
 }
 
-if { [info exists asset_type_id] } {
+if { [exists_and_not_null asset_type_id] } {
     # get asset_type_id info
+    #    asset_label asset_title asset_description
     set asset_type_list [lindex [hf_asset_type_read $asset_type_id $instance_id] 0]
+
     qf_lists_to_vars $asset_type_list [hf_asset_type_keys]
 } else {
     set asset_type_id ""
 }
+
+
+##code hf_key_hidden_q
+# hf_peek_pop_stack
