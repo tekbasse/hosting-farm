@@ -9,8 +9,9 @@
 #  tech_p        If is 1, flags to show technical info (for admins)
 
 
-# if admin_p, show edit asset button and all details
-# if write_p, show buttons to change state of publish_p, monitor_p, trashed_p
+# if admin assets, show edit asset button and  show all detail
+# if write published  show button to change state of publish_p
+# if write assets, show:, button to change state of monitor_p, trashed_p
 
 
 # provides variables of each element:
