@@ -117,7 +117,7 @@ ad_proc -public hf_constructor_a {
     if { $sub_asset_id_p && $asset_id_p } {
         set sub_f_id_primary [hf_asset_primary_attr $asset_id]
         if { $sub_f_id_primary eq $sub_f_id } {
-            set sub_is_primary_p 1
+            set sub_f_id_is_primary_p 1
         }
     }
 
@@ -134,7 +134,7 @@ ad_proc -public hf_constructor_a {
     set state ""
     set state_old $state
 
-    if { $sub_f_id_primary_p } {
+    if { $sub_f_id_is_primary_p } {
         set state "asset_primary_attr"
     } elseif { $sub_asset_id_p && $asset_id_p } {
         set state "asset_attr"
