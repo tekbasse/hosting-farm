@@ -51,16 +51,16 @@ if { ![info exists detail_p] } {
     set detail_p 0
 }
 
-if { [info exists asset_arr(asset_id) ] } {
-    set asset_id $asset_arr(asset_id)
-} else {
-    set asset_id ""
-}
 
 if { ![info exists tech_p] } {
     set tech_p 0
     set user_id [ad_conn user_id]
     set instance_id [ad_conn package_id]
+    if { [info exists asset_arr(asset_id) ] } {
+        set asset_id $asset_arr(asset_id)
+    } else {
+        set asset_id ""
+    }
     if { ![info exists qal_customer_id] } {
         set qal_customer_id [hf_customer_id_of_asset_id $asset_id]
     }

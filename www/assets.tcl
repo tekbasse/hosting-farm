@@ -529,7 +529,7 @@ switch -exact -- $mode {
             set asset_type [hf_constructor_a asset_arr]
             set include_view_one_p 1
             # pass asset_arr
-            set detail_p $admin_p
+            set detail_p $pkg_admin_p
             set tech_p $admin_p
             
 
