@@ -7,7 +7,7 @@
 # optional:
 #  detail_p      If detail_p is 1, flags to show record detail
 #  tech_p        If is 1, flags to show technical info (for admins)
-
+# asset_type     as determined by hf_constructor_a
 
 # if admin assets, show edit asset button and  show all detail
 # if write published  show button to change state of publish_p
@@ -52,6 +52,10 @@ if { ![info exists detail_p] } {
 }
 
 
+if { ![info exists asset_type] } {
+    set asset_type [hf_constructor_a $asset_arr]
+}
+
 if { ![info exists tech_p] } {
     set tech_p 0
     set user_id [ad_conn user_id]
@@ -83,6 +87,20 @@ if { [exists_and_not_null asset_type_id] } {
 } else {
     set asset_type_id ""
 }
+
+if { [string match "*attr*" $asset_type] } {
+    if { [exists_and_not_null sub_type_id] } {
+        # get sub_type_id info
+        #    asset_label asset_title asset_description
+        set sub_asset_type_list [lindex [hf_asset_type_read $sub_type_id $instance_id] 0]
+        set sub_asset_label [lindex $sub_asset_type_list 0]
+        set sub_asset_title [lindex $sub_asset_type_list 1]
+        set sub_asset_description [lindex $sub_asset_type_list 2]
+    } else {
+        set sub_type_id ""
+    }
+}
+
 
 
 ##code hf_key_hidden_q
