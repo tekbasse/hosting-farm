@@ -523,17 +523,16 @@ switch -exact -- $mode {
             }
             ns_log Notice "hosting-farm/assets.tcl(667): mode = $mode ie. view"
 
-            lappend menu_list [list #q-wiki.index# "index?mode=l"]
-
-            if { $create_p } {
-                if { $admin_p } {
-                    lappend menu_list [list #q-wiki.revisions# "${url}?mode=r"]
-                } 
-                lappend menu_list [list #q-wiki.edit# "${url}?mode=e" ]
-            }
-            
             set title "#hosting-farm.Asset#"
+            # add default, to convert attr_only to include asset?
+            #set asset_type \[hf_constructor_a asset_arr default asset_attr\]
+            set asset_type [hf_constructor_a asset_arr]
             set include_view_one_p 1
+            # pass asset_arr
+            set detail_p $admin_p
+            set tech_p $admin_p
+            
+
 
         } else {
             # no permission to read page. This should not happen.
