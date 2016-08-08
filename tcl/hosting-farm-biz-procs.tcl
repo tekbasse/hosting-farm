@@ -17,24 +17,33 @@ ad_proc -public hf_constructor_a {
     {arg2 ""}
     {arg3 ""}
 } {
-    Examines available asset and attr references and asset_type_id.
+    <p>
+    Examines available asset and attr references: 
+    ( <code>asset_id f_id sub_asset_id sub_f_id</code>) and <code>asset_type_id</code>.
+    </p><p>
     Returns state of hf object from user perspective:
-    asset_only asset_attr asset_primary_attr attr_only
-    and populates a_arr_name with data and/or defaults accordingly.
-    asset_only: Only contains an hf_assets record. Not related attribute.
-    asset_attr: Combination of asset and one attribute.
-    asset_primary_attr:  This is the asset with its primary attribute.
-    attr_only: This is an attribute record without corresponding asset.
-    If asset_type_id, is not available, and nothing qualifies,
-    a_arr_name is populated with hf_asset defaults and 
+    <code>asset_only asset_attr asset_primary_attr attr_only</code>
+    </p><ul><li>
+    <code>asset_only</code>:         Only contains an hf_assets record. Not related attribute.
+    </li><li>
+    <code>asset_attr</code>:         Combination of asset and one attribute.
+    </li><li>
+    <code>asset_primary_attr</code>: This is the asset with its primary attribute.
+    </li><li>
+    <code>attr_only</code>:          This is an attribute record without corresponding asset.
+    </li></ul><p>
+    and populates <code>a_arr_name</code> with data and/or defaults accordingly.
+    </p><p>
+    If <code>asset_type_id</code>, is not available, and nothing qualifies,
+    <code>a_arr_name</code> is populated with hf_asset defaults and 
     empty string for asset_type_id.
-
+    </p><p>
     If arg1 is "default" and arg2 is one of the states,
     then if no state is determined that includes attr or asset, then
     constructor will fill missing data to fit arg2 state.
     If existing asset_type_id is unavailable, then asset_type_id will
     be set to value supplied by arg3
-
+    </p><p>
     If arg1 is "force" and arg2 is one of the states, 
     then constructor  will analyze existing state, 
     and force state accordingly by
@@ -42,7 +51,8 @@ ad_proc -public hf_constructor_a {
     and return force_state as the state. If arg3 is set to an asset_type_id,
     state will be forced to the arg3 asset_type_id instead of
     any existing asset_type_id.
-
+    </p>
+    @return a string: asset_only asset_attr asset_primary_attr attr_only
 } {
     upvar 1 $a_arr_name an_arr
     upvar 1 instance_id instance_id

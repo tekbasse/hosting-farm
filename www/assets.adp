@@ -37,7 +37,7 @@
   <include src="/packages/hosting-farm/lib/attributes-view" &attrs_lists=attrs_lists>
 </if>
 <if @include_view_sub_assets_p@ true>
-<!-- configure assets-view-2 for use with scope of sub_assets_list -->
+<!-- make a revision of assets-view-2 for use with scope of sub_assets_list -->
   <include src="/packages/hosting-farm/lib/sub-assets-view" &sub_assets_lists=sub_assets_lists>
 </if>
 
