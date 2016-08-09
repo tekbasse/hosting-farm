@@ -8,6 +8,7 @@
 #  detail_p      If detail_p is 1, flags to show record detail
 #  tech_p        If is 1, flags to show technical info (for admins)
 # asset_type     as determined by hf_constructor_a
+# separator      Used to separate key from value in list.
 
 # if admin assets, show edit asset button and  show all detail
 # if write published  show button to change state of publish_p
@@ -50,11 +51,14 @@
 if { ![info exists detail_p] } {
     set detail_p 0
 }
-
-
 if { ![info exists asset_type] } {
     set asset_type [hf_constructor_a $asset_arr]
 }
+if { ![info exists separator] } {
+    set separator ": "
+}
+
+
 
 if { ![info exists tech_p] } {
     set tech_p 0
@@ -85,23 +89,52 @@ if { [exists_and_not_null asset_type_id] } {
 
     qf_lists_to_vars $asset_type_list [hf_asset_type_keys]
 } else {
+    ns_log Warning "hosting-farm/lib/asset-view.tcl: asset_type_id is null or does not exist."
     set asset_type_id ""
 }
+
+
+# output
+set content_list [list ]
+foreach key [hf_asset_keys] {
+    if { ( $detail_p || $tech_p ) || ![hf_key_hidden_q $key] } {
+        set element ""
+        append element $key $separator $asset_arr(${key})
+        lappend content_list $element
+    } 
+}
+
 
 if { [string match "*attr*" $asset_type] } {
     if { [exists_and_not_null sub_type_id] } {
         # get sub_type_id info
         #    asset_label asset_title asset_description
+        # changed to sub_asset_label sub_asset_title sub_asset_description
         set sub_asset_type_list [lindex [hf_asset_type_read $sub_type_id $instance_id] 0]
         set sub_asset_label [lindex $sub_asset_type_list 0]
         set sub_asset_title [lindex $sub_asset_type_list 1]
         set sub_asset_description [lindex $sub_asset_type_list 2]
     } else {
+        ns_log Warning "hosting-farm/lib/asset-view.tcl: sub_type_id is null or does not exist."
         set sub_type_id ""
     }
+
+    if { $sub_type_id ne "" } {
+        foreach key [hf_${sub_type_id}_keys] {
+            if { ( $tech_p ) || ![hf_key_hidden_q $key] } {
+                set element ""
+                append element $key $separator $asset_arr(${key})
+                lappend content_list $element
+            } 
+        }
+    }
+
 }
 
 
+foreach element $content_list {
+    append content "<li>"
+    append content $element
+    append content "</li>"
+}
 
-##code hf_key_hidden_q
-# hf_peek_pop_stack

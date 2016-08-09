@@ -28,6 +28,7 @@ set write_p 0
 set admin_p 0
 set pkg_admin_p 0
 set title "#hosting-farm.Assets#"
+set context [list $title]
 set icons_path1 "/resources/acs-subsite/"
 set icons_path2 "/resources/ajaxhelper/icons/"
 set delete_icon_url [file join $icons_path2 delete.png]
@@ -526,12 +527,18 @@ switch -exact -- $mode {
             set title "#hosting-farm.Asset#"
             # add default, to convert attr_only to include asset?
             #set asset_type \[hf_constructor_a asset_arr default asset_attr\]
-            set asset_type [hf_constructor_a asset_arr]
+            set asset_type [hf_constructor_b obj_arr]
             set include_view_one_p 1
             # pass asset_arr
             set detail_p $pkg_admin_p
             set tech_p $admin_p
-            
+            if { [info exists obj_arr(name)] } {
+                lappend context $obj_arr(name)
+            } elseif { [info exists obj_ar(label)] } {
+                lappend context $obj_arr(label) 
+            } elseif { [info exists obj_arr(sub_label)] } {
+                lappend context $obj_arr(sub_label) 
+            }
 
 
         } else {
@@ -574,4 +581,4 @@ if { $form_posted_p && $validated_p || !$form_posted_p } {
     }
 } 
 set doc(title) $title
-set context [list $title]
+

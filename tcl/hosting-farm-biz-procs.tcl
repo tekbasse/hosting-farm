@@ -18,7 +18,7 @@ ad_proc -public hf_constructor_a {
     {arg3 ""}
 } {
     <p>
-    Examines available asset and attr references: 
+    Examines available asset and attr references in array: 
     ( <code>asset_id f_id sub_asset_id sub_f_id</code>) and <code>asset_type_id</code>.
     </p><p>
     Returns state of hf object from user perspective:
@@ -32,7 +32,8 @@ ad_proc -public hf_constructor_a {
     </li><li>
     <code>attr_only</code>:          This is an attribute record without corresponding asset.
     </li></ul><p>
-    and populates <code>a_arr_name</code> with data and/or defaults accordingly.
+    and populates <code>a_arr_name</code> with defaults if data is missing, but will
+    not populate with data from db.
     </p><p>
     If <code>asset_type_id</code>, is not available, and nothing qualifies,
     <code>a_arr_name</code> is populated with hf_asset defaults and 
@@ -214,5 +215,80 @@ ad_proc -public hf_constructor_a {
     foreach arr_key $arr_keys_list {
         array unset an_arr $arr_key
     }
+
+    if { $f_id eq "" && $asset_id ne "" } {
+        # maybe save a trip to db to get f_id
+        set f_id $f_id_of_asset_id
+    }
     return $state
+}
+
+ad_proc -public hf_constructor_b {
+    a_arr_name
+    {arg1 ""}
+    {arg2 ""}
+    {arg3 ""}
+} {
+    <p>
+    Examines available asset and attr references in array: 
+    ( <code>asset_id f_id sub_asset_id sub_f_id</code>) and <code>asset_type_id</code>.
+    </p><p>
+    Returns state of hf object from user perspective:
+    <code>asset_only asset_attr asset_primary_attr attr_only</code>
+    </p><ul><li>
+    <code>asset_only</code>:         Only contains an hf_assets record. Not related attribute.
+    </li><li>
+    <code>asset_attr</code>:         Combination of asset and one attribute.
+    </li><li>
+    <code>asset_primary_attr</code>: This is the asset with its primary attribute.
+    </li><li>
+    <code>attr_only</code>:          This is an attribute record without corresponding asset.
+    </li></ul><p>
+    and populates <code>a_arr_name</code> with relevant data.
+    </p><p>
+    If <code>asset_type_id</code>, is not available, and nothing qualifies,
+    <code>a_arr_name</code> is populated with hf_asset defaults and 
+    empty string for asset_type_id.
+    </p><p>
+    If arg1 is "default" and arg2 is one of the states,
+    then if no state is determined that includes attr or asset, then
+    constructor will fill missing data to fit arg2 state.
+    If existing asset_type_id is unavailable, then asset_type_id will
+    be set to value supplied by arg3
+    </p><p>
+    If arg1 is "force" and arg2 is one of the states, 
+    then constructor  will analyze existing state, 
+    and force state accordingly by
+    either adding missing or defaults, or unset related info
+    and return force_state as the state. If arg3 is set to an asset_type_id,
+    state will be forced to the arg3 asset_type_id instead of
+    any existing asset_type_id.
+    </p>
+    @return a string: asset_only asset_attr asset_primary_attr attr_only
+} {
+    upvar 1 $a_arr_name an_arr
+    upvar 1 instance_id instance_id
+    upvar 1 asset_id asset_id
+    upvar 1 f_id f_id
+    upvar 1 sub_f_id sub_f_id
+    upvar 1 asset_type_id asset_type_id
+
+    set asset_type [hf_constructor_a obj_arr $arg1 $arg2 $arg3]
+    
+    if { $asset_id ne "" && $f_id ne "" } {
+        set asset_id [hf_asset_id_of_f_id_if_untrashed $f_id]
+    }
+    if { $asset_id ne "" } {
+        set asset_list [hf_asset_read $asset_id]
+        qf_lists_to_array obj_arr $asset_list [hf_asset_keys]
+    }
+    if { $sub_f_id ne "" } {
+        set sub_asset_map_list [hf_sub_asset $sub_f_id $f_id]
+        qf_lists_to_array obj_arr $sub_asset_map_list [hf_sub_asset_map_keys]
+        if { $sub_type_id in [hf_asset_type_id_list] } {
+            set sub_asset_list [hf_${sub_type_id}_read $sub_f_id]
+            qf_lists_to_array obj_arr $sub_asset_list [hf_${sub_type_id}_keys]
+        }
+    }
+    return $asset_type
 }
