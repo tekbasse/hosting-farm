@@ -133,7 +133,7 @@ ad_proc -private hf_user_id_of_asset_id {
     # log_read needs to be adjusted so monitor notifications work for anyone with admin role for asset_id
     set user_id ""
     set asset_id [qf_is_natural_number $asset_id]
-    db_0or1row hf_assets_read_uid "select user_id from hf_assets where asset_id=:asset_id"
+    db_0or1row hf_assets_read_uid {select user_id from hf_assets where asset_id=:asset_id}
     return $user_id
 }
 
@@ -148,14 +148,14 @@ ad_proc -private hf_f_id_active_q {
     @return  1 or 0
 } {
     upvar 1 instance_id instance_id
-    set active_q 0
+    set active_p 0
     set exists_and_is_untrashed_p [hf_asset_id_of_f_id_if_untrashed $asset_id]
     if { $exists_and_is_untrashed_p } {
         hf_asset_stats $asset_id "time_stop"
         if { $time_stop ne "" } {
             set active_p 1
         }
-    } 
+    }
     return $active_p
 }
 
@@ -170,11 +170,12 @@ ad_proc -private hf_asset_id_current_q {
     @return  1 or 0
 } {
     upvar 1 instance_id instance_id
-    set active_q 0
     set trashed_p 0
     set exists_p [db_0or1row hf_asset_id_current_q { select f_id from hf_asset_rev_map 
         where asset_id=:asset_id and instance_id=:instance_id } ]
-    ns_log Notice "hf_asset_id_current_q: asset_id does not exist. asset_id '${asset_id}' instance_id '${instance_id}'"
+    if { !$exists_p } {
+        ns_log Notice "hf_asset_id_current_q: asset_id does not exist. asset_id '${asset_id}' instance_id '${instance_id}'"
+    }
     return $exists_p
 }
 
@@ -191,7 +192,9 @@ ad_proc -private hf_asset_id_of_f_id_if_untrashed {
     set asset_id 0
     set exists_p [db_0or1row hf_f_id_of_asset_id_tr { select asset_id from hf_asset_rev_map 
         where f_id=:f_id and instance_id=:instance_id and trashed_p!='1' } ]
-    ns_log Notice "hf_asset_id_of_f_id_if_untrashed: asset_id requested is trashed or does not exist. asset_id '${asset_id}' instance_id '${instance_id}'"
+    if { !$exists_p } {
+        ns_log Notice "hf_asset_id_of_f_id_if_untrashed: asset_id requested is trashed or does not exist. asset_id '${asset_id}' instance_id '${instance_id}'"
+    }
     
     return $asset_id
 }
