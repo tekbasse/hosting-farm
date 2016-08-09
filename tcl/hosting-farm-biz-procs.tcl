@@ -229,7 +229,7 @@ ad_proc -public hf_constructor_a {
 }
 
 ad_proc -public hf_constructor_b {
-    a_arr_name
+    a_array_name
     {arg1 ""}
     {arg2 ""}
     {arg3 ""}
@@ -249,10 +249,10 @@ ad_proc -public hf_constructor_b {
     </li><li>
     <code>attr_only</code>:          This is an attribute record without corresponding asset.
     </li></ul><p>
-    and populates <code>a_arr_name</code> with relevant data.
+    and populates <code>a_array_name</code> with relevant data.
     </p><p>
     If <code>asset_type_id</code>, is not available, and nothing qualifies,
-    <code>a_arr_name</code> is populated with hf_asset defaults and 
+    <code>a_array_name</code> is populated with hf_asset defaults and 
     empty string for asset_type_id.
     </p><p>
     If arg1 is "default" and arg2 is one of the states,
@@ -271,14 +271,15 @@ ad_proc -public hf_constructor_b {
     </p>
     @return a string: asset_only asset_attr asset_primary_attr attr_only
 } {
-    upvar 1 $a_arr_name an_arr
+    upvar 1 $a_array_name yan_arr
     upvar 1 instance_id instance_id
     upvar 1 asset_id asset_id
     upvar 1 f_id f_id
     upvar 1 sub_f_id sub_f_id
     upvar 1 asset_type_id asset_type_id
     upvar 1 user_id user_id
-    set asset_type [hf_constructor_a an_arr $arg1 $arg2 $arg3]
+
+    set asset_type [hf_constructor_a yan_arr $arg1 $arg2 $arg3]
     
     if { $asset_id ne "" && $f_id ne "" } {
         set asset_id_old $asset_id
@@ -289,28 +290,30 @@ ad_proc -public hf_constructor_b {
     }
     if { $asset_id ne "" } {
         set asset_list [hf_asset_read $asset_id]
-        #ns_log Notice "hf_constructor_b.292: asset_list '${asset_list}'"
-        set result_list [qf_lists_to_array an_arr $asset_list [hf_asset_keys]]
-        if { [llength $asset_list] != [llength [hf_asset_keys]]  } {
+        ns_log Notice "hf_constructor_b.292: asset_list '${asset_list}'"
+        set hf_asset_keys_list [hf_asset_keys]
+        set result_list [qf_lists_to_array yan_arr $asset_list $hf_asset_keys_list]
+        if { [llength $asset_list] != [llength $hf_asset_keys_list] || [llength $result_list] > 0 } {
             ns_log Warning "hf_constructor_b.295: asset_list length differs from hf_asset_keys"
         }
+        #array set yan_arr \[array get yan2_arr\]
     } 
-    if { [string match "*asset*" $asset_type] && ![exists_and_not_null an_arr(asset_id) ] } {
-        ns_log Warning "hf_constructor_b.293: asset_id '${asset_id}' not set in ${a_arr_name}.\
- array get: '[array get an_arr]'"
+    if { [string match "*asset*" $asset_type] && ![exists_and_not_null yan_arr(asset_id) ] } {
+        ns_log Warning "hf_constructor_b.293: asset_id '${asset_id}' not set in ${a_array_name}.\
+ array get: '[array get yan_arr]'"
 
     }
     if { $sub_f_id ne "" } {
         set sub_asset_map_list [hf_sub_asset $sub_f_id $f_id]
-        qf_lists_to_array an_arr $sub_asset_map_list [hf_sub_asset_map_keys]
+        qf_lists_to_array yan_arr $sub_asset_map_list [hf_sub_asset_map_keys]
         if { $sub_type_id in [hf_asset_type_id_list] } {
             set sub_asset_list [hf_${sub_type_id}_read $sub_f_id]
-            qf_lists_to_array an_arr $sub_asset_list [hf_${sub_type_id}_keys]
+            qf_lists_to_array yan_arr $sub_asset_list [hf_${sub_type_id}_keys]
         }
     } 
-    if { [string match "*attr*" $asset_type ] && ![exists_and_not_null an_arr(sub_f_id) ] } {
-        ns_log Warning "hf_constructor_b.303: sub_f_id '${sub_f_id}' not set in ${a_arr_name}.\
- array get: '[array get an_arr]'"
+    if { [string match "*attr*" $asset_type ] && ![exists_and_not_null yan_arr(sub_f_id) ] } {
+        ns_log Warning "hf_constructor_b.303: sub_f_id '${sub_f_id}' not set in ${a_array_name}.\
+ array get: '[array get yan_arr]'"
     }
     return $asset_type
 }
