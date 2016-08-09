@@ -534,6 +534,7 @@ switch -exact -- $mode {
             #set asset_type \[hf_constructor_a asset_arr default asset_attr\]
             set asset_id_old $asset_id
             set asset_type [hf_constructor_b obj_arr]
+
             if { "asset_id" ni [array names obj_arr] } {
                 if { [array exists obj_arr ] } {
                     ns_log Warning "hosting-farm/assets.tcl(530): ob_arr(asset_id) does not exist. array get obj_arr '[array get obj_arr]'"
@@ -548,11 +549,11 @@ switch -exact -- $mode {
             set detail_p $pkg_admin_p
             set tech_p $admin_p
             if { [info exists obj_arr(name)] } {
-                lappend context $obj_arr(name)
-            } elseif { [info exists obj_ar(label)] } {
-                lappend context $obj_arr(label) 
+                set context [list [list assets #hosting-farm.Assets#] $obj_arr(name)]
+            } elseif { [info exists obj_arr(label)] } {
+                set context [list [list assets #hosting-farm.Assets#] $obj_arr(label)]
             } elseif { [info exists obj_arr(sub_label)] } {
-                lappend context $obj_arr(sub_label) 
+                set context [list [list assets #hosting-farm.Assets#] $obj_arr(sub_label) ]
             }
 
 

@@ -86,8 +86,13 @@ if { [exists_and_not_null asset_type_id] } {
     # get asset_type_id info
     #    asset_label asset_title asset_description
     set asset_type_list [lindex [hf_asset_type_read $asset_type_id $instance_id] 0]
-
-    qf_lists_to_vars $asset_type_list [hf_asset_type_keys]
+    if { [llength $asset_type_list ] > 0 } {
+        qf_lists_to_vars $asset_type_list [hf_asset_type_keys]
+    } else {
+        set asset_label ""
+        set asset_title ""
+        set asset_description ""
+    }
 } else {
     ns_log Warning "hosting-farm/lib/asset-view.tcl: asset_type_id is null or does not exist."
     set asset_type_id ""
@@ -111,9 +116,15 @@ if { [string match "*attr*" $asset_type] } {
         #    asset_label asset_title asset_description
         # changed to sub_asset_label sub_asset_title sub_asset_description
         set sub_asset_type_list [lindex [hf_asset_type_read $sub_type_id $instance_id] 0]
-        set sub_asset_label [lindex $sub_asset_type_list 0]
-        set sub_asset_title [lindex $sub_asset_type_list 1]
-        set sub_asset_description [lindex $sub_asset_type_list 2]
+        if { [llength $sub_asset_type_list ] > 0 } {
+            set sub_asset_label [lindex $sub_asset_type_list 0]
+            set sub_asset_title [lindex $sub_asset_type_list 1]
+            set sub_asset_description [lindex $sub_asset_type_list 2]
+        } else {
+            set sub_asset_label ""
+            set sub_asset_title ""
+            set sub_asset_description ""
+        }
     } else {
         ns_log Warning "hosting-farm/lib/asset-view.tcl: sub_type_id is null or does not exist."
         set sub_type_id ""

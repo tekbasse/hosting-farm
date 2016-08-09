@@ -74,9 +74,11 @@ ad_proc -private hf_asset_type_read {
             lappend new_as_type_id_list $asset_type_id
         }
     }
-    
-    set return_list_of_lists [db_list_of_lists hf_asset_type_read "select id, label, title, description from hf_asset_type where instance_id =:instance_id and id in ([template::util::tcl_to_sql_list $new_as_type_id_list])" ]
-    
+    if { [llength $new_as_type_id_list] > 0 } {
+        set return_list_of_lists [db_list_of_lists hf_asset_type_read "select id, label, title, description from hf_asset_type where instance_id =:instance_id and id in ([template::util::tcl_to_sql_list $new_as_type_id_list])" ]
+    } else {
+        set return_list_of_lists [list ]
+    }
     return $return_list_of_lists
 }
 
