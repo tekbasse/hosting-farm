@@ -532,14 +532,16 @@ switch -exact -- $mode {
             set title "#hosting-farm.Asset#"
             # add default, to convert attr_only to include asset?
             #set asset_type \[hf_constructor_a asset_arr default asset_attr\]
-
+            set asset_id_old $asset_id
             set asset_type [hf_constructor_b obj_arr]
-            if { ![exists_and_not_null obj_arr(asset_id)] } {
+            if { "asset_id" ni [array names obj_arr] } {
                 if { [array exists obj_arr ] } {
-                    ns_log Warning "hosting-farm/assets.tcl(530): array get obj_arr '[array get obj_arr]'"
+                    ns_log Warning "hosting-farm/assets.tcl(530): ob_arr(asset_id) does not exist. array get obj_arr '[array get obj_arr]'"
                 } else {
                     ns_log Warning "hosting-farm/assets.tcl(532): obj_arr does not exist."
                 }
+            } elseif { $obj_arr(asset_id) ne $asset_id_old } {
+                ns_log Warning "hosting-farm/assets.tcl(544): obj_arr(asset_id) '$obj_arr(asset_id)' asset_id '${asset_id}' asset_id_old '${asset_id_old}'"
             }
             set include_view_one_p 1
             # pass asset_arr

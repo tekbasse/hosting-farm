@@ -62,6 +62,8 @@ ad_proc -public hf_assets_read {
             if { [llength $row_list] > 0 } {
                 lappend return_lists $row_list
             }
+        } else {
+            ns_log Notice "hf_assets_read.66: read_p '${read_p}' for user_id '${user_id}' instance_id '${instance_id}' asset_id '${asset_id}'"
         }
     }
     return $return_lists
