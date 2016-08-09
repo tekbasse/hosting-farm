@@ -289,7 +289,11 @@ ad_proc -public hf_constructor_b {
     }
     if { $asset_id ne "" } {
         set asset_list [hf_asset_read $asset_id]
-        qf_lists_to_array an_arr $asset_list [hf_asset_keys]
+        #ns_log Notice "hf_constructor_b.292: asset_list '${asset_list}'"
+        set result_list [qf_lists_to_array an_arr $asset_list [hf_asset_keys]]
+        if { [llength $asset_list] != [llength [hf_asset_keys]]  } {
+            ns_log Warning "hf_constructor_b.295: asset_list length differs from hf_asset_keys"
+        }
     } 
     if { [string match "*asset*" $asset_type] && ![exists_and_not_null an_arr(asset_id) ] } {
         ns_log Warning "hf_constructor_b.293: asset_id '${asset_id}' not set in ${a_arr_name}.\
