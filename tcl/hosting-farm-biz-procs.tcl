@@ -89,7 +89,9 @@ ad_proc -public hf_constructor_a {
         set f_id_of_asset_id [hf_f_id_of_asset_id $asset_id]
     }
     if { $f_id_of_asset_id eq "" } {
+        ns_log Notice "hf_constructor_a: f_id_of_asset_id is '', setting asset_id ''"
         set asset_id ""
+
     } else {
         set asset_id_p 1
     }
@@ -276,7 +278,11 @@ ad_proc -public hf_constructor_b {
     set asset_type [hf_constructor_a obj_arr $arg1 $arg2 $arg3]
     
     if { $asset_id ne "" && $f_id ne "" } {
+        set asset_id_old $asset_id
         set asset_id [hf_asset_id_of_f_id_if_untrashed $f_id]
+        if { $asset_id ne $asset_id_old } {
+            ns_log Notice "hf_constructor_b.282: asset_id changed from '${asset_id_old}' to '${asset_id}'"
+        }
     }
     if { $asset_id ne "" } {
         set asset_list [hf_asset_read $asset_id]

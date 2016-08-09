@@ -64,15 +64,17 @@ array set input_arr \
          this_start_row "" \
          interval_remaining "" \
          top_level_p "0"]
-template::util::array_to_vars input_arr
+
 # INPUTS
 
 
 # Get form inputs if they exist
 set form_posted_p [qf_get_inputs_as_array input_arr hash_check 1]
 
-if { $form_posted_p } {
-    
+if { !$form_posted_p } {
+    # form not posted. Get defaults.
+    template::util::array_to_vars input_arr
+} else {
 
     # Convert input_array to variables
     qf_array_to_vars input_arr \
@@ -209,6 +211,8 @@ if { $form_posted_p } {
             set customer_id ""
         }
     }
+    ns_log Notice "hosting-farm/assets.tcl(214): user_id '${user_id}' \
+ customer_id '${customer_id}' asset_id '${asset_id}' "
 
     ns_log Notice "hosting-farm/assets.tcl(165): read_p '${read_p}' \
  create_p ${create_p} write_p ${write_p} admin_p ${admin_p} \
@@ -431,9 +435,6 @@ if { $form_posted_p } {
             set mode_next ""
         }
     }
-} else {
-    # form not posted. Get defaults.
-    template::util::array_to_vars input_arr
 }
 
 
