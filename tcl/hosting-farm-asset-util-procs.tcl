@@ -71,7 +71,9 @@ ad_proc -private hf_customer_id_of_asset_id {
     # hf_ui_go_ahead_q read
     set f_id [hf_f_id_of_asset_id $asset_id]
     set customer_id ""
-    db_0or1row hf_customer_id_of_asset_id "select qal_customer_id from hf_assets where instance_id = :instance_id and asset_id=:f_id order by last_modified desc"
+    db_0or1row hf_customer_id_of_asset_id { select qal_customer_id from hf_assets 
+        where instance_id=:instance_id 
+        and asset_id=:f_id order by last_modified desc}
     return $customer_id
 }
 
@@ -172,7 +174,7 @@ ad_proc -private hf_asset_id_current_q {
     set trashed_p 0
     set exists_p [db_0or1row hf_asset_id_current_q { select f_id from hf_asset_rev_map 
         where asset_id=:asset_id and instance_id=:instance_id } ]
-    ns_log Notice "hf_asset_active_q: asset_id requested is trashed or does not exist. asset_id '${asset_id}' instance_id '${instance_id}'"
+    ns_log Notice "hf_asset_id_current_q: asset_id does not exist. asset_id '${asset_id}' instance_id '${instance_id}'"
     return $exists_p
 }
 
@@ -189,7 +191,7 @@ ad_proc -private hf_asset_id_of_f_id_if_untrashed {
     set asset_id 0
     set exists_p [db_0or1row hf_f_id_of_asset_id_tr { select asset_id from hf_asset_rev_map 
         where f_id=:f_id and instance_id=:instance_id and trashed_p!='1' } ]
-    ns_log Notice "hf_asset_active_q: asset_id requested is trashed or does not exist. asset_id '${asset_id}' instance_id '${instance_id}'"
+    ns_log Notice "hf_asset_id_of_f_id_if_untrashed: asset_id requested is trashed or does not exist. asset_id '${asset_id}' instance_id '${instance_id}'"
     
     return $asset_id
 }
