@@ -107,9 +107,11 @@ if { $form_posted_p } {
         set test [string range $modes 0 3]
         if { [string match "zv*" $test] } {
             set asset_id [string range $modes 3 end]
+            ns_log Notice "hosting-farm/www/assets.tcl.110: asset_id '${asset_id}'"
         }
         if { [string match "zl*" $test] } {
             set this_start_row [string range $modes 3 end]
+            ns_log Notice "hosting-farm/www/assets.tcl.114: this_start_row '${this_start_row}'"
         }
         # modes 0 0 is z
         set mode [string range $modes 1 1]
@@ -137,9 +139,26 @@ if { $form_posted_p } {
     }
 
     ns_log Notice "hosting-farm/www/assets.tcl(115): \
- mode '${mode} mode_next ${mode_next}"
+ mode '${mode}' mode_next ${mode_next}"
 
     set validated_p 0
+    ns_log Notice "hosting-farm/assets.tcl(152): user_id '${user_id}' \
+ customer_id '${customer_id}' asset_id '${asset_id}' "
+    # special cases require special permissions
+    # Re-checking read_p in context of input.
+    set read_p [hf_ui_go_ahead_q read "" "" 0]
+    set create_p [hf_ui_go_ahead_q create "" "" 0]
+    set write_p [hf_ui_go_ahead_q write "" "" 0]
+    set admin_p [hf_ui_go_ahead_q admin "" "" 0]
+    if { $admin_p } {
+        # check package admin for extras
+        set pkg_admin_p [permission::permission_p \
+                             -party_id $user_id \
+                             -object_id $instance_id \
+                             -privilege admin]
+    }
+
+
     # Cleanse data, verify values for consistency
     # Determine input completeness
 
@@ -186,26 +205,11 @@ if { $form_posted_p } {
 
     if { $customer_id ne "" && [qf_is_natural_number $customer_id ] } {
         set customer_ids_list [hf_customer_ids_for_user $user_id $instance_id]
-        if { $customer_id ni $customer_ids_list } {
+        if { $customer_id ni $customer_ids_list && !$pkg_admin_p } {
             set customer_id ""
         }
     }
 
-    ns_log Notice "hosting-farm/assets.tcl(152): user_id '${user_id}' \
- customer_id '${customer_id}' asset_id '${asset_id}' "
-    # special cases require special permissions
-    # Re-checking read_p in context of input.
-    set read_p [hf_ui_go_ahead_q read "" "" 0]
-    set create_p [hf_ui_go_ahead_q create "" "" 0]
-    set write_p [hf_ui_go_ahead_q write "" "" 0]
-    set admin_p [hf_ui_go_ahead_q admin "" "" 0]
-    if { $admin_p } {
-        # check package admin for extras
-        set pkg_admin_p [permission::permission_p \
-                             -party_id $user_id \
-                             -object_id $instance_id \
-                             -privilege admin]
-    }
     ns_log Notice "hosting-farm/assets.tcl(165): read_p '${read_p}' \
  create_p ${create_p} write_p ${write_p} admin_p ${admin_p} \
  pkg_admin_p '${pkg_admin_p}'"
@@ -215,7 +219,7 @@ if { $form_posted_p } {
     # A blank referrer means a direct request
     # otherwise make sure referrer is from same domain when editing.
     if { $referrer_url ne "" } {
-        ns_log Notice "hosting-farm/assets.tcl(189): form_posted_p \
+        ns_log Notice "hosting-farm/assets.tcl(189): form_posted_p '${form_posted_p}' \
  http_header_method ${http_header_method} referrer '${referrer_url}'"
     }
     if { ![string match -nocase "post*" $http_header_method ] } {
@@ -381,7 +385,7 @@ if { $form_posted_p } {
  
     if { $validated_p } {
         ns_log Notice "hosting-farm/assets.tcl(300): ACTION \
- mode '${mode} mode_next '${mode_next}' validated_p '${validated_p}'"
+ mode '${mode}' mode_next '${mode_next}' validated_p '${validated_p}'"
 
         # execute process using validated input
         # Using IF instead of SWITCH to allow mode to be modified successively
