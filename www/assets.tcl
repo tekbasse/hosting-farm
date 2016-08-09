@@ -527,12 +527,20 @@ switch -exact -- $mode {
                 ad_returnredirect $url
                 ad_script_abort
             }
-            ns_log Notice "hosting-farm/assets.tcl(667): mode = $mode ie. view"
+            ns_log Notice "hosting-farm/assets.tcl(667): view mode '${mode}' asset_id '${asset_id}'"
 
             set title "#hosting-farm.Asset#"
             # add default, to convert attr_only to include asset?
             #set asset_type \[hf_constructor_a asset_arr default asset_attr\]
+
             set asset_type [hf_constructor_b obj_arr]
+            if { ![exists_and_not_null obj_arr(asset_id)] } {
+                if { [array exists obj_arr ] } {
+                    ns_log Warning "hosting-farm/assets.tcl(530): array get obj_arr '[array get obj_arr]'"
+                } else {
+                    ns_log Warning "hosting-farm/assets.tcl(532): obj_arr does not exist."
+                }
+            }
             set include_view_one_p 1
             # pass asset_arr
             set detail_p $pkg_admin_p
