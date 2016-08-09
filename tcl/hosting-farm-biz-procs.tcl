@@ -224,7 +224,7 @@ ad_proc -public hf_constructor_a {
         # maybe save a trip to db to get f_id
         set f_id $f_id_of_asset_id
     }
-    ns_log Notice "hf_constructor_a.227: array get ${a_arr_name} '[array get an_arr]'"
+    #ns_log Notice "hf_constructor_a.227: array get ${a_arr_name} '[array get an_arr]'"
     return $state
 }
 
@@ -290,7 +290,7 @@ ad_proc -public hf_constructor_b {
     }
     if { $asset_id ne "" } {
         set asset_list [hf_asset_read $asset_id]
-        ns_log Notice "hf_constructor_b.292: asset_list '${asset_list}'"
+        #ns_log Notice "hf_constructor_b.292: asset_list '${asset_list}'"
         set hf_asset_keys_list [hf_asset_keys]
         set result_list [qf_lists_to_array yan_arr $asset_list $hf_asset_keys_list]
         if { [llength $asset_list] != [llength $hf_asset_keys_list] || [llength $result_list] > 0 } {
