@@ -7,9 +7,9 @@
   </if>
 </if>
 
-<div style="background-color: transparent; background-repeat: no-repeat; background-image: url(resources/icons/@asset_type_id@-background.png); background-size: 100% 100% ;">
+<div style="background-color: transparent; background-repeat: no-repeat; background-image: url(resources/icons/@asset_type_id@-background.png); background-size: 100% 100% ; padding: 0 ; margin: 0;">
 
-  <div style="margin: .5in; padding: .5in">
+  <div style="padding: 10%; margin: 10%;">
     <if @label@ not nil>
       <h3>@label@</h3>
     </if>
