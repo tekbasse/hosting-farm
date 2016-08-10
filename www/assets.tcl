@@ -304,27 +304,6 @@ if { !$form_posted_p } {
     if { $mode eq "e" } {
         if { $write_p || $admin_p } {
             # allowed
-            # copy everything. Only obj keys pass constructor.
-            array set ob_arr [array get input_arr]
-
-            # 0. asset_type_id:
-            #    New combo asset and primary attribute of asset_type_id
-            
-            # 1. asset_id/f_id:
-            #    Edit asset
-            
-            # 2. asset_id/f_id,primary sub_asset_id/f_id:
-            #    Edit combo existing asset and attribute 
-            
-            # 3. sub_asset_id/sub_f_id
-            #    Edit attribute
-            
-            # 4. asset_id/f_id and asset_type_id
-            #    New attribute of asset_id
-            # If asset and non primary attribute exist, just
-            # edit the attribute.
-            # set include_view_one_p 1
-            hf_constructor_a obj_arr
             
         } elseif { $read_p } {
             set mode "v"
@@ -480,6 +459,32 @@ switch -exact -- $mode {
             # for default values.
             ns_log Notice "hosting-farm/assets.tcl mode = edit"
 
+
+            # copy everything. Only obj keys pass constructor.
+            array set ob_arr [array get input_arr]
+
+            # 0. asset_type_id:
+            #    New combo asset and primary attribute of asset_type_id
+            
+            # 1. asset_id/f_id:
+            #    Edit asset
+            
+            # 2. asset_id/f_id,primary sub_asset_id/f_id:
+            #    Edit combo existing asset and attribute 
+            
+            # 3. sub_asset_id/sub_f_id
+            #    Edit attribute
+            
+            # 4. asset_id/f_id and asset_type_id
+            #    New attribute of asset_id
+            # If asset and non primary attribute exist, just
+            # edit the attribute.
+            # set include_view_one_p 1
+            hf_constructor_b obj_arr
+            ##code
+            # display asset-edit
+
+
             foreach key [array names obj_arr] {
                 set obj_arr(${key}) [qf_unquote $obj_arr(${key}) ]
             }
@@ -536,13 +541,13 @@ switch -exact -- $mode {
             set asset_type [hf_constructor_b obj_arr]
             set include_view_one_p 1
             set publish_p [hf_ui_go_ahead_q write "" published 0]
-            array set perms_arr [list read_p $read_p create_p $create_p write_p $write_p admin_p $admin_p pkg_admin_p $pkg_admin_p publish_p $publish_p]
+            ns_log Notice "assets.tcl.539 publish_p '${publish_p}' asset_id '${asset_id}'"
+            array set perms_arr [list read_p $read_p create_p $create_p write_p $write_p admin_p $admin_p pkg_admin_p $pkg_admin_p publish_p $publish_p ]
             # pass asset_arr perms_arr
-
             set detail_p $pkg_admin_p
             set tech_p $admin_p
 
-            # adjust context
+            # adjust page context
             if { [info exists obj_arr(name)] } {
                 set context [list [list assets #hosting-farm.Assets#] $obj_arr(name)]
             } elseif { [info exists obj_arr(label)] } {
@@ -550,7 +555,13 @@ switch -exact -- $mode {
             } elseif { [info exists obj_arr(sub_label)] } {
                 set context [list [list assets #hosting-farm.Assets#] $obj_arr(sub_label) ]
             }
-
+            # display other attributes
+            ##code
+            set attrs_list [hf_asset_attrbutes_cascade]
+            # display other assets
+            ##code
+            set assets_list [hf_asset_sub_assets_cascade]
+            
 
         } else {
             # no permission to read page. This should not happen.
