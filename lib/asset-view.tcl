@@ -57,7 +57,21 @@ if { ![info exists asset_type] } {
 if { ![info exists separator] } {
     set separator ": "
 }
-
+if { [exists_and_not_null perms_arr(write_p)] } {
+    set write_p $perms_arr(write_p)
+} else {
+    set write_p 0
+}
+if { [exists_and_not_null perms_arr(admin_p)] } {
+    set admin_p $perms_arr(admin_p)
+} else {
+    set admin_p 0
+}
+if { [exists_and_not_null perms_arr(publish_p)] } {
+    set publish_p $perms_arr(publish_p)
+} else {
+    set publish_p 0
+}
 
 
 if { ![info exists tech_p] } {

@@ -534,20 +534,15 @@ switch -exact -- $mode {
             #set asset_type \[hf_constructor_a asset_arr default asset_attr\]
             set asset_id_old $asset_id
             set asset_type [hf_constructor_b obj_arr]
-
-            if { "asset_id" ni [array names obj_arr] } {
-                if { [array exists obj_arr ] } {
-                    ns_log Warning "hosting-farm/assets.tcl(530): ob_arr(asset_id) does not exist. array get obj_arr '[array get obj_arr]'"
-                } else {
-                    ns_log Warning "hosting-farm/assets.tcl(532): obj_arr does not exist."
-                }
-            } elseif { $obj_arr(asset_id) ne $asset_id_old } {
-                ns_log Warning "hosting-farm/assets.tcl(544): obj_arr(asset_id) '$obj_arr(asset_id)' asset_id '${asset_id}' asset_id_old '${asset_id_old}'"
-            }
             set include_view_one_p 1
-            # pass asset_arr
+            set publish_p [hf_ui_go_ahead_q write "" published 0]
+            array set perms_arr [list read_p $read_p create_p $create_p write_p $write_p admin_p $admin_p pkg_admin_p $pkg_admin_p publish_p $publish_p]
+            # pass asset_arr perms_arr
+
             set detail_p $pkg_admin_p
             set tech_p $admin_p
+
+            # adjust context
             if { [info exists obj_arr(name)] } {
                 set context [list [list assets #hosting-farm.Assets#] $obj_arr(name)]
             } elseif { [info exists obj_arr(label)] } {
