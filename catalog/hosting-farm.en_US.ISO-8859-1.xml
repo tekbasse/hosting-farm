@@ -23,12 +23,14 @@
   <msg key="Primary_attribute">Primary attribute</msg>
   <msg key="Primary_attribute_def">Principle attribute record of an asset.</msg>
   <msg key="Projected">Projected</msg>
+  <msg key="Publish">Publish</msg>
   <msg key="Quota">Quota</msg>
   <msg key="SAAS">SAAS</msg>
   <msg key="Score">Score</msg>
   <msg key="See_asset_configuration_for_details">See asset configuration for details</msg>
   <msg key="Server_farm">Server farm</msg>
   <msg key="Software_as_a_Service">Software as a service</msg>
+  <msg key="Unpublish">Unpublish</msg>
   <msg key="Virtual_host">Virtual host</msg>
   <msg key="Virtual_machine">Virtual machine</msg>
   <msg key="active_p">Active?</msg>

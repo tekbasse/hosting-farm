@@ -72,7 +72,9 @@ if { [exists_and_not_null perms_arr(publish_p)] } {
 } else {
     set publish_p 0
 }
-
+if { ![exists_and_not_null base_url] } {
+    set base_url [ad_conn url]
+}
 
 if { ![info exists tech_p] } {
     set tech_p 0
@@ -163,3 +165,26 @@ foreach element $content_list {
     append content "</li>"
 }
 
+set form_id [qf_form action $base_url method post id 20160809 hash_check 1]
+qf_input type "hidden" name "mode" value "p"
+qf_input type submit value "#accounts-ledger.edit#" name "zev${asset_id}" class button
+qf_append html "<br>"
+if { $write_p && [exists_and_not_null asset_arr(trashed_p) ] } {
+    if { $asset_arr(trashed_p) } {
+        qf_input type submit value "#accounts-finance.untrash#" name "zuv${asset_id}" class button
+    } else {
+        qf_input type submit value "#accounts-finance.trash#" name "ztl${asset_id}" class button
+    }
+    qf_append html "<br>"
+}
+ns_log Notice "asset-view.tcl publish_p '${publish_p}' admin_p '${admin_p}'"
+if { ( $publish_p || $admin_p )  && [exists_and_not_null asset_arr(publish_p) ] } {
+    if { $asset_arr(publish_p) } {
+        qf_input type submit value "#accounts-finance.Unpublish#" name "zpv${asset_id}" class button
+    } else {
+        qf_input type submit value "#accounts-finance.Publish#" name "zwv${asset_id}" class button
+    }
+    qf_append html "<br>"
+}
+qf_close form_id $form_id
+append content [qf_read form_id $form_id]
