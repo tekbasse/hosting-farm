@@ -67,7 +67,7 @@ if { [exists_and_not_null perms_arr(admin_p)] } {
 } else {
     set admin_p 0
 }
-if { [exists_and_not_null perms_arr(publish_p)] } {
+if { [exists_and_not_null perms_arr(publish_p) ] } {
     set publish_p $perms_arr(publish_p)
 } else {
     set publish_p 0
@@ -178,11 +178,11 @@ if { $write_p && [exists_and_not_null asset_arr(trashed_p) ] } {
     qf_append html "<br>"
 }
 ns_log Notice "asset-view.tcl publish_p '${publish_p}' admin_p '${admin_p}'"
-if { ( $publish_p || $admin_p )  && [exists_and_not_null asset_arr(publish_p) ] } {
-    if { $asset_arr(publish_p) } {
-        qf_input type submit value "#accounts-finance.Unpublish#" name "zpv${asset_id}" class button
+if { ( $publish_p || $admin_p ) && [exists_and_not_null asset_arr(publish_p) ] } {
+    if { [qf_is_true $asset_arr(publish_p) ] } {
+        qf_input type submit value "#hosting-farm.Unpublish#" name "zpv${asset_id}" class button
     } else {
-        qf_input type submit value "#accounts-finance.Publish#" name "zwv${asset_id}" class button
+        qf_input type submit value "#hosting-farm.Publish#" name "zwv${asset_id}" class button
     }
     qf_append html "<br>"
 }

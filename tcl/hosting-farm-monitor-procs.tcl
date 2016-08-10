@@ -764,7 +764,7 @@ ad_proc -private hf_ui_go_ahead_q {
             set go_ahead 1
         }
     }
-    if { $go_head ne 1 && $go_ahead ne 0 } {
+    if { $go_ahead ne 1 && $go_ahead ne 0 } {
         ns_log Warning "hf_ui_go_ahead.771: Returned non logical 0/1 go_ahead '${go_ahead}' given privilege '${privilege}' asset_id_varnam '${asset_id_varnam}' asset_type_id '${asset_type_id}' break_p '${break_p}'"
     }
     if { !$go_ahead && $break_p } {
