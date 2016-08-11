@@ -171,7 +171,7 @@ qf_input type submit value "#accounts-ledger.edit#" name "zev${asset_id}" class 
 qf_append html "<br>"
 if { $write_p && [exists_and_not_null asset_arr(trashed_p) ] } {
     if { [qf_is_true $asset_arr(trashed_p) ] } {
-        qf_input type submit value "#accounts-finance.untrash#" name "zuv${asset_id}" class button
+        qf_input type submit value "#accounts-finance.untrash#" name "zTv${asset_id}" class button
     } else {
         qf_input type submit value "#accounts-finance.trash#" name "ztl${asset_id}" class button
     }
@@ -180,9 +180,9 @@ if { $write_p && [exists_and_not_null asset_arr(trashed_p) ] } {
 #ns_log Notice "asset-view.tcl pub_p '${pub_p}' admin_p '${admin_p}'"
 if { ( $pub_p || $admin_p ) && [exists_and_not_null asset_arr(publish_p) ] } {
     if { [qf_is_true $asset_arr(publish_p) ] } {
-        qf_input type submit value "#hosting-farm.Unpublish#" name "zpv${asset_id}" class button
+        qf_input type submit value "#hosting-farm.Unpublish#" name "zsv${asset_id}" class button
     } else {
-        qf_input type submit value "#hosting-farm.Publish#" name "zwv${asset_id}" class button
+        qf_input type submit value "#hosting-farm.Publish#" name "zSv${asset_id}" class button
     }
     qf_append html "<br>"
 }

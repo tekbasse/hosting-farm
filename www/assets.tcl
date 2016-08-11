@@ -243,8 +243,11 @@ if { !$form_posted_p } {
     #   d  = delete asset_id or sub_asset_id
     #   D  = delete f_id or sub_f_id 
     #   t  = trash asset_id or sub_asset_id
+    #   T  = untrash asset_id
     #   w  = write asset_id/sub_asset_id asset_type_id
     #   a  = add asset_type_id
+    #   s  = publish
+    #   S  = Unpublish
 
     # Views
     #   e  = edit asset_id/sub_asset_id, presents defaults if no prior data
