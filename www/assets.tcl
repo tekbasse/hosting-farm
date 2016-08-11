@@ -102,8 +102,8 @@ if { !$form_posted_p } {
     # following is part of dynamic menu processing using form tags instead of url/GET
     # key,value is passed as a single name, with first letter z.
     set input_arr_idx_list [array names input_arr]
-    ##code update this regexp
-    set modes_idx [lsearch -regexp $input_arr_idx_list {z[vprnwctdel][ivcrl][1-9][0-9]*}]
+    ##code update this regexp?
+    set modes_idx [lsearch -regexp $input_arr_idx_list {z[vpsSrnwctTdel][ivcrl][1-9][0-9]*}]
     if { $modes_idx > -1 && $mode eq "p" } {
         set modes [lindex $input_arr_idx_list $modes_idx]
         set test [string range $modes 0 3]
@@ -132,10 +132,7 @@ if { !$form_posted_p } {
     if { [string length $mode_next] > 1 } {
         set mode_next ""
     }
-    if { [string first $mode "Ddtwvaelr"] == -1 } {
-        set mode "v"
-
-    } elseif { [string first $mode "dt"] > -1 \
+    if { [string first $mode "dt"] > -1 \
                    && [string first $mode_next "lrv"] == -1 } {
         set mode_next "v"
     }
@@ -452,7 +449,7 @@ switch -exact -- $mode {
         if { $admin_p } {
             ns_log Notice "hosting-farm/assets.tcl mode = $mode ie. revisions"
             # sort by date
-##code
+            ##code later, in /www/admin
         }
     }
     e {
@@ -558,14 +555,21 @@ switch -exact -- $mode {
             } elseif { [info exists obj_arr(sub_label)] } {
                 set context [list [list assets #hosting-farm.Assets#] $obj_arr(sub_label) ]
             }
-            # display other attributes
-            ##code
-            set attrs_list [hf_asset_attrbutes_cascade]
-            # display other assets
-            ##code
-            set assets_list [hf_asset_sub_assets_cascade]
-            
 
+            if { $f_id ne "" } {
+                set attrs_list [hf_asset_attrbutes $f_id]
+                if { [llength $attrs_list ] > 0 } {
+                    set include_view_attrs_p 1
+                    ##code
+                }
+
+                set assets_list [hf_asset_subassets $f_id]
+                if { [llength $assets_list ] > 0 } {
+                    set include_view_sub_assets_p 1
+                    ##code
+                }
+
+            }
         } else {
             # no permission to read page. This should not happen.
             ns_log Warning "hosting-farm/assets.tcl:(619) user did not get expected 404 error when not able to read page."
