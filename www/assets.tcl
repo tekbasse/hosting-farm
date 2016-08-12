@@ -47,6 +47,7 @@ set include_view_sub_assets_p 0
 array set input_arr \
     [list \
          asset_id "" \
+         asset_type "" \
          asset_type_id "" \
          customer_id "" \
          f_id "" \
@@ -459,10 +460,6 @@ switch -exact -- $mode {
             # for default values.
             ns_log Notice "hosting-farm/assets.tcl mode = edit"
 
-
-            # copy everything. Only obj keys pass constructor.
-            array set ob_arr [array get input_arr]
-
             # 0. asset_type_id:
             #    New combo asset and primary attribute of asset_type_id
             
@@ -480,43 +477,30 @@ switch -exact -- $mode {
             # If asset and non primary attribute exist, just
             # edit the attribute.
             # set include_view_one_p 1
-            hf_constructor_b obj_arr
+            set asset_type [hf_constructor_b obj_arr]
+            set include_edit_one_p 1
+            set publish_p [hf_ui_go_ahead_q write "" published 0]
+            ns_log Notice "assets.tcl.539 publish_p '${publish_p}' asset_id '${asset_id}'"
+            array set perms_arr [list read_p $read_p create_p $create_p write_p $write_p admin_p $admin_p pkg_admin_p $pkg_admin_p publish_p $publish_p ]
+            # pass asset_arr perms_arr
+            set detail_p $pkg_admin_p
+            set tech_p $admin_p
+
+            # adjust page context
+            append title " -  #q-wiki.edit#"
+            if { [info exists obj_arr(name)] } {
+                set context [list [list assets #hosting-farm.Assets#] "$obj_arr(name) - #q-wiki.edit#"]
+            } elseif { [info exists obj_arr(label)] } {
+                set context [list [list assets #hosting-farm.Assets#] "$obj_arr(label) - #q-wiki.edit#"]
+            } elseif { [info exists obj_arr(sub_label)] } {
+                set context [list [list assets #hosting-farm.Assets#] "$obj_arr(sub_label) - #q-wiki.edit#"]
+            }
+
+
+
             ##code
-            # display asset-edit
 
 
-            foreach key [array names obj_arr] {
-                set obj_arr(${key}) [qf_unquote $obj_arr(${key}) ]
-            }
-
-
-            set cancel_link_html "<a hrer=\"list?mode=l\">#acs-kernel.common_Cancel#</a>"
-
-            set conn_package_url [ad_conn package_url]
-            set post_url [file join $conn_package_url $url]
-
-            append title "${title} -  #q-wiki.edit#"
-
-            qf_form action $post_url method post id 20160616 hash_check 1
-            qf_input type hidden value w name mode
-            qf_input type hidden value v name mode_next
-            qf_append html "<div style=\"width: 70%; text-align: right;\">"
-
-            foreach {key val} [array get obj_arr] {
-                if { [hf_key_hidden_q $key] } {
-                    qf_input type hidden value $val name $key
-                } else {
-                    qf_append html "<br>"
-                    set val_unquoted [qf_unquote $val]
-                    qf_input type text value $val_unquoted name $key label "#hosting-farm.${key}#:" size 40 maxlength 80
-                }
-            }
-
-            qf_append html "</div>"
-            qf_input type submit value "#acs-kernel.common_Save#"
-            qf_append html " &nbsp; &nbsp; &nbsp; ${cancel_link_html}"
-            qf_close
-            set form_html [qf_read]
 
         } else {
             lappend user_message_list "#q-wiki.Edit_operation_did_not_succeed# #q-wiki.You_don_t_have_permission#"
@@ -537,7 +521,6 @@ switch -exact -- $mode {
             set title "#hosting-farm.Asset#"
             # add default, to convert attr_only to include asset?
             #set asset_type \[hf_constructor_a asset_arr default asset_attr\]
-            set asset_id_old $asset_id
             set asset_type [hf_constructor_b obj_arr]
             set include_view_one_p 1
             set publish_p [hf_ui_go_ahead_q write "" published 0]

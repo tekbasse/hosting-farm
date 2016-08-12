@@ -33,6 +33,9 @@
 <if @include_view_one_p@ true>
   <include src="/packages/hosting-farm/lib/asset-view" &asset_arr=obj_arr &perms_arr=perms_arr detail_p="@detail_p@" tech_p="@tech_p@" asset_type="@asset_type@">
 </if>
+<if @include_edit_one_p@ true>
+  <include src="/packages/hosting-farm/lib/asset-edit" &asset_arr=obj_arr &perms_arr=perms_arr detail_p="@detail_p@" tech_p="@tech_p@" asset_type="@asset_type@">
+</if>
 <if @include_view_attrs_p@ true>
   <include src="/packages/hosting-farm/lib/attributes-view" &attrs_lists=attrs_lists>
 </if>
