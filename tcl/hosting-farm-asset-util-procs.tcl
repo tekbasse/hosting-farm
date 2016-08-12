@@ -487,7 +487,12 @@ ad_proc -private hf_asset_attributes {
 } {
     Returns list of untrashed attribute ids for f_id. 
 } {
-    set id_list [db_list hf_asset_attrs "select sub_type_id from hf_sub_asset_map where f_id=:f_id and sub_type_id=:asset_type_id and attribute_p='1' and instance_id=:instance_id and trashed_p!='1'"]
+    upvar 1 instance_id instance_id
+    set id_list [db_list hf_asset_attrs {select sub_type_id from hf_sub_asset_map
+        where f_id=:f_id 
+        and attribute_p!='0' 
+        and instance_id=:instance_id 
+        and trashed_p!='1'}]
     return $id_list
 }
 
@@ -497,7 +502,13 @@ ad_proc -private hf_asset_attributes_by_type {
 } {
     Returns a list of untrashed ids of asset_type_id for f_id.
 } {
-    set id_list [db_list hf_asset_attr_for_type "select sub_type_id from hf_sub_asset_map where f_id=:f_id and attribute_p='1' and instance_id=:instance_id and trashed_p!='1'"]
+    upvar 1 instance_id instance_id
+    set id_list [db_list hf_asset_attr_for_type {select sub_type_id from hf_sub_asset_map 
+        where f_id=:f_id 
+        and sub_type_id=:asset_type_id
+        and attribute_p!='0' 
+        and instance_id=:instance_id 
+        and trashed_p!='1'}]
     return $id_list
 }
 
@@ -506,7 +517,13 @@ ad_proc -private hf_asset_attribute_types {
 } {
     Returns a list of untrashed, distinct asset_type_ids for f_id.
 } {
-    set type_id_list [db_list hf_asset_type "select distinct sub_type_id from hf_sub_asset_map where f_id=:f_id and sub_type_id=:asset_type_id and attribute_p='1' and instance_id=:instance_id and trashed_p!='1'"]
+    upvar 1 instance_id instance_id
+    set type_id_list [db_list hf_asset_type {select distinct sub_type_id from hf_sub_asset_map 
+        where f_id=:f_id 
+        and sub_type_id=:asset_type_id 
+        and attribute_p!='0' 
+        and instance_id=:instance_id 
+        and trashed_p!='1'}]
     return $type_id_list
 }
 
@@ -517,7 +534,11 @@ ad_proc -private hf_asset_subassets {
     Returns a list of untrashed f_id of direct subassets of asset.
 } {
     upvar 1 instance_id instance_id
-    set asset_id_list [db_list hf_subassets_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:f_id and instance_id=:instance_id and attribute_p!='1' and trashed_p!='1'"]
+    set asset_id_list [db_list hf_subassets_of_f_id {select sub_f_id from hf_sub_asset_map 
+        where f_id=:f_id 
+        and instance_id=:instance_id 
+        and attribute_p!='1' 
+        and trashed_p!='1'}]
     return $asset_id_list
 }
 
@@ -528,7 +549,12 @@ ad_proc -private hf_asset_subassets_by_type {
     Returns a list of f_id of untrashed, direct subassets of asset that are of type asset_type_id.
 } {
     upvar 1 instance_id instance_id
-    set asset_id_list [db_list hf_subassets_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:f_id and sub_type_id=:asset_type_id and instance_id=:instance_id and attribute_p!='1' and trashed_p!='1'"]
+    set asset_id_list [db_list hf_subassets_of_f_id {select sub_f_id from hf_sub_asset_map 
+        where f_id=:f_id 
+        and sub_type_id=:asset_type_id 
+        and instance_id=:instance_id 
+        and attribute_p!='1' 
+        and trashed_p!='1'}]
     return $asset_id_list
 }
 
@@ -550,7 +576,11 @@ ad_proc -private hf_asset_subassets_cascade {
         set next_id_list [list ]
         foreach s_id $current_id_list {
             lappend final_id_list $s_id
-            set new_list [db_list hf_subassets_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and instance_id=:instance_id and attribute_p!='1' and trashed_p!='1'"]
+            set new_list [db_list hf_subassets_of_f_id {select sub_f_id from hf_sub_asset_map 
+                where f_id=:s_id 
+                and instance_id=:instance_id 
+                and attribute_p!='1' 
+                and trashed_p!='1'}]
             foreach sb_id $new_list {
                 if { $sb_id in $next_id_list || $sb_id in $final_id_list } {
                     # skip
@@ -588,7 +618,10 @@ ad_proc -private hf_asset_cascade_count {
         set next_id_list [list ]
         foreach s_id $current_id_list {
             lappend final_id_list $s_id
-            set new_list [db_list hf_subassets_all_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and instance_id=:instance_id and trashed_p!='1'"]
+            set new_list [db_list hf_subassets_all_of_f_id {select sub_f_id from hf_sub_asset_map 
+                where f_id=:s_id 
+                and instance_id=:instance_id 
+                and trashed_p!='1'}]
             foreach sb_id $new_list {
                 if { $sb_id in $next_id_list || $sb_id in $final_id_list } {
                     # skip
@@ -629,7 +662,12 @@ ad_proc -private hf_asset_subassets_by_type_cascade {
         set next_id_list [list ]
         foreach s_id $current_id_list {
             lappend final_id_list $s_id
-            set new_list [db_list hf_subassets_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and sub_type_id=:asset_type_id and instance_id=:instance_id and attribute_p!='1' and trashed_p!='1'"]
+            set new_list [db_list hf_subassets_of_f_id {select sub_f_id from hf_sub_asset_map 
+                where f_id=:s_id 
+                and sub_type_id=:asset_type_id 
+                and instance_id=:instance_id 
+                and attribute_p!='1' 
+                and trashed_p!='1'}]
             foreach sb_id $new_list {
                 if { $sb_id in $next_id_list || $sb_id in $final_id_list } {
                     # skip
@@ -668,7 +706,11 @@ ad_proc -private hf_asset_attributes_cascade {
         set next_id_list [list ]
         foreach s_id $current_id_list {
             lappend final_id_list $s_id
-            set new_list [db_list hf_attributes_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and instance_id=:instance_id and attribute_p='1' and trashed_p!='1'"]
+            set new_list [db_list hf_attributes_of_f_id {select sub_f_id from hf_sub_asset_map 
+                where f_id=:s_id 
+                and instance_id=:instance_id 
+                and attribute_p!='0' 
+                and trashed_p!='1'}]
             foreach sb_id $new_list {
                 if { $sb_id in $next_id_list || $sb_id in $final_id_list } {
                     # skip
@@ -712,7 +754,12 @@ ad_proc -private hf_asset_attributes_by_type_cascade {
         set next_id_list [list ]
         foreach s_id $current_id_list {
             lappend final_id_list $s_id
-            set new_list [db_list hf_attributes_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and sub_type_id=:asset_type_id and instance_id=:instance_id and attribute_p='1' and trashed_p!='1'"]
+            set new_list [db_list hf_attributes_of_f_id {select sub_f_id from hf_sub_asset_map 
+                where f_id=:s_id 
+                and sub_type_id=:asset_type_id 
+                and instance_id=:instance_id 
+                and attribute_p!='0' 
+                and trashed_p!='1'}]
             foreach sb_id $new_list {
                 if { $sb_id in $next_id_list || $sb_id in $final_id_list } {
                     # skip
@@ -755,7 +802,10 @@ ad_proc -private hf_asset_cascade {
         set next_id_list [list ]
         foreach s_id $current_id_list {
             lappend final_id_list $s_id
-            set new_list [db_list hf_attributes_of_f_id "select sub_f_id from hf_sub_asset_map where f_id=:s_id and instance_id=:instance_id and trashed_p!='1'"]
+            set new_list [db_list hf_attributes_of_f_id {select sub_f_id from hf_sub_asset_map 
+                where f_id=:s_id 
+                and instance_id=:instance_id 
+                and trashed_p!='1'}]
             foreach sb_id $new_list {
                 if { $sb_id in $next_id_list || $sb_id in $final_id_list } {
                     # skip
@@ -858,7 +908,9 @@ ad_proc -private hf_call_write {
         if { $hf_call_id_exists_p && $no_errors_p } {
             if { $remove_p } {
                 # remove record
-                db_1row hf_calls_read1 "select proc_name from hf_calls where id=:hf_call_id and instance_id=:instance_id"
+                db_1row hf_calls_read1 {select proc_name from hf_calls 
+                    where id=:hf_call_id 
+                    and instance_id=:instance_id}
                 ns_log Notice "hf_call_write(2998): user_id ${user_id} deleted hf_calls.id '${hf_call_id}'  instance_id '${instance_id}' proc_name '${proc_name}'"
                 db_dml hf_calls_delete1 {
                     delete from hf_calls where id=:hf_call_id and instance_id=:instance_id
@@ -1033,7 +1085,9 @@ ad_proc -private hf_call_roles_read {
     set role_ids_list [list ]
     if { [qf_is_natural_number $instance_id] } {
         if { [qf_is_natural_number $call_id ] } {
-            set role_ids_list [db_list hf_call_roles_read "select role_id from hf_call_role_map where instance_id=:instance_id and call_id=:call_id"]
+            set role_ids_list [db_list hf_call_roles_read {select role_id from hf_call_role_map 
+                where instance_id=:instance_id 
+                and call_id=:call_id}]
         }
     }
     return $role_ids_list

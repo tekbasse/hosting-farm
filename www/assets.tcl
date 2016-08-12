@@ -43,7 +43,7 @@ set include_view_assets_p 0
 set include_view_one_p 0
 set include_view_attrs_p 0
 set include_view_sub_assets_p 0
-
+set include_edit_one_p 0
 array set input_arr \
     [list \
          asset_id "" \
@@ -540,7 +540,7 @@ switch -exact -- $mode {
             }
 
             if { $f_id ne "" } {
-                set attrs_list [hf_asset_attrbutes $f_id]
+                set attrs_list [hf_asset_attributes $f_id]
                 if { [llength $attrs_list ] > 0 } {
                     set include_view_attrs_p 1
                     ##code
