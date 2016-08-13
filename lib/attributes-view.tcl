@@ -23,6 +23,16 @@
 # @param items_per_page (required)
 # @param this_start_row (required) the start row for this page
 # @param separator is html used between page numbers, defaults to &nbsp;
+if { ![info exists instance_id] } {
+    set instance_id [ad_conn package_id]
+}
 
-db_list_of_lists hf_attributes_set "select [hf_sub_asset_map_keys ","] from hf_sub_asset_map where instance_id=:instance_id and attribute_p!='0' and sub_f_id in ([template::util::tcl_to_sql_list $attrs_list])"
+set attrs_lists [db_list_of_lists hf_attributes_set "select [hf_sub_asset_map_keys ","] from hf_sub_asset_map where instance_id=:instance_id and attribute_p!='0' and sub_f_id in ([template::util::tcl_to_sql_list $attrs_list])"]
+set attrs_sorted_lists [lsort -integer 5 -increasing $attrs_lists]
+set attrs_sorted2_lists [lsort -ascii 4 -increasing $attrs_sorted_lists]
+set content ""
+foreach row_list $attrs_sorted2_lists {
 
+
+
+}

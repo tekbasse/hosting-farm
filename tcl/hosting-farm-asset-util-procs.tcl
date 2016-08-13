@@ -488,7 +488,7 @@ ad_proc -private hf_asset_attributes {
     Returns list of untrashed attribute ids for f_id. 
 } {
     upvar 1 instance_id instance_id
-    set id_list [db_list hf_asset_attrs {select sub_type_id from hf_sub_asset_map
+    set id_list [db_list hf_asset_attrs {select sub_f_id from hf_sub_asset_map
         where f_id=:f_id 
         and attribute_p!='0' 
         and instance_id=:instance_id 

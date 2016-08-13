@@ -32,7 +32,7 @@
   <include src="/packages/hosting-farm/lib/asset-edit" &asset_arr=obj_arr &perms_arr=perms_arr detail_p="@detail_p@" tech_p="@tech_p@" asset_type="@asset_type@">
 </if>
 <if @include_view_attrs_p@ true>
-  <include src="/packages/hosting-farm/lib/attributes-view" &attrs_lists=attrs_lists>
+  <include src="/packages/hosting-farm/lib/attributes-view" &attrs_list=attrs_list>
 </if>
 <if @include_view_sub_assets_p@ true>
 <!-- make a revision of assets-view-2 for use with scope of sub_assets_list -->
