@@ -89,7 +89,7 @@ ad_proc -public hf_constructor_a {
         set f_id_of_asset_id [hf_f_id_of_asset_id $asset_id]
     }
     if { $f_id_of_asset_id eq "" } {
-        ns_log Notice "hf_constructor_a: f_id_of_asset_id is '', setting asset_id ''"
+        ns_log Notice "hf_constructor_a: f_id_of_asset_id is '' for asset_id '${asset_id}', setting asset_id ''"
         set asset_id ""
 
     } else {
@@ -208,7 +208,7 @@ ad_proc -public hf_constructor_a {
             hf_sub_asset_map_defaults an_arr
             set keys_list [set_union $keys_list [hf_sub_asset_map_keys]]
         } else {
-            ns_log Warning "hf_constructor_a.193: unknown asset_type_id '${asset_type_id}'"
+            ns_log Warning "hf_constructor_a.193: unknown asset_type_id '${asset_type_id}' ad_script_abort"
             ad_script_abort
         }
     }
