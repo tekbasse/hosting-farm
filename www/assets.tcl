@@ -104,7 +104,7 @@ if { !$form_posted_p } {
     # key,value is passed as a single name, with first letter z for asset_id or Z for sub_f_id.
     set input_arr_idx_list [array names input_arr]
     ##code update this regexp?
-    set modes_idx [lsearch -regexp $input_arr_idx_list {Zz[vpsSrnwctTdel][ivcrl][1-9][0-9]*}]
+    set modes_idx [lsearch -regexp $input_arr_idx_list {[Zz][vpsSrnwctTdel][ivcrl][1-9][0-9]*}]
     if { $modes_idx > -1 && $mode eq "p" } {
         set modes [lindex $input_arr_idx_list $modes_idx]
         set test [string range $modes 0 3]
