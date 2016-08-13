@@ -19,7 +19,7 @@
 <!-- one col on l, m, s  -->
 <div class="l-grid-whole m-grid-whole s-grid-whole padded">
   <div class="content-box">
-  <include src="/packages/hosting-farm/lib/assets-view-2" &assets_lists=assets_lists s="@s;noquote@" p="@p;noquote@" this_start_row="@this_start_row;noquote@" base_url="assets">
+  <include src="/packages/hosting-farm/lib/assets-view-2" &assets_lists=assets_lists s="@s;noquote@" p="@p;noquote@" this_start_row="@this_start_row;noquote@" base_url="@base_url;noquote@">
 
   </div>
 </div>
@@ -32,14 +32,14 @@
   <include src="/packages/hosting-farm/lib/asset-edit" &asset_arr=obj_arr &perms_arr=perms_arr detail_p="@detail_p@" tech_p="@tech_p@" asset_type="@asset_type@">
 </if>
 <if @include_view_attrs_p@ true>
-  <include src="/packages/hosting-farm/lib/attributes-view" &attrs_list=attrs_list>
+  <include src="/packages/hosting-farm/lib/attributes-view" &attrs_list=attrs_list base_url="@base_url;noquote@">
 </if>
 <if @include_view_sub_assets_p@ true>
 <!-- make a revision of assets-view-2 for use with scope of sub_assets_list -->
 <!-- one col on l, m, s  -->
 <div class="l-grid-whole m-grid-whole s-grid-whole padded">
   <div class="content-box">
-    <include src="/packages/hosting-farm/lib/assets-view-2" &assets_lists=assets_lists  base_url="assets" pagination_bar_p="0">
+    <include src="/packages/hosting-farm/lib/assets-view-2" &assets_lists=assets_lists  base_url="@base_url;noquote@" pagination_bar_p="0">
   </div>
 </div>
 </if>

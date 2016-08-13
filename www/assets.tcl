@@ -38,6 +38,7 @@ set radio_checked_url [file join $icons_path1 radiochecked.gif]
 set radio_unchecked_url [file join $icons_path1 radio.gif]
 set redirect_before_v_p 0
 set user_message_list [list ]
+set base_url "assets"
 #flags
 set include_view_assets_p 0
 set include_view_one_p 0
@@ -551,8 +552,9 @@ switch -exact -- $mode {
                     set include_view_attrs_p 1
                 }
 
-                set assets_list [hf_asset_subassets $f_id]
-                if { [llength $assets_list ] > 0 } {
+                set asset_ids_list [hf_asset_subassets $f_id]
+                if { [llength $asset_ids_list ] > 0 } {
+                    set assets_lists [hf_assets_read $asset_ids_list]
                     set include_view_sub_assets_p 1
                 }
 

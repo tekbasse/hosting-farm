@@ -30,11 +30,11 @@ if { ![info exists instance_id] } {
 set attrs_lists [db_list_of_lists hf_attributes_set "select [hf_sub_asset_map_keys ","] from hf_sub_asset_map where instance_id=:instance_id and attribute_p!='0' and sub_f_id in ([template::util::tcl_to_sql_list $attrs_list])"]
 
 if { [llength $attrs_lists ] > 0 } {
-    set attrs_sorted_lists [lsort -integer 5 -increasing $attrs_lists]
-    set attrs_sorted2_lists [lsort -ascii 4 -increasing $attrs_sorted_lists]
+    set attrs_sorted_lists [lsort -integer -index 5 -increasing $attrs_lists]
+    set attrs_sorted2_lists [lsort -ascii -index 4 -increasing $attrs_sorted_lists]
     set content ""
     
-    set form_id [qf_form action $base_url method post id 20160802 hash_check 1]
+    set form_id [qf_form action $base_url method post id 20160813 hash_check 1]
     qf_input type "hidden" name "mode" value "p"
     
     set i 0
@@ -50,7 +50,8 @@ if { [llength $attrs_lists ] > 0 } {
             if { $sub_label eq "" } {
                 set sub_label $i
             }
-            qf_input type submit value $sub_label name "Zvl${sub_f_id}" class button
+            set button_label "${sub_label} (${sub_type_id})"
+            qf_input type submit value $button_label name "Zvl${sub_f_id}" class button
             qf_append html "<br>"
         }
     }
