@@ -65,11 +65,13 @@
 # 5. Format output -- compact_p vs. regular
 
 set page_html ""
-if { ![info exists pagination_bar_p] } {
+
+if { ![info exists pagination_bar_p ] } {
     set pagination_bar_p 1
     set item_count [llength $assets_lists]
-    set items_per_page $item_count
-}
+    # if pagination_bar_p is zero, maybe set items_per_page $item_count
+
+} 
 
 # ================================================
 # 1. Get table as list_of_lists
@@ -120,10 +122,11 @@ if { $item_count > 0 } {
     qf_input type "hidden" name "mode" value "p"
 
     # Calc a pagination bar?
-    if { $pagination_bar_p && $item_count > $items_per_page } {
-        if { ![info exists items_per_page] } {
-            set items_per_page 12
-        }
+    if { ![info exists items_per_page] } {
+        set items_per_page 12
+    }
+
+    if { $pagination_bar_p && ( $item_count > $items_per_page ) } {
         if { ![info exists show_page_num_p ] } {
             set show_page_num_p 0
         }
