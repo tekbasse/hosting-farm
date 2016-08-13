@@ -101,10 +101,10 @@ if { !$form_posted_p } {
 
 
     # following is part of dynamic menu processing using form tags instead of url/GET
-    # key,value is passed as a single name, with first letter z.
+    # key,value is passed as a single name, with first letter z for asset_id or Z for sub_f_id.
     set input_arr_idx_list [array names input_arr]
     ##code update this regexp?
-    set modes_idx [lsearch -regexp $input_arr_idx_list {z[vpsSrnwctTdel][ivcrl][1-9][0-9]*}]
+    set modes_idx [lsearch -regexp $input_arr_idx_list {Zz[vpsSrnwctTdel][ivcrl][1-9][0-9]*}]
     if { $modes_idx > -1 && $mode eq "p" } {
         set modes [lindex $input_arr_idx_list $modes_idx]
         set test [string range $modes 0 3]
@@ -116,6 +116,12 @@ if { !$form_posted_p } {
             set this_start_row [string range $modes 3 end]
             ns_log Notice "hosting-farm/www/assets.tcl.114: this_start_row '${this_start_row}'"
         }
+        if { [string match "Zv*" $test] } {
+            set sub_f_id [string range $modes 3 end]
+            ns_log Notice "hosting-farm/www/assets.tcl.121: sub_f_id '${sub_f_id}'"
+        }
+
+
         # modes 0 0 is z
         set mode [string range $modes 1 1]
         set next_mode [string range $modes 2 2]
