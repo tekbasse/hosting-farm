@@ -24,4 +24,5 @@
 # @param this_start_row (required) the start row for this page
 # @param separator is html used between page numbers, defaults to &nbsp;
 
+db_list_of_lists hf_attributes_set "select [hf_sub_asset_map_keys ","] from hf_sub_asset_map where instance_id=:instance_id and attribute_p!='0' and sub_f_id in ([template::util::tcl_to_sql_list $attrs_list])"
 

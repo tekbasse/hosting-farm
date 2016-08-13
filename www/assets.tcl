@@ -543,13 +543,11 @@ switch -exact -- $mode {
                 set attrs_list [hf_asset_attributes $f_id]
                 if { [llength $attrs_list ] > 0 } {
                     set include_view_attrs_p 1
-                    ##code
                 }
 
                 set assets_list [hf_asset_subassets $f_id]
                 if { [llength $assets_list ] > 0 } {
                     set include_view_sub_assets_p 1
-                    ##code
                 }
 
             }

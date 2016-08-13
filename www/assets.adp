@@ -24,11 +24,6 @@
   </div>
 </div>
 
-
-
-
-
-
 </if>
 <if @include_view_one_p@ true>
   <include src="/packages/hosting-farm/lib/asset-view" &asset_arr=obj_arr &perms_arr=perms_arr detail_p="@detail_p@" tech_p="@tech_p@" asset_type="@asset_type@">
@@ -41,7 +36,12 @@
 </if>
 <if @include_view_sub_assets_p@ true>
 <!-- make a revision of assets-view-2 for use with scope of sub_assets_list -->
-  <include src="/packages/hosting-farm/lib/sub-assets-view" &sub_assets_lists=sub_assets_lists>
+<!-- one col on l, m, s  -->
+<div class="l-grid-whole m-grid-whole s-grid-whole padded">
+  <div class="content-box">
+    <include src="/packages/hosting-farm/lib/assets-view-2" &assets_lists=assets_lists interval_remaining="@interval_remaining;noquote@" s="@s;noquote@" p="@p;noquote@" this_start_row="@this_start_row;noquote@" base_url="assets" pagination_bar_p="0">
+  </div>
+</div>
 </if>
 
 <if @form_html@ not nil>

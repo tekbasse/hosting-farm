@@ -54,7 +54,7 @@
 # @param show_page_num_p           Answers Q: Use the page number in pagniation bar?
 #                             If not, uses the first value of the left-most (primary sort) column
 # @param show_titles_p        (defaults to 1)
-
+# @pagination_bar_p               Allow pagination_bar ? defaults to 1
 
 # General process flow:
 # 1. Get table as list_of_lists
@@ -65,7 +65,11 @@
 # 5. Format output -- compact_p vs. regular
 
 set page_html ""
-
+if { ![info exists pagination_bar_p] } {
+    set pagination_bar_p 1
+    set item_count [llength $assets_lists]
+    set items_per_page $item_count
+}
 
 # ================================================
 # 1. Get table as list_of_lists
@@ -95,38 +99,41 @@ if { $item_count > 0 } {
     #if { !\[info exists base_url\] } {
     #    set base_url \[ad_conn path_url\]
     #}
-    if { ![info exists show_page_num_p ] } {
-        set show_page_num_p 0
-    }
     if { ![info exists show_titles_p ] } {
         set show_titles_p 1
     }
 
-    set this_start_row_exists_p [info exists this_start_row]
-    if { !$this_start_row_exists_p || ( $this_start_row_exists_p && ![qf_is_natural_number $this_start_row] ) } {
-        set this_start_row 1
-    }
-    if { ![info exists separator] } {
-        set separator "&nbsp;"
-    }
 
 
     # ================================================
     # Pagination_bar -- calcs including list_limit and list_offset, build UI
     # ================================================
     # if $s exists, add it to to pagination urls.
-    ns_log Notice "assets-view.tcl.210"
+    ns_log Notice "assets-view-2.tcl.210"
     # setup
 
-    if { ![info exists items_per_page] } {
-        set items_per_page 12
-    }
     set prev_bar ""
     set next_bar ""
     set current_bar ""
 
+    set form_id [qf_form action $base_url method post id 20160802 hash_check 1]
+    qf_input type "hidden" name "mode" value "p"
+
     # Calc a pagination bar?
-    if { $item_count > $items_per_page } {
+    if { $pagination_bar_p && $item_count > $items_per_page } {
+        if { ![info exists items_per_page] } {
+            set items_per_page 12
+        }
+        if { ![info exists show_page_num_p ] } {
+            set show_page_num_p 0
+        }
+        set this_start_row_exists_p [info exists this_start_row]
+        if { !$this_start_row_exists_p || ( $this_start_row_exists_p && ![qf_is_natural_number $this_start_row] ) } {
+            set this_start_row 1
+        }
+        if { ![info exists separator] } {
+            set separator "&nbsp;"
+        }
         
         # Sanity check 
         if { $this_start_row > $item_count } {
@@ -135,8 +142,6 @@ if { $item_count > 0 } {
         if { $this_start_row < 1 } {
             set this_start_row 1
         }
-        set form_id [qf_form action $base_url method post id 20160802 hash_check 1]
-        qf_input type "hidden" name "mode" value "p"
 
         set bar_list_set [hf_pagination_by_items $item_count $items_per_page $this_start_row]
         set prev_bar_list [list]
@@ -186,7 +191,7 @@ if { $item_count > 0 } {
         # not implemented in this version. code removed.
 
         # Begin building the paginated table here. Table rows have been sorted.
-        ns_log Notice "assets-view.tcl.424"
+        ns_log Notice "assets-view-2.tcl.424"
         set table_paged_sorted_lists [list ]
         set lindex_start [expr { $this_start_row - 1 } ]
         set lindex_last [expr { $item_count - 1 } ]
@@ -227,20 +232,38 @@ if { $item_count > 0 } {
 
         }
         #set next_bar \[join $next_bar_list $separator\]
-    }
-
-    # add start_row to sort_urls.
-    if { $this_start_row_exists_p } {
-        set page_url_add "&amp;this_start_row=${this_start_row}"
     } else {
-        set page_url_add ""
-    }
+        # no pagination bar
+        # Begin building the paginated table here. Table rows have been sorted.
+        # This code extracted from above.
 
+
+        ns_log Notice "assets-view-2.tcl.237"
+        set table_paged_sorted_lists [list ]
+        set lindex_start 0
+        set lindex_last [expr { $item_count - 1 } ]
+        set last_row [expr { $lindex_start + $items_per_page - 1 } ]
+        if { $lindex_last < $last_row } {
+            set last_row $lindex_last
+        }
+        for { set row_num $lindex_start } { $row_num <= $last_row } {incr row_num} {
+            set row_list [lindex $table_sorted_lists $row_num]
+            lappend table_paged_sorted_lists $row_list
+            set asset_name [lindex $row_list 0]
+            set asset_id [lindex $row_list 1]
+            qf_append html "<br> &nbsp; &nbsp;"
+            qf_input type submit value $asset_name name "zvl${asset_id}" class button
+        }
+        # Result: table_page_sorted_lists
+        qf_append html "<br>"
+        
+    }
 
     qf_close form_id $form_id
     append page_html [qf_read form_id $form_id]
 } else {
     append page_html "#acs-subsite.none#"
 }
+
 
 
