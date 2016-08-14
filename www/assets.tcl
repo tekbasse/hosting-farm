@@ -109,7 +109,7 @@ if { !$form_posted_p } {
     if { $modes_idx > -1 && $mode eq "p" } {
         set modes [lindex $input_arr_idx_list $modes_idx]
         set test [string range $modes 0 3]
-        if { [string match "zv*" $test] } {
+        if { [string match {z[ev]*} $test] } {
             set asset_id [string range $modes 3 end]
             ns_log Notice "hosting-farm/www/assets.tcl.110: asset_id '${asset_id}'"
         }
@@ -487,7 +487,7 @@ switch -exact -- $mode {
             set asset_type [hf_constructor_b obj_arr]
             set include_edit_one_p 1
             set publish_p [hf_ui_go_ahead_q write "" published 0]
-            ns_log Notice "assets.tcl.539 publish_p '${publish_p}' asset_id '${asset_id}'"
+            ns_log Notice "assets.tcl.490 publish_p '${publish_p}' asset_id '${asset_id}'"
             array set perms_arr [list read_p $read_p create_p $create_p write_p $write_p admin_p $admin_p pkg_admin_p $pkg_admin_p publish_p $publish_p ]
             # pass asset_arr perms_arr
             set detail_p $pkg_admin_p
@@ -503,7 +503,9 @@ switch -exact -- $mode {
                 set context [list [list assets #hosting-farm.Assets#] "$obj_arr(sub_label) - #q-wiki.edit#"]
             }
 
-
+            if { ![exists_and_not_null asset_type] } {
+                ns_log Warning "assets.tcl.507: asset_type not defined."
+            }
 
             ##code
 

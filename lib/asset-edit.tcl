@@ -1,4 +1,4 @@
-# hosting-farm/lib/asset-view.tcl
+# hosting-farm/lib/asset-edit.tcl
 # show an hf asset record
 # for editing, see asset-input.tcl
 
@@ -51,7 +51,8 @@
 if { ![info exists detail_p] } {
     set detail_p 0
 }
-if { ![info exists asset_type] } {
+if { ![exists_and_not_null asset_type ] } {
+    ns_log Warning "hosting-farm/lib/asset-edit.tcl.55: asset_type not defined"
     set asset_type [hf_constructor_a $asset_arr]
 }
 if { ![info exists separator] } {
@@ -93,7 +94,7 @@ if { ![info exists tech_p] } {
         set tech_p [string match "*technical_*" $user_roles]
     } 
 }
-
+ns_log Notice "hosting-farm/lib/asset-edit.tcl.97: asset_type '${asset_type}'"
 if { [array exists asset_arr] } {
     template::util::array_to_vars asset_arr
 }
@@ -110,17 +111,17 @@ if { [exists_and_not_null asset_type_id] } {
         set asset_description ""
     }
 } else {
-    ns_log Warning "hosting-farm/lib/asset-view.tcl: asset_type_id is null or does not exist."
+    ns_log Warning "hosting-farm/lib/asset-edit.tcl: asset_type_id is null or does not exist."
     set asset_type_id ""
 }
 
 
 # output
 foreach key [array names asset_arr] {
-                set asset_arr(${key}) [qf_unquote $asset_arr(${key}) ]
-            }
+    set asset_arr(${key}) [qf_unquote $asset_arr(${key}) ]
+}
 
-set cancel_link_html "<a hrer=\"list?mode=l\">#acs-kernel.common_Cancel#</a>"
+set cancel_link_html "<a href=\"${base_url}\">#acs-kernel.common_Cancel#</a>"
 
 #set conn_package_url \[ad_conn package_url\]
 #set base_url \[file join $conn_package_url $url\]
@@ -130,37 +131,27 @@ set cancel_link_html "<a hrer=\"list?mode=l\">#acs-kernel.common_Cancel#</a>"
 qf_form action $base_url method post id 20160811 hash_check 1
 qf_input type hidden value w name mode
 qf_input type hidden value v name mode_next
-qf_append html "<div style=\"width: 70%; text-align: right;\">"
+#qf_append html "<div style=\"width: 70%; text-align: right;\">"
 
-foreach {key val} [array get asset_arr] {
-    if { ( $detail_p || $tech_p ) || ![hf_key_hidden_q $key] } {
-        qf_append html "<br>"
-        set val_unquoted [qf_unquote $val]
-        qf_input type text value $val_unquoted name $key label "#hosting-farm.${key}#:" size 40 maxlength 80
-    } else {
-        qf_input type hidden value $val name $key
+if { [string match "*asset*" $asset_type ] } {
+    foreach {key val} [array get asset_arr] {
+        if { ( $detail_p || $tech_p ) || ![hf_key_hidden_q $key] } {
+            qf_append html "<br>"
+            set val_unquoted [qf_unquote $val]
+            qf_input type text value $val_unquoted name $key label "#hosting-farm.${key}#:" size 40 maxlength 80
+        } else {
+            qf_input type hidden value $val name $key
+        }
     }
 }
-
-qf_append html "</div>"
+#qf_append html "</div>"
 qf_input type submit value "#acs-kernel.common_Save#"
 qf_append html " &nbsp; &nbsp; &nbsp; ${cancel_link_html}"
 qf_close
-set form_html [qf_read]
+append content [qf_read]
 
 
-
-set content_list [list ]
-foreach key [hf_asset_keys] {
-
-        set element ""
-        append element $key $separator $asset_arr(${key})
-        lappend content_list $element
-    } 
-}
-
-
-if { [string match "*attr*" $asset_type] } {
+if { [string match "*attr*" $asset_type ] } {
     if { [exists_and_not_null sub_type_id] } {
         # get sub_type_id info
         #    asset_label asset_title asset_description
@@ -176,21 +167,8 @@ if { [string match "*attr*" $asset_type] } {
             set sub_asset_description ""
         }
     } else {
-        ns_log Warning "hosting-farm/lib/asset-view.tcl: sub_type_id is null or does not exist."
+        ns_log Warning "hosting-farm/lib/asset-edit.tcl: sub_type_id is null or does not exist."
         set sub_type_id ""
     }
-
-    if { $sub_type_id ne "" } {
-        foreach key [hf_${sub_type_id}_keys] {
-            if { ( $tech_p ) || ![hf_key_hidden_q $key] } {
-                set element ""
-                append element $key $separator $asset_arr(${key})
-                lappend content_list $element
-            } 
-        }
-    }
-
 }
 
-
-append content [qf_read form_id $form_id]
