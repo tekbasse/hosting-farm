@@ -27,6 +27,7 @@ set create_p 0
 set write_p 0
 set admin_p 0
 set pkg_admin_p 0
+set publish_p 0
 set title "#hosting-farm.Assets#"
 set context [list $title]
 set icons_path1 "/resources/acs-subsite/"
@@ -42,9 +43,11 @@ set base_url "assets"
 #flags
 set include_view_assets_p 0
 set include_view_one_p 0
+set include_view_attr_p 0
 set include_view_attrs_p 0
 set include_view_sub_assets_p 0
 set include_edit_one_p 0
+set include_edit_attr_p 0
 array set input_arr \
     [list \
          asset_id "" \
@@ -104,6 +107,10 @@ if { !$form_posted_p } {
     # following is part of dynamic menu processing using form tags instead of url/GET
     # key,value is passed as a single name, with first letter z for asset_id or Z for sub_f_id.
     set input_arr_idx_list [array names input_arr]
+    # add required defaults not passed by form
+    set asset_type ""
+
+
     ##code update this regexp?
     set modes_idx [lsearch -regexp $input_arr_idx_list {[Zz][vpsSrnwctTdel][ivcrl][1-9][0-9]*}]
     if { $modes_idx > -1 && $mode eq "p" } {
@@ -126,6 +133,7 @@ if { !$form_posted_p } {
             set f_id [hf_asset_f_id_of_sub_f_id $sam_arr(f_id)]
             set asset_id [hf_asset_id_current_of_f_id $f_id]
             set asset_type "attr_only"
+            set sub_type_id $sam_arr(sub_type_id)
         }
 
 
@@ -176,7 +184,7 @@ if { !$form_posted_p } {
     # Determine input completeness
 
     if { [qf_is_natural_number $asset_id] } {
-        if { [hf_asset_id_exists_q $asset_id ] } {
+        if { [hf_asset_id_exists_q $asset_id ] || $asset_type eq "attr_only" } {
             # Probably valid asset_id
         } else {
             set asset_id ""
@@ -194,7 +202,7 @@ if { !$form_posted_p } {
         set sub_asset_id ""
     }
     if { [qf_is_natural_number $f_id] } {
-        if { [hf_asset_id_exists_q $f_id ] } {
+        if { [hf_asset_id_exists_q $f_id ] || $asset_type eq "attr_only" } {
             # Probably valid f_id
         } else {
             set f_id ""
@@ -490,10 +498,14 @@ switch -exact -- $mode {
             # If asset and non primary attribute exist, just
             # edit the attribute.
             # set include_view_one_p 1
-            set asset_type [hf_constructor_b obj_arr]
-            set include_edit_one_p 1
-            set publish_p [hf_ui_go_ahead_q write "" published 0]
-            ns_log Notice "assets.tcl.490 publish_p '${publish_p}' asset_id '${asset_id}'"
+            if { $asset_type eq "attr_only" } {
+                set asset_type [hf_constructor_b obj_arr force $asset_type $sub_type_id]
+            } else {
+                set asset_type [hf_constructor_b obj_arr]
+                set include_edit_one_p 1
+                set publish_p [hf_ui_go_ahead_q write "" published 0]
+                ns_log Notice "assets.tcl.490 publish_p '${publish_p}' asset_id '${asset_id}'"
+            }
             array set perms_arr [list read_p $read_p create_p $create_p write_p $write_p admin_p $admin_p pkg_admin_p $pkg_admin_p publish_p $publish_p ]
             # pass asset_arr perms_arr
             set detail_p $pkg_admin_p
@@ -536,15 +548,42 @@ switch -exact -- $mode {
             set title "#hosting-farm.Asset#"
             # add default, to convert attr_only to include asset?
             #set asset_type \[hf_constructor_a asset_arr default asset_attr\]
-            set asset_type [hf_constructor_b obj_arr]
-            set include_view_one_p 1
-            set publish_p [hf_ui_go_ahead_q write "" published 0]
+            if { $asset_type eq "attr_only" } {
+                set asset_type [hf_constructor_b obj_arr force $asset_type $sub_type_id]
+                set include_view_attr_p 1
+                set attrs_list [hf_asset_attributes $sub_f_id]
+                if { [llength $attrs_list ] > 0 } {
+                    set include_view_attrs_p 1
+                }
+                
+                set asset_ids_list [hf_asset_subassets $sub_f_id]
+                if { [llength $asset_ids_list ] > 0 } {
+                    set assets_lists [hf_assets_read $asset_ids_list]
+                    set include_view_sub_assets_p 1
+                }
+            } else {
+                set asset_type [hf_constructor_b obj_arr]
+                set include_view_one_p 1
+                set publish_p [hf_ui_go_ahead_q write "" published 0]
+                if { $f_id ne "" } {
+                    set attrs_list [hf_asset_attributes $f_id]
+                    if { [llength $attrs_list ] > 0 } {
+                        set include_view_attrs_p 1
+                    }
+                    
+                    set asset_ids_list [hf_asset_subassets $f_id]
+                    if { [llength $asset_ids_list ] > 0 } {
+                        set assets_lists [hf_assets_read $asset_ids_list]
+                        set include_view_sub_assets_p 1
+                    }
+                }
+            }
             ns_log Notice "assets.tcl.539 publish_p '${publish_p}' asset_id '${asset_id}'"
             array set perms_arr [list read_p $read_p create_p $create_p write_p $write_p admin_p $admin_p pkg_admin_p $pkg_admin_p publish_p $publish_p ]
             # pass asset_arr perms_arr
             set detail_p $pkg_admin_p
             set tech_p $admin_p
-
+            
             # adjust page context
             if { [info exists obj_arr(name)] } {
                 set context [list [list assets #hosting-farm.Assets#] $obj_arr(name)]
@@ -554,19 +593,6 @@ switch -exact -- $mode {
                 set context [list [list assets #hosting-farm.Assets#] $obj_arr(sub_label) ]
             }
 
-            if { $f_id ne "" } {
-                set attrs_list [hf_asset_attributes $f_id]
-                if { [llength $attrs_list ] > 0 } {
-                    set include_view_attrs_p 1
-                }
-
-                set asset_ids_list [hf_asset_subassets $f_id]
-                if { [llength $asset_ids_list ] > 0 } {
-                    set assets_lists [hf_assets_read $asset_ids_list]
-                    set include_view_sub_assets_p 1
-                }
-
-            }
         } else {
             # no permission to read page. This should not happen.
             ns_log Warning "hosting-farm/assets.tcl:(619) user did not get expected 404 error when not able to read page."
