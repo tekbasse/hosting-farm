@@ -176,3 +176,41 @@ ad_proc -private hf_key_hidden_q {
     }
     return $hide_p
 }
+
+
+ad_proc -private hf_key_editable_q {
+    fieldname
+    {asset_type_id ""}
+} {
+    Returns 1 if fieldname is editable by user
+    such as in UI forms and views.
+    Refers to write_p, admin_p and pkg_admin_p as defined in calling environment.
+
+    If asset_type_id is included, checks for specific case, otherwise
+    only considers the general case.
+} {
+    upvar 1 read_p read_p
+    upvar 1 write_p write_p
+    upvar 1 admin_p admin_p
+    upvar 1 pkg_admin_p pkg_admin_p
+    set editable_p 0
+
+    if { $hidden_p == 0 && $read_p } {
+        set write_list [list name ]
+        set admin_list [list ]
+        set pkg_admin_list [list label template_p flags ]
+        if { $write_p } {
+            if { $fieldname in $write_list } {
+                set editable_p 1
+            } elseif { $admin_p } {
+                if { $fieldname in $admin_list } {
+                    set editable_p 1
+                } elseif { $pkg_admin_p && $fieldname in $pkg_admin_list } {
+                    set editable_p 1
+                }
+            }
+        }
+
+    }
+    return $editable_p
+}
