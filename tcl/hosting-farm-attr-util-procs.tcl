@@ -1444,6 +1444,8 @@ ad_proc -private hf_asset_f_id_of_sub_f_id {
     upvar 1 instance_id instance_id
     set i_limit 20
     set i 0
+    set f_id [hf_f_id_of_sub_f_id $sub_f_id]
+    set f_id_exists_p [hf_f_id_exists_q $f_id]
     while { !$f_id_exists_p && $f_id ne "" && $i < $i_limit } {
         incr i
         set f_id [hf_f_id_of_sub_f_id $sub_f_id]
@@ -1451,6 +1453,7 @@ ad_proc -private hf_asset_f_id_of_sub_f_id {
     }
     if { $i >= $i_limit } {
         set f_id ""
+        ns_log Warning "hf_asset_f_id_of_sub_f_id.1456: i > i_limit. Reached loop limit of '${i_limit}' for tree search."
     }
     return $f_id
 }
