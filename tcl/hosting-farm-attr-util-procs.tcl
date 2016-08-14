@@ -1431,3 +1431,26 @@ ad_proc -private hf_sub_label_define_empty {
     }
 }
 
+
+ad_proc -private hf_asset_f_id_of_sub_f_id {
+    sub_f_id
+} {
+    This finds the asset that contains the attribute.
+    Most mapping only handles one level deep.
+    This follows a chain of attributes to the asset. 
+    Think reverse cascade. Current limit is 20 deep.
+    @return f_id or empty string if not found.
+} {
+    upvar 1 instance_id instance_id
+    set i_limit 20
+    set i 0
+    while { !$f_id_exists_p && $f_id ne "" && $i < $i_limit } {
+        incr i
+        set f_id [hf_f_id_of_sub_f_id $sub_f_id]
+        set f_id_exists_p [hf_f_id_exists_q $f_id]
+    }
+    if { $i >= $i_limit } {
+        set f_id ""
+    }
+    return $f_id
+}

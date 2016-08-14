@@ -120,6 +120,12 @@ if { !$form_posted_p } {
         if { [string match "Zv*" $test] } {
             set sub_f_id [string range $modes 3 end]
             ns_log Notice "hosting-farm/www/assets.tcl.121: sub_f_id '${sub_f_id}'"
+            # set asset_id for permissions, and make rest of map record available. sub_type_id etc.
+            set sam_list [hf_sub_asset $sub_f_id]
+            qf_lists_to_array sam_arr $sam_list [hf_sub_asset_map_keys]
+            set f_id [hf_asset_f_id_of_sub_f_id $sam_arr(f_id)]
+            set asset_id [hf_asset_id_current_of_f_id $f_id]
+            set asset_type "attr_only"
         }
 
 
@@ -255,8 +261,8 @@ if { !$form_posted_p } {
     #   S  = Unpublish
 
     # Views
-    #   e  = edit asset_id/sub_asset_id, presents defaults if no prior data
-    #   v  = view asset_id or sub_asset_id
+    #   e  = edit asset_id/sub_asset_id or attribute, presents defaults if no prior data
+    #   v  = view asset_id or sub_asset_id (attribute_id or asset_id)
     #   l  = list assets
     #   r  = view history (can only delete if pkg admin)
     #   "" = view list of role oriented summaries
