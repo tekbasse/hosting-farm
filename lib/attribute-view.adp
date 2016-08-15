@@ -1,9 +1,9 @@
 
 <if @sub_type_id@ not nil>
-  <img src="resources/icons/@sub_type_id@.png" title="@asset_title;noquote@" alt="@asset_title;noquote@">
-  <if @asset_label@ not nil>
-    <p>@asset_label@ - @asset_description@</p>
-    <h2>@asset_title;noquote@</h2>
+  <img src="resources/icons/@sub_type_id@.png" title="@sub_asset_title;noquote@" alt="@sub_asset_title;noquote@">
+  <if @sub_asset_label@ not nil>
+    <p>@sub_asset_label@ - @sub_asset_description@</p>
+    <h2>@sub_asset_title;noquote@</h2>
   </if>
 </if>
 
