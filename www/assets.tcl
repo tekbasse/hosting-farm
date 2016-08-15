@@ -499,7 +499,12 @@ switch -exact -- $mode {
             # edit the attribute.
             # set include_view_one_p 1
             if { $asset_type eq "attr_only" } {
-                set asset_type [hf_constructor_b obj_arr force $asset_type $sub_type_id]
+                array set attr_arr [array get sam_arr]
+                if { $sub_type_id in [hf_asset_type_id_list] } {
+                    set sub_asset_list [hf_${sub_type_id}_read $sub_f_id]
+                    qf_lists_to_array attr_arr $sub_asset_list [hf_${sub_type_id}_keys]
+                }
+                set include_edit_attr_p 1
             } else {
                 set asset_type [hf_constructor_b obj_arr]
                 set include_edit_one_p 1
@@ -549,7 +554,12 @@ switch -exact -- $mode {
             # add default, to convert attr_only to include asset?
             #set asset_type \[hf_constructor_a asset_arr default asset_attr\]
             if { $asset_type eq "attr_only" } {
-                set asset_type [hf_constructor_b obj_arr force $asset_type $sub_type_id]
+                array set attr_arr [array get sam_arr]
+                if { $sub_type_id in [hf_asset_type_id_list] } {
+                    set sub_asset_list [hf_${sub_type_id}_read $sub_f_id]
+                    qf_lists_to_array attr_arr $sub_asset_list [hf_${sub_type_id}_keys]
+                }
+
                 set include_view_attr_p 1
                 set attrs_list [hf_asset_attributes $sub_f_id]
                 if { [llength $attrs_list ] > 0 } {

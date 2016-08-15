@@ -52,7 +52,7 @@ if { ![info exists tech_p] } {
 if { [array exists attr_arr] } {
     template::util::array_to_vars attr_arr
 }
-
+set content ""
 if { ![exists_and_not_null sub_type_id] } {
     ns_log Warning "hosting-farm/lib/asset-view.tcl: sub_type_id is null or does not exist."
     set sub_type_id ""
