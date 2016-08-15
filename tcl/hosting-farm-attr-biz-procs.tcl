@@ -514,49 +514,49 @@ ad_proc -private hf_attribute_sub_label_update {
             db_transaction {
                 switch -exact -- $sub_type_id {
                     dc { 
-                        set dc_list [lindex hf_dc_read $sub_f_id 0]
+                        set dc_list [hf_dc_read $sub_f_id]
                         qf_lists_to_array dc_arr $dc_list [hf_dc_keys]
                         set dc_arr(dc_id) ""
                         set sub_f_id__new [hf_dc_write dc_arr]
                     }
                     hw { 
-                        set hw_list [lindex hf_hw_read $sub_f_id 0]
+                        set hw_list [hf_hw_read $sub_f_id]
                         qf_lists_to_array hw_arr $hw_list [hf_hw_keys]
                         set hw_arr(hw_id) ""
                         set sub_f_id__new [hf_hw_write hw_arr]
                     }
                     vm { 
-                        set vm_list [lindex hf_vm_read $sub_f_id 0]
+                        set vm_list [hf_vm_read $sub_f_id]
                         qf_lists_to_array vm_arr $vm_list [hf_vm_keys]
                         set vm_arr(vm_id) ""
                         set sub_f_id__new [hf_vm_write vm_arr]
                     }
                     vh { 
-                        set vh_list [lindex hf_vh_read $sub_f_id 0]
+                        set vh_list [hf_vh_read $sub_f_id]
                         qf_lists_to_array vh_arr $vh_list [hf_vh_keys]
                         set vh_arr(vh_id) ""
                         set sub_f_id__new [hf_vh_write vh_arr]
                     }
                     ss { 
-                        set ss_list [lindex hf_ss_read $sub_f_id 0]
+                        set ss_list [hf_ss_read $sub_f_id]
                         qf_lists_to_array ss_arr $ss_list [hf_ss_keys]
                         set ss_arr(ss_id) ""
                         set sub_f_id__new [hf_ss_write ss_arr]
                     }
                     ip { 
-                        set ip_list [lindex hf_ip_read $sub_f_id 0]
+                        set ip_list [hf_ip_read $sub_f_id]
                         qf_lists_to_array ip_arr $ip_list [hf_ip_keys]
                         set ip_arr(ip_id) ""
                         set sub_f_id__new [hf_ip_write ip_arr]
                     }
                     ni { 
-                        set ni_list [lindex hf_ni_read $sub_f_id 0]
+                        set ni_list [hf_ni_read $sub_f_id]
                         qf_lists_to_array ni_arr $ni_list [hf_ni_keys]
                         set ni_arr(ni_id) ""
                         set sub_f_id__new [hf_ni_write ni_arr]
                     }
                     ns { 
-                        set ns_list [lindex hf_ns_read $sub_f_id 0]
+                        set ns_list [hf_ns_read $sub_f_id]
                         qf_lists_to_array ns_arr $ns_list [hf_ns_keys]
                         set ns_arr(ns_id) ""
                         set sub_f_id__new [hf_ns_write ns_arr]

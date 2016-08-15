@@ -57,6 +57,9 @@ if { ![exists_and_not_null sub_type_id] } {
     ns_log Warning "hosting-farm/lib/asset-view.tcl: sub_type_id is null or does not exist."
     set sub_type_id ""
 } else {
+    if { $sub_type_id in [list dc hw vm vh ss] } {
+        set sub_type_id_url $sub_type_id
+    }
 
 
     # output
@@ -69,6 +72,12 @@ if { ![exists_and_not_null sub_type_id] } {
         } 
     }
 
+
+    foreach element $content_list {
+        append content "<li>"
+        append content $element
+        append content "</li>"
+    }
 
 
 
@@ -86,23 +95,6 @@ if { ![exists_and_not_null sub_type_id] } {
         set sub_asset_description ""
     }
 
-    if { $sub_type_id ne "" } {
-        foreach key [hf_${sub_type_id}_keys] {
-            if { ( $tech_p ) || ![hf_key_hidden_q $key] } {
-                set element ""
-                append element $key $separator $attr_arr(${key})
-                lappend content_list $element
-            } 
-        }
-    }
-
-
-
-    foreach element $content_list {
-        append content "<li>"
-        append content $element
-        append content "</li>"
-    }
 
     set form_id [qf_form action $base_url method post id 20160809 hash_check 1]
     qf_input type "hidden" name "mode" value "p"

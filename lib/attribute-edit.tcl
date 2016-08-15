@@ -52,8 +52,12 @@ if { [array exists attr_arr] } {
     template::util::array_to_vars attr_arr
 }
 
+
 if { [exists_and_not_null sub_type_id] } {
     # get sub_type_id info
+    if { $sub_type_id in [list dc hw vm vh ss] } {
+        set sub_type_id_url $sub_type_id
+    }
     #    asset_label asset_title asset_description
     # changed to sub_asset_label sub_asset_title sub_asset_description
     set sub_asset_type_list [lindex [hf_asset_type_read $sub_type_id $instance_id] 0]

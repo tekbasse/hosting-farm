@@ -211,7 +211,7 @@ if { !$form_posted_p } {
         set f_id ""
     }
     if { [qf_is_natural_number $sub_f_id] } {
-        if { [hf_asset_id_exists_q $sub_f_id ] } {
+        if { [hf_sub_f_id_exists_q $sub_f_id ] } {
             # Probably valid sub_f_id
         } else {
             set sub_f_id ""
@@ -548,7 +548,7 @@ switch -exact -- $mode {
                 ad_returnredirect $url
                 ad_script_abort
             }
-            ns_log Notice "hosting-farm/assets.tcl(667): view mode '${mode}' asset_id '${asset_id}'"
+            ns_log Notice "hosting-farm/assets.tcl(667): view mode '${mode}' asset_id '${asset_id}' sub_f_id '${sub_f_id}' asset_type '${asset_type}'"
 
             set title "#hosting-farm.Asset#"
             # add default, to convert attr_only to include asset?
@@ -558,6 +558,7 @@ switch -exact -- $mode {
                 if { $sub_type_id in [hf_asset_type_id_list] } {
                     set sub_asset_list [hf_${sub_type_id}_read $sub_f_id]
                     qf_lists_to_array obj_arr $sub_asset_list [hf_${sub_type_id}_keys]
+                    ns_log Notice "hosting-farm/assets.tcl(669): array get obj_arr [array get obj_arr]"
                 }
 
                 set include_view_attr_p 1

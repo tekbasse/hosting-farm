@@ -111,8 +111,10 @@ ad_proc -private hf_asset_types {
 
 ad_proc -private hf_dc_read {
     {dc_id_list ""}
+    {one_as_list_p "1"}
 } {
-    Returns records from hf_data_centers as a list of lists. See hf_dc_keys
+    Returns records from hf_data_centers as a list of lists. See hf_dc_keys. 
+    If only one id is requested and one_as_list_p is true, a list is returned instead of a list of lists.
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -128,14 +130,20 @@ ad_proc -private hf_dc_read {
             }
         }
     }
+    if { [llength $dc_id_list] == 1 && $one_as_list_p } {
+        # expecting to return only 1 row
+        set return_lists [lindex $return_lists 0]
+    }
     return $return_lists
 }
 
 
 ad_proc -private hf_hw_read {
     {hw_id_list ""}
+    {one_as_list_p "1"}
 } {
     Returns records from hf_hardware as a list of lists. See hf_hw_keys
+    If only one id is requested and one_as_list_p is true, a list is returned instead of a list of lists.
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -151,14 +159,20 @@ ad_proc -private hf_hw_read {
             }
         }
     }
+    if { [llength $hw_id_list] == 1 && $one_as_list_p } {
+        # expecting to return only 1 row
+        set return_lists [lindex $return_lists 0]
+    }
     return $return_lists
 }
 
 
 ad_proc -private hf_vm_read {
     {vm_id_list ""}
+    {one_as_list_p "1"}
 } {
     Returns records from hf_virtual_machines as a list of lists. See hf_vm_keys
+    If only one id is requested and one_as_list_p is true, a list is returned instead of a list of lists.
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -174,14 +188,20 @@ ad_proc -private hf_vm_read {
             }
         }
     }
+    if { [llength $vm_id_list] == 1 && $one_as_list_p } {
+        # expecting to return only 1 row
+        set return_lists [lindex $return_lists 0]
+    }
     return $return_lists
 }
 
 
 ad_proc -private hf_vh_read {
     {vh_id_list ""}
+    {one_as_list_p "1"}
 } {
     Returns records from hf_vhosts as a list of lists. See hf_vh_keys
+    If only one id is requested and one_as_list_p is true, a list is returned instead of a list of lists.
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -197,14 +217,20 @@ ad_proc -private hf_vh_read {
             }
         }
     }
+    if { [llength $vh_id_list] == 1 && $one_as_list_p } {
+        # expecting to return only 1 row
+        set return_lists [lindex $return_lists 0]
+    }
     return $return_lists
 }
 
 
 ad_proc -private hf_ss_read {
     {ss_id_list ""}
+    {one_as_list_p "1"}
 } {
     Returns records from hf_services as a list of lists. See hf_ss_keys
+    If only one id is requested and one_as_list_p is true, a list is returned instead of a list of lists.
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -220,13 +246,19 @@ ad_proc -private hf_ss_read {
             }
         }
     }
+    if { [llength $ss_id_list] == 1 && $one_as_list_p } {
+        # expecting to return only 1 row
+        set return_lists [lindex $return_lists 0]
+    }
     return $return_lists
 }
 
 ad_proc -private hf_ip_read {
     {ip_id_list ""}
+    {one_as_list_p "1"}
 } {
     Returns records from hf_ip_addresses as a list of lists. See hf_ip_keys
+    If only one id is requested and one_as_list_p is true, a list is returned instead of a list of lists.
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -242,13 +274,19 @@ ad_proc -private hf_ip_read {
             }
         }
     }
+    if { [llength $ip_id_list] == 1 } {
+        # expecting to return only 1 row
+        set return_lists [lindex $return_lists 0]
+    }
     return $return_lists
 }
 
 ad_proc -private hf_ni_read {
     {ni_id_list ""}
+    {one_as_list_p "1"}
 } {
     Returns records from hf_network_interfaces as a list of lists. See hf_ni_keys
+    If only one id is requested and one_as_list_p is true, a list is returned instead of a list of lists.
 } {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
@@ -263,6 +301,39 @@ ad_proc -private hf_ni_read {
                 lappend return_lists $row_list
             }
         }
+    }
+    if { [llength $ni_id_list] == 1 } {
+        # expecting to return only 1 row
+        set return_lists [lindex $return_lists 0]
+    }
+    return $return_lists
+}
+
+
+ad_proc -private hf_ns_read {
+    {ns_id_list ""}
+    {one_as_list_p "1"}
+} {
+    Returns records from hf_ns_records as a list of lists. See hf_ns_keys
+    If only one id is requested and one_as_list_p is true, a list is returned instead of a list of lists.
+} {
+    upvar 1 instance_id instance_id
+    upvar 1 user_id user_id
+    set ns_ids_list [hf_list_filter_by_natural_number $ns_id_list]
+    set return_lists [list ]
+    foreach ns_id $ns_id_list {
+        set read_p [hf_ui_go_ahead_q read ns_id "" 0]
+        if { $read_p } {
+            set rows_list [db_list_of_lists hf_ns_detail_get "select [hf_ns_keys ","] from hf_ns_records where instance_id =:instance_id and ns_id=:ns_id"]
+            set row_list [lindex $rows_list 0]
+            if { [llength $row_list] > 0 } {
+                lappend return_lists $row_list
+            }
+        }
+    }
+    if { [llength $ns_id_list] == 1 } {
+        # expecting to return only 1 row
+        set return_lists [lindex $return_lists 0]
     }
     return $return_lists
 }
@@ -286,28 +357,6 @@ ad_proc -private hf_os_read {
     return $rows_lists
 }
 
-
-ad_proc -private hf_ns_read {
-    {ns_id_list ""}
-} {
-    Returns records from hf_ns_records as a list of lists. See hf_ns_keys
-} {
-    upvar 1 instance_id instance_id
-    upvar 1 user_id user_id
-    set ns_ids_list [hf_list_filter_by_natural_number $ns_id_list]
-    set return_lists [list ]
-    foreach ns_id $ns_id_list {
-        set read_p [hf_ui_go_ahead_q read ns_id "" 0]
-        if { $read_p } {
-            set rows_list [db_list_of_lists hf_ns_detail_get "select [hf_ns_keys ","] from hf_ns_records where instance_id =:instance_id and ns_id=:ns_id"]
-            set row_list [lindex $rows_list 0]
-            if { [llength $row_list] > 0 } {
-                lappend return_lists $row_list
-            }
-        }
-    }
-    return $return_lists
-}
 
 ad_proc -private hf_vm_quota_read {
     {plan_id_list ""}
