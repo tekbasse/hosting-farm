@@ -53,79 +53,69 @@ if { [array exists attr_arr] } {
     template::util::array_to_vars attr_arr
 }
 
-if { [exists_and_not_null sub_type_id] } {
-    # get asset_type_id info
-    #    asset_label asset_title asset_description
-    set asset_type_list [lindex [hf_asset_type_read $sub_type_id $instance_id] 0]
-    if { [llength $asset_type_list ] > 0 } {
-        qf_lists_to_vars $asset_type_list [hf_asset_type_keys]
-    } else {
-        set asset_label ""
-        set asset_title ""
-        set asset_description ""
-    }
-} else {
+if { ![exists_and_not_null sub_type_id] } {
     ns_log Warning "hosting-farm/lib/asset-view.tcl: sub_type_id is null or does not exist."
     set sub_type_id ""
-}
-
-
-# output
-set content_list [list ]
-foreach key [hf_asset_keys] {
-    if { ( $detail_p || $tech_p ) || ![hf_key_hidden_q $key] } {
-        set element ""
-        append element $key $separator $asset_arr(${key})
-        lappend content_list $element
-    } 
-}
-
-
-
-
-# get sub_type_id info
-#    asset_label asset_title asset_description
-# changed to sub_asset_label sub_asset_title sub_asset_description
-set sub_asset_type_list [lindex [hf_asset_type_read $sub_type_id $instance_id] 0]
-if { [llength $sub_asset_type_list ] > 0 } {
-    set sub_asset_label [lindex $sub_asset_type_list 0]
-    set sub_asset_title [lindex $sub_asset_type_list 1]
-    set sub_asset_description [lindex $sub_asset_type_list 2]
 } else {
-    set sub_asset_label ""
-    set sub_asset_title ""
-    set sub_asset_description ""
-}
 
-if { $sub_type_id ne "" } {
+
+    # output
+    set content_list [list ]
     foreach key [hf_${sub_type_id}_keys] {
-        if { ( $tech_p ) || ![hf_key_hidden_q $key] } {
+        if { ( $detail_p || $tech_p ) || ![hf_key_hidden_q $key] } {
             set element ""
-            append element $key $separator $asset_arr(${key})
+            append element $key $separator $attr_arr(${key})
             lappend content_list $element
         } 
     }
-}
 
 
 
-foreach element $content_list {
-    append content "<li>"
-    append content $element
-    append content "</li>"
-}
 
-set form_id [qf_form action $base_url method post id 20160809 hash_check 1]
-qf_input type "hidden" name "mode" value "p"
-qf_input type submit value "#accounts-ledger.edit#" name "Zev${sub_f_id}" class button
-qf_append html "<br>"
-if { $write_p && [exists_and_not_null asset_arr(trashed_p) ] } {
-    if { [qf_is_true $asset_arr(trashed_p) ] } {
-        qf_input type submit value "#accounts-finance.untrash#" name "ZTv${sub_f_id}" class button
+    # get sub_type_id info
+    #    asset_label asset_title asset_description
+    # changed to sub_asset_label sub_asset_title sub_asset_description
+    set sub_asset_type_list [lindex [hf_asset_type_read $sub_type_id $instance_id] 0]
+    if { [llength $sub_asset_type_list ] > 0 } {
+        set sub_asset_label [lindex $sub_asset_type_list 0]
+        set sub_asset_title [lindex $sub_asset_type_list 1]
+        set sub_asset_description [lindex $sub_asset_type_list 2]
     } else {
-        qf_input type submit value "#accounts-finance.trash#" name "Ztl${sub_f_id}" class button
+        set sub_asset_label ""
+        set sub_asset_title ""
+        set sub_asset_description ""
     }
+
+    if { $sub_type_id ne "" } {
+        foreach key [hf_${sub_type_id}_keys] {
+            if { ( $tech_p ) || ![hf_key_hidden_q $key] } {
+                set element ""
+                append element $key $separator $attr_arr(${key})
+                lappend content_list $element
+            } 
+        }
+    }
+
+
+
+    foreach element $content_list {
+        append content "<li>"
+        append content $element
+        append content "</li>"
+    }
+
+    set form_id [qf_form action $base_url method post id 20160809 hash_check 1]
+    qf_input type "hidden" name "mode" value "p"
+    qf_input type submit value "#accounts-ledger.edit#" name "Zev${sub_f_id}" class button
     qf_append html "<br>"
+    if { $write_p && [exists_and_not_null attr_arr(trashed_p) ] } {
+        if { [qf_is_true $attr_arr(trashed_p) ] } {
+            qf_input type submit value "#accounts-finance.untrash#" name "ZTv${sub_f_id}" class button
+        } else {
+            qf_input type submit value "#accounts-finance.trash#" name "Ztl${sub_f_id}" class button
+        }
+        qf_append html "<br>"
+    }
+    qf_close form_id $form_id
+    append content [qf_read form_id $form_id]
 }
-qf_close form_id $form_id
-append content [qf_read form_id $form_id]
