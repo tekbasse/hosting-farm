@@ -131,6 +131,8 @@ set cancel_link_html "<a href=\"${base_url}\">#acs-kernel.common_Cancel#</a>"
 qf_form action $base_url method post id 20160811 hash_check 1
 qf_input type hidden value w name mode
 qf_input type hidden value v name mode_next
+qf_input type hidden value $asset_type name asset_type
+
 #qf_append html "<div style=\"width: 70%; text-align: right;\">"
 
 if { [string match "*asset*" $asset_type ] } {
