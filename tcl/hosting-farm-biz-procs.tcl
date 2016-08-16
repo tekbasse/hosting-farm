@@ -87,13 +87,12 @@ ad_proc -public hf_constructor_a {
     if { $asset_id ne "" } {
         set asset_id_supplied_p 1
         set f_id_of_asset_id [hf_f_id_of_asset_id $asset_id]
-    }
-    if { $f_id_of_asset_id eq "" } {
-        ns_log Notice "hf_constructor_a: f_id_of_asset_id is '' for asset_id '${asset_id}', setting asset_id ''"
-        set asset_id ""
-
-    } else {
-        set asset_id_p 1
+        if { $f_id_of_asset_id eq "" } {
+            ns_log Notice "hf_constructor_a.91: f_id_of_asset_id is '' for asset_id '${asset_id}', setting asset_id ''"
+            set asset_id ""
+        } else {
+            set asset_id_p 1
+        }
     }
 
     # determine sub_asset_id_p
@@ -104,15 +103,20 @@ ad_proc -public hf_constructor_a {
         if { $sub_arr(trashed_p) } {
             # sub_f_id is not current 
             # do not use.
+            ns_log Warning "hf_constructor_a.106: sub_f_id '${sub_f_id}' is trashed. Setting sub_f_id ''"
             set sub_f_id ""
         }
         if { ![qf_is_true $sub_arr(trashed_p) ] } {
-            if { $f_id ne "" && ( $sub_arr(f_id) eq $f_id || [hf_asset_f_id_of_sub_f_id $sub_f_id] eq $f_id } {
-                set sub_asset_id_p 1
-                array set an_arr [array get sub_arr]
-            } else {
-                set f_id ""
-                set sub_f_id ""
+            if { $f_id ne "" } {
+                set asset_f_id [hf_asset_f_id_of_sub_f_id $sub_f_id]
+                if { $sub_arr(f_id) eq $f_id || $asset_f_id eq $f_id } {
+                    set sub_asset_id_p 1
+                    array set an_arr [array get sub_arr]
+                } else {
+                    ns_log Warning "hf_constructor_a.114: Unexpected f_id '${f_id}' s/b '${asset_f_id}' or '$sub_arr(f_id)' Setting to ''"
+                    set f_id ""
+                    set sub_f_id ""
+                }
             }
         }
     }
@@ -130,7 +134,7 @@ ad_proc -public hf_constructor_a {
         if { $asset_type_id ne "" } {
             set asset_type_id_p 1
         } else {
-            ns_log Warning "hf_constructor_a: changing asset_type_id '${asset_type_id}' to ''"
+            ns_log Warning "hf_constructor_a.137: changing asset_type_id '${asset_type_id}' to ''"
             set asset_type_id ""
         }
     }
@@ -208,8 +212,22 @@ ad_proc -public hf_constructor_a {
             hf_sub_asset_map_defaults an_arr
             set keys_list [set_union $keys_list [hf_sub_asset_map_keys]]
         } else {
-            ns_log Warning "hf_constructor_a.193: unknown asset_type_id '${asset_type_id}' ad_script_abort"
-            ad_script_abort
+            # attr_only
+            set sub_type_id [value_if_exists sub_arr(sub_type_id) ]
+            if { $sub_type_id in [hf_asset_type_id_list] } {
+                # attr_only
+                hf_${sub_type_id}_defaults an_arr
+                set keys_list [set_union $keys_list [hf_${sub_type_id}_keys]]
+                hf_sub_asset_map_defaults an_arr
+                set keys_list [set_union $keys_list [hf_sub_asset_map_keys]]
+                
+            } else {
+            
+                ns_log Warning "hf_constructor_a.193: unknown asset_type_id '${asset_type_id}', sub_type_id '${sub_type_id}'  ad_script_abort"
+                ad_script_abort
+                # once doesn't stop page.. trying twice.
+                ad_script_abort
+            }
         }
     }
     # Remove any unconstructed keys
