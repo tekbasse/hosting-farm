@@ -216,10 +216,21 @@ ad_proc -private hf_key_editable_q {
 }
 
 ad_proc -private hf_key_order_for_display {
-    fieldnames_list
+    names_list
 } {
     Returns fieldnames in sequence for display or editing.
 } {
-    set fieldnames_list_new [lsort -dictionary $fieldnames_list]
-    return $fieldnames_list_new
+    set f_lists [list ]
+    foreach f $names_list {
+        set row_list [list $f [_ "#hosting-farm.${f}#" ]] 
+        lappend f_lists $row_list
+    }
+    # using ascii sort, so that capitalized names are first.
+    # use dictionary instead to alphabetize all of them.
+    set f2_lists [lsort -index 1 -ascii -increasing $f_lists]
+    set names_list_new [list ]
+    foreach row_list $f2_lists {
+        lappend names_list_new [lindex $row_list 0]
+    }
+    return $names_list_new
 }
