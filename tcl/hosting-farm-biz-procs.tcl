@@ -106,8 +106,8 @@ ad_proc -public hf_constructor_a {
             # do not use.
             set sub_f_id ""
         }
-        if { $sub_arr(trashed_p) == 0 } {
-            if { $f_id ne "" && $sub_arr(f_id) eq $f_id } {
+        if { ![qf_is_true $sub_arr(trashed_p) ] } {
+            if { $f_id ne "" && ( $sub_arr(f_id) eq $f_id || [hf_asset_f_id_of_sub_f_id $sub_f_id] eq $f_id } {
                 set sub_asset_id_p 1
                 array set an_arr [array get sub_arr]
             } else {
