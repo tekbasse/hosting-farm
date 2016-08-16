@@ -134,7 +134,8 @@ qf_input type hidden value v name mode_next
 #qf_append html "<div style=\"width: 70%; text-align: right;\">"
 
 if { [string match "*asset*" $asset_type ] } {
-    foreach {key val} [array get asset_arr] {
+    foreach key [hf_key_order_for_display [array names asset_arr]] {
+        set val $asset_arr(${key})
         if { ( $detail_p || $tech_p ) || ![hf_key_hidden_q $key] } {
             qf_append html "<br>"
             set val_unquoted [qf_unquote $val]

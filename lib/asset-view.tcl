@@ -117,10 +117,10 @@ if { [exists_and_not_null asset_type_id] } {
 
 # output
 set content_list [list ]
-foreach key [hf_asset_keys] {
+foreach key [hf_key_order_for_display [hf_asset_keys]] {
     if { ( $detail_p || $tech_p ) || ![hf_key_hidden_q $key] } {
         set element ""
-        append element $key $separator $asset_arr(${key})
+        append element "#hosting-farm.${key}#" $separator $asset_arr(${key})
         lappend content_list $element
     } 
 }
@@ -147,10 +147,10 @@ if { [string match "*attr*" $asset_type] } {
     }
 
     if { $sub_type_id ne "" } {
-        foreach key [hf_${sub_type_id}_keys] {
+        foreach key [hf_key_order_for_display [hf_${sub_type_id}_keys]] {
             if { ( $tech_p ) || ![hf_key_hidden_q $key] } {
                 set element ""
-                append element $key $separator $asset_arr(${key})
+                append element "#hosting-farm.${key}#" $separator $asset_arr(${key})
                 lappend content_list $element
             } 
         }

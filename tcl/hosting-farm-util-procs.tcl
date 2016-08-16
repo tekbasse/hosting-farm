@@ -214,3 +214,12 @@ ad_proc -private hf_key_editable_q {
     }
     return $editable_p
 }
+
+ad_proc -private hf_key_order_for_display {
+    fieldnames_list
+} {
+    Returns fieldnames in sequence for display or editing.
+} {
+    set fieldnames_list_new [lsort -dictionary $fieldnames_list]
+    return $fieldnames_list_new
+}

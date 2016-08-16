@@ -106,7 +106,8 @@ qf_input type hidden value v name mode_next
 qf_input type hidden value $sub_f_id name sub_f_id
 #qf_append html "<div style=\"width: 70%; text-align: right;\">"
 
-foreach {key val} [array get attr_arr] {
+foreach key [hf_key_order_for_display [array names attr_arr]] {
+    set val $attr_arr(${key})
     if { ( $detail_p || $tech_p ) || ![hf_key_hidden_q $key] } {
         qf_append html "<br>"
         set val_unquoted [qf_unquote $val]
