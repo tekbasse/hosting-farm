@@ -85,6 +85,7 @@ if { !$form_posted_p } {
     qf_array_to_vars input_arr \
         [list \
              asset_id \
+             asset_type "" \
              asset_type_id \
              customer_id \
              f_id \
