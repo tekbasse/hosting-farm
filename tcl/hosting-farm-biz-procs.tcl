@@ -133,10 +133,7 @@ ad_proc -public hf_constructor_a {
     if { $sub_asset_id_p == 0 && $asset_id_p == 0 } {
         if { $asset_type_id ne "" } {
             set asset_type_id_p 1
-        } else {
-            ns_log Warning "hf_constructor_a.137: changing asset_type_id '${asset_type_id}' to ''"
-            set asset_type_id ""
-        }
+        } 
     }
 
     # Default to most specific case.
@@ -189,11 +186,13 @@ ad_proc -public hf_constructor_a {
         if { $state ne $arg2 } {
             set state_old $state
             set state $arg2
+            ns_log Notice "hf_constructor_a.189: state forced from '${state_old}' to '${arg2}'"
             # set state_forced_p 1
         }
         if { $asset_type_id ne $arg3 } {
             set asset_type_id_old $asset_type_id
             set asset_type_id $arg3
+            ns_log Notice "hf_constructor_a.194: asset_type_id forced from '${asset_type_id_old}' to '${arg3}'"
             # set asset_type_id_forced_p 1
         }
     } 
@@ -213,7 +212,10 @@ ad_proc -public hf_constructor_a {
             set keys_list [set_union $keys_list [hf_sub_asset_map_keys]]
         } else {
             # attr_only
-            set sub_type_id [value_if_exists sub_arr(sub_type_id) ]
+            set sub_type_id ""
+            if { [info exists sub_arr(sub_type_id) ] } {
+                set sub_type_id $sub_arr(sub_type_id)
+            }   
             if { $sub_type_id in [hf_asset_type_id_list] } {
                 # attr_only
                 hf_${sub_type_id}_defaults an_arr
@@ -224,8 +226,6 @@ ad_proc -public hf_constructor_a {
             } else {
             
                 ns_log Warning "hf_constructor_a.193: unknown asset_type_id '${asset_type_id}', sub_type_id '${sub_type_id}'  ad_script_abort"
-                ad_script_abort
-                # once doesn't stop page.. trying twice.
                 ad_script_abort
             }
         }

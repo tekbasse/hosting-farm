@@ -124,7 +124,7 @@ if { !$form_posted_p } {
             set this_start_row [string range $modes 3 end]
             ns_log Notice "hosting-farm/www/assets.tcl.114: this_start_row '${this_start_row}'"
         }
-        if { [string match "Zv*" $test] } {
+        if { [string match "Z*" $test] } {
             set sub_f_id [string range $modes 3 end]
             ns_log Notice "hosting-farm/www/assets.tcl.121: sub_f_id '${sub_f_id}'"
             # set asset_id for permissions, and make rest of map record available. sub_type_id etc.
@@ -503,9 +503,11 @@ switch -exact -- $mode {
                 if { $sub_type_id in [hf_asset_type_id_list] } {
                     set sub_asset_list [hf_${sub_type_id}_read $sub_f_id]
                     qf_lists_to_array obj_arr $sub_asset_list [hf_${sub_type_id}_keys]
+                    ns_log Notice "hosting-farm/assets.tcl(563): array get obj_arr [array get obj_arr]"
                 }
                 set include_edit_attr_p 1
-            } else {
+   
+         } else {
                 set asset_type [hf_constructor_b obj_arr]
                 set include_edit_one_p 1
                 set publish_p [hf_ui_go_ahead_q write "" published 0]
@@ -560,8 +562,8 @@ switch -exact -- $mode {
                     qf_lists_to_array obj_arr $sub_asset_list [hf_${sub_type_id}_keys]
                     ns_log Notice "hosting-farm/assets.tcl(669): array get obj_arr [array get obj_arr]"
                 }
-
                 set include_view_attr_p 1
+
                 set attrs_list [hf_asset_attributes $sub_f_id]
                 if { [llength $attrs_list ] > 0 } {
                     set include_view_attrs_p 1
