@@ -23,8 +23,8 @@ ad_proc -private hf_asset_ids_for_user {
     upvar 1 instance_id instance_id
     set asset_ids_list [list ]
     if { [qf_is_natural_number $user_id] } {
-        set sys_admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
-        if { $sys_admin_p } {
+        set pkg_admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
+        if { $pkg_admin_p } {
 
             if { [qf_is_true $top_level_p ] } {
                 set asset_ids_list [db_list hf_asset_ids_all_tla {
