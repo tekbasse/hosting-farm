@@ -178,41 +178,107 @@ ad_proc -private hf_key_hidden_q {
 }
 
 
-ad_proc -private hf_key_editable_q {
+ad_proc -private privilege_on_key_allowed_q {
+    privilege
     fieldname
     {asset_type_id ""}
 } {
-    Returns 1 if fieldname is editable by user
+    Returns 1 if user can perform privilege on fieldname.
+
+    This permits an increasing level of responsibility with increasing privilege.
+    Privilege can be create, write.
     such as in UI forms and views.
-    Refers to write_p, admin_p and pkg_admin_p as defined in calling environment.
+    Refers to create_p, write_p, admin_p and pkg_admin_p as defined in calling environment.
+    Assumes these have been generated using hf_permission_p for assets.
+
 
     If asset_type_id is included, checks for specific case, otherwise
     only considers the general case.
 } {
+    # privilege can be create or write.
+    # Is there a use case for admin that exceeds write? If so, it can be added.
     upvar 1 read_p read_p
+    upvar 1 create_p create_p
     upvar 1 write_p write_p
     upvar 1 admin_p admin_p
     upvar 1 pkg_admin_p pkg_admin_p
-    set editable_p 0
+    set allowed_p 0
 
-    if { $hidden_p == 0 && $read_p } {
-        set write_list [list name ]
-        set admin_list [list ]
-        set pkg_admin_list [list label template_p flags ]
-        if { $write_p } {
-            if { $fieldname in $write_list } {
-                set editable_p 1
+    if { $read_p } {
+        set c_list [list \
+                        asset_type_id \
+                        domain_name \
+                        label \
+                        server_name \
+                        service_name \
+                        ua \
+                        up ]
+        set w_list [list \
+                        name \
+                        trashed_p]
+        set a_list [list \
+                        active_p \
+                        alert_by_privilege \
+                        alert_by_role \
+                        config_uri \
+                        health_percentile_trigger \
+                        monitor_p \
+                        name_record \
+                        popularity \
+                        port \
+                        triage_priority \
+                        ua \
+                        up ]
+        set p_list [list \
+                        affix \
+                        backup_sys \
+                        bia_mac_address \
+                        brand \
+                        connection_type \
+                        description \
+                        details \
+                        flags \
+                        halt_proc \
+                        ipv4_addr \
+                        ipv4_addr_range \
+                        ipv4_status \
+                        ipv6_addr \
+                        ipv6_addr_range \
+                        ipv6_status \
+                        kernel \
+                        label \
+                        mount_union \
+                        orphaned_p \
+                        os_dev_ref \
+                        os_id \
+                        requires_upgrade_p \
+                        resource_path \
+                        start_proc \
+                        sub_label \
+                        sub_sort_order \
+                        system_name \
+                        template_p \
+                        ul_mac_address \
+                        version ]
+        if { $create_p && $privilege eq "create" } {
+            if { $fieldname in $c_list } {
+                set allowed_p 1
+            }
+        }
+        if { $privilege eq "write" } {
+            if { $write_p && $fieldname in $w_list } {
+                set allowed_p 1
             } elseif { $admin_p } {
-                if { $fieldname in $admin_list } {
-                    set editable_p 1
-                } elseif { $pkg_admin_p && $fieldname in $pkg_admin_list } {
-                    set editable_p 1
+                if { $fieldname in $a_list } {
+                    set allowed_p 1
+                } elseif { $pkg_admin_p && $fieldname in $p_list } {
+                    set allowed_p 1
                 }
             }
         }
 
     }
-    return $editable_p
+    return $allowed_p
 }
 
 ad_proc -private hf_key_order_for_display {

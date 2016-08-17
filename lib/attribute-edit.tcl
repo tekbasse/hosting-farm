@@ -109,7 +109,7 @@ qf_input type hidden value $asset_type name asset_type
 
 foreach key [hf_key_order_for_display [array names attr_arr]] {
     set val $attr_arr(${key})
-    if { ( $detail_p || $tech_p ) || ![hf_key_hidden_q $key] } {
+    if { ( $detail_p || $tech_p ) || ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
         qf_append html "<br>"
         set val_unquoted [qf_unquote $val]
         qf_input type text value $val_unquoted name $key label "#hosting-farm.${key}#:" size 40 maxlength 80
