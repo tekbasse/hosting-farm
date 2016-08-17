@@ -30,6 +30,16 @@ if { ![info exists detail_p] } {
 if { ![info exists separator] } {
     set separator ": "
 }
+if { [exists_and_not_null perms_arr(create_p)] } {
+    set create_p $perms_arr(create_p)
+} else {
+    set create_p 0
+}
+if { [exists_and_not_null perms_arr(read_p)] } {
+    set read_p $perms_arr(read_p)
+} else {
+    set read_p 0
+}
 if { [exists_and_not_null perms_arr(write_p)] } {
     set write_p $perms_arr(write_p)
 } else {
@@ -39,6 +49,11 @@ if { [exists_and_not_null perms_arr(admin_p)] } {
     set admin_p $perms_arr(admin_p)
 } else {
     set admin_p 0
+}
+if { [exists_and_not_null perms_arr(pkg_admin_p)] } {
+    set pkg_admin_p $perms_arr(pkg_admin_p)
+} else {
+    set pkg_admin_p 0
 }
 if { ![exists_and_not_null base_url] } {
     set base_url [ad_conn url]
@@ -109,10 +124,15 @@ qf_input type hidden value $asset_type name asset_type
 
 foreach key [hf_key_order_for_display [array names attr_arr]] {
     set val $attr_arr(${key})
-    if { ( $detail_p || $tech_p ) || ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+    # was  ( $detail_p || $tech_p ) || !\[hf_key_hidden_q $key\] && \[privilege_on_key_allowed_q write $key\]
+    if { ( ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
         qf_append html "<br>"
         set val_unquoted [qf_unquote $val]
         qf_input type text value $val_unquoted name $key label "#hosting-farm.${key}#:" size 40 maxlength 80
+    } elseif { $detail_p || $tech_p } {
+        qf_append html "<br>"
+        qf_append html "<span>#hosting-farm.${key}#${separator}${val}</span>"
+        qf_input type hidden value $val name $key
     } else {
         qf_input type hidden value $val name $key
     }
