@@ -288,7 +288,7 @@ ad_proc -private hf_key_order_for_display {
 } {
     set f_lists [list ]
     foreach f $names_list {
-        set row_list [list $f [_ "#hosting-farm.${f}#" ]] 
+        set row_list [list $f [lang::util::localize "#hosting-farm.${f}#" ]] 
         lappend f_lists $row_list
     }
     # using ascii sort, so that capitalized names are first.
