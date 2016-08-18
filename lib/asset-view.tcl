@@ -171,7 +171,7 @@ qf_input type submit value "#accounts-ledger.edit#" name "zev${asset_id}" class 
 qf_append html "<br>"
 if { $write_p && [exists_and_not_null asset_arr(trashed_p) ] } {
     if { [qf_is_true $asset_arr(trashed_p) ] } {
-        qf_input type submit value "#accounts-finance.untrash#" name "zTv${asset_id}" class button
+        qf_input type submit value "#accounts-finance.untrash#" name "zTvo${asset_id}" class button
     } else {
         qf_input type submit value "#accounts-finance.trash#" name "ztl${asset_id}" class button
     }

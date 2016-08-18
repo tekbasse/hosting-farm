@@ -157,7 +157,30 @@ if { [string match "*asset*" $asset_type ] } {
         if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
             qf_append html "<br>"
             set val_unquoted [qf_unquote $val]
-            qf_input type text value $val_unquoted name $key label "#hosting-farm.${key}#:" size 40 maxlength 80
+            if { [string match "*_p" $key] } {
+                if { [qf_is_true $val] } {
+                    set 1_selected_p 1
+                    set 0_selected_p 0
+                } else {
+                    set 1_selected_p 0
+                    set 0_selected_p 1
+                }
+                if { $key ne "trashed_p" } {
+                    qf_append html "#hosting-farm.${key}#${separator}"
+                    set choices_list [list \
+                                          [list label "#acs-kernel.common_yes#" value 1 selected $1_selected_p ] \
+                                          [list label "#acs-kernel.common_no#" value 0 selected $0_selected_p ] ]
+                    qf_choice type radio name $key value $choices_list
+                } else {
+                    if { $1_selected_p } {
+                        qf_input type submit value "#accounts-finance.untrash#" name "zTvo${asset_id}" class button
+                    } else {
+                        qf_input type submit value "#accounts-finance.trash#" name "ztl${asset_id}" class button
+                    }
+                }
+            } else {
+                qf_input type text value $val_unquoted name $key label "#hosting-farm.${key}#${separator}" size 40 maxlength 80
+            }
         } elseif { $detail_p || $tech_p } {
             qf_append html "<br>"
             qf_append html "<span>#hosting-farm.${key}#${separator}${val}</span>"
