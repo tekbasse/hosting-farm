@@ -942,7 +942,8 @@ ad_proc -private hf_ua_id_of_f_id_ua {
 } {
     upvar 1 instance_id instance_id
     set mystify_proc [parameter::get -package_id $instance_id -parameter MystifyProc -default hf_mystify]
-    set sdetail [safe_eval [list ${mystify_proc} $ua]]
+    set mystify_key [parameter::get -package_id $instance_id -parameter MystifyKey -default ""]
+    set sdetail [safe_eval [list ${mystify_proc} ${mystify_key} $ua]]
     set ua_id ""
     set f_id_list [list $f_id]
     # f_id may be  sub_f_id of primary. If so, also check f_id or visa versa.
@@ -971,13 +972,15 @@ ad_proc -private hf_ua_keys {
 }
 
 ad_proc -private hf_encode {
+    key
     string
-    {key_list ""}
 } {
     upvar 1 instance_id instance_id
     if { $key_list eq "" || [llength $key_list ] < 2 } {
         # other choices: hf_chars 1,  hf_key
         set key_list [hf_key]
+    } else {
+        set key_list $key
     }
     set vka_list [list ]
     foreach {k v} $key_list {
@@ -989,12 +992,14 @@ ad_proc -private hf_encode {
 }
 
 ad_proc -private hf_decode {
+    key
     string
-    {key_list ""}
 } {
     upvar 1 instance_id instance_id
     if { $key_list eq "" || [llength $key_list ] < 2 } {
         set key_list [hf_key]
+    } else {
+        set key_list $key
     }
     set x [string map $key_list $string]
     return $x
@@ -1002,13 +1007,19 @@ ad_proc -private hf_decode {
 
 
 ad_proc -private hf_mystify {
+    key
     string
-    {key_list ""}
 } {
     upvar 1 instance_id instance_id
     if { $key_list eq "" || [llength $key_list ] < 2 } {
-        # other choices: hf_chars 1,  hf_key
-        set key_list [hf_key "abcdefghijklmnopqrstuvwxyz0123456789_" ]
+        if { [string length $key_list < 26 ] } {
+            # other choices: hf_chars 1,  hf_key
+            set key_list [hf_key "abcdefghijklmnopqrstuvwxyz0123456789_" ]
+        } else {
+            set key_list [hf_key $key_list]
+        }
+    } else {
+        set key_list $key
     }
     set vka_list [list ]
     foreach {k v} $key_list {
@@ -1020,12 +1031,18 @@ ad_proc -private hf_mystify {
 }
 
 ad_proc -private hf_demystify {
+    key
     string
-    {key_list ""}
 } {
     upvar 1 instance_id instance_id
     if { $key_list eq "" || [llength $key_list ] < 2 } {
-        set key_list [hf_key "abcdefghijklmnopqrstuvwxyz0123456789_" ]
+        if { [string length $key_list < 26 ] } {
+            set key_list [hf_key "abcdefghijklmnopqrstuvwxyz0123456789_" ]
+        } else {
+            set key_list [hf_key $key_list]
+        }
+    } else {
+        set key_list $key
     }
     set x [string map $key_list $string]
     return $x
@@ -1061,9 +1078,11 @@ ad_proc -private hf_up_ck {
             # validation and limits
             set connection_type [string range $connection_type 0 23]
             set mystify_proc [parameter::get -package_id $instance_id -parameter MystifyProc -default hf_mystify]
+            set mystify_key [parameter::get -package_id $instance_id -parameter MystifyKey -default ""]
             set encode_proc [parameter::get -package_id $instance_id -parameter EncodeProc -default hf_encode]
-            set sdetail [safe_eval [list ${mystify_proc} $ua]]
-            set uup  [safe_eval [list ${encode_proc} $up_submitted]]
+            set encode_key [parameter::get -package_id $instance_id -parameter EncodeKey -default ""]
+            set sdetail [safe_eval [list ${mystify_proc} ${mystify_key} $ua]]
+            set uup [safe_eval [list ${encode_proc} ${encode_key} $up_submitted]]
             # f_id may be asset f_id or ua_id.
             set f_id_list [hf_asset_attributes_by_type $ua_id "ua"]
             lappend ua_id_list $ua_id
@@ -1106,7 +1125,8 @@ ad_proc -private hf_up_write {
     }
     if { $success_p } {
         set encode_proc [parameter::get -package_id $instance_id -parameter EncodeProc -default hf_encode]
-        set details [safe_eval [list ${encode_proc} $up]]
+        set encode_key [parameter::get -package_id $instance_id -parameter EncodeKey -default ""]
+        set details [safe_eval [list ${encode_proc} ${encode_key} $up]]
         set up_exists_p [db_0or1row ua_id_exists_p {
             select up_id as up_id_db 
             from hf_ua_up_map 
@@ -1175,7 +1195,8 @@ ad_proc -private hf_up_of_ua_id {
                           and instance_id=:instance_id ) } ]
         if { $success_p } {
             set decode_proc [parameter::get -package_id $instance_id -parameter DecodeProc -default hf_decode]
-            set up [safe_eval [list ${decode_proc} $details]]
+            set decode_key [parameter::get -package_id $instance_id -parameter DecodeKey -default ""]
+            set up [safe_eval [list ${decode_proc} ${decode_key} $details]]
         }
     } else {
         ns_log Warning "hf_up_of_ua_id: request denied for user_id '${user_id}' instance_id '${instance_id}' ua_id '${ua_id}' allowed_p ${allowed_p}"

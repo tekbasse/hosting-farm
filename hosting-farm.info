@@ -9,7 +9,7 @@
     <implements-subsite-p>f</implements-subsite-p>
     <inherit-templates-p>f</inherit-templates-p>
     
-    <version name="0.536" url="http://openacs.org/repository/download/apm/hosting-farm-0.536.apm">
+    <version name="1.043" url="http://openacs.org/repository/download/apm/hosting-farm-1.043.apm">
         <owner url="mailto:tekbasse@yahoo.com">Benjamin Brink</owner>
         <summary>Operations management system initially designed for a hosting farm using freebsd jails.</summary>
         <release-date></release-date>
@@ -19,7 +19,7 @@
         <maturity>-1</maturity>
         <package_instance_name>hosting farm</package_instance_name>
 
-        <provides url="hosting-farm" version="0.536"/>
+        <provides url="hosting-farm" version="1.043"/>
         <requires url="accounts-receivables" version="0.001"/>
         <requires url="accounts-ledger" version="0.001"/>
         <requires url="accounts-finance" version="0.001"/>
@@ -35,8 +35,10 @@
           <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="ScheduledProcsAllowed"  default="" description="A space delimited list of procs allowed for use with asset admin in package instance and usually defined in tcl/hosting-farm-local-procs.tcl" section_name="systemcalls"/>
           <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="MystifyProc"  default="hf_mystify" description="A proc used to scramble some data. DO NOT CHANGE after package in use." section_name="security"/>
           <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="DemystifyProc"  default="hf_demystify" description="A proc used to unscramble some data. DO NOT CHANGE after package in use." section_name="security"/>
+          <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="MystifyKey"  default="" description="A key used to scramble some data. DO NOT CHANGE after package in use." section_name="security"/>
           <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="EncodeProc"  default="hf_encode" description="A proc used to scramble pass codes. DO NOT CHANGE after package in use." section_name="security"/>
           <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="DecodeProc"  default="hf_decode" description="A proc used to unscramble pass codes. DO NOT CHANGE after package in use." section_name="security"/>
+          <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="EncodeKey"  default="hf_encode" description="A key used to scramble pass codes. DO NOT CHANGE after package in use." section_name="security"/>
         </parameters>
     </version>
 </package>

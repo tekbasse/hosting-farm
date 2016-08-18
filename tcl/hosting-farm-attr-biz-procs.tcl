@@ -1308,7 +1308,8 @@ ad_proc -private hf_ua_write {
         set connection_type [string range $connection_type 0 23]
 
         set mystify_proc [parameter::get -package_id $instance_id -parameter MystifyProc -default hf_mystify]
-        set sdetail [safe_eval [list ${mystify_proc} $ua]]
+        set mystify_key [parameter::get -package_id $instance_id -parameter MystifyKey -default ""]
+        set sdetail [safe_eval [list ${mystify_proc} $mystify_key $ua]]
 
         # hf_sub_asset_map_update internal convention is not fit for purpose with hf_ua and friends.
 

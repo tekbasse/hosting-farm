@@ -635,12 +635,14 @@ ad_proc -private hf_ua_read {
             }
         }
         set demystify_proc [parameter::get -package_id $instance_id -parameter DemystifyProc -default hf_demystify]
+        set demystify_key [parameter::get -package_id $instance_id -parameter DemystifyKey -default ""]
         set decode_proc [parameter::get -package_id $instance_id -parameter DecodeProc -default hf_decode]
+        set decode_key [parameter::get -package_id $instance_id -parameter DecodeKey -default ""]
         if { $success_p == 0 && $ua ne "" } {
             # read
             if { $r_up_p } {
 
-                set ua_ik [safe_eval [list ${demystify_proc} $details]]
+                set ua_ik [safe_eval [list ${demystify_proc} ${demystify_key} $details]]
                 set success_p [db_0or1row hf_ua_read_w_up "select ua.ua_id, ua.connection_type, up.details as hfup from hf_ua ua, hf_up up, hf_ua_up_map hm where ua.instance_id=:instance_id and ua.ua=:ua_ik and ua.instance_id=up.instance_id and ua.ua_id=hm.ua_id and hm.up_id=up.up_id"  ]
             } else {
                 set hfup ""
@@ -649,10 +651,10 @@ ad_proc -private hf_ua_read {
         }
         if { $success_p } {
             if { $details eq "" } {
-                set details [safe_eval [list ${demystify_proc} $ua]]
+                set details [safe_eval [list ${demystify_proc} ${demystify_key} $ua]]
             }
             if { $r_up_p } {
-                set up [safe_eval [list ${decode_proc} $hfup]
+                set up [safe_eval [list ${decode_proc} ${decode_key} $hfup]
             }
             set i_list [list ua_id ua connection_type instance_id up details]
             foreach i $i_list {
