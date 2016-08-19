@@ -52,7 +52,7 @@ ad_proc -private hf_oses {
             append sql_extra " and os_id in ([template::util::tcl_to_sql_list $clean_os_id_list])"
         }
     }
-    set os_detail_list [db_list_of_lists hf_operating_systems_get "select os_id, label, brand, version, kernel, orphaned_p, requires_upgrade_p, description from hf_operating_systems where instance_id = :instance_id ${sql_extra}"]
+    set os_detail_list [db_list_of_lists hf_operating_systems_get "select os_id,label,brand,version,kernel,orphaned_p,requires_upgrade_p,description from hf_operating_systems where instance_id=:instance_id ${sql_extra}"]
     return $os_detail_list
 }
 
@@ -61,7 +61,7 @@ ad_proc -private hf_asset_type_read {
     type_id_list
     {instance_id ""}
 } {
-    returns an existing asset_type in a list of lists: {label1, title1, description1} {labelN, titleN, descriptionN} or blank list if none found. Bad id's are ignored.
+    returns an existing asset_type in a list of lists: {label1,name1,details1} {labelN,nameN,detailsN} or blank list if none found. Bad id's are ignored.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
@@ -75,7 +75,7 @@ ad_proc -private hf_asset_type_read {
         }
     }
     if { [llength $new_as_type_id_list] > 0 } {
-        set return_list_of_lists [db_list_of_lists hf_asset_type_read "select id, label, title, description from hf_asset_type where instance_id =:instance_id and id in ([template::util::tcl_to_sql_list $new_as_type_id_list])" ]
+        set return_list_of_lists [db_list_of_lists hf_asset_type_read "select id,label,name,details from hf_asset_type where instance_id=:instance_id and id in ([template::util::tcl_to_sql_list $new_as_type_id_list])" ]
     } else {
         set return_list_of_lists [list ]
     }
@@ -86,13 +86,13 @@ ad_proc -private hf_asset_types {
     {label_match ""}
     {instance_id ""}
 } {
-    returns matching asset types as a list of list: {id,label,title,description}, if label is nonblank, returns asset types that glob match the passed label value via tcl match.
+    returns matching asset types as a list of list: {id,label,name,details}, if label is nonblank, returns asset types that glob match the passed label value via tcl match.
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
         set instance_id [ad_conn package_id]
     }
-    set all_asset_types_list_of_lists [db_list_of_lists hf_asset_types_get {select id,label, title, description from hf_asset_type where instance_id =:instance_id} ]
+    set all_asset_types_list_of_lists [db_list_of_lists hf_asset_types_get {select id,label,name,details from hf_asset_type where instance_id =:instance_id} ]
     if { $label_match ne "" } {
         set return_list_of_lists [list ]
         foreach asset_type_list $all_asset_types_list_of_lists {

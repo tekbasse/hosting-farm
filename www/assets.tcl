@@ -26,8 +26,20 @@ if { !$read_p } {
 set create_p 0
 set write_p 0
 set admin_p 0
-set pkg_admin_p 0
 set publish_p 0
+if { $read_p } {
+    set read_p [hf_ui_go_ahead_q read "" "" 0]
+    set create_p [hf_ui_go_ahead_q create "" "" 0]
+    set write_p [hf_ui_go_ahead_q write "" "" 0]
+    set admin_p [hf_ui_go_ahead_q admin "" "" 0]
+    if { $admin_p } {
+        # check package admin for extras
+        set pkg_admin_p [permission::permission_p \
+                             -party_id $user_id \
+                             -object_id $instance_id \
+                             -privilege admin]
+    }
+}
 set title "#hosting-farm.Assets#"
 set context [list $title]
 set icons_path1 "/resources/acs-subsite/"
@@ -166,20 +178,6 @@ if { !$form_posted_p } {
     set validated_p 0
     ns_log Notice "hosting-farm/assets.tcl(152): user_id '${user_id}' \
  customer_id '${customer_id}' asset_id '${asset_id}' "
-    # special cases require special permissions
-    # Re-checking read_p in context of input.
-    set read_p [hf_ui_go_ahead_q read "" "" 0]
-    set create_p [hf_ui_go_ahead_q create "" "" 0]
-    set write_p [hf_ui_go_ahead_q write "" "" 0]
-    set admin_p [hf_ui_go_ahead_q admin "" "" 0]
-    if { $admin_p } {
-        # check package admin for extras
-        set pkg_admin_p [permission::permission_p \
-                             -party_id $user_id \
-                             -object_id $instance_id \
-                             -privilege admin]
-    }
-
 
     # Cleanse data, verify values for consistency
     # Determine input completeness
@@ -224,6 +222,13 @@ if { !$form_posted_p } {
     if { $asset_type_id ne "" &&  $asset_type_id ni [hf_asset_type_id_list ] } {
         set asset_type_id ""
     }
+
+    # special cases require special permissions
+    # Re-checking permissions in context of input.
+    set read_p [hf_ui_go_ahead_q read "" "" 0]
+    set create_p [hf_ui_go_ahead_q create "" "" 0]
+    set write_p [hf_ui_go_ahead_q write "" "" 0]
+    set admin_p [hf_ui_go_ahead_q admin "" "" 0]
 
     if { $customer_id ne "" && [qf_is_natural_number $customer_id ] } {
         set customer_ids_list [hf_customer_ids_for_user $user_id $instance_id]
@@ -477,6 +482,9 @@ switch -exact -- $mode {
             set asset_ids_list [hf_asset_ids_for_user $user_id $top_level_p]
             set assets_lists [hf_assets_read $asset_ids_list]
             set include_view_assets_p 1
+            # pass asset_arr perms_arr for buttons etc.
+            array set perms_arr [list read_p $read_p create_p $create_p write_p $write_p admin_p $admin_p pkg_admin_p $pkg_admin_p publish_p $publish_p ]
+
 
         } 
     }

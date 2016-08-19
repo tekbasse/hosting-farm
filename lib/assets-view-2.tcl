@@ -63,6 +63,38 @@
 # 4. Sort UI -- build
 #     columns, column_order, and cell data vary between compact_p vs. default, keep in mind with sort UI
 # 5. Format output -- compact_p vs. regular
+if { [exists_and_not_null perms_arr(create_p)] } {
+    set create_p $perms_arr(create_p)
+} else {
+    set create_p 0
+}
+if { [exists_and_not_null perms_arr(read_p)] } {
+    set read_p $perms_arr(read_p)
+} else {
+    set read_p 0
+}
+if { [exists_and_not_null perms_arr(write_p)] } {
+    set write_p $perms_arr(write_p)
+} else {
+    set write_p 0
+}
+if { [exists_and_not_null perms_arr(admin_p)] } {
+    set admin_p $perms_arr(admin_p)
+} else {
+    set admin_p 0
+}
+if { [exists_and_not_null perms_arr(pkg_admin_p)] } {
+    set pkg_admin_p $perms_arr(pkg_admin_p)
+} else {
+    set pkg_admin_p 0
+}
+if { [exists_and_not_null perms_arr(publish_p) ] } {
+    set pub_p [qf_is_true $perms_arr(publish_p) ]
+} else {
+    set pub_p 0
+}
+
+
 
 set page_html ""
 
@@ -135,7 +167,7 @@ if { $item_count > 0 } {
             set this_start_row 1
         }
         if { ![info exists separator] } {
-            set separator "&nbsp;"
+            set separator ":&nbsp;"
         }
         
         # Sanity check 
@@ -259,14 +291,33 @@ if { $item_count > 0 } {
         }
         # Result: table_page_sorted_lists
         qf_append html "<br>"
-        
-    }
 
+    }
+    # Anything else?
+    if { $pkg_admin_p } {
+
+        qf_append html "<br><br>#hosting-farm.Asset# #acs-subsite.create#${separator}"
+        set asset_types_lists [hf_asset_types]
+        set asset_types_sorted_lists [lsort -index 2 -dictionary $asset_types_lists]
+        set choices_list [list ]
+        foreach at_list $asset_types_sorted_lists {
+            set at_id [lindex $at_list 0]
+            set at_title [lindex $at_list 2]
+            set row_list [list label]
+            if { $at_id eq "dc" } {
+                set selected 1
+            } else {
+                set selected 0
+            }
+            lappend row_list " ${at_title} " value $at_id selected $selected
+            lappend choices_list $row_list
+        }
+        qf_choice type radio name asset_type_id value $choices_list
+        qf_input type submit value "#acs-subsite.create#" name "zal000" class button
+    }
     qf_close form_id $form_id
     append page_html [qf_read form_id $form_id]
 } else {
     append page_html "#acs-subsite.none#"
 }
-
-
 

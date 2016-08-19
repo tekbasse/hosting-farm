@@ -19,7 +19,7 @@
 <!-- one col on l, m, s  -->
 <div class="l-grid-whole m-grid-whole s-grid-whole padded">
   <div class="content-box">
-  <include src="/packages/hosting-farm/lib/assets-view-2" &assets_lists=assets_lists s="@s;noquote@" p="@p;noquote@" this_start_row="@this_start_row;noquote@" base_url="@base_url;noquote@">
+  <include src="/packages/hosting-farm/lib/assets-view-2" &assets_lists=assets_lists &perms_arr=perms_arr s="@s;noquote@" p="@p;noquote@" this_start_row="@this_start_row;noquote@" base_url="@base_url;noquote@">
 
   </div>
 </div>
