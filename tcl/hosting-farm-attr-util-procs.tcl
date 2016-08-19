@@ -976,7 +976,7 @@ ad_proc -private hf_encode {
     string
 } {
     upvar 1 instance_id instance_id
-    if { $key_list eq "" || [llength $key_list ] < 2 } {
+    if { $key eq "" || [llength $key ] < 2 } {
         # other choices: hf_chars 1,  hf_key
         set key_list [hf_key]
     } else {
@@ -996,7 +996,7 @@ ad_proc -private hf_decode {
     string
 } {
     upvar 1 instance_id instance_id
-    if { $key_list eq "" || [llength $key_list ] < 2 } {
+    if { $key eq "" || [llength $key ] < 2 } {
         set key_list [hf_key]
     } else {
         set key_list $key
@@ -1011,12 +1011,12 @@ ad_proc -private hf_mystify {
     string
 } {
     upvar 1 instance_id instance_id
-    if { $key_list eq "" || [llength $key_list ] < 2 } {
-        if { [string length $key_list < 26 ] } {
+    if { $key eq "" || [llength $key ] < 2 } {
+        if { [string length $key ] < 26 } {
             # other choices: hf_chars 1,  hf_key
             set key_list [hf_key "abcdefghijklmnopqrstuvwxyz0123456789_" ]
         } else {
-            set key_list [hf_key $key_list]
+            set key_list [hf_key $key]
         }
     } else {
         set key_list $key
@@ -1035,11 +1035,11 @@ ad_proc -private hf_demystify {
     string
 } {
     upvar 1 instance_id instance_id
-    if { $key_list eq "" || [llength $key_list ] < 2 } {
-        if { [string length $key_list < 26 ] } {
+    if { $key eq "" || [llength $key ] < 2 } {
+        if { [string length $key ] < 26 } {
             set key_list [hf_key "abcdefghijklmnopqrstuvwxyz0123456789_" ]
         } else {
-            set key_list [hf_key $key_list]
+            set key_list [hf_key $key]
         }
     } else {
         set key_list $key
