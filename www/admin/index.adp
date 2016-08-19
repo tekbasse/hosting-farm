@@ -3,6 +3,19 @@
   <property name="context">@context;noquote@</property>
 
 <h1>Administration</h1>
+<h2>System status</h2>
+<ul><li>
+number of active assets:
+</li><li>
+number of users with active assets:
+</li><li>
+number of active customers
+</li></ul>
+<h3>Procs in stack</h3>
+
+
+
+
 <ul><li>
     <a href="../doc/index">Documentation</a>
 </li><li>
