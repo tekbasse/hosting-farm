@@ -228,6 +228,7 @@ if { !$form_posted_p } {
     if { $customer_id ne "" && [qf_is_natural_number $customer_id ] } {
         set customer_ids_list [hf_customer_ids_for_user $user_id $instance_id]
         if { $customer_id ni $customer_ids_list && !$pkg_admin_p } {
+            ns_log Warning "hosting-farm/assets.tcl.231: customer_id '${customer_id}' not permitted. Set to ''"
             set customer_id ""
         }
     }
@@ -242,6 +243,7 @@ if { !$form_posted_p } {
     set http_header_method [ad_conn method]
     # A blank referrer means a direct request
     # otherwise make sure referrer is from same domain when editing.
+    # Referrer originates from browser.
     if { $referrer_url ne "" } {
         ns_log Notice "hosting-farm/assets.tcl(189): form_posted_p '${form_posted_p}' \
  http_header_method ${http_header_method} referrer '${referrer_url}'"
@@ -298,7 +300,8 @@ if { !$form_posted_p } {
         }
     }
 
-    if { $mode eq "t" } {
+    if { $mode eq "t" || $mode eq "T" } {
+        # (t)rash un(T)rash
         if { $write_p || $admin_p } {
             # allowed
         } else {
@@ -400,18 +403,28 @@ if { !$form_posted_p } {
 
         }
 
-        if { $mode eq "t" } {
-            # choose the most specific reference only
-            if { $sub_asset_id ne "" } {
-
-            } elseif { $asset_id ne "" } {
-
-            } elseif { $sub_f_id ne "" } {
-
-            } elseif { $f_id ne "" } {
+        if { [string match -nocase "t" $mode } {
+            set processed_p 0
+            if { $mode eq "T" } {
+                if { [string match "*asset*" $asset_type] && $asset_id ne "" } {
+                    set processed_p [hf_asset_untrash $asset_id]
+                }
+                if { [string match "*attr*" $asset_type] && $sub_f_id ne "" } {
+                    ##code
+                    set processed_p [hf_attribute_untrash $sub_f_id]
+                }
             } else {
+                # mode t
+                if { [string match "*asset*" $asset_type] && $asset_id ne "" } {
+                    set processed_p [hf_asset_trash $asset_id]
+                }
+                if { [string match "*attr*" $asset_type] && $sub_f_id ne "" } {
+                    set processed_p [hf_attribute_trash $sub_f_id]
+                }
+            }
+            if { !$processed_p } {
                 ns_log Warning "hosting-farm/assets.tcl(331): \
- trash requested without an expected reference"
+ trash mode '${mode}'. Unsuccessful or incomplete request"
             }
             set mode $mode_next
             set mode_next ""
