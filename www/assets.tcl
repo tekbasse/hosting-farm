@@ -408,7 +408,7 @@ if { !$form_posted_p } {
 
         }
 
-        if { [string match -nocase "t" $mode } {
+        if { [string match -nocase "t" $mode] } {
             set processed_p 0
             if { $mode eq "T" } {
                 if { [string match "*asset*" $asset_type] && $asset_id ne "" } {

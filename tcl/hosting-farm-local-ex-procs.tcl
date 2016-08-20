@@ -469,3 +469,14 @@ ad_proc -private hfl_problem_server_traffic {
     hf_monitor_update $asset_id $monitor_id hfl_system_memory $health $report "" "" $instance_id
     return 1
 }
+
+
+ad_proc -private hfl_assets_allowed_by_user {
+    set asset_type_id_list [list hw vm vh ss ]
+    return $asset_type_id_list
+}
+
+ad_proc -private hfl_attributes_allowed_by_user {
+    set asset_type_id_list [list vh ns ss ua ]
+    return $asset_type_id_list
+}
