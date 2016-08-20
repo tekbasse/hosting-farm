@@ -311,6 +311,7 @@ if { $item_count > 0 } {
         if { [llength $at_limited_lists] > 0 } {
             set at_sorted_lists [lsort -index 2 -dictionary $at_limited_lists]
             qf_append html "<br><br>#hosting-farm.Asset# #acs-subsite.create#${separator}"
+            qf_input type hidden name state value asset_primary_attr
             set choices_list [list ]
             set selected 1
             foreach at_list $at_sorted_lists {

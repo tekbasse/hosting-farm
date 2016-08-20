@@ -129,8 +129,15 @@ if { !$form_posted_p } {
     if { $modes_idx > -1 && $mode eq "p" } {
         set modes [lindex $input_arr_idx_list $modes_idx]
         set test [string range $modes 0 3]
-        if { [string match {z[ev]*} $test] } {
+        if { [string match {z[aev]*} $test] } {
             set asset_id [string range $modes 3 end]
+            if { $asset_id == 0 } {
+                set asset_id ""
+                if { [string match "za*" } {
+                    set state $input_arr(state)
+                    set asset_type_id $input_arr(asset_type_id)
+                }
+            }
             ns_log Notice "hosting-farm/www/assets.tcl.110: asset_id '${asset_id}'"
         }
         if { [string match "zl*" $test] } {
@@ -150,7 +157,7 @@ if { !$form_posted_p } {
         }
 
 
-        # modes 0 0 is z
+        # modes 0 0 is z or Z
         set mode [string range $modes 1 1]
         set next_mode [string range $modes 2 2]
 
@@ -277,6 +284,7 @@ if { !$form_posted_p } {
     #   S  = Unpublish
 
     # Views
+    #   a  = add asset/attribute (this allows more control over adding than using edit form allows)
     #   e  = edit asset_id/sub_asset_id or attribute, presents defaults if no prior data
     #   v  = view asset_id or sub_asset_id (attribute_id or asset_id)
     #   l  = list assets
@@ -353,7 +361,7 @@ if { !$form_posted_p } {
                 hf_constructor_a obj_arr force $state $asset_type_id
             } else {
                 ns_log Notice "hosting-farm/assets.tcl.301: incomplete new \
- asset request. state '${state}' asset_type_id '${asset_type_id}'"
+ asset or attribute request. state '${state}' asset_type_id '${asset_type_id}'"
                 set mode "l"
                 set mode_next ""
             }
