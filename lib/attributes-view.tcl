@@ -26,6 +26,39 @@
 if { ![info exists instance_id] } {
     set instance_id [ad_conn package_id]
 }
+if { [exists_and_not_null perms_arr(create_p)] } {
+    set create_p $perms_arr(create_p)
+} else {
+    set create_p 0
+}
+if { [exists_and_not_null perms_arr(read_p)] } {
+    set read_p $perms_arr(read_p)
+} else {
+    set read_p 0
+}
+if { [exists_and_not_null perms_arr(write_p)] } {
+    set write_p $perms_arr(write_p)
+} else {
+    set write_p 0
+}
+if { [exists_and_not_null perms_arr(admin_p)] } {
+    set admin_p $perms_arr(admin_p)
+} else {
+    set admin_p 0
+}
+if { [exists_and_not_null perms_arr(pkg_admin_p)] } {
+    set pkg_admin_p $perms_arr(pkg_admin_p)
+} else {
+    set pkg_admin_p 0
+}
+if { [exists_and_not_null perms_arr(publish_p) ] } {
+    set pub_p [qf_is_true $perms_arr(publish_p) ]
+} else {
+    set pub_p 0
+}
+if { ![info exists separator] } {
+    set separator ":&nbsp;"
+}
 
 set attrs_lists [db_list_of_lists hf_attributes_set "select [hf_sub_asset_map_keys ","] from hf_sub_asset_map where instance_id=:instance_id and attribute_p!='0' and sub_f_id in ([template::util::tcl_to_sql_list $attrs_list])"]
 
@@ -88,10 +121,7 @@ if { [llength $attrs_lists ] > 0 } {
             qf_choice type radio name asset_type_id value $choices_list
             qf_input type submit value "#acs-subsite.create#" name "zal${asset_id}" class button
         }
-        qf_close form_id $form_id
-        append page_html [qf_read form_id $form_id]
     }
-
 
     qf_close form_id $form_id
     append content [qf_read form_id $form_id]

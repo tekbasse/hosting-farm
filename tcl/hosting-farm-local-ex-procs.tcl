@@ -472,11 +472,17 @@ ad_proc -private hfl_problem_server_traffic {
 
 
 ad_proc -private hfl_assets_allowed_by_user {
+} {
+    Returns list of asset_type_id of assets allowed by users with create privilege
+} {
     set asset_type_id_list [list hw vm vh ss ]
     return $asset_type_id_list
 }
 
 ad_proc -private hfl_attributes_allowed_by_user {
+} {
+    Returns list of asset_type_id of attributes allowed by users with create privilege
+} {
     set asset_type_id_list [list vh ns ss ua ]
     return $asset_type_id_list
 }
