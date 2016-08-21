@@ -138,15 +138,15 @@ if { !$form_posted_p } {
                     set asset_type_id $input_arr(asset_type_id)
                 }
             }
-            ns_log Notice "hosting-farm/www/assets.tcl.110: asset_id '${asset_id}'"
+            ns_log Notice "hosting-farm/www/assets.tcl.141: asset_id '${asset_id}'"
         }
         if { [string match "zl*" $test] } {
             set this_start_row [string range $modes 3 end]
-            ns_log Notice "hosting-farm/www/assets.tcl.114: this_start_row '${this_start_row}'"
+            ns_log Notice "hosting-farm/www/assets.tcl.145: this_start_row '${this_start_row}'"
         }
         if { [string match "Z*" $test] } {
             set sub_f_id [string range $modes 3 end]
-            ns_log Notice "hosting-farm/www/assets.tcl.121: sub_f_id '${sub_f_id}'"
+            ns_log Notice "hosting-farm/www/assets.tcl.149: sub_f_id '${sub_f_id}'"
             # set asset_id for permissions, and make rest of map record available. sub_type_id etc.
             set sam_list [hf_sub_asset $sub_f_id]
             qf_lists_to_array sam_arr $sam_list [hf_sub_asset_map_keys]
@@ -179,11 +179,11 @@ if { !$form_posted_p } {
         set mode_next "v"
     }
 
-    ns_log Notice "hosting-farm/www/assets.tcl(115): \
+    ns_log Notice "hosting-farm/www/assets.tcl.182: \
  mode '${mode}' mode_next ${mode_next}"
 
     set validated_p 0
-    ns_log Notice "hosting-farm/assets.tcl(152): user_id '${user_id}' \
+    ns_log Notice "hosting-farm/assets.tcl.186: user_id '${user_id}' \
  customer_id '${customer_id}' asset_id '${asset_id}' "
 
     # Cleanse data, verify values for consistency
@@ -240,14 +240,14 @@ if { !$form_posted_p } {
     if { $customer_id ne "" && [qf_is_natural_number $customer_id ] } {
         set customer_ids_list [hf_customer_ids_for_user $user_id $instance_id]
         if { $customer_id ni $customer_ids_list && !$pkg_admin_p } {
-            ns_log Warning "hosting-farm/assets.tcl.231: customer_id '${customer_id}' not permitted. Set to ''"
+            ns_log Warning "hosting-farm/assets.tcl.243: customer_id '${customer_id}' not permitted. Set to ''"
             set customer_id ""
         }
     }
-    ns_log Notice "hosting-farm/assets.tcl(214): user_id '${user_id}' \
+    ns_log Notice "hosting-farm/assets.tcl.247: user_id '${user_id}' \
  customer_id '${customer_id}' asset_id '${asset_id}' "
 
-    ns_log Notice "hosting-farm/assets.tcl(165): read_p '${read_p}' \
+    ns_log Notice "hosting-farm/assets.tcl.250: read_p '${read_p}' \
  create_p ${create_p} write_p ${write_p} admin_p ${admin_p} \
  pkg_admin_p '${pkg_admin_p}'"
 
@@ -257,7 +257,7 @@ if { !$form_posted_p } {
     # otherwise make sure referrer is from same domain when editing.
     # Referrer originates from browser.
     if { $referrer_url ne "" } {
-        ns_log Notice "hosting-farm/assets.tcl(189): form_posted_p '${form_posted_p}' \
+        ns_log Notice "hosting-farm/assets.tcl.260: form_posted_p '${form_posted_p}' \
  http_header_method ${http_header_method} referrer '${referrer_url}'"
     }
     if { ![string match -nocase "post*" $http_header_method ] } {
@@ -308,7 +308,7 @@ if { !$form_posted_p } {
             set mode ""
             set mode_next ""
             set validated_p 0
-            ns_log Warning "hosting-farm/assets.tcl(215): \
+            ns_log Warning "hosting-farm/assets.tcl.311: \
  write denied for '${user_id}'."
         }
     }
@@ -318,7 +318,7 @@ if { !$form_posted_p } {
         if { $write_p || $admin_p } {
             # allowed
         } else {
-            ns_log Warning "hosting-farm/assets.tcl(222): \
+            ns_log Warning "hosting-farm/assets.tcl.321: \
  trash denied for '${user_id}'."
             set validated_p 0
             if { $read_p } {
@@ -333,7 +333,7 @@ if { !$form_posted_p } {
         if { $pkg_admin_p } {
             # allowed
         } else {
-            ns_log Warning "hosting-farm/assets.tcl(244): \
+            ns_log Warning "hosting-farm/assets.tcl.336: \
  mode '${mode}' denied for '${user_id}'."
             set mode ""
             set validated_p 0
@@ -349,7 +349,7 @@ if { !$form_posted_p } {
         } else {
             set mode "l"
             set validated_p 0
-            ns_log Warning "hosting-farm/assets.tcl(258): \
+            ns_log Warning "hosting-farm/assets.tcl.352: \
  mode 'e' denied for '${user_id}'."
         }
     }
@@ -358,9 +358,13 @@ if { !$form_posted_p } {
         if { $create_p || $admin_p } {
             # allowed
             if { $state in [list asset_attr attr_only asset_only asset_primary_attr] && $asset_type_id ne "" } {
+                if { $asset_id ne "" } {
+                    set f_id [hf_f_id_of_asset_id $asset_id]
+                    set asset_id ""
+                }
                 hf_constructor_a obj_arr force $state $asset_type_id
             } else {
-                ns_log Notice "hosting-farm/assets.tcl.301: incomplete new \
+                ns_log Notice "hosting-farm/assets.tcl.367: incomplete new \
  asset or attribute request. state '${state}' asset_type_id '${asset_type_id}'"
                 set mode "l"
                 set mode_next ""
@@ -370,7 +374,7 @@ if { !$form_posted_p } {
         } else {
             set mode "l"
             set validated_p 0
-            ns_log Warning "hosting-farm/assets.tcl(262): \
+            ns_log Warning "hosting-farm/assets.tcl.377: \
  mode 'a' denied for '${user_id}'."
         }
     }
@@ -381,7 +385,7 @@ if { !$form_posted_p } {
         } else {
             set mode ""
             set mode_next ""
-            ns_log Warning "hosting-farm/assets.tcl(268): \
+            ns_log Warning "hosting-farm/assets.tcl.388: \
  mode 'l' denied for '${user_id}'."
             set validated_p 0
         }
@@ -394,19 +398,19 @@ if { !$form_posted_p } {
             set mode ""
             set mode_next ""
             set validated 0
-            ns_log Warning "hosting-farm/assets.tcl(280): \
+            ns_log Warning "hosting-farm/assets.tcl.401: \
  mode 'v' denied for '${user_id}'."
         }
     }
     if { !$validated_p } {
-        ns_log Notice "hosting-farm/assets.tcl(287): \
+        ns_log Notice "hosting-farm/assets.tcl.406: \
  validated_p '${validated_p}' mode '${mode} mode_next '${mode_next}'"
     }
 
     # ACTIONS
  
     if { $validated_p } {
-        ns_log Notice "hosting-farm/assets.tcl(300): ACTION \
+        ns_log Notice "hosting-farm/assets.tcl.413: ACTION \
  mode '${mode}' mode_next '${mode_next}' validated_p '${validated_p}'"
 
         # execute process using validated input
@@ -436,7 +440,7 @@ if { !$form_posted_p } {
                 }
             }
             if { !$processed_p } {
-                ns_log Warning "hosting-farm/assets.tcl(331): \
+                ns_log Warning "hosting-farm/assets.tcl.443: \
  trash mode '${mode}'. Unsuccessful or incomplete request"
             }
             set mode $mode_next
@@ -452,7 +456,7 @@ if { !$form_posted_p } {
                 # does not have permission to write
                 lappend user_message_list "#q-wiki.Write_operation_did_not_succeed# #q-wiki.You_don_t_have_permission#"
                 util_user_message -message [lindex $user_message_list end]
-                ns_log Notice "hosting-farm/assets.tcl(402) User attempting to write content without permission."
+                ns_log Notice "hosting-farm/assets.tcl.459) User attempting to write content without permission."
                 if { $read_p } {
                     set mode "v"
                 } else {
@@ -471,7 +475,7 @@ set menu_list [list ]
 
 # OUTPUT / VIEW
 # using switch, because there's only one view at a time
-ns_log Notice "hosting-farm/assets.tcl(508): OUTPUT mode $mode"
+ns_log Notice "hosting-farm/assets.tcl.478: OUTPUT mode $mode"
 # initializations
 set include_assets_p 0
 set include_attrs_p 0
@@ -483,7 +487,7 @@ switch -exact -- $mode {
     l {
         if { $read_p } {
             if { $redirect_before_v_p } {
-                ns_log Notice "hosting-farm/assets.tcl(587): redirecting to url ${url} for clean url view"
+                ns_log Notice "hosting-farm/assets.tcl.490: redirecting to url ${url} for clean url view"
                 ad_returnredirect "${url}?mode=l"
                 ad_script_abort
             }
@@ -499,9 +503,58 @@ switch -exact -- $mode {
     r {
         #  revisions. presents a list of revisions of asset and/or attributes
         if { $admin_p } {
-            ns_log Notice "hosting-farm/assets.tcl mode = $mode ie. revisions"
+            ns_log Notice "hosting-farm/assets.tcl.506: mode = $mode ie. revisions"
             # sort by date
             ##code later, in /www/admin
+        }
+    }
+    a {
+        if { $create_p } {
+            #  add...... add/form mode of current context
+            # If context already exists, use most recent/active case
+            # for default values.
+            ns_log Notice "hosting-farm/assets.tcl.516: mode = add"
+
+            if { $asset_type eq "attr_only" } {
+                array set obj_arr [array get sam_arr]
+                if { $sub_type_id in [hf_asset_type_id_list] } {
+                    set sub_asset_list [hf_${sub_type_id}_read $sub_f_id]
+                    qf_lists_to_array obj_arr $sub_asset_list [hf_${sub_type_id}_keys]
+                    ns_log Notice "hosting-farm/assets.tcl.523: array get obj_arr [array get obj_arr]"
+                }
+                set include_add_attr_p 1
+   
+            } elseif { $asset_type ne "" } {
+                set include_add_one_p 1
+                set publish_p [hf_ui_go_ahead_q write "" published 0]
+                ns_log Notice "hosting-farm/assets.tcl.530 publish_p '${publish_p}' asset_id '${asset_id}'"
+            }
+            array set perms_arr [list read_p $read_p create_p $create_p write_p $write_p admin_p $admin_p pkg_admin_p $pkg_admin_p publish_p $publish_p ]
+            # pass asset_arr perms_arr
+            set detail_p $pkg_admin_p
+            set tech_p $admin_p
+
+            # adjust page context
+            append title " -  #acs-subsite.create#"
+            if { [info exists obj_arr(name)] } {
+                set context [list [list assets #hosting-farm.Assets#] "$obj_arr(name) - #acs-subsite.create#"]
+            } elseif { [info exists obj_arr(label)] } {
+                set context [list [list assets #hosting-farm.Assets#] "$obj_arr(label) - #acs-subsite.create#"]
+            } elseif { [info exists obj_arr(sub_label)] } {
+                set context [list [list assets #hosting-farm.Assets#] "$obj_arr(sub_label) - #acs-subsite.create#"]
+            }
+
+            if { ![exists_and_not_null asset_type] } {
+                ns_log Warning "hosting-farm/assets.tcl.548: asset_type not defined."
+            }
+
+            ##code
+
+
+
+        } else {
+            lappend user_message_list "#q-wiki.Edit_operation_did_not_succeed# #q-wiki.You_don_t_have_permission#"
+            util_user_message -message [lindex $user_message_list end]
         }
     }
     e {
@@ -509,7 +562,7 @@ switch -exact -- $mode {
             #  edit...... edit/form mode of current context
             # If context already exists, use most recent/active case
             # for default values.
-            ns_log Notice "hosting-farm/assets.tcl mode = edit"
+            ns_log Notice "hosting-farm/assets.tcl.565: mode = edit"
 
             # 0. asset_type_id:
             #    New combo asset and primary attribute of asset_type_id
@@ -533,7 +586,7 @@ switch -exact -- $mode {
                 if { $sub_type_id in [hf_asset_type_id_list] } {
                     set sub_asset_list [hf_${sub_type_id}_read $sub_f_id]
                     qf_lists_to_array obj_arr $sub_asset_list [hf_${sub_type_id}_keys]
-                    ns_log Notice "hosting-farm/assets.tcl(563): array get obj_arr [array get obj_arr]"
+                    ns_log Notice "hosting-farm/assets.tcl.589: array get obj_arr [array get obj_arr]"
                 }
                 set include_edit_attr_p 1
    
@@ -541,7 +594,7 @@ switch -exact -- $mode {
                 set asset_type [hf_constructor_b obj_arr]
                 set include_edit_one_p 1
                 set publish_p [hf_ui_go_ahead_q write "" published 0]
-                ns_log Notice "assets.tcl.490 publish_p '${publish_p}' asset_id '${asset_id}'"
+                ns_log Notice "hosting-farm/assets.tcl.597 publish_p '${publish_p}' asset_id '${asset_id}'"
             }
             array set perms_arr [list read_p $read_p create_p $create_p write_p $write_p admin_p $admin_p pkg_admin_p $pkg_admin_p publish_p $publish_p ]
             # pass asset_arr perms_arr
@@ -559,7 +612,7 @@ switch -exact -- $mode {
             }
 
             if { ![exists_and_not_null asset_type] } {
-                ns_log Warning "assets.tcl.507: asset_type not defined."
+                ns_log Warning "hosting-farm/assets.tcl.615: asset_type not defined."
             }
 
             ##code
@@ -576,11 +629,11 @@ switch -exact -- $mode {
         if { $read_p } {
             # if $url is different than ad_conn url stem, 303/305 redirect to asset_id's primary url
             if { $redirect_before_v_p } {
-                ns_log Notice "hosting-farm/assets.tcl(835): redirecting to url ${url} for clean url view"
+                ns_log Notice "hosting-farm/assets.tcl.632: redirecting to url ${url} for clean url view"
                 ad_returnredirect $url
                 ad_script_abort
             }
-            ns_log Notice "hosting-farm/assets.tcl(667): view mode '${mode}' asset_id '${asset_id}' sub_f_id '${sub_f_id}' asset_type '${asset_type}'"
+            ns_log Notice "hosting-farm/assets.tcl.636: view mode '${mode}' asset_id '${asset_id}' sub_f_id '${sub_f_id}' asset_type '${asset_type}'"
 
             set title "#hosting-farm.Asset#"
             # add default, to convert attr_only to include asset?
@@ -590,7 +643,7 @@ switch -exact -- $mode {
                 if { $sub_type_id in [hf_asset_type_id_list] } {
                     set sub_asset_list [hf_${sub_type_id}_read $sub_f_id]
                     qf_lists_to_array obj_arr $sub_asset_list [hf_${sub_type_id}_keys]
-                    ns_log Notice "hosting-farm/assets.tcl(669): array get obj_arr [array get obj_arr]"
+                    ns_log Notice "hosting-farm/assets.tcl.646: array get obj_arr [array get obj_arr]"
                 }
                 set include_view_attr_p 1
 
@@ -621,7 +674,7 @@ switch -exact -- $mode {
                     }
                 }
             }
-            ns_log Notice "assets.tcl.539 publish_p '${publish_p}' asset_id '${asset_id}'"
+            ns_log Notice "hosting-farm/assets.tcl.677 publish_p '${publish_p}' asset_id '${asset_id}'"
             array set perms_arr [list read_p $read_p create_p $create_p write_p $write_p admin_p $admin_p pkg_admin_p $pkg_admin_p publish_p $publish_p ]
             # pass asset_arr perms_arr
             set detail_p $pkg_admin_p
@@ -638,13 +691,13 @@ switch -exact -- $mode {
 
         } else {
             # no permission to read page. This should not happen.
-            ns_log Warning "hosting-farm/assets.tcl:(619) user did not get expected 404 error when not able to read page."
+            ns_log Warning "hosting-farm/assets.tcl.694: user did not get expected 404 error when not able to read page."
         }
     }
     w {
         #  save.....  (write) asset_id 
         # should already have been handled above and switched to another mode.
-        ns_log Warning "hosting-farm/assets.tcl(575): mode = save/write THIS SHOULD NOT BE CALLED HERE."
+        ns_log Warning "hosting-farm/assets.tcl.700: mode = save/write THIS SHOULD NOT BE CALLED HERE."
     }
     default {
         # return 404 not found or not validated (permission or other issue)
