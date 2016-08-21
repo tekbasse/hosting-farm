@@ -55,6 +55,44 @@ if { [llength $attrs_lists ] > 0 } {
             qf_append html "<br>"
         }
     }
+
+    # Anything else?
+    if { $admin_p } {
+        set asset_types_lists [hf_asset_types]
+        if { $pkg_admin_p } {
+            set at_limited_lists $asset_types_lists
+        } else {
+            set id_list [hfl_attributes_allowed_by_user]
+            # at is abbrev for asset_type
+            set at_limited_lists [list ]
+            foreach at_list $asset_types_lists {
+                if { [lindex $at_list 0] in $id_list } {
+                    lappend at_limited_lists $at_list
+                }
+            }
+        }
+        if { [llength $at_limited_lists] > 0 } {
+            set at_sorted_lists [lsort -index 2 -dictionary $at_limited_lists]
+            qf_append html "<br><br>#hosting-farm.Attribute# #acs-subsite.create#${separator}"
+            qf_input type hidden name state value attr_only
+            set choices_list [list ]
+            set selected 1
+            foreach at_list $at_sorted_lists {
+                set at_id [lindex $at_list 0]
+                set at_title [lindex $at_list 2]
+                set row_list [list label]
+                lappend row_list " ${at_title} " value $at_id selected $selected
+                lappend choices_list $row_list
+                set selected 0
+            }
+            qf_choice type radio name asset_type_id value $choices_list
+            qf_input type submit value "#acs-subsite.create#" name "zal${asset_id}" class button
+        }
+        qf_close form_id $form_id
+        append page_html [qf_read form_id $form_id]
+    }
+
+
     qf_close form_id $form_id
     append content [qf_read form_id $form_id]
 } else {

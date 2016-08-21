@@ -38,14 +38,14 @@
   <include src="/packages/hosting-farm/lib/attribute-edit" &attr_arr=obj_arr &perms_arr=perms_arr detail_p="@detail_p@" tech_p="@tech_p@" asset_type="@asset_type@">
 </if>
 <if @include_view_attrs_p@ true>
-  <include src="/packages/hosting-farm/lib/attributes-view" &attrs_list=attrs_list base_url="@base_url;noquote@">
+  <include src="/packages/hosting-farm/lib/attributes-view" &attrs_list=attrs_list base_url="@base_url;noquote@" &perms_arr=perms_arr asset_id="@asset_id@">
 </if>
 <if @include_view_sub_assets_p@ true>
 <!-- make a revision of assets-view-2 for use with scope of sub_assets_list -->
 <!-- one col on l, m, s  -->
 <div class="l-grid-whole m-grid-whole s-grid-whole padded">
   <div class="content-box">
-    <include src="/packages/hosting-farm/lib/assets-view-2" &assets_lists=assets_lists  base_url="@base_url;noquote@" pagination_bar_p="0">
+    <include src="/packages/hosting-farm/lib/assets-view-2" &assets_lists=assets_lists  base_url="@base_url;noquote@" pagination_bar_p="0" &perms_arr=perms_arr asset_id="@asset_id@">
   </div>
 </div>
 </if>
