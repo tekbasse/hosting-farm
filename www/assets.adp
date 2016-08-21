@@ -34,8 +34,14 @@
 <if @include_edit_one_p@ true>
   <include src="/packages/hosting-farm/lib/asset-edit" &asset_arr=obj_arr &perms_arr=perms_arr detail_p="@detail_p@" tech_p="@tech_p@" asset_type="@asset_type@">
 </if>
+<if @include_add_one_p@ true>
+  <include src="/packages/hosting-farm/lib/asset-add" &asset_arr=obj_arr &perms_arr=perms_arr detail_p="@detail_p@" tech_p="@tech_p@" asset_type="@asset_type@">
+</if>
 <if @include_edit_attr_p@ true>
   <include src="/packages/hosting-farm/lib/attribute-edit" &attr_arr=obj_arr &perms_arr=perms_arr detail_p="@detail_p@" tech_p="@tech_p@" asset_type="@asset_type@">
+</if>
+<if @include_add_attr_p@ true>
+  <include src="/packages/hosting-farm/lib/attribute-add" &attr_arr=obj_arr &perms_arr=perms_arr detail_p="@detail_p@" tech_p="@tech_p@" asset_type="@asset_type@">
 </if>
 <if @include_view_attrs_p@ true>
   <include src="/packages/hosting-farm/lib/attributes-view" &attrs_list=attrs_list base_url="@base_url;noquote@" &perms_arr=perms_arr asset_id="@asset_id@">

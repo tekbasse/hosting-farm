@@ -125,7 +125,7 @@ if { !$form_posted_p } {
 
 
     ##code update this regexp?
-    set modes_idx [lsearch -regexp $input_arr_idx_list {[Zz][vpsSrnwctTdel][ivcrl][1-9][0-9]*}]
+    set modes_idx [lsearch -regexp $input_arr_idx_list {[Zz][avpsSrnwctTdel][ivcrl][1-9][0-9]*}]
     if { $modes_idx > -1 && $mode eq "p" } {
         set modes [lindex $input_arr_idx_list $modes_idx]
         set test [string range $modes 0 3]
@@ -133,10 +133,10 @@ if { !$form_posted_p } {
             set asset_id [string range $modes 3 end]
             if { $asset_id == 0 } {
                 set asset_id ""
-                if { [string match "za*" } {
-                    set state $input_arr(state)
-                    set asset_type_id $input_arr(asset_type_id)
-                }
+            }
+            if { [string match "za*" $test] } {
+                set state $input_arr(state)
+                set asset_type_id $input_arr(asset_type_id)
             }
             ns_log Notice "hosting-farm/www/assets.tcl.141: asset_id '${asset_id}'"
         }
@@ -475,7 +475,7 @@ set menu_list [list ]
 
 # OUTPUT / VIEW
 # using switch, because there's only one view at a time
-ns_log Notice "hosting-farm/assets.tcl.478: OUTPUT mode $mode"
+ns_log Notice "hosting-farm/assets.tcl.478: OUTPUT mode ${mode}"
 # initializations
 set include_assets_p 0
 set include_attrs_p 0
@@ -503,7 +503,7 @@ switch -exact -- $mode {
     r {
         #  revisions. presents a list of revisions of asset and/or attributes
         if { $admin_p } {
-            ns_log Notice "hosting-farm/assets.tcl.506: mode = $mode ie. revisions"
+            ns_log Notice "hosting-farm/assets.tcl.506: mode = ${mode} ie. revisions"
             # sort by date
             ##code later, in /www/admin
         }
