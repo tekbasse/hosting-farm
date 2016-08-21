@@ -93,6 +93,9 @@ if { [exists_and_not_null perms_arr(publish_p) ] } {
 } else {
     set pub_p 0
 }
+if { ![info exists separator] } {
+    set separator ":&nbsp;"
+}
 
 
 
@@ -165,9 +168,6 @@ if { $item_count > 0 } {
         set this_start_row_exists_p [info exists this_start_row]
         if { !$this_start_row_exists_p || ( $this_start_row_exists_p && ![qf_is_natural_number $this_start_row] ) } {
             set this_start_row 1
-        }
-        if { ![info exists separator] } {
-            set separator ":&nbsp;"
         }
         
         # Sanity check 

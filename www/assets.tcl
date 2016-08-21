@@ -60,6 +60,8 @@ set include_view_attrs_p 0
 set include_view_sub_assets_p 0
 set include_edit_one_p 0
 set include_edit_attr_p 0
+set include_add_one_p 0
+set include_add_attr_p 0
 array set input_arr \
     [list \
          asset_id "" \
@@ -131,9 +133,6 @@ if { !$form_posted_p } {
         set test [string range $modes 0 3]
         if { [string match {z[aev]*} $test] } {
             set asset_id [string range $modes 3 end]
-            if { $asset_id == 0 } {
-                set asset_id ""
-            }
             if { [string match "za*" $test] } {
                 set state $input_arr(state)
                 set asset_type_id $input_arr(asset_type_id)
@@ -145,17 +144,24 @@ if { !$form_posted_p } {
             ns_log Notice "hosting-farm/www/assets.tcl.145: this_start_row '${this_start_row}'"
         }
         if { [string match "Z*" $test] } {
-            set sub_f_id [string range $modes 3 end]
-            ns_log Notice "hosting-farm/www/assets.tcl.149: sub_f_id '${sub_f_id}'"
-            # set asset_id for permissions, and make rest of map record available. sub_type_id etc.
-            set sam_list [hf_sub_asset $sub_f_id]
-            qf_lists_to_array sam_arr $sam_list [hf_sub_asset_map_keys]
-            set f_id [hf_asset_f_id_of_sub_f_id $sam_arr(f_id)]
-            set asset_id [hf_asset_id_current_of_f_id $f_id]
+            # attr_only
             set asset_type "attr_only"
-            set sub_type_id $sam_arr(sub_type_id)
+            if { [string match "Z[vewtTdl]*" $test] } {
+                set sub_f_id [string range $modes 3 end]
+                ns_log Notice "hosting-farm/www/assets.tcl.149: sub_f_id '${sub_f_id}'"
+                # set asset_id for permissions, and make rest of map record available. sub_type_id etc.
+                set sam_list [hf_sub_asset $sub_f_id]
+                qf_lists_to_array sam_arr $sam_list [hf_sub_asset_map_keys]
+                set sub_type_id $sam_arr(sub_type_id)
+                set asset_id [hf_asset_id_current_of_f_id $f_id]
+            } elseif { [string match "Z[vewtTdl]*" $test] } {
+                # sub_f_id passed.
+            }
+            if { $f_id eq "" } {
+                set f_id [hf_asset_f_id_of_sub_f_id $sub_type_id]
+            }
         }
-
+        
 
         # modes 0 0 is z or Z
         set mode [string range $modes 1 1]
@@ -356,13 +362,8 @@ if { !$form_posted_p } {
 
     if { $mode eq "a" } {
         if { $create_p || $admin_p } {
-            # allowed
             if { $state in [list asset_attr attr_only asset_only asset_primary_attr] && $asset_type_id ne "" } {
-                if { $asset_id ne "" } {
-                    set f_id [hf_f_id_of_asset_id $asset_id]
-                    set asset_id ""
-                }
-                hf_constructor_a obj_arr force $state $asset_type_id
+                # allowed
             } else {
                 ns_log Notice "hosting-farm/assets.tcl.367: incomplete new \
  asset or attribute request. state '${state}' asset_type_id '${asset_type_id}'"
@@ -416,10 +417,6 @@ if { !$form_posted_p } {
         # execute process using validated input
         # Using IF instead of SWITCH to allow mode to be modified successively
 
-        if { $mode eq "a" } {
-
-        }
-
         if { [string match -nocase "t" $mode] } {
             set processed_p 0
             if { $mode eq "T" } {
@@ -451,7 +448,9 @@ if { !$form_posted_p } {
             if { $write_p } {
                 # ad-unquotehtml values before posting to db
                 set mode $mode_next
-                
+                if { $asset_id ne "" && $f_id eq "" } {
+                    set f_id [hf_f_id_of_asset_id $asset_id]
+                }
             } else {
                 # does not have permission to write
                 lappend user_message_list "#q-wiki.Write_operation_did_not_succeed# #q-wiki.You_don_t_have_permission#"
@@ -514,7 +513,12 @@ switch -exact -- $mode {
             # If context already exists, use most recent/active case
             # for default values.
             ns_log Notice "hosting-farm/assets.tcl.516: mode = add"
-
+            if { $state ne "" && $asset_type eq "" } {
+                set asset_type $state
+            } elseif { $asset_type ne "" && $state eq "" } {
+                set state $asset_type
+            }
+            hf_constructor_a obj_arr force $state $asset_type_id
             if { $asset_type eq "attr_only" } {
                 array set obj_arr [array get sam_arr]
                 if { $sub_type_id in [hf_asset_type_id_list] } {
@@ -523,10 +527,11 @@ switch -exact -- $mode {
                     ns_log Notice "hosting-farm/assets.tcl.523: array get obj_arr [array get obj_arr]"
                 }
                 set include_add_attr_p 1
-   
+                append title " #hosting-farm.Attribute#"
             } elseif { $asset_type ne "" } {
                 set include_add_one_p 1
                 set publish_p [hf_ui_go_ahead_q write "" published 0]
+                append title " #hosting-farm.Asset#"
                 ns_log Notice "hosting-farm/assets.tcl.530 publish_p '${publish_p}' asset_id '${asset_id}'"
             }
             array set perms_arr [list read_p $read_p create_p $create_p write_p $write_p admin_p $admin_p pkg_admin_p $pkg_admin_p publish_p $publish_p ]
@@ -535,7 +540,7 @@ switch -exact -- $mode {
             set tech_p $admin_p
 
             # adjust page context
-            append title " -  #acs-subsite.create#"
+            append title " - #acs-subsite.create#"
             if { [info exists obj_arr(name)] } {
                 set context [list [list assets #hosting-farm.Assets#] "$obj_arr(name) - #acs-subsite.create#"]
             } elseif { [info exists obj_arr(label)] } {

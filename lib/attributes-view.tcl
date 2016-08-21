@@ -107,7 +107,7 @@ if { [llength $attrs_lists ] > 0 } {
         if { [llength $at_limited_lists] > 0 } {
             set at_sorted_lists [lsort -index 2 -dictionary $at_limited_lists]
             qf_append html "<br><br>#hosting-farm.Attribute# #acs-subsite.create#${separator}"
-            qf_input type hidden name state value attr_only
+            qf_input type "hidden" name "state" value "attr_only"
             set choices_list [list ]
             set selected 1
             foreach at_list $at_sorted_lists {
@@ -118,8 +118,8 @@ if { [llength $attrs_lists ] > 0 } {
                 lappend choices_list $row_list
                 set selected 0
             }
-            qf_choice type radio name asset_type_id value $choices_list
-            qf_input type submit value "#acs-subsite.create#" name "zal${asset_id}" class button
+            qf_choice type radio name sub_type_id value $choices_list
+            qf_input type submit value "#acs-subsite.create#" name "Zal${asset_id}" class button
         }
     }
 
