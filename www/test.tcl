@@ -1,66 +1,55 @@
-set y [list 1 23 456 7800 ab]
-set content ""
 
+#
+#oacs-dev=# select * from hf_hardware;
+# instance_id | hw_id | system_name | backup_sys | os_id | description |       details        | time_trashed |      time_created      
+#-------------+-------+-------------+------------+-------+-------------+----------------------+--------------+------------------------
+#         147 | 10805 | 7D92764B2   | Dn         |       | HW0         | This is for api test |              | 2016-07-05 05:50:44-04
+#(1 row)
+#
+#oacs-dev=# select * from hf_asset_rev_map;
+# instance_id |  label   | f_id  | asset_id | trashed_p 
+#-------------+----------+-------+----------+-----------
+#         147 | or97.net | 10802 |    10802 | 0
+#         147 | Dn-D-d   | 10804 |    10804 | 0
+#(2 rows)
+#
+#oacs-dev=# select * from hf_sub_asset_map;
+# instance_id | f_id  | type_id | sub_f_id | sub_type_id | sub_sort_order | sub_label | attribute_p | trashed_p 
+#-------------+-------+---------+----------+-------------+----------------+-----------+-------------+-----------
+#         147 | 10802 | dc      |    10803 | dc          |             20 | 1         | 1           | 0
+#         147 | 10804 | hw      |    10806 | ua          |             20 |           | 1           | 0
+#         147 | 10804 | hw      |    10806 | ua          |             20 |           | 1           | 0
+#         147 | 10804 | hw      |    10806 | hw          |             20 | 1         | 1           | 0
+#(4 rows)
+#
+#oacs-dev=# select * from hf_data_centers;
+# instance_id | dc_id |   affix   | description |       details        | time_trashed |      time_created      
+#-------------+-------+-----------+-------------+----------------------+--------------+------------------------
+#         147 | 10803 | C7A7D9B7E | DC0         | This is for api test |              | 2016-07-05 05:50:44-04
+#(1 row)
+#
+#oacs-dev=# select * from hf_assets;
+#oacs-dev=# select * from hf_assets;
+#oacs-dev=# select label,asset_id,f_id,asset_type_id,name from hf_assets;
+#  label   | asset_id | f_id  | asset_type_id |        name        
+#----------+----------+-------+---------------+--------------------
+# or97.net |    10802 | 10802 | dc            | or97.net test dc 0
+# Dn-D-d   |    10804 | 10804 | hw            | Dn-D-d test hw 0
+#(2 rows)
+set asset_id 33683
+set asset_list [hf_asset_read $asset_id]
+set hf_asset_keys_list [hf_asset_keys]
+set result_list [qf_lists_to_array obj_arr $asset_list $hf_asset_keys_list]
 
-            # Identify and test full range of parameters
-            set asset_type_ids_list [db_list hf_property_asset_type_ids_get {
-                select distinct on (asset_type_id) asset_type_id
-                from hf_property } ]
-            set asset_type_ids_count [llength $asset_type_ids_list]
-
-            set roles_lists [hf_roles $instance_id]
-            set roles_list [list ]
-            foreach role_list $roles_lists {
-                set role [lindex $role_list 0]
-                append roles_list $role
-                set role_id [hf_role_id_of_label $role "" $instance_id]
-                set role_id_arr(${role}) $role_id
-            }
-            # keep namespace clean to help prevent bugs in test code
-            unset role_id
-            unset role
-            unset roles_lists
-
-            # create a lookup truth table of permissions
-            # hf_asset_type_ids_list vs roles_list
-            # with value being 1 read, 2 create, 4 write, 8 delete, 16 admin
-            # which results in these values, based on existing assignments:
-            # 0,1,3,7,15,31
-            # with this table, if user has same role, customer_id, 
-            # then pass using bit math: table value & privilege_request_value
-            # 
-            # initialize table
-            foreach role $roles_list {
-                # at_id = asset_type_id
-                foreach at_id $asset_type_ids_list {
-                    # 0 is default, no privilege
-#                    set priv_arr(${role},${at_id})  0
-                    set property_id [hf_property_id $at_id $instance_id]
-                    set role_id [hf_role_id_of_label $role $instance_id]
-                    set priv_list [db_list test_tcl "select privilege from hf_property_role_privilege_map where instance_id=:instance_id"] 
-                    set priv_val 0
-                    foreach priv $priv_list {
-                        switch -exact -- $priv {
-                            read {
-                                inr priv_val 1
-                            }
-                            create {
-                                incr priv_val 2
-                            }
-                            write {
-                                incr priv_val 4
-                            }
-                            delete {
-                                incr priv_val 8
-                            }
-                            admin {
-                                incr priv_val 16
-                            }
-                        }
-                    }
-                    if { $priv_val > 0 } {
-                        append content "${role},${at_id} ${priv_val} \\n"
-                    }
-                }
-            }
-
+set content "
+asset_list: $asset_list
+hf_asset_keys_list: $hf_asset_keys_list
+[array get obj_arr]"
+set content "<pre>
+$content
+</pre>"
+#db_list_of_lists hf_test1 "select [hf_hw_keys ","] from hf_hardware"
+#db_list_of_lists hf_test2 "select instance_id,asset_id,f_id,label,trashed_p from hf_asset_rev_map"
+#db_list_of_lists hf_test3 "select [hf_dc_keys ","] from hf_data_centers"
+#db_list_of_lists hf_test4 "select instance_id,asset_id,f_id,asset_type_id,label,name from hf_assets"
+#db_list_of_lists hf_test5 "select [hf_sub_asset_map_keys ","] from hf_sub_asset_map"
