@@ -143,7 +143,6 @@ foreach key [hf_key_order_for_display [array names attr_arr]] {
                                       [list label " #acs-kernel.common_no# " value 0 selected $0_selected_p ] ]
                 qf_choice type radio name $key value $choices_list
             } else {
-                qf_append html "<br>"
                 qf_append html "<span>#hosting-farm.${key}#${separator}${val}</span>"
             }
         } else {
@@ -160,6 +159,7 @@ foreach key [hf_key_order_for_display [array names attr_arr]] {
 
 
 #qf_append html "</div>"
+qf_append html "<br>"
 qf_input type submit value "#acs-kernel.common_Save#"
 qf_append html " &nbsp; &nbsp; &nbsp; ${cancel_link_html}"
 qf_close
