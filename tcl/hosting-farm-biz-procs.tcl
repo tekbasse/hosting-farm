@@ -169,20 +169,33 @@ ad_proc -public hf_constructor_a {
         }
     } else {
         if { $arg1 eq "default" } {
-            ns_log Notice "hf_constructor_a.156: using default arg2 '${arg2}' asset_type_id/arg3 '${arg3}'"
-            set asset_type_id $arg3
             if { $state eq "" } {
-                set state $arg2
+                if { $arg2 in [list asst_primary_attr asset_attr attr_only asset_only] } {
+                    set state $arg2
+                    ns_log Notice "hf_constructor_a.156: using default asset_type arg2 '${arg2}'"
+                    if { $asset_type_id eq "" } {
+                        if { $arg3 in [hf_asset_type_id_list] } {
+                            ns_log Notice "hf_constructor_a.177: using default asset_type_id/arg3 '${arg3}'"
+                            set asset_type_id $arg3
+                        } elseif { $arg3 ne "" } {
+                            ns_log Warning "hf_constructor_a.183: arg3 '${arg3}' not valid."
+                            set arg3 ""
+                        }
+                    }
+                } else {
+                    ns_log Warning "hf_constructor_a.178: arg2 '${arg2}' not valid"
+                }
             }
         } 
         # provide default default
         if { $state eq "" } {
             set state "attr_only"
-            ns_log Notice "hf_constructor_a.164: using default default"
+            ns_log Notice "hf_constructor_a.164: using default default ie asset_type 'attr_only'"
         }
     }
 
     if { $arg1 eq "force" } {
+        # only makes sense when asset_only, attr_only, or asset_primary_attr
         if { $state ne $arg2 } {
             set state_old $state
             set state $arg2
@@ -190,32 +203,50 @@ ad_proc -public hf_constructor_a {
             # set state_forced_p 1
         }
         if { $asset_type_id ne $arg3 } {
-            set asset_type_id_old $asset_type_id
-            set asset_type_id $arg3
-            ns_log Notice "hf_constructor_a.194: asset_type_id forced from '${asset_type_id_old}' to '${arg3}'"
+            if { $arg3 in [hf_asset_type_id_list] } {
+                set asset_type_id_old $asset_type_id
+                set asset_type_id $arg3
+                ns_log Notice "hf_constructor_a.194: asset_type_id forced from '${asset_type_id_old}' to '${arg3}'"
+            } elseif { $arg3 ne "" } {
+                ns_log Warning "hf_constructor_a.199: asset_type_id supplied by force '${arg3}' is not valid"
+                set arg3 ""
+            }
             # set asset_type_id_forced_p 1
         }
-    } 
+    }
 
     # fill array, track keys for removing dangler keys
     set keys_list [list ]
     if { [string match "*asset*" $state] } {
         hf_asset_defaults an_arr
+        set an_arr(asset_type_id) $asset_type_id
         set keys_list [set_union $keys_list [hf_asset_keys]]
     }
     if { [string match "*attr*" $state] } {
         if { $asset_type_id in [hf_asset_type_id_list] } {
             # substitution in command avoids a long switch
             hf_${asset_type_id}_defaults an_arr
+            if { $arg1 eq "force" && $arg3 ne "" } {
+                set an_arr(type_id) $asset_type_id
+            }
             set keys_list [set_union $keys_list [hf_${asset_type_id}_keys]]
             hf_sub_asset_map_defaults an_arr
+            if { $state eq "asset_primary_attr" } {
+                set an_arr(attribute_p) 0
+            }
+            if { $arg1 eq "force" && $arg3 ne "" } {
+                set an_arr(sub_type_id) $asset_type_id
+            }
             set keys_list [set_union $keys_list [hf_sub_asset_map_keys]]
         } else {
             # attr_only
             set sub_type_id ""
             if { [info exists sub_arr(sub_type_id) ] } {
                 set sub_type_id $sub_arr(sub_type_id)
-            }   
+            }
+            if { $arg1 eq "force" && $arg3 ne "" } {
+                set sub_type_id $arg3
+            }
             if { $sub_type_id in [hf_asset_type_id_list] } {
                 # attr_only
                 hf_${sub_type_id}_defaults an_arr
