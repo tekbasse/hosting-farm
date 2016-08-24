@@ -14,9 +14,7 @@
       <h3>@label@</h3>
     </if>
     
-    <ul>
       @content;noquote@
-    </ul>  
   </div>
 </div>
 </div>

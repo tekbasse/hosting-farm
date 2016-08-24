@@ -20,9 +20,7 @@
   <h3>@sub_type_id@</h3>
 </else>
 
-<ul>
   @content;noquote@
-</ul>  
 
 </div>
 </div>
