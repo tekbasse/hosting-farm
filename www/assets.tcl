@@ -541,14 +541,20 @@ switch -exact -- $mode {
             set tech_p $admin_p
 
             # adjust page context
-            append title " - #acs-subsite.create#"
-            if { [info exists obj_arr(name)] } {
-                set context [list [list assets #hosting-farm.Assets#] "$obj_arr(name) - #acs-subsite.create#"]
-            } elseif { [info exists obj_arr(label)] } {
-                set context [list [list assets #hosting-farm.Assets#] "$obj_arr(label) - #acs-subsite.create#"]
-            } elseif { [info exists obj_arr(sub_label)] } {
-                set context [list [list assets #hosting-farm.Assets#] "$obj_arr(sub_label) - #acs-subsite.create#"]
+
+            if { [exists_and_not_null obj_arr(name)] } {
+                set sub_title $obj_arr(name)
+            } elseif { [exists_and_not_null obj_arr(label)] } {
+                set sub_title $obj_arr(label)
+            } elseif { [exists_and_not_null obj_arr(sub_label)] } {
+                set sub_title $obj_arr(sub_label)
+            } elseif { [exists_and_not_null obj_arr(asset_type_id)] } {
+                set sub_title $obj_arr(asset_type_id)
+            } else {
+                set sub_title $obj_arr(sub_type_id)
             }
+            append title " ${sub_title} - #acs-subsite.create#"
+            set context [list [list assets #hosting-farm.Assets#] "${sub_title} - #acs-subsite.create#"]  
 
             if { ![exists_and_not_null asset_type] } {
                 ns_log Warning "hosting-farm/assets.tcl.548: asset_type not defined."
