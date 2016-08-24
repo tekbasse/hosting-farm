@@ -305,13 +305,6 @@ if { !$form_posted_p } {
     if { $mode eq "w" } { 
         if { $write_p || $create_p || $admin_p } {
             # allowed
-            if { $create_p && !$write_p } {
-                # create only. Remove any existing revision references
-                set asset_id ""
-                set sub_asset_id ""
-                set f_id ""
-                set sub_f_id ""
-            }
         } else {
             set mode ""
             set mode_next ""
@@ -448,6 +441,17 @@ if { !$form_posted_p } {
 
         if { $mode eq "w" } {
             if { $write_p } {
+                if { $create_p && !$write_p } {
+                    # create only. Any existing revision references must be for establishing hierarchical relationship only
+                    set asset_id ""
+                    set input_arr(asset_id) ""
+                    set sub_asset_id ""
+                    set input_arr(sub_asset_id) ""
+                    if { $sub_f_id ne "" } {
+                        set f_id $sub_f_id
+                        set sub_f_id ""
+                    } 
+                }
                 # ad-unquotehtml values before posting to db
                 set mode $mode_next
                 if { $asset_id ne "" && $f_id eq "" } {
