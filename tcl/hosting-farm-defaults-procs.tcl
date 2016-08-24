@@ -689,7 +689,7 @@ ad_proc -private hf_asset_type_id_init {
                  [list dc "#hosting-farm.dc#" "#hosting-farm.Data_center#"] \
                  [list hw "#hosting-farm.hw#" "#hosting-farm.Hardware#"] \
                  [list ip "#hosting-farm.ip#" "#hosting-farm.ip_address#"] \
-                 [list ip "#hosting-farm.ua#" "#hosting-farm.user_account#"] \
+                 [list ua "#hosting-farm.ua#" "#hosting-farm.user_account#"] \
                  [list ni "#hosting-farm.ni#" "#hosting-farm.network_interface#"] \
                  [list ns "#hosting-farm.ns#" "#hosting-farm.Name_service#"] \
                  [list ot "#hosting-farm.ot#" "#hosting-farm.Other#"] \
