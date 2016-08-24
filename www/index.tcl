@@ -1,4 +1,4 @@
-set title "#hosting-farm.Hosting-Farm#"
+set title "#hosting-farm.Hosting_Farm#"
 set context [list $title]
 
 # adp flags: gt1_customer_p and (role labels_p) site_developer_p for example.
