@@ -998,5 +998,4 @@ if { $validated_p_exists && $validated_p || !$validated_p_exists } {
         append menu_html "<a href=\"${menu_url}\" title=\"${menu_label}\">${menu_label}</a> &nbsp; "
     }
 } 
-set doc(title) $title
 set context [list $title]

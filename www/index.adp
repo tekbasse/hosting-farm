@@ -1,5 +1,5 @@
 <master>
-
+  <property name="doc(title)">@title@</property>
 
 <if @app_admin_p@>
   <a href="admin/">#accounts-ledger.admin#</a>
