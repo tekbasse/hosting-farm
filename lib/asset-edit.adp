@@ -8,7 +8,7 @@
 </if>
 
 <if @has_bg_image_p@ true>
-<div style="background-color: transparent; background-repeat: no-repeat; background-image: url(@pg_image_url@); background-size: 100% 100% ; padding: 0 ; margin: 0;">
+<div style="background-color: transparent; background-repeat: no-repeat; background-image: url(@bg_image_url@); background-size: 100% 100% ; padding: 0 ; margin: 0;">
   <div style="padding-top: 10%; margin-top: 10%;padding-bottom: 10%; margin-bottom: 10%;">
   <div style="padding: 10%; margin: 10%;">
 </if>

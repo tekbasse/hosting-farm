@@ -137,7 +137,9 @@ foreach key [hf_key_order_for_display [array names attr_arr]] {
                 set 1_selected_p 0
                 set 0_selected_p 1
             }
-            if { $key ne "trashed_p" } {
+            if { $key eq "details" || $key eq "description" } {
+                qf_textarea value $val_unquoted name $key label "#hosting-farm.${key}#${separator}" cols 40 rows 3
+            } elseif { $key ne "trashed_p" } {
                 qf_append html "#hosting-farm.${key}#${separator}"
                 set choices_list [list \
                                       [list label " #acs-kernel.common_yes# " value 1 selected $1_selected_p ] \
