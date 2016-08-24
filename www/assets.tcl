@@ -154,8 +154,8 @@ if { !$form_posted_p } {
                 set sam_list [hf_sub_asset $sub_f_id]
                 qf_lists_to_array sam_arr $sam_list [hf_sub_asset_map_keys]
                 set sub_type_id $sam_arr(sub_type_id)
+                set f_id [hf_asset_f_id_of_sub_f_id $sub_f_id]
                 set asset_id [hf_asset_id_current_of_f_id $f_id]
-                set f_id [hf_asset_f_id_of_sub_f_id $sub_type_id]
             } elseif { [string match "Za*" $test] } {
                 set state $input_arr(state)
                 set sub_type_id $input_arr(sub_type_id)

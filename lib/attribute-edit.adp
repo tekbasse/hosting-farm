@@ -20,9 +20,11 @@
   <h3>@sub_type_id@</h3>
 </else>
 
+  <div style="background-color: white ; padding: 0 ; margin: 0 ; padding: 1%; margin: 1%;">
 <ul>
   @content;noquote@
 </ul>  
+  </div>
 
 </div>
 </div>

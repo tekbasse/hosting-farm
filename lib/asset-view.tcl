@@ -114,6 +114,13 @@ if { [exists_and_not_null asset_type_id] } {
     set asset_type_id ""
 }
 
+set icon_url [file join resources icons $asset_type_id]
+set bg_image_url $icon_url
+append icon_url ".png"
+append bg_image_url "-background.png"
+set acs_root [acs_root_dir]
+set has_icon_p [file exists [file join $acs_root packages hosting-farm www $icon_url]]
+set has_bg_image_p [file exists [file join $acs_root packages hosting-farm www $bg_image_url]]
 
 # output
 set content_list [list ]
