@@ -469,6 +469,7 @@ if { !$form_posted_p } {
             if { $create_p } {
                 # create only. 
                 # Any existing revision references must be for establishing hierarchical relationship only
+                # Choose the most specific f_id.
                 if { $asset_id ne "" && $f_id eq "" } {
                     set mapped_f_id [hf_f_id_of_asset_id $asset_id]
                 }
@@ -481,21 +482,48 @@ if { !$form_posted_p } {
                     set sub_f_id ""
                     set input_arr(sub_f_id) ""
                 }
-
+                if { $mapped_f_id eq "" && $f_id ne "" } {
+                    set mapped_f_id $f_id
+                }
+                if { $mapped_f_id ne "" } {
+                    set mapped_type_id [hf_asset_type_id_of_asset_id $mapped_f_id]
+                    if { $mapped_type_id eq "" } {
+                        set mapped_f_id "" 
+                    }
+                }
+                
                 array set obj_arr [array get input_arr]
                 set form_state [hf_constructor_a obj_arr ]
                 # ad-unquotehtml values before posting to db
                 foreach key [array names $obj_arr] {
                     set obj_arr(${key}) [ad_unquotehtml $obj_arr(${key})]
                 }
-##code
                 if { $form_state eq $state } {
                     if { [string match "*asset*" $state] } {
                         # first asset_id is f_id
                         set asset_id [hf_asset_create obj_arr]
+                        set obj_arr(f_id) $asset_id
+                        if { $mapped_f_id ne "" } {
+                            # asset to asset
+                            hf_sub_asset_map_update $mapped_f_id $mapped_type_id $obj_arr(label) $asset_id $obj_arr(asset_type_id) 0
+                        }
                     }
                     if { [string match "*attr*" $state] } {
-                        
+                        if { ![string match "*asset*" $state ] } {
+                            # attr_only
+                            if { $mapped_f_id ne "" } {
+                                set obj_arr(f_id) $mapped_f_id
+                                set obj_arr(type_id) $mapped_type_id
+                            }
+                        } 
+                        if { [exists_and_not_null obj_arr(f_id) ] } {
+                            set attr_id [hf_${sub_type_id}_write obj_arr]
+                            if { $attr_id eq "" } {
+                                ns_log Warning "hosting-farm/assets.tcl.462: attribute not created. attr_id '' array get obj_arr '[array get obj_arr]'"
+                            }
+                        } else {
+                            ns_log Warning "hosting-farm/assets.tcl.465: attribute not created. obj_arr(f_id) ''  array get obj_arr '[array get obj_arr]'"
+                        }
                     }
                     set mode $mode_next
                 } else {
