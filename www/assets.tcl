@@ -497,7 +497,7 @@ if { !$form_posted_p } {
                     if { $mapped_type_id eq "" } {
                         set mapped_f_id "" 
                     }
-                }
+                } 
                 
                 array set obj_arr [array get input_arr]
                 set form_state [hf_constructor_a obj_arr ]
