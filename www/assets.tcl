@@ -286,6 +286,7 @@ if { !$form_posted_p } {
     #   D  = delete f_id or sub_f_id 
     #   t  = trash asset_id or sub_asset_id
     #   T  = untrash asset_id
+    #   c  = create asset/attr
     #   w  = write asset_id/sub_asset_id asset_type_id
     #   a  = add asset_type_id
     #   s  = publish
@@ -302,15 +303,40 @@ if { !$form_posted_p } {
 
     # keeping the logic simple in this section
     # Using IF instead of SWITCH to allow mode to be modified successively
-    if { $mode eq "w" } { 
+    if { $mode eq "c" } { 
         if { $write_p || $create_p || $admin_p } {
             # allowed
         } else {
-            set mode ""
-            set mode_next ""
-            set validated_p 0
+            # does not have permission to create
             ns_log Warning "hosting-farm/assets.tcl.311: \
  write denied for '${user_id}'."
+            lappend user_message_list "#q-wiki.Write_operation_did_not_succeed# #q-wiki.You_don_t_have_permission#"
+            util_user_message -message [lindex $user_message_list end]
+            set mode_next ""
+            if { $read_p } {
+                set mode "v"
+            } else {
+                set mode ""
+            }
+            set validated_p 0
+        }
+    }
+    if { $mode eq "w" } { 
+        if { $write_p || $admin_p } {
+            # allowed
+        } else {
+            # does not have permission to write
+            ns_log Warning "hosting-farm/assets.tcl.319: \
+ write denied for '${user_id}'."
+            lappend user_message_list "#q-wiki.Write_operation_did_not_succeed# #q-wiki.You_don_t_have_permission#"
+            util_user_message -message [lindex $user_message_list end]
+            set mode_next ""
+            if { $read_p } {
+                set mode "v"
+            } else {
+                set mode ""
+            }
+            set validated_p 0
         }
     }
 
@@ -439,37 +465,69 @@ if { !$form_posted_p } {
             set mode_next ""
         }
 
-        if { $mode eq "w" } {
-            if { $write_p } {
-                if { $create_p && !$write_p } {
-                    # create only. Any existing revision references must be for establishing hierarchical relationship only
-                    set asset_id ""
-                    set input_arr(asset_id) ""
-                    set sub_asset_id ""
-                    set input_arr(sub_asset_id) ""
-                    if { $sub_f_id ne "" } {
-                        set f_id $sub_f_id
-                        set sub_f_id ""
-                    } 
-                }
-                # ad-unquotehtml values before posting to db
-                set mode $mode_next
+        if { $mode eq "c" } {
+            if { $create_p } {
+                # create only. 
+                # Any existing revision references must be for establishing hierarchical relationship only
                 if { $asset_id ne "" && $f_id eq "" } {
-                    set f_id [hf_f_id_of_asset_id $asset_id]
+                    set mapped_f_id [hf_f_id_of_asset_id $asset_id]
                 }
-            } else {
-                # does not have permission to write
-                lappend user_message_list "#q-wiki.Write_operation_did_not_succeed# #q-wiki.You_don_t_have_permission#"
-                util_user_message -message [lindex $user_message_list end]
-                ns_log Notice "hosting-farm/assets.tcl.459) User attempting to write content without permission."
-                if { $read_p } {
-                    set mode "v"
+                set asset_id ""
+                set input_arr(asset_id) ""
+                set sub_asset_id ""
+                set input_arr(sub_asset_id) ""
+                if { $sub_f_id ne "" } {
+                    set mapped_f_id $sub_f_id
+                    set sub_f_id ""
+                    set input_arr(sub_f_id) ""
+                }
+
+                array set obj_arr [array get input_arr]
+                set form_state [hf_constructor_a obj_arr ]
+                # ad-unquotehtml values before posting to db
+                foreach key [array names $obj_arr] {
+                    set obj_arr(${key}) [ad_unquotehtml $obj_arr(${key})]
+                }
+##code
+                if { $form_state eq $state } {
+                    if { [string match "*asset*" $state] } {
+                        # first asset_id is f_id
+                        set asset_id [hf_asset_create obj_arr]
+                    }
+                    if { [string match "*attr*" $state] } {
+                        
+                    }
+                    set mode $mode_next
                 } else {
                     set mode ""
-                }
+                    ns_log Warning "hosting-farm/assets.tcl.470: form_state '${form_state}' ne state '${state}'. form input ignored."
+                } 
+                # end section of write
+                set mode_next ""
+
             }
-            # end section of write
-            set mode_next ""
+        }
+
+        if { $mode eq "w" } {
+            if { $write_p } {
+                # ad-unquotehtml values before posting to db
+                array set obj_arr [array get input_arr]
+                set form_state [hf_constructor_a obj_arr ]
+                if { $form_state eq $state } {
+                    if { [string match "*asset*" $state] } {
+
+                    }
+                    if { [string match "*attr*" $state] } {
+
+                    }
+                    set mode $mode_next
+                } else {
+                    set mode ""
+                    ns_log Warning "hosting-farm/assets.tcl.470: form_state '${form_state}' ne state '${state}'. form input ignored."
+                } 
+                # end section of write
+                set mode_next ""
+            }
         }
     }
 }

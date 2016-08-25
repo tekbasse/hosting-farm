@@ -117,7 +117,7 @@ set cancel_link_html "<a href=\"${base_url}\">#acs-kernel.common_Cancel#</a>"
 #set base_url \[file join $conn_package_url $url\]
 
 qf_form action $base_url method post id 20160818 hash_check 1
-qf_input type hidden value w name mode
+qf_input type hidden value c name mode
 qf_input type hidden value v name mode_next
 qf_input type hidden value $sub_f_id name sub_f_id
 qf_input type hidden value $asset_type name asset_type
