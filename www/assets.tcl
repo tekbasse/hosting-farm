@@ -498,7 +498,7 @@ if { !$form_posted_p } {
                 foreach key [array names $obj_arr] {
                     set obj_arr(${key}) [ad_unquotehtml $obj_arr(${key})]
                 }
-                if { $form_state eq $state } {
+                if { $form_state eq $state and $asset_type_id ne "" } {
                     if { [string match "*asset*" $state] } {
                         # first asset_id is f_id
                         set asset_id [hf_asset_create obj_arr]
@@ -516,13 +516,14 @@ if { !$form_posted_p } {
                                 set obj_arr(type_id) $mapped_type_id
                             }
                         } 
-                        if { [exists_and_not_null obj_arr(f_id) ] } {
+                        if { [exists_and_not_null obj_arr(f_id)] && $obj_arr(sub_type_id) in [hf_types_allowed_by $mapped_type_id] } {
+                            set sub_type_id $obj_arr(sub_type_id)
                             set attr_id [hf_${sub_type_id}_write obj_arr]
                             if { $attr_id eq "" } {
                                 ns_log Warning "hosting-farm/assets.tcl.462: attribute not created. attr_id '' array get obj_arr '[array get obj_arr]'"
                             }
                         } else {
-                            ns_log Warning "hosting-farm/assets.tcl.465: attribute not created. obj_arr(f_id) ''  array get obj_arr '[array get obj_arr]'"
+                            ns_log Warning "hosting-farm/assets.tcl.465: attribute not created. obj_arr(f_id) '' mapped_type_id '${mapped_type_id}'  array get obj_arr '[array get obj_arr]'"
                         }
                     }
                     set mode $mode_next
@@ -530,9 +531,8 @@ if { !$form_posted_p } {
                     set mode ""
                     ns_log Warning "hosting-farm/assets.tcl.470: form_state '${form_state}' ne state '${state}'. form input ignored."
                 } 
-                # end section of write
+                # end section of create
                 set mode_next ""
-
             }
         }
 
@@ -543,15 +543,17 @@ if { !$form_posted_p } {
                 set form_state [hf_constructor_a obj_arr ]
                 if { $form_state eq $state } {
                     if { [string match "*asset*" $state] } {
-
+                        set asset_id [hf_asset_create obj_arr]
+                        set obj_arr(f_id) $asset_id
                     }
                     if { [string match "*attr*" $state] } {
-
+                        set sub_type_id $obj_arr(sub_type_id)
+                        set attr_id [hf_${sub_type_id}_write obj_arr]
                     }
                     set mode $mode_next
                 } else {
                     set mode ""
-                    ns_log Warning "hosting-farm/assets.tcl.470: form_state '${form_state}' ne state '${state}'. form input ignored."
+                    ns_log Warning "hosting-farm/assets.tcl.470: form_state '${form_state}' ne state '${state}'. form input ignored. array get obj_arr '[array get obj_arr]'"
                 } 
                 # end section of write
                 set mode_next ""
