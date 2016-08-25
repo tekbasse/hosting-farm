@@ -306,6 +306,12 @@ if { !$form_posted_p } {
     if { $mode eq "c" } { 
         if { $write_p || $create_p || $admin_p } {
             # allowed
+            set state $input_arr(asset_type)
+            set asset_type_id $input_arr(asset_type_id)
+            if { $state eq "attr_only" } {
+                set sub_type_id $input_arr(sub_type_id)
+                set f_id [hf_f_id_of_asset_id $asset_id]
+            }
         } else {
             # does not have permission to create
             ns_log Warning "hosting-farm/assets.tcl.311: \
@@ -499,7 +505,7 @@ if { !$form_posted_p } {
                 foreach key [array names obj_arr] {
                     set obj_arr(${key}) [ad_unquotehtml $obj_arr(${key})]
                 }
-                if { $form_state eq $state and $asset_type_id ne "" } {
+                if { $form_state eq $state && $asset_type_id ne "" } {
                     if { [string match "*asset*" $state] } {
                         # first asset_id is f_id
                         set asset_id [hf_asset_create obj_arr]
