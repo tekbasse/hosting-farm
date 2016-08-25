@@ -470,34 +470,32 @@ if { !$form_posted_p } {
             set mode $mode_next
             set mode_next ""
         }
-
         if { $mode eq "c" } {
             if { $create_p } {
                 # create only. 
                 # Any existing revision references must be for establishing hierarchical relationship only
                 # Choose the most specific f_id.
-                set mapped_f_id $f_id
-                if { $asset_id ne "" && $f_id eq "" } {
-                    set mapped_f_id [hf_f_id_of_asset_id $asset_id]
+                set f_id_of_asset_id ""
+                set mapped_f_id ""
+                if { $asset_id ne "" } {
+                    set f_id_of_asset_id [hf_f_id_of_asset_id $asset_id]
                 }
+                set mapped_f_id [qal_first_nonempty_in_list [list $sub_f_id $f_id $f_id_of_asset_id]
+                if { $mapped_f_id ne "" } {
+                    set mapped_type_id [hf_asset_type_id_of_f_id $mapped_f_id]
+                    if { $mapped_type_id eq "" } {
+                        set mapped_f_id "" 
+                    }
+                } else {
+                    set mapped_type_id [qal_first_nonempty_in_list [list $sub_type_id $type_id $asset_type_id]
+                }
+
                 set asset_id ""
                 set input_arr(asset_id) ""
                 set sub_asset_id ""
                 set input_arr(sub_asset_id) ""
-                if { $sub_f_id ne "" } {
-                    set mapped_f_id $sub_f_id
-                    set sub_f_id ""
-                    set input_arr(sub_f_id) ""
-                }
-                if { $mapped_f_id eq "" && $f_id ne "" } {
-                    set mapped_f_id $f_id
-                }
-                if { $mapped_f_id ne "" } {
-                    set mapped_type_id [hf_asset_type_id_of_asset_id $mapped_f_id]
-                    if { $mapped_type_id eq "" } {
-                        set mapped_f_id "" 
-                    }
-                } 
+                set sub_f_id ""
+                set input_arr(sub_f_id) ""
                 
                 array set obj_arr [array get input_arr]
                 set form_state [hf_constructor_a obj_arr ]
@@ -507,6 +505,10 @@ if { !$form_posted_p } {
                 }
                 if { $form_state eq $state && $asset_type_id ne "" } {
                     if { [string match "*asset*" $state] } {
+           set message "#accounts-finance.requiredq-wiki.Write_operation_did_not_succeed#"
+            util_user_message -message $message
+
+
                         # first asset_id is f_id
                         set asset_id [hf_asset_create obj_arr]
                         set obj_arr(f_id) $asset_id
@@ -560,7 +562,7 @@ if { !$form_posted_p } {
                     set mode $mode_next
                 } else {
                     set mode ""
-                    ns_log Warning "hosting-farm/assets.tcl.470: form_state '${form_state}' ne state '${state}'. form input ignored. array get obj_arr '[array get obj_arr]'"
+                    ns_log Warning "hosting-farm/assets.tcl.570: form_state '${form_state}' ne state '${state}'. form input ignored. array get obj_arr '[array get obj_arr]'"
                 } 
                 # end section of write
                 set mode_next ""
@@ -575,7 +577,7 @@ set menu_list [list ]
 
 # OUTPUT / VIEW
 # using switch, because there's only one view at a time
-ns_log Notice "hosting-farm/assets.tcl.478: OUTPUT mode ${mode}"
+ns_log Notice "hosting-farm/assets.tcl.578: OUTPUT mode ${mode}"
 # initializations
 set include_assets_p 0
 set include_attrs_p 0
@@ -587,7 +589,7 @@ switch -exact -- $mode {
     l {
         if { $read_p } {
             if { $redirect_before_v_p } {
-                ns_log Notice "hosting-farm/assets.tcl.490: redirecting to url ${url} for clean url view"
+                ns_log Notice "hosting-farm/assets.tcl.590: redirecting to url ${url} for clean url view"
                 ad_returnredirect "${url}?mode=l"
                 ad_script_abort
             }
@@ -603,7 +605,7 @@ switch -exact -- $mode {
     r {
         #  revisions. presents a list of revisions of asset and/or attributes
         if { $admin_p } {
-            ns_log Notice "hosting-farm/assets.tcl.506: mode = ${mode} ie. revisions"
+            ns_log Notice "hosting-farm/assets.tcl.606: mode = ${mode} ie. revisions"
             # sort by date
             ##code later, in /www/admin
         }
@@ -613,7 +615,7 @@ switch -exact -- $mode {
             #  add...... add/form mode of current context
             # If context already exists, use most recent/active case
             # for default values.
-            ns_log Notice "hosting-farm/assets.tcl.516: mode = add"
+            ns_log Notice "hosting-farm/assets.tcl.616: mode = add"
             if { $state ne "" && $asset_type eq "" } {
                 set asset_type $state
             } elseif { $asset_type ne "" && $state eq "" } {
@@ -624,7 +626,7 @@ switch -exact -- $mode {
                 hf_constructor_a obj_arr force $state $sub_type_id
                 array set obj_arr [array get sam_arr]
                 set obj_arr(f_id) $f_id
-                ns_log Notice "hosting-farm/assets.tcl.523: array get obj_arr [array get obj_arr]"
+                ns_log Notice "hosting-farm/assets.tcl.627: array get obj_arr [array get obj_arr]"
                 set include_add_attr_p 1
                 append title " #hosting-farm.Attribute#"
             } elseif { $asset_type ne "" } {
@@ -632,7 +634,7 @@ switch -exact -- $mode {
                 set include_add_one_p 1
                 set publish_p [hf_ui_go_ahead_q write "" published 0]
                 append title " #hosting-farm.Asset#"
-                ns_log Notice "hosting-farm/assets.tcl.530 publish_p '${publish_p}' asset_id '${asset_id}'"
+                ns_log Notice "hosting-farm/assets.tcl.635: publish_p '${publish_p}' asset_id '${asset_id}'"
             }
             array set perms_arr [list read_p $read_p create_p $create_p write_p $write_p admin_p $admin_p pkg_admin_p $pkg_admin_p publish_p $publish_p ]
             # pass asset_arr perms_arr
@@ -656,7 +658,7 @@ switch -exact -- $mode {
             set context [list [list assets #hosting-farm.Assets#] "${sub_title} - #acs-subsite.create#"]  
 
             if { ![exists_and_not_null asset_type] } {
-                ns_log Warning "hosting-farm/assets.tcl.548: asset_type not defined."
+                ns_log Warning "hosting-farm/assets.tcl.659: asset_type not defined."
             }
 
             ##code
@@ -673,7 +675,7 @@ switch -exact -- $mode {
             #  edit...... edit/form mode of current context
             # If context already exists, use most recent/active case
             # for default values.
-            ns_log Notice "hosting-farm/assets.tcl.565: mode = edit"
+            ns_log Notice "hosting-farm/assets.tcl.676: mode = edit"
 
             # 0. asset_type_id:
             #    New combo asset and primary attribute of asset_type_id
@@ -697,7 +699,7 @@ switch -exact -- $mode {
                 if { $sub_type_id in [hf_asset_type_id_list] } {
                     set sub_asset_list [hf_${sub_type_id}_read $sub_f_id]
                     qf_lists_to_array obj_arr $sub_asset_list [hf_${sub_type_id}_keys]
-                    ns_log Notice "hosting-farm/assets.tcl.589: array get obj_arr [array get obj_arr]"
+                    ns_log Notice "hosting-farm/assets.tcl.700: array get obj_arr [array get obj_arr]"
                 }
                 set include_edit_attr_p 1
    
@@ -705,7 +707,7 @@ switch -exact -- $mode {
                 set asset_type [hf_constructor_b obj_arr]
                 set include_edit_one_p 1
                 set publish_p [hf_ui_go_ahead_q write "" published 0]
-                ns_log Notice "hosting-farm/assets.tcl.597 publish_p '${publish_p}' asset_id '${asset_id}'"
+                ns_log Notice "hosting-farm/assets.tcl.710 publish_p '${publish_p}' asset_id '${asset_id}'"
             }
             array set perms_arr [list read_p $read_p create_p $create_p write_p $write_p admin_p $admin_p pkg_admin_p $pkg_admin_p publish_p $publish_p ]
             # pass asset_arr perms_arr
@@ -723,7 +725,7 @@ switch -exact -- $mode {
             }
 
             if { ![exists_and_not_null asset_type] } {
-                ns_log Warning "hosting-farm/assets.tcl.615: asset_type not defined."
+                ns_log Warning "hosting-farm/assets.tcl.726: asset_type not defined."
             }
 
             ##code
@@ -740,11 +742,11 @@ switch -exact -- $mode {
         if { $read_p } {
             # if $url is different than ad_conn url stem, 303/305 redirect to asset_id's primary url
             if { $redirect_before_v_p } {
-                ns_log Notice "hosting-farm/assets.tcl.632: redirecting to url ${url} for clean url view"
+                ns_log Notice "hosting-farm/assets.tcl.743: redirecting to url ${url} for clean url view"
                 ad_returnredirect $url
                 ad_script_abort
             }
-            ns_log Notice "hosting-farm/assets.tcl.636: view mode '${mode}' asset_id '${asset_id}' sub_f_id '${sub_f_id}' asset_type '${asset_type}'"
+            ns_log Notice "hosting-farm/assets.tcl.750: view mode '${mode}' asset_id '${asset_id}' sub_f_id '${sub_f_id}' asset_type '${asset_type}'"
 
             set title "#hosting-farm.Asset#"
             # add default, to convert attr_only to include asset?
@@ -754,7 +756,7 @@ switch -exact -- $mode {
                 if { $sub_type_id in [hf_asset_type_id_list] } {
                     set sub_asset_list [hf_${sub_type_id}_read $sub_f_id]
                     qf_lists_to_array obj_arr $sub_asset_list [hf_${sub_type_id}_keys]
-                    ns_log Notice "hosting-farm/assets.tcl.646: array get obj_arr [array get obj_arr]"
+                    ns_log Notice "hosting-farm/assets.tcl.760: array get obj_arr [array get obj_arr]"
                 }
                 set include_view_attr_p 1
 
@@ -785,7 +787,7 @@ switch -exact -- $mode {
                     }
                 }
             }
-            ns_log Notice "hosting-farm/assets.tcl.677 publish_p '${publish_p}' asset_id '${asset_id}'"
+            ns_log Notice "hosting-farm/assets.tcl.790: publish_p '${publish_p}' asset_id '${asset_id}'"
             array set perms_arr [list read_p $read_p create_p $create_p write_p $write_p admin_p $admin_p pkg_admin_p $pkg_admin_p publish_p $publish_p ]
             # pass asset_arr perms_arr
             set detail_p $pkg_admin_p
@@ -802,13 +804,13 @@ switch -exact -- $mode {
 
         } else {
             # no permission to read page. This should not happen.
-            ns_log Warning "hosting-farm/assets.tcl.694: user did not get expected 404 error when not able to read page."
+            ns_log Warning "hosting-farm/assets.tcl.805: user did not get expected 404 error when not able to read page."
         }
     }
     w {
         #  save.....  (write) asset_id 
         # should already have been handled above and switched to another mode.
-        ns_log Warning "hosting-farm/assets.tcl.700: mode = save/write THIS SHOULD NOT BE CALLED HERE."
+        ns_log Warning "hosting-farm/assets.tcl.820: mode = save/write THIS SHOULD NOT BE CALLED HERE."
     }
     default {
         # return 404 not found or not validated (permission or other issue)
