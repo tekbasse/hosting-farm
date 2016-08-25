@@ -470,6 +470,7 @@ if { !$form_posted_p } {
                 # create only. 
                 # Any existing revision references must be for establishing hierarchical relationship only
                 # Choose the most specific f_id.
+                set mapped_f_id $f_id
                 if { $asset_id ne "" && $f_id eq "" } {
                     set mapped_f_id [hf_f_id_of_asset_id $asset_id]
                 }
@@ -495,7 +496,7 @@ if { !$form_posted_p } {
                 array set obj_arr [array get input_arr]
                 set form_state [hf_constructor_a obj_arr ]
                 # ad-unquotehtml values before posting to db
-                foreach key [array names $obj_arr] {
+                foreach key [array names obj_arr] {
                     set obj_arr(${key}) [ad_unquotehtml $obj_arr(${key})]
                 }
                 if { $form_state eq $state and $asset_type_id ne "" } {
