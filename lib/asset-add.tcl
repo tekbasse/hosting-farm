@@ -160,12 +160,14 @@ qf_input type hidden value $asset_type name asset_type
 if { [string match "*asset*" $asset_type ] } {
     foreach key [hf_key_order_for_display [array names asset_arr]] {
         set val $asset_arr(${key})
+        set key_def "#hosting-farm."
+        append key_def $key "_def#"
         # was  ( $detail_p || $tech_p ) || !\[hf_key_hidden_q $key\] && \[privilege_on_key_allowed_q write $key\]
         if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
             qf_append html "<br>"
             set val_unquoted [qf_unquote $val]
             if { $key eq "details" || $key eq "description" } {
-                qf_textarea value $val_unquoted name $key label "#hosting-farm.${key}#${separator}" cols 40 rows 3
+                qf_textarea value $val_unquoted name $key label "#hosting-farm.${key}#${separator}" title $key_def cols 40 rows 3
             } elseif { [string match "*_p" $key] } {
                 if { [qf_is_true $val] } {
                     set 1_selected_p 1
@@ -179,12 +181,12 @@ if { [string match "*asset*" $asset_type ] } {
                     set choices_list [list \
                                           [list label "#acs-kernel.common_yes#" value 1 selected $1_selected_p ] \
                                           [list label "#acs-kernel.common_no#" value 0 selected $0_selected_p ] ]
-                    qf_choice type radio name $key value $choices_list
+                    qf_choice type radio name $key value $choices_list title $key_def
                 } else {
                     qf_append html "<span>#hosting-farm.${key}#${separator}${val}</span>"
                 }
             } else {
-                qf_input type text value $val_unquoted name $key label "#hosting-farm.${key}#${separator}" size 40 maxlength 80
+                qf_input type text value $val_unquoted name $key label "#hosting-farm.${key}#${separator}" title $key_def size 40 maxlength 80
             }
         } elseif { $detail_p || $tech_p } {
             qf_append html "<br>"
