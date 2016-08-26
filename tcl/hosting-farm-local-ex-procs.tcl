@@ -506,8 +506,12 @@ ad_proc -private hfl_asset_field_validation {
     #q-wiki.Write_operation_did_not_succeed#
     #acs-tcl.lt_Problem_with_your_inp# "Problem with your input"
     #acs-tcl.lt_Value_is_not_an_decim# "Value is not an decimal number"
+    #acs-tcl.lt_Value_is_not_an_integ# "Value is not an integer"
     #acs-templating.Invalid_decimal_number# "Invalid decimal number"
     #acs-templating.Invalid_natural_number# "Invalid natural number"
+    #acs-tcl.lt_name_is_too_long__Ple# "This string looks broken!"
+    #accounts-finance.unknown_reference# "Unknown reference."
+    #accounts-ledger.Value_is_not_boolean# "Value is not boolean."
     #number types
     # qf_is_decimal
     # qf_is_natural_number
@@ -520,19 +524,76 @@ ad_proc -private hfl_asset_field_validation {
             set validated_p 1
         } elseif { $key ne "" } {
             switch -exact -- $key {
+                asset_id -
+                popularity -
+                triage_priority -
+                qal_product_id -
+                qal_customer_id -
+                instance_id -
+                template_id -
+                f_id -
+                user_id -
+                trashed_by -
                 natural {
                     set validated_p [qf_is_natural_number $asset_arr(${key})]
-                    if{ !$validated_p } {
+                    if { !$validated_p } {
                         lappend message_list "#hosting-farm.${key}#: #acs-templating.Invalid_natural_number#"
                     }
                 }
                 decimal {
                     set validated_p [qf_is_decimal $asset_arr(${key})]
+                    if { !$validated_p } {
+                        lappend message_list "#hosting-farm.${key}#: #acs-templating.Invalid_decimal_number#"
+                    }
                 }
                 integer {
                     set validated_p [qf_is_intenger $asset_arr(${key}) ]
+                    if { !$validated_p } {
+                       lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_Value_is_not_an_integ#"
+                    }
                 }
-                
+                label -
+                name -
+                op_status -
+                last_modified -
+                created -
+                flags -
+                visible_safe {
+                    set validated_p [hf_are_safe_and_visible_characters_q $asset_arr(${key}) ]
+                    if { !$validated_p } {
+                        lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_name_is_too_long__Ple#"
+                    }
+                }
+                visible {
+                    set validated_p [hf_are_visible_characters_q $asset_arr(${key}) ]
+                    if { !$validated_p } {
+                        lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_name_is_too_long__Ple#"
+                    }
+                }
+                asset_type_id {
+                    if { $asset_arr(${key}) in [hf_asset_type_id_list] } {
+                        set validated_p 1
+                    } else {
+                        # set validated_p 0
+                        lappend message_list "#hosting-farm.${key}#: #accounts-finance.unknown_reference#"
+                    }
+                }
+                trashed_p -
+                template_p -
+                templated_p -
+                publish_p -
+                monitor_p -
+                logical {
+                    if { $asset_arr(${key}) eq [qf_is_true $asset_arr(${key})] } {
+                        set validated_p 1
+                    } else {
+                        # set validated_p 0
+                        lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Value_is_not_boolean#"
+                    }
+                }
+                default {
+                    ns_log Warning "hfl_asset_field_validation.595: No validation check for key '${key}'"
+                }
             }
         }
     }
