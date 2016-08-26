@@ -505,7 +505,20 @@ if { !$form_posted_p } {
                 }
                 if { $form_state eq $state && $asset_type_id ne "" } {
                     if { [string match "*asset*" $state] } {
-           set message "#accounts-finance.requiredq-wiki.Write_operation_did_not_succeed#"
+                        # some possibly useful input messages
+                        #acs-templating.required#  "required"
+                        #accounts-finance.required# "Required"
+                        #q-wiki.Write_operation_did_not_succeed#
+                        #acs-tcl.lt_Problem_with_your_inp# "Problem with your input"
+                        #acs-tcl.lt_Value_is_not_an_decim# "Value is not an decimal number"
+                        #acs-templating.Invalid_decimal_number# "Invalid decimal number"
+                        #acs-templating.Invalid_natural_number# "Invalid natural number"
+                        #number types
+                        # qf_is_decimal
+                        # qf_is_natural_number
+                        # qf_is_integer
+                        
+           set message ""
             util_user_message -message $message
 
 
