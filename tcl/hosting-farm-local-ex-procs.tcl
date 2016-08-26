@@ -512,6 +512,8 @@ ad_proc -private hfl_asset_field_validation {
     #acs-tcl.lt_name_is_too_long__Ple# "This string looks broken!"
     #accounts-finance.unknown_reference# "Unknown reference."
     #accounts-ledger.Value_is_not_boolean# "Value is not boolean."
+    #acs-subsite.This_should_be_a_short_string# "This should be a short string, all lowercase, with hyphens instead of spaces, whicn will be used in the URL of the new application. If you leave this blank, we will generate one for you from name of the application."
+
     #number types
     # qf_is_decimal
     # qf_is_natural_number
@@ -563,6 +565,13 @@ ad_proc -private hfl_asset_field_validation {
                     if { !$validated_p } {
                         lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_name_is_too_long__Ple#"
                     }
+                    if { $validated_p && $key eq "label"} {
+                        if { [regexp -nocase {[:alnum;]+} $asset_arr(${key}) scratch] } {
+                        } else {
+                            lappend message_list "#hosting-farm.label#: #hosting-farm.label_def#"
+                            #set validated_p 0
+                        }
+                    }
                 }
                 visible {
                     set validated_p [hf_are_visible_characters_q $asset_arr(${key}) ]
@@ -611,7 +620,7 @@ ad_proc -private hfl_asset_field_validation {
 ad_proc -private hfl_attribute_field_validation {
     array_name
 } {
-    Validates attribute fields. Returns 1 if validates, otherwise returns 0.
+    Validates input for attribute fields and for sub_asset_map. Returns 1 if validates, otherwise returns 0.
     If there are validation issues, messages are conveyed to user via util_user_message
 
     @param array_name Name of attribute array
@@ -621,13 +630,35 @@ ad_proc -private hfl_attribute_field_validation {
 } {
     upvar 1 $array_name attr_arr
     set validated_p 0
-    set sub_type_id $attr_arr(sub_type_id)
+    set sub_type_id [value_if_exists $attr_arr(sub_type_id) ]
     if { $sub_type_id ne "" } {
+ 
+        # ns keys 
+        # instance_id ns_id active_p name_record time_trashed time_created
+        # ni keys 
+        # instance_id ni_id os_dev_ref bia_mac_address ul_mac_address ipv4_addr_range ipv6_addr_range time_trashed time_created
+        # ip keys
+        # instance_id ip_id ipv4_addr ipv4_status ipv6_addr ipv6_status time_trashed time_created
+        # hw keys
+        # instance_id hw_id system_name backup_sys os_id description details time_trashed time_created
+        # dc keys
+        # instance_id dc_id affix description details time_trashed time_created
+        # vh keys
+        # instance_id vh_id domain_name details time_trashed time_created
+        # vm keys
+        # instance_id vm_id domain_name os_id server_type resource_path mount_union details time_trashed time_created
+        # ss keys
+        # instance_id ss_id server_name service_name daemon_ref protocol port ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes details time_trashed time_created
+        # sub_asset_map keys
+        # instance_id f_id type_id sub_f_id sub_type_id sub_sort_order sub_label attribute_p trashed_p last_updated
+        # ua keys
+        # ua_id ua connection_type instance_id up details
         foreach key [hf_${sub_type_id}_keys] {
-            #switch
+            switch -exact -- $key {
             
         }
+    } else {
+        ns_log Warning "hfl_attribute_field_validation.631: No sub_type_id in array. Unable to validate attribute."
     }
-
     return $validated_p
 }
