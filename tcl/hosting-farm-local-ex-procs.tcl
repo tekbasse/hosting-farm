@@ -486,3 +486,23 @@ ad_proc -private hfl_attributes_allowed_by_user {
     set asset_type_id_list [list vh ns ss ua ]
     return $asset_type_id_list
 }
+
+ad_proc -private hfl_asset_field_validation {
+    array_name
+} {
+    Validates asset fields. Returns 1 if validates, otherwise returns 0.
+    If there are validation issues, messages are conveyed to user via util_user_message
+
+    @param array_name Name of asset array
+    @return 1 if validates, 0 if not.
+    @see util_user_message
+
+} {
+    upvar 1 $array_name asset_arr
+    foreach key [hf_asset_keys] {
+        #switch
+
+    }
+
+    return $validated_p
+}
