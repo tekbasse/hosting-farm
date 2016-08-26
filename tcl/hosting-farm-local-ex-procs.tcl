@@ -499,9 +499,73 @@ ad_proc -private hfl_asset_field_validation {
 
 } {
     upvar 1 $array_name asset_arr
+    # asset_id  label  name  asset_type_id  trashed_p  trashed_by  template_p  templated_p  publish_p  monitor_p  popularity  triage_priority  op_status  qal_product_id  qal_customer_id  instance_id  user_id  last_modified  created  flags  template_id  f_id
+    # some possibly useful input messages
+    #acs-templating.required#  "required"
+    #accounts-finance.required# "Required"
+    #q-wiki.Write_operation_did_not_succeed#
+    #acs-tcl.lt_Problem_with_your_inp# "Problem with your input"
+    #acs-tcl.lt_Value_is_not_an_decim# "Value is not an decimal number"
+    #acs-templating.Invalid_decimal_number# "Invalid decimal number"
+    #acs-templating.Invalid_natural_number# "Invalid natural number"
+    #number types
+    # qf_is_decimal
+    # qf_is_natural_number
+    # qf_is_integer
+    set blank_okay_list [list asset_id popularity triage_priority op_status qal_product_id qal_customer_id flags template_id f_id last_modified trashed_by]
+    set message_list [list ]
+    lappend message_list "#acs-tcl.lt_Problem_with_your_inp#"
     foreach key [hf_asset_keys] {
-        #switch
+        if { $key eq "" && $key in $blank_okay_list } {
+            set validated_p 1
+        } elseif { $key ne "" } {
+            switch -exact -- $key {
+                natural {
+                    set validated_p [qf_is_natural_number $asset_arr(${key})]
+                    if{ !$validated_p } {
+                        lappend message_list "#hosting-farm.${key}#: #acs-templating.Invalid_natural_number#"
+                    }
+                }
+                decimal {
+                    set validated_p [qf_is_decimal $asset_arr(${key})]
+                }
+                integer {
+                    set validated_p [qf_is_intenger $asset_arr(${key}) ]
+                }
+                
+            }
+        }
+    }
+    if { [llength $message_list] > 1 } {
+        set validated_p 0
+        foreach message $message_list {
+            util_user_message -message $message
+        }
+    } else {
+        set validated_p 1
+    }
+    return $validated_p
+}
 
+ad_proc -private hfl_attribute_field_validation {
+    array_name
+} {
+    Validates attribute fields. Returns 1 if validates, otherwise returns 0.
+    If there are validation issues, messages are conveyed to user via util_user_message
+
+    @param array_name Name of attribute array
+    @return 1 if validates, 0 if not.
+    @see util_user_message
+
+} {
+    upvar 1 $array_name attr_arr
+    set validated_p 0
+    set sub_type_id $attr_arr(sub_type_id)
+    if { $sub_type_id ne "" } {
+        foreach key [hf_${sub_type_id}_keys] {
+            #switch
+            
+        }
     }
 
     return $validated_p
