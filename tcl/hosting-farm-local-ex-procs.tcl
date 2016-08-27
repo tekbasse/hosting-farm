@@ -566,7 +566,7 @@ ad_proc -private hfl_asset_field_validation {
                         lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_name_is_too_long__Ple#"
                     }
                     if { $validated_p && $key eq "label"} {
-                        if { [regexp -nocase {[:alnum;]+} $asset_arr(${key}) scratch] } {
+                        if { [regexp -nocase {^[[:alnum;]]+$} $asset_arr(${key}) scratch] } {
                         } else {
                             lappend message_list "#hosting-farm.label#: #hosting-farm.label_def#"
                             #set validated_p 0
@@ -632,7 +632,7 @@ ad_proc -private hfl_attribute_field_validation {
     set validated_p 0
     set sub_type_id [value_if_exists $attr_arr(sub_type_id) ]
     if { $sub_type_id ne "" } {
- 
+        
         # ns keys 
         # instance_id ns_id active_p name_record time_trashed time_created
         # ni keys 
@@ -653,9 +653,124 @@ ad_proc -private hfl_attribute_field_validation {
         # instance_id f_id type_id sub_f_id sub_type_id sub_sort_order sub_label attribute_p trashed_p last_updated
         # ua keys
         # ua_id ua connection_type instance_id up details
-        foreach key [hf_${sub_type_id}_keys] {
-            switch -exact -- $key {
-            
+        set one_word_list [list sub_label affix domain_name system_name ipv4_addr ipv6_addr ipv6_addr_range ipv4_addr_range server_type resource_path mount_union server_name service_name daemon_ref protocol config_url connection_type]
+        set key_list [concat [hf_${sub_type_id}_keys] [hf_sub_asset_map_keys] ]
+        foreach key $key_list {
+            if { [exists_and_not_null attr_arr(${key}) ] } { 
+                switch -exact -- $key {
+                    f_id -
+                    sub_f_id -
+                    user_id -
+                    instance_id -
+                    ns_id -
+                    ni_id -
+                    ip_id -
+                    hw_id -
+                    os_id -
+                    dc_id -
+                    vm_id -
+                    ss_id -
+                    port -
+                    memory_bytes -
+                    sub_sort_order -
+                    ua_id -
+                    natural {
+                        set validated_p [qf_is_natural_number $asset_arr(${key})]
+                        if { !$validated_p } {
+                            lappend message_list "#hosting-farm.${key}#: #acs-templating.Invalid_natural_number#"
+                        }
+                    }
+                    decimal {
+                        set validated_p [qf_is_decimal $asset_arr(${key})]
+                        if { !$validated_p } {
+                            lappend message_list "#hosting-farm.${key}#: #acs-templating.Invalid_decimal_number#"
+                        }
+                    }
+                    integer {
+                        set validated_p [qf_is_intenger $asset_arr(${key}) ]
+                        if { !$validated_p } {
+                            lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_Value_is_not_an_integ#"
+                        }
+                    }
+                    up -
+                    ss_type -
+                    ss_subtype -
+                    ss_underssubtype -
+                    ss_ultrasubtype -
+                    config_url -
+                    protocol -
+                    service_name -
+                    daemon_ref -
+                    server_type -
+                    server_name -
+                    resource_path -
+                    mount_union -
+                    affix -
+                    domain_name -
+                    description -
+                    system_name -
+                    backup_sys -
+                    ipv4_addr -
+                    ipv6_addr -
+                    bia_mac_addresss -
+                    ul_mac_address -
+                    ipv4_addr_range -
+                    ipv5_addr_range -
+                    os_dev_ref -
+                    name_record -
+                    last_updated -
+                    time_trashed -
+                    time_created -
+                    connection_type -
+                    visible_safe {
+                        set validated_p [hf_are_safe_and_visible_characters_q $asset_arr(${key}) ]
+                        if { !$validated_p } {
+                            lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_name_is_too_long__Ple#"
+                        }
+                        if { $validated_p && $key in $one_word_list } {
+                            if { ![regexp -nocase {^[^[:space:]]+$} $asset_arr(${key}) scratch] } {
+                                lappend message_list "#hosting-farm.${key}#: #hosting-farm.${key}_def#"
+                                #set validated_p 0
+                            }
+                        }
+                    }
+                    details -
+                    visible {
+                        set validated_p [hf_are_visible_characters_q $asset_arr(${key}) ]
+                        if { !$validated_p } {
+                            lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_name_is_too_long__Ple#"
+                        }
+                    }
+                    type_id -
+                    sub_type_id -
+                    asset_type_id {
+                        if { $asset_arr(${key}) in [hf_asset_type_id_list] } {
+                            set validated_p 1
+                        } else {
+                            # set validated_p 0
+                            lappend message_list "#hosting-farm.${key}#: #accounts-finance.unknown_reference#"
+                        }
+                    }
+                    ipv4_status -
+                    ipv6_status -
+                    active_p -
+                    attribute_p -
+                    trashed_p -
+                    logical {
+                        if { $asset_arr(${key}) eq [qf_is_true $asset_arr(${key})] } {
+                            set validated_p 1
+                        } else {
+                            # set validated_p 0
+                            lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Value_is_not_boolean#"
+                        }
+                    }
+                    default {
+                        ns_log Warning "hfl_attribute_field_validation.833: No validation check for key '${key}'"
+                    }
+                }
+            } else {
+                # no need to validate
+            }           
         }
     } else {
         ns_log Warning "hfl_attribute_field_validation.631: No sub_type_id in array. Unable to validate attribute."
