@@ -170,7 +170,7 @@ if { !$form_posted_p } {
         
         # modes 0 0 is z or Z
         set mode [string range $modes 1 1]
-        set next_mode [string range $modes 2 2]
+        set mode_next [string range $modes 2 2]
 
     }
 
@@ -508,10 +508,10 @@ if { !$form_posted_p } {
                 }
                 if { $form_state eq $state && $asset_type_id ne "" } {
                     if { [string match "*asset*" $state] } {
-                        
+
                         set input_issues_p [hfl_asset_field_validation obj_arr]
                         if { $input_issues_p } {
-                            set next_mode "a"
+                            set mode_next "a"
                         } else {
                             # first asset_id is f_id
                             set asset_id [hf_asset_create obj_arr]
@@ -527,7 +527,7 @@ if { !$form_posted_p } {
                             # attr_only
                             set input_issues_p [hfl_attribute_field_validation obj_arr]
                             if { $input_issues_p } {
-                                set next_mode "a"
+                                set mode_next "a"
                             } else {
                                 if { $mapped_f_id ne "" } {
                                     set obj_arr(f_id) $mapped_f_id
@@ -836,10 +836,11 @@ switch -exact -- $mode {
 
 # using OpenACS built-in util_get_user_messages feature
 set user_message_html ""
-util_get_user_messages -multirow user_message_list
-foreach user_message $user_message_list {
-    append user_message_html "<li>${user_message}</li>"
-}
+#util_get_user_messages -multirow user_message_list
+#foreach user_message $user_message_list {
+#    append user_message_html "<li>${user_message}</li>"
+#    ns_log Notice "hosting-farm/assets.tcl.842: user_message '${user_message}'"
+#}
 
 # for buttons as multiple form submits within one form, example of a submit:
 # from accounts-finance: input type="submit" value="Sort by Y ascending" name="zy" class="btn"

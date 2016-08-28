@@ -618,7 +618,7 @@ ad_proc -private hfl_asset_field_validation {
                 visible_safe {
                     set validated_p [hf_are_safe_and_visible_characters_q $asset_arr(${key}) ]
                     if { !$validated_p } {
-                        lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_name_is_too_long__Ple#"
+                        lappend message_list "#hosting-farm.${key}#: #acs-tcl.Value_has_at_least_one_character_that_is_not_allowed#"
                     }
                     if { $validated_p && $key eq "label"} {
                         if { [regexp -nocase {^[[:alnum:]]+$} $asset_arr(${key}) scratch] } {
@@ -633,10 +633,10 @@ ad_proc -private hfl_asset_field_validation {
                             set str_len [string length $asset_arr(${key}) ]
                             if { $str_len < [lindex $min_max_list 0] } {
                                 #set validated_p 0
-                                lappend message_list "hosting-farm.${key}#: #accounts-ledger.Text_has_too_few_characters#"
+                                lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_few_characters#"
                             } elseif { $str_len > [lindex $min_max_list 1] } {
                                 #set validated_p 0
-                                lappend message_list "hosting-farm.${key}#: #accounts-ledger.Text_has_too_many_characters#"
+                                lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_many_characters#"
                             }
                         }
                     }
@@ -644,17 +644,17 @@ ad_proc -private hfl_asset_field_validation {
                 visible {
                     set validated_p [hf_are_visible_characters_q $asset_arr(${key}) ]
                     if { !$validated_p } {
-                        lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_name_is_too_long__Ple#"
+                        lappend message_list "#hosting-farm.${key}#: #acs-tcl.Value_has_at_least_one_character_that_is_not_allowed#"
                     } else {
                         set min_max_list [hfl_field_value_min_max_allowed $key ]
                         if { [llength $min_max_list ] > 0 } {
                             set str_len [string length $asset_arr(${key}) ]
                             if { $str_len < [lindex $min_max_list 0] } {
                                 #set validated_p 0
-                                lappend message_list "hosting-farm.${key}#: #accounts-ledger.Text_has_too_few_characters#"
+                                lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_few_characters#"
                             } elseif { $str_len > [lindex $min_max_list 1] } {
                                 #set validated_p 0
-                                lappend message_list "hosting-farm.${key}#: #accounts-ledger.Text_has_too_many_characters#"
+                                lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_many_characters#"
                             }
                         }
                     }
@@ -690,6 +690,7 @@ ad_proc -private hfl_asset_field_validation {
         set validated_p 0
         foreach message $message_list {
             util_user_message -message $message
+            ns_log Notice "hfl_asset_field_validation.693. message '${message}'"
         }
     } else {
         set validated_p 1
@@ -806,7 +807,7 @@ ad_proc -private hfl_attribute_field_validation {
                     visible_safe {
                         set validated_p [hf_are_safe_and_visible_characters_q $asset_arr(${key}) ]
                         if { !$validated_p } {
-                            lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_name_is_too_long__Ple#"
+                            lappend message_list "#hosting-farm.${key}#: #acs-tcl.Value_has_at_least_one_character_that_is_not_allowed#"
                         }
                         if { $validated_p } {
                             if { $key in $one_word_list } {
@@ -821,10 +822,10 @@ ad_proc -private hfl_attribute_field_validation {
                                     set str_len [string length $asset_arr(${key}) ]
                                     if { $str_len < [lindex $min_max_list 0] } {
                                         #set validated_p 0
-                                        lappend message_list "hosting-farm.${key}#: #accounts-ledger.Text_has_too_few_characters#"
+                                        lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_few_characters#"
                                     } elseif { $str_len > [lindex $min_max_list 1] } {
                                         #set validated_p 0
-                                        lappend message_list "hosting-farm.${key}#: #accounts-ledger.Text_has_too_many_characters#"
+                                        lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_many_characters#"
                                     }
                                 }
                             }
@@ -834,17 +835,17 @@ ad_proc -private hfl_attribute_field_validation {
                     visible {
                         set validated_p [hf_are_visible_characters_q $asset_arr(${key}) ]
                         if { !$validated_p } {
-                            lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_name_is_too_long__Ple#"
+                            lappend message_list "#hosting-farm.${key}#: #acs-tcl.Value_has_at_least_one_character_that_is_not_allowed#"
                         } else {
                             set min_max_list [hfl_field_value_min_max_allowed $key ]
                             if { [llength $min_max_list ] > 0 } {
                                 set str_len [string length $asset_arr(${key}) ]
                                 if { $str_len < [lindex $min_max_list 0] } {
                                     #set validated_p 0
-                                    lappend message_list "hosting-farm.${key}#: #accounts-ledger.Text_has_too_few_characters#"
+                                    lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_few_characters#"
                                 } elseif { $str_len > [lindex $min_max_list 1] } {
                                     #set validated_p 0
-                                    lappend message_list "hosting-farm.${key}#: #accounts-ledger.Text_has_too_many_characters#"
+                                    lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_many_characters#"
                                 }
                             }
                         }
@@ -882,6 +883,15 @@ ad_proc -private hfl_attribute_field_validation {
         }
     } else {
         ns_log Warning "hfl_attribute_field_validation.631: No sub_type_id in array. Unable to validate attribute."
+    }
+    if { [llength $message_list] > 1 } {
+        set validated_p 0
+        foreach message $message_list {
+            util_user_message -message $message
+            ns_log Notice "hfl_attribute_field_validation.890. message '${message}'"
+        }
+    } else {
+        set validated_p 1
     }
     return $validated_p
 }
