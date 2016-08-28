@@ -480,7 +480,7 @@ CREATE TABLE hf_vhosts (
     vh_id       integer unique not null DEFAULT nextval ( 'hf_id_seq' ),
     -- ua_id       integer not null,
     -- ns_id       integer not null,
-    domain_name varchar(200),
+    domain_name varchar(300),
     details     text,
     time_trashed   timestamptz,
     time_created   timestamptz DEFAULT now()
