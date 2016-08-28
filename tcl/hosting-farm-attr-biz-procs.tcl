@@ -1300,7 +1300,7 @@ ad_proc -private hf_ua_write {
 
     hf_ui_go_ahead_q admin
 
-    if { [hf_are_visible_characters_q $ua ] } {    
+    if { [hf_are_printable_characters_q $ua ] } {    
         set log_p 0
         set id_exists_p 0
 

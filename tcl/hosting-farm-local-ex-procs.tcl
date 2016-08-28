@@ -573,11 +573,11 @@ ad_proc -private hfl_asset_field_validation {
     # qf_is_decimal
     # qf_is_natural_number
     # qf_is_integer
-    set blank_okay_list [list asset_id popularity triage_priority op_status qal_product_id qal_customer_id flags template_id f_id last_modified trashed_by]
+    set blank_okay_list [list user_id last_modified created asset_id popularity triage_priority op_status qal_product_id qal_customer_id flags template_id f_id last_modified trashed_by]
     set message_list [list ]
     lappend message_list "#acs-tcl.lt_Problem_with_your_inp#"
     foreach key [hf_asset_keys] {
-        if { $key eq "" && $key in $blank_okay_list } {
+        if { $asset_arr(${key}) eq "" && $key in $blank_okay_list } {
             set validated_p 1
         } elseif { $key ne "" } {
             switch -exact -- $key {
@@ -618,7 +618,7 @@ ad_proc -private hfl_asset_field_validation {
                 visible_safe {
                     set validated_p [hf_are_safe_and_visible_characters_q $asset_arr(${key}) ]
                     if { !$validated_p } {
-                        lappend message_list "#hosting-farm.${key}#: #acs-tcl.Value_has_at_least_one_character_that_is_not_allowed#"
+                        lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Value_has_at_least_one_character_that_is_not_allowed#"
                     }
                     if { $validated_p && $key eq "label"} {
                         if { [regexp -nocase {^[[:alnum:]]+$} $asset_arr(${key}) scratch] } {
@@ -641,10 +641,11 @@ ad_proc -private hfl_asset_field_validation {
                         }
                     }
                 }
+                details -
                 visible {
                     set validated_p [hf_are_visible_characters_q $asset_arr(${key}) ]
                     if { !$validated_p } {
-                        lappend message_list "#hosting-farm.${key}#: #acs-tcl.Value_has_at_least_one_character_that_is_not_allowed#"
+                        lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Value_has_at_least_one_character_that_is_not_allowed#"
                     } else {
                         set min_max_list [hfl_field_value_min_max_allowed $key ]
                         if { [llength $min_max_list ] > 0 } {
@@ -695,6 +696,7 @@ ad_proc -private hfl_asset_field_validation {
     } else {
         set validated_p 1
     }
+    ns_log Notice "hfl_asset_field_validation.695. validated_p '${validated_p}'"
     return $validated_p
 }
 
@@ -777,6 +779,7 @@ ad_proc -private hfl_attribute_field_validation {
                             lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_Value_is_not_an_integ#"
                         }
                     }
+                    sub_label -
                     up -
                     ss_type -
                     ss_subtype -
@@ -810,7 +813,7 @@ ad_proc -private hfl_attribute_field_validation {
                     visible_safe {
                         set validated_p [hf_are_safe_and_visible_characters_q $attr_arr(${key}) ]
                         if { !$validated_p } {
-                            lappend message_list "#hosting-farm.${key}#: #acs-tcl.Value_has_at_least_one_character_that_is_not_allowed#"
+                            lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Value_has_at_least_one_character_that_is_not_allowed#"
                         }
                         if { $validated_p } {
                             if { $key in $one_word_list } {
@@ -838,7 +841,7 @@ ad_proc -private hfl_attribute_field_validation {
                     visible {
                         set validated_p [hf_are_visible_characters_q $attr_arr(${key}) ]
                         if { !$validated_p } {
-                            lappend message_list "#hosting-farm.${key}#: #acs-tcl.Value_has_at_least_one_character_that_is_not_allowed#"
+                            lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Value_has_at_least_one_character_that_is_not_allowed#"
                         } else {
                             set min_max_list [hfl_field_value_min_max_allowed $key ]
                             if { [llength $min_max_list ] > 0 } {
@@ -896,6 +899,7 @@ ad_proc -private hfl_attribute_field_validation {
     } else {
         set validated_p 1
     }
+    ns_log Notice "hfl_attribute_field_validation.895. validated_p '${validated_p}'"
     return $validated_p
 }
 

@@ -58,7 +58,7 @@ ad_proc -private hf_asset_features {
 } {
     upvar 1 instance_id instance_id
     hf_ui_go_ahead_q read "" published
-    set new_as_type_id_list [hf_list_filter_by_visible $asset_type_id_list ]
+    set new_as_type_id_list [hf_list_filter_by_printable $asset_type_id_list ]
     set keys_list [db_list_of_lists hf_asset_type_features_get "select [hf_asset_feature_keys ","] where instance_id=:instance_id and asset_type_id in ([template::util::tcl_to_sql_list $new_as_type_id_list])"]
     set keys [hf_keys_by $keys_list $separator]
     return $keys
@@ -1055,7 +1055,7 @@ ad_proc -private hf_up_ck {
     set log_p 1
     set connected_p [ns_conn isconnected]
     if {[qf_is_natural_number $ua_id] } {
-        if { [hf_are_safe_and_visible_characters_q $ua ] } {
+        if { [hf_are_safe_and_printable_characters_q $ua ] } {
             set log_p 0
             if { ![qf_is_natural_number $instance_id] && $connected_p } {
                 # set instance_id package_id
@@ -1109,7 +1109,7 @@ ad_proc -private hf_up_write {
         set success_p 0
     }
     if { $up ne "" } {
-        if { ![hf_are_safe_and_visible_characters_q $up] } {
+        if { ![hf_are_safe_and_printable_characters_q $up] } {
             set up ""
             set success_p 0
         }

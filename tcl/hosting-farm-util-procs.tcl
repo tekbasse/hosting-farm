@@ -115,9 +115,9 @@ ad_proc -private hf_natural_number_list_validate {
 ad_proc -private hf_are_visible_characters_q {
     user_input
 } {
-    Verifies that characters are printable.
+    Verifies that characters are printable, or spaces.
 } {
-    if { [regexp -- {^[[:graph:]]+$} $user_input scratch ] } {
+    if { [regexp -- {^[[:graph:]\ ]+$} $user_input scratch ] } {
         set visible_p 1
     } else {
         set visible_p 0
@@ -128,7 +128,7 @@ ad_proc -private hf_are_visible_characters_q {
 ad_proc -private hf_are_safe_and_visible_characters_q {
     user_input
 } {
-    Verifies that characters are printable and safe for use in dynamic arguments, such as eval.
+    Verifies that characters are printable (or space) and safe for use in dynamic arguments, such as eval.
 } {
     set visible_p [hf_are_visible_characters_q $user_input]
     if { $visible_p && [string match {*[\[;]*} $user_input] } {
@@ -140,12 +140,40 @@ ad_proc -private hf_are_safe_and_visible_characters_q {
     return $visible_p
 }
 
-ad_proc -private hf_list_filter_by_visible {
+ad_proc -private hf_are_printable_characters_q {
+    user_input
+} {
+    Verifies that characters are printable.
+} {
+    if { [regexp -- {^[[:graph:]]+$} $user_input scratch ] } {
+        set printable_p 1
+    } else {
+        set printable_p 0
+    }
+    return $printable_p
+}
+
+ad_proc -private hf_are_safe_and_printable_characters_q {
+    user_input
+} {
+    Verifies that characters are printable and safe for use in dynamic arguments, such as eval.
+} {
+    set printable_p [hf_are_printable_characters_q $user_input]
+    if { $printable_p && [string match {*[\[;]*} $user_input] } {
+        # unsafe for safe_eval etc.
+        # Test here for Ui handling 
+        # instead of forcing error per safe_eval
+        set printable_p 0
+    }
+    return $printable_p
+}
+
+ad_proc -private hf_list_filter_by_printable {
     user_input_list
 } {
     set filtered_list [list ]
     foreach input_unfiltered $user_input_list {
-        if { [hf_are_visible_characters_q $input_unfiltered] } {
+        if { [hf_are_printable_characters_q $input_unfiltered] } {
             lappend filtered_list $input_unfiltered
         }
     }

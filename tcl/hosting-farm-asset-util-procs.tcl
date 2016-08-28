@@ -854,7 +854,7 @@ ad_proc -private hf_call_write {
         set hf_call_id_exists_p [qf_is_natural_number $hf_call_id]
         set asset_type_id [string range $asset_type_id 0 23]
         if { $asset_type_id ne "" } {
-            if { ![hf_are_visible_characters_q $asset_type_id ] } {
+            if { ![hf_are_printable_characters_q $asset_type_id ] } {
                 set asset_type_id ""
                 set no_errors_p 0
                 ns_log Warning "hf_call_write(2942): user_id ${user_id} attempted to write including unprintable characters asset_type_id '${asset_type_id}'"
@@ -975,7 +975,7 @@ ad_proc -private hf_call_read {
         set hf_call_id_exists_p [qf_is_natural_number $hf_call_id]
         set asset_type_id [string range $asset_type_id 0 23]
         if { $asset_type_id ne "" } {
-            if { ![hf_are_visible_characters_q $asset_type_id ] } {
+            if { ![hf_are_printable_characters_q $asset_type_id ] } {
                 set asset_type_id ""
                 set no_errors_p 0
                 ns_log Warning "hf_call_read(3062): user_id ${user_id} attempted to read including unprintable characters asset_type_id '${asset_type_id}'"
