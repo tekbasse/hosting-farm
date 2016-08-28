@@ -261,7 +261,7 @@ CREATE TABLE hf_asset_type_features (
     publish_p            varchar(1) DEFAULT '0',
     -- aka feature.name or one_line_description
     title                varchar(85),
-    description          text
+    details              text
 );
 
 create index hf_asset_type_features_instance_id_idx on hf_asset_type_features (instance_id);
@@ -309,7 +309,7 @@ CREATE TABLE hf_data_centers (
     dc_id       integer unique DEFAULT nextval ( 'hf_id_seq' ),
     -- was datacenter.short_code
     affix       varchar(20),
-    description varchar(80),
+    description varchar(200),
     details     text,
     time_trashed   timestamptz,
     time_created   timestamptz DEFAULT now()
@@ -444,7 +444,7 @@ create index hf_asset_feature_map_feature_id_idx on hf_asset_feature_map (featur
 CREATE TABLE hf_vm_quotas (
   instance_id        integer,
   plan_id            integer not null,
-  description        varchar(40) not null,
+  description        varchar(200) not null,
   base_storage       integer not null,
   base_traffic       integer not null,
   base_memory        varchar(19),
