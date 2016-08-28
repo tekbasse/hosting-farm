@@ -55,11 +55,11 @@ ad_proc -private hfl_allow_q {
         }
     } else {
         # make sure called by hf::monitor::do directly
-       # if { $argv0 ne "hf::monitor::do" } {
-       #     ns_log Warning "hfl_go_head(52). failed. Called by argv0 '${argv0}'"
-       #     set go_head 0
-       #     ad_script_abort
-       # } 
+        # if { $argv0 ne "hf::monitor::do" } {
+        #     ns_log Warning "hfl_go_head(52). failed. Called by argv0 '${argv0}'"
+        #     set go_head 0
+        #     ad_script_abort
+        # } 
         ns_log Notice "hf_nc_go_ahead: ns_thread name [ns_thread name] ns_thread id [ns_thread id] ns_info threads [ns_info threads] ns_info scheduled [ns_info scheduled]"
 
     }
@@ -576,7 +576,9 @@ ad_proc -private hfl_asset_field_validation {
     set blank_okay_list [list user_id last_modified created asset_id popularity triage_priority op_status qal_product_id qal_customer_id flags template_id f_id last_modified trashed_by]
     set message_list [list ]
     lappend message_list "#acs-tcl.lt_Problem_with_your_inp#"
+    set asset_validated_p 1
     foreach key [hf_asset_keys] {
+        set validated_p 0
         if { $asset_arr(${key}) eq "" && $key in $blank_okay_list } {
             set validated_p 1
         } elseif { $key ne "" } {
@@ -594,19 +596,31 @@ ad_proc -private hfl_asset_field_validation {
                 natural {
                     set validated_p [qf_is_natural_number $asset_arr(${key})]
                     if { !$validated_p } {
-                        lappend message_list "#hosting-farm.${key}#: #acs-templating.Invalid_natural_number#"
+                        if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                            lappend message_list "#hosting-farm.${key}#: #acs-templating.Invalid_natural_number#"
+                        } else {
+                            ns_log Warning "hfl_asset_field_validation.600: key '${key}' value not natural number: value '$asset_arr(${key})'"
+                        }
                     }
                 }
                 decimal {
                     set validated_p [qf_is_decimal $asset_arr(${key})]
                     if { !$validated_p } {
-                        lappend message_list "#hosting-farm.${key}#: #acs-templating.Invalid_decimal_number#"
+                        if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                            lappend message_list "#hosting-farm.${key}#: #acs-templating.Invalid_decimal_number#"
+                        } else {
+                            ns_log Warning "hfl_asset_field_validation.610:  key '${key}' value not decimal number: value '$asset_arr(${key})'"
+                        }
                     }
                 }
                 integer {
                     set validated_p [qf_is_intenger $asset_arr(${key}) ]
                     if { !$validated_p } {
-                       lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_Value_is_not_an_integ#"
+                        if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                            lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_Value_is_not_an_integ#"
+                        } else {
+                            ns_log Warning "hfl_asset_field_validation.620:  key '${key}' value not integer: value '$asset_arr(${key})'"
+                        }
                     }
                 }
                 label -
@@ -618,12 +632,20 @@ ad_proc -private hfl_asset_field_validation {
                 visible_safe {
                     set validated_p [hf_are_safe_and_visible_characters_q $asset_arr(${key}) ]
                     if { !$validated_p } {
-                        lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Value_has_at_least_one_character_that_is_not_allowed#"
+                        if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                            lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Value_has_at_least_one_character_that_is_not_allowed#"
+                        } else {
+                            ns_log Warning "hfl_asset_field_validation.630:  key '${key}' value not safe and visible chars: value '$asset_arr(${key})'"
+                        }
                     }
                     if { $validated_p && $key eq "label"} {
                         if { [regexp -nocase {^[[:alnum:]]+$} $asset_arr(${key}) scratch] } {
                         } else {
-                            lappend message_list "#hosting-farm.label#: #hosting-farm.label_def#"
+                            if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                                lappend message_list "#hosting-farm.label#: #hosting-farm.label_def#"
+                            } else {
+                                ns_log Warning "hfl_asset_field_validation.640:  key '${key}' value may have space(s): value '$asset_arr(${key})'"
+                            }
                             set validated_p 0
                         }
                     }
@@ -633,10 +655,18 @@ ad_proc -private hfl_asset_field_validation {
                             set str_len [string length $asset_arr(${key}) ]
                             if { $str_len < [lindex $min_max_list 0] } {
                                 #set validated_p 0
-                                lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_few_characters#"
+                                if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                                    lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_few_characters#"
+                                } else {
+                                    ns_log Warning "hfl_asset_field_validation.645:  key '${key}' value too few chars: value '$asset_arr(${key})'"
+                                }
                             } elseif { $str_len > [lindex $min_max_list 1] } {
                                 #set validated_p 0
-                                lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_many_characters#"
+                                if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                                    lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_many_characters#"
+                                } else {
+                                    ns_log Warning "hfl_asset_field_validation.649:  key '${key}' value too many chars: value '$asset_arr(${key})'"
+                                }
                             }
                         }
                     }
@@ -645,17 +675,29 @@ ad_proc -private hfl_asset_field_validation {
                 visible {
                     set validated_p [hf_are_visible_characters_q $asset_arr(${key}) ]
                     if { !$validated_p } {
-                        lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Value_has_at_least_one_character_that_is_not_allowed#"
+                        if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                            lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Value_has_at_least_one_character_that_is_not_allowed#"
+                        } else {
+                            ns_log Warning "hfl_asset_field_validation.660:  key '${key}' value has at least one not allowed char: value '$asset_arr(${key})'"
+                        }
                     } else {
                         set min_max_list [hfl_field_value_min_max_allowed $key ]
                         if { [llength $min_max_list ] > 0 } {
                             set str_len [string length $asset_arr(${key}) ]
                             if { $str_len < [lindex $min_max_list 0] } {
                                 #set validated_p 0
-                                lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_few_characters#"
+                                if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                                    lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_few_characters#"
+                                } else {
+                                    ns_log Warning "hfl_asset_field_validation.665:  key '${key}' value has too few chars: value '$asset_arr(${key})'"
+                                }
                             } elseif { $str_len > [lindex $min_max_list 1] } {
                                 #set validated_p 0
-                                lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_many_characters#"
+                                if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                                    lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_many_characters#"
+                                } else {
+                                    ns_log Warning "hfl_asset_field_validation.669:  key '${key}' value has too many chars: value '$asset_arr(${key})'"
+                                }
                             }
                         }
                     }
@@ -665,7 +707,11 @@ ad_proc -private hfl_asset_field_validation {
                         set validated_p 1
                     } else {
                         # set validated_p 0
-                        lappend message_list "#hosting-farm.${key}#: #accounts-finance.unknown_reference#"
+                        if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                            lappend message_list "#hosting-farm.${key}#: #accounts-finance.unknown_reference#"
+                        } else {
+                            ns_log Warning "hfl_asset_field_validation.673:  key '${key}' value is unknown reference: value '$asset_arr(${key})'"
+                        }
                     }
                 }
                 trashed_p -
@@ -678,7 +724,11 @@ ad_proc -private hfl_asset_field_validation {
                         set validated_p 1
                     } else {
                         # set validated_p 0
-                        lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Value_is_not_boolean#"
+                        if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                            lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Value_is_not_boolean#"
+                        } else {
+                            ns_log Warning "hfl_asset_field_validation.680:  key '${key}' value is not boolean: value '$asset_arr(${key})'"
+                        }
                     }
                 }
                 default {
@@ -686,6 +736,8 @@ ad_proc -private hfl_asset_field_validation {
                 }
             }
         }
+        # next brace ends foreach
+        set asset_validated_p [expr { $attr_validated_p && $validated_p } ]
     }
     if { [llength $message_list] > 1 } {
         set validated_p 0
@@ -740,7 +792,9 @@ ad_proc -private hfl_attribute_field_validation {
         set blank_okay_list [list f_id sub_f_id ns_id ni_id ip_id hw_id dc_id vh_id vm_id ss_id sub_sort_order last_updated name_record time_trashed time_created os_dev_ref bia_mac_address ul_mac_address ipv4_addr_range ipv6_addr_range ipv4_addr ipv6_addr ipv4_status ipv6_status backup_sys os_id description details domain_name server_type resource_path mount_union server_name service_name daemon_ref protocol port ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes ]
         set one_word_list [list sub_label affix domain_name system_name ipv4_addr ipv6_addr ipv6_addr_range ipv4_addr_range server_type resource_path mount_union server_name service_name daemon_ref protocol config_url connection_type]
         set key_list [concat [hf_${sub_type_id}_keys] [hf_sub_asset_map_keys] ]
+        set attr_validated_p 1
         foreach key $key_list {
+            set validated_p 0
             if { $attr_arr(${key}) eq "" && $key in $blank_okay_list } {
                 set validated_p 1
             } elseif { $attr_arr(${key}) ne "" } {
@@ -764,19 +818,32 @@ ad_proc -private hfl_attribute_field_validation {
                     natural {
                         set validated_p [qf_is_natural_number $attr_arr(${key})]
                         if { !$validated_p } {
-                            lappend message_list "#hosting-farm.${key}#: #acs-templating.Invalid_natural_number#"
+                            if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                                lappend message_list "#hosting-farm.${key}#: #acs-templating.Invalid_natural_number#"
+                            } else {
+                                ns_log Warning "hfl_attribute_field_validation.820: key '${key}' value not natural number: value '$attr_arr(${key})'"
+                                
+                            }
                         }
                     }
                     decimal {
                         set validated_p [qf_is_decimal $attr_arr(${key})]
                         if { !$validated_p } {
-                            lappend message_list "#hosting-farm.${key}#: #acs-templating.Invalid_decimal_number#"
+                            if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                                lappend message_list "#hosting-farm.${key}#: #acs-templating.Invalid_decimal_number#"
+                            } else {
+                                ns_log Warning "hfl_attribute_field_validation.830:  key '${key}' value not decimal number: value '$attr_arr(${key})'"
+                            }
                         }
                     }
                     integer {
                         set validated_p [qf_is_intenger $attr_arr(${key}) ]
                         if { !$validated_p } {
-                            lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_Value_is_not_an_integ#"
+                            if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                                lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_Value_is_not_an_integ#"
+                            } else {
+                                ns_log Warning "hfl_attribute_field_validation.840:  key '${key}' value not integer: value '$attr_arr(${key})'"
+                            }
                         }
                     }
                     sub_label -
@@ -813,12 +880,20 @@ ad_proc -private hfl_attribute_field_validation {
                     visible_safe {
                         set validated_p [hf_are_safe_and_visible_characters_q $attr_arr(${key}) ]
                         if { !$validated_p } {
-                            lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Value_has_at_least_one_character_that_is_not_allowed#"
+                            if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                                lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Value_has_at_least_one_character_that_is_not_allowed#"
+                            } else {
+                                ns_log Warning "hfl_attribute_field_validation.880:  key '${key}' value not safe and visible chars: value '$attr_arr(${key})'"
+                            }
                         }
                         if { $validated_p } {
                             if { $key in $one_word_list } {
                                 if { ![regexp -nocase {^[^[:space:]]+$} $attr_arr(${key}) scratch] } {
-                                    lappend message_list "#hosting-farm.${key}#: #hosting-farm.${key}_def#"
+                                    if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                                        lappend message_list "#hosting-farm.label#: #hosting-farm.label_def#"
+                                    } else {
+                                        ns_log Warning "hfl_attribute_field_validation.890:  key '${key}' value may have space(s): value '$attr_arr(${key})'"
+                                    }
                                     set validated_p 0
                                 }
                             }
@@ -828,10 +903,18 @@ ad_proc -private hfl_attribute_field_validation {
                                     set str_len [string length $attr_arr(${key}) ]
                                     if { $str_len < [lindex $min_max_list 0] } {
                                         #set validated_p 0
-                                        lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_few_characters#"
+                                        if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                                            lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_few_characters#"
+                                        } else {
+                                            ns_log Warning "hfl_attribute_field_validation.905:  key '${key}' value too few chars: value '$attr_arr(${key})'"
+                                        }
                                     } elseif { $str_len > [lindex $min_max_list 1] } {
                                         #set validated_p 0
-                                        lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_many_characters#"
+                                        if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                                            lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_many_characters#"
+                                        } else {
+                                            ns_log Warning "hfl_attribute_field_validation.910:  key '${key}' value too many chars: value '$attr_arr(${key})'"
+                                        }
                                     }
                                 }
                             }
@@ -841,17 +924,29 @@ ad_proc -private hfl_attribute_field_validation {
                     visible {
                         set validated_p [hf_are_visible_characters_q $attr_arr(${key}) ]
                         if { !$validated_p } {
-                            lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Value_has_at_least_one_character_that_is_not_allowed#"
+                            if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                                lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Value_has_at_least_one_character_that_is_not_allowed#"
+                            } else {
+                                ns_log Warning "hfl_attribute_field_validation.925:  key '${key}' value has at least one not allowed char: value '$attr_arr(${key})'"
+                            }
                         } else {
                             set min_max_list [hfl_field_value_min_max_allowed $key ]
                             if { [llength $min_max_list ] > 0 } {
                                 set str_len [string length $attr_arr(${key}) ]
                                 if { $str_len < [lindex $min_max_list 0] } {
                                     #set validated_p 0
-                                    lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_few_characters#"
+                                    if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                                        lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_few_characters#"
+                                    } else {
+                                        ns_log Warning "hfl_attribute_field_validation.935:  key '${key}' value has too few chars: value '$attr_arr(${key})'"
+                                    }
                                 } elseif { $str_len > [lindex $min_max_list 1] } {
                                     #set validated_p 0
-                                    lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_many_characters#"
+                                    if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                                        lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_many_characters#"
+                                    } else {
+                                        ns_log Warning "hfl_attribute_field_validation.945:  key '${key}' value has too many chars: value '$attr_arr(${key})'"
+                                    }
                                 }
                             }
                         }
@@ -863,7 +958,11 @@ ad_proc -private hfl_attribute_field_validation {
                             set validated_p 1
                         } else {
                             # set validated_p 0
-                            lappend message_list "#hosting-farm.${key}#: #accounts-finance.unknown_reference#"
+                            if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                                lappend message_list "#hosting-farm.${key}#: #accounts-finance.unknown_reference#"
+                            } else {
+                                ns_log Warning "hfl_attribute_field_validation.960:  key '${key}' value is unknown reference: value '$attr_arr(${key})'"
+                            }
                         }
                     }
                     ipv4_status -
@@ -876,30 +975,37 @@ ad_proc -private hfl_attribute_field_validation {
                             set validated_p 1
                         } else {
                             # set validated_p 0
-                            lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Value_is_not_boolean#"
+                            if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+                                lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Value_is_not_boolean#"
+                            } else {
+                                ns_log Warning "hfl_attribute_field_validation.975:  key '${key}' value is not boolean: value '$attr_arr(${key})'"
+                            }
                         }
                     }
                     default {
-                        ns_log Warning "hfl_attribute_field_validation.833: No validation check for key '${key}'"
+                        ns_log Warning "hfl_attribute_field_validation.990: No validation check for key '${key}'"
                     }
                 }
             } else {
                 # no need to validate
-            }           
+                set validated_p 1
+            }
+            # next brace is end foreach
+            set attr_validated_p [expr { $attr_validated_p && $validated_p } ]
         }
     } else {
-        ns_log Warning "hfl_attribute_field_validation.631: No sub_type_id in array. Unable to validate attribute."
+        ns_log Warning "hfl_attribute_field_validation.1000: No sub_type_id in array. Unable to validate attribute."
     }
     if { [llength $message_list] > 1 } {
         set validated_p 0
         foreach message $message_list {
             util_user_message -message $message
-            ns_log Notice "hfl_attribute_field_validation.890. message '${message}'"
+            ns_log Notice "hfl_attribute_field_validation.1100. message '${message}'"
         }
     } else {
         set validated_p 1
     }
-    ns_log Notice "hfl_attribute_field_validation.895. validated_p '${validated_p}'"
-    return $validated_p
+    ns_log Notice "hfl_attribute_field_validation.1110. validated_p '${validated_p}'"
+    return $attr_validated_p
 }
 
