@@ -498,6 +498,7 @@ ad_proc -private hfl_asset_field_validation {
     @see util_user_message
 
 } {
+    upvar 1 instance_id instance_id
     upvar 1 $array_name asset_arr
     # asset_id  label  name  asset_type_id  trashed_p  trashed_by  template_p  templated_p  publish_p  monitor_p  popularity  triage_priority  op_status  qal_product_id  qal_customer_id  instance_id  user_id  last_modified  created  flags  template_id  f_id
     # some possibly useful input messages
@@ -566,7 +567,7 @@ ad_proc -private hfl_asset_field_validation {
                         lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_name_is_too_long__Ple#"
                     }
                     if { $validated_p && $key eq "label"} {
-                        if { [regexp -nocase {^[[:alnum;]]+$} $asset_arr(${key}) scratch] } {
+                        if { [regexp -nocase {^[[:alnum:]]+$} $asset_arr(${key}) scratch] } {
                         } else {
                             lappend message_list "#hosting-farm.label#: #hosting-farm.label_def#"
                             #set validated_p 0
@@ -628,6 +629,7 @@ ad_proc -private hfl_attribute_field_validation {
     @see util_user_message
 
 } {
+    upvar 1 instance_id instance_id
     upvar 1 $array_name attr_arr
     set validated_p 0
     set sub_type_id [value_if_exists $attr_arr(sub_type_id) ]

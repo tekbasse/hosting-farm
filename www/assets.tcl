@@ -77,10 +77,12 @@ array set input_arr \
          state "" \
          sub_asset_id "" \
          sub_f_id "" \
+         sub_type_id "" \
          submit "" \
          s "" \
          p "" \
          this_start_row "" \
+         type_id "" \
          interval_remaining "" \
          top_level_p "0"]
 
@@ -111,10 +113,11 @@ if { !$form_posted_p } {
              s \
              p \
              sub_f_id \
+             sub_type_id \
              this_start_row \
              top_level_p \
-             interval_remaining \
-             sub_f_id ]
+             type_id \
+             interval_remaining ]
     # x,y elements in input_arr holds position of image-based submit
     array unset input_arr x
     array unset input_arr y
@@ -183,7 +186,7 @@ if { !$form_posted_p } {
         set mode_next ""
     }
     if { [string first $mode "dt"] > -1 \
-                   && [string first $mode_next "lrv"] == -1 } {
+             && [string first $mode_next "lrv"] == -1 } {
         set mode_next "v"
     }
 
@@ -436,7 +439,7 @@ if { !$form_posted_p } {
     }
 
     # ACTIONS
- 
+    
     if { $validated_p } {
         ns_log Notice "hosting-farm/assets.tcl.413: ACTION \
  mode '${mode}' mode_next '${mode_next}' validated_p '${validated_p}'"
@@ -480,16 +483,16 @@ if { !$form_posted_p } {
                 if { $asset_id ne "" } {
                     set f_id_of_asset_id [hf_f_id_of_asset_id $asset_id]
                 }
-                set mapped_f_id [qal_first_nonempty_in_list [list $sub_f_id $f_id $f_id_of_asset_id]
+                set mapped_f_id [qal_first_nonempty_in_list [list $sub_f_id $f_id $f_id_of_asset_id]]
                 if { $mapped_f_id ne "" } {
                     set mapped_type_id [hf_asset_type_id_of_f_id $mapped_f_id]
                     if { $mapped_type_id eq "" } {
                         set mapped_f_id "" 
                     }
                 } else {
-                    set mapped_type_id [qal_first_nonempty_in_list [list $sub_type_id $type_id $asset_type_id]
+                    set mapped_type_id [qal_first_nonempty_in_list [list $sub_type_id $type_id $asset_type_id]]
                 }
-
+                
                 set asset_id ""
                 set input_arr(asset_id) ""
                 set sub_asset_id ""
@@ -506,31 +509,37 @@ if { !$form_posted_p } {
                 if { $form_state eq $state && $asset_type_id ne "" } {
                     if { [string match "*asset*" $state] } {
                         
-           set message ""
-            util_user_message -message $message
-
-
-                        # first asset_id is f_id
-                        set asset_id [hf_asset_create obj_arr]
-                        set obj_arr(f_id) $asset_id
-                        if { $mapped_f_id ne "" } {
-                            # asset to asset
-                            hf_sub_asset_map_update $mapped_f_id $mapped_type_id $obj_arr(label) $asset_id $obj_arr(asset_type_id) 0
+                        set input_issues_p [hfl_asset_field_validation obj_arr]
+                        if { $input_issues_p } {
+                            set mode "a"
+                        } else {
+                            # first asset_id is f_id
+                            set asset_id [hf_asset_create obj_arr]
+                            set obj_arr(f_id) $asset_id
+                            if { $mapped_f_id ne "" } {
+                                # asset to asset
+                                hf_sub_asset_map_update $mapped_f_id $mapped_type_id $obj_arr(label) $asset_id $obj_arr(asset_type_id) 0
+                            }
                         }
                     }
-                    if { [string match "*attr*" $state] } {
+                    if { [string match "*attr*" $state] && !$input_issues_p } {
                         if { ![string match "*asset*" $state ] } {
                             # attr_only
-                            if { $mapped_f_id ne "" } {
-                                set obj_arr(f_id) $mapped_f_id
-                                set obj_arr(type_id) $mapped_type_id
-                            }
-                        } 
-                        if { [exists_and_not_null obj_arr(f_id)] && $obj_arr(sub_type_id) in [hf_types_allowed_by $mapped_type_id] } {
-                            set sub_type_id $obj_arr(sub_type_id)
-                            set attr_id [hf_${sub_type_id}_write obj_arr]
-                            if { $attr_id eq "" } {
-                                ns_log Warning "hosting-farm/assets.tcl.462: attribute not created. attr_id '' array get obj_arr '[array get obj_arr]'"
+                            set input_issues_p [hfl_attribute_field_validation obj_arr]
+                            if { $input_issues_p } {
+                                set mode "a"
+                            } else {
+                                if { $mapped_f_id ne "" } {
+                                    set obj_arr(f_id) $mapped_f_id
+                                    set obj_arr(type_id) $mapped_type_id
+                                }
+                                if { [exists_and_not_null obj_arr(f_id)] && $obj_arr(sub_type_id) in [hf_types_allowed_by $mapped_type_id] } {
+                                    set sub_type_id $obj_arr(sub_type_id)
+                                    set attr_id [hf_${sub_type_id}_write obj_arr]
+                                    if { $attr_id eq "" } {
+                                        ns_log Warning "hosting-farm/assets.tcl.462: attribute not created. attr_id '' array get obj_arr '[array get obj_arr]'"
+                                    }
+                                }
                             }
                         } else {
                             ns_log Warning "hosting-farm/assets.tcl.465: attribute not created. obj_arr(f_id) '' mapped_type_id '${mapped_type_id}'  array get obj_arr '[array get obj_arr]'"
@@ -622,7 +631,7 @@ switch -exact -- $mode {
             } elseif { $asset_type ne "" && $state eq "" } {
                 set state $asset_type
             }
-       
+            
             if { $asset_type eq "attr_only" } {
                 hf_constructor_a obj_arr force $state $sub_type_id
                 array set obj_arr [array get sam_arr]
@@ -703,8 +712,8 @@ switch -exact -- $mode {
                     ns_log Notice "hosting-farm/assets.tcl.700: array get obj_arr [array get obj_arr]"
                 }
                 set include_edit_attr_p 1
-   
-         } else {
+                
+            } else {
                 set asset_type [hf_constructor_b obj_arr]
                 set include_edit_one_p 1
                 set publish_p [hf_ui_go_ahead_q write "" published 0]
@@ -826,10 +835,11 @@ switch -exact -- $mode {
 # end of switches
 
 # using OpenACS built-in util_get_user_messages feature
-#set user_message_html ""
-#foreach user_message $user_message_list {
-#    append user_message_html "<li>${user_message}</li>"
-#}
+set user_message_html ""
+util_get_user_messages -multirow user_message_list
+foreach user_message $user_message_list {
+    append user_message_html "<li>${user_message}</li>"
+}
 
 # for buttons as multiple form submits within one form, example of a submit:
 # from accounts-finance: input type="submit" value="Sort by Y ascending" name="zy" class="btn"
