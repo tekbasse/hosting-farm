@@ -509,9 +509,10 @@ if { !$form_posted_p } {
                 if { $form_state eq $state && $asset_type_id ne "" } {
                     if { [string match "*asset*" $state] } {
 
-                        set input_issues_p [hfl_asset_field_validation obj_arr]
-                        if { $input_issues_p } {
+                        set valid_input_p [hfl_asset_field_validation obj_arr]
+                        if { !$valid_input_p } {
                             set mode_next "a"
+                            ns_log Notice "hosting-farm/assets.tcl.450: asset input validation issues. set mode_next '${mode_next}'"
                         } else {
                             # first asset_id is f_id
                             set asset_id [hf_asset_create obj_arr]
@@ -522,12 +523,13 @@ if { !$form_posted_p } {
                             }
                         }
                     }
-                    if { [string match "*attr*" $state] && !$input_issues_p } {
+                    if { [string match "*attr*" $state] && $valid_input_p } {
                         if { ![string match "*asset*" $state ] } {
                             # attr_only
-                            set input_issues_p [hfl_attribute_field_validation obj_arr]
-                            if { $input_issues_p } {
+                            set valid_input_p [hfl_attribute_field_validation obj_arr]
+                            if { !$valid_input_p } {
                                 set mode_next "a"
+                                ns_log Notice "hosting-farm/assets.tcl.455: asset input validation issues. set mode_next '${mode_next}'"
                             } else {
                                 if { $mapped_f_id ne "" } {
                                     set obj_arr(f_id) $mapped_f_id
@@ -830,6 +832,7 @@ switch -exact -- $mode {
             #  rp_internal_redirect /www/global/404.adp
             ad_script_abort
         }
+        ns_log Warning "hosting-farm/assets.tcl.833: mode '${mode}' mode_next '${mode_next}' THIS SHOULD NOT BE CALLED HERE."
     }
 }
 # end of switches
