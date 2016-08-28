@@ -511,7 +511,7 @@ if { !$form_posted_p } {
                         
                         set input_issues_p [hfl_asset_field_validation obj_arr]
                         if { $input_issues_p } {
-                            set mode "a"
+                            set next_mode "a"
                         } else {
                             # first asset_id is f_id
                             set asset_id [hf_asset_create obj_arr]
@@ -527,7 +527,7 @@ if { !$form_posted_p } {
                             # attr_only
                             set input_issues_p [hfl_attribute_field_validation obj_arr]
                             if { $input_issues_p } {
-                                set mode "a"
+                                set next_mode "a"
                             } else {
                                 if { $mapped_f_id ne "" } {
                                     set obj_arr(f_id) $mapped_f_id
