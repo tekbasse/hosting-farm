@@ -629,7 +629,7 @@ ad_proc -private hfl_asset_field_validation {
                     }
                     if { $validated_p } {
                         set min_max_list [hfl_field_value_min_max_allowed $key ]
-                        if { [llength $min_max_list > 0 ] } {
+                        if { [llength $min_max_list ] > 0  } {
                             set str_len [string length $asset_arr(${key}) ]
                             if { $str_len < [lindex $min_max_list 0] } {
                                 #set validated_p 0
@@ -647,7 +647,7 @@ ad_proc -private hfl_asset_field_validation {
                         lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_name_is_too_long__Ple#"
                     } else {
                         set min_max_list [hfl_field_value_min_max_allowed $key ]
-                        if { [llength $min_max_list > 0 ] } {
+                        if { [llength $min_max_list ] > 0 } {
                             set str_len [string length $asset_arr(${key}) ]
                             if { $str_len < [lindex $min_max_list 0] } {
                                 #set validated_p 0
@@ -817,7 +817,7 @@ ad_proc -private hfl_attribute_field_validation {
                             }
                             if { $validated_p } {
                                 set min_max_list [hfl_field_value_min_max_allowed $key ]
-                                if { [llength $min_max_list > 0 ] } {
+                                if { [llength $min_max_list ] > 0 } {
                                     set str_len [string length $asset_arr(${key}) ]
                                     if { $str_len < [lindex $min_max_list 0] } {
                                         #set validated_p 0
@@ -837,7 +837,7 @@ ad_proc -private hfl_attribute_field_validation {
                             lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_name_is_too_long__Ple#"
                         } else {
                             set min_max_list [hfl_field_value_min_max_allowed $key ]
-                            if { [llength $min_max_list > 0 ] } {
+                            if { [llength $min_max_list ] > 0 } {
                                 set str_len [string length $asset_arr(${key}) ]
                                 if { $str_len < [lindex $min_max_list 0] } {
                                     #set validated_p 0
