@@ -65,11 +65,11 @@ ad_proc -private hf_asset_features {
 }
 
 
-ad_proc -private hf_asset_feature_keys {
+ad_proc -private hf_asset_type_feature_keys {
 } {
     Returns an ordered list of keys for hf_asset_type_features
 } {
-    set keys_list [list instance_id id asset_type_id label feature_type publish_p title description]
+    set keys_list [list instance_id id asset_type_id label feature_type publish_p name details]
     set keys [hf_keys_by $keys_list $separator]
     return $keys
 }
@@ -117,15 +117,6 @@ ad_proc -private hf_asset_type_keys {
 }
 
 
-ad_proc -private hf_asset_type_feature_keys {
-    {separator ""}
-} {
-    Returns an ordered list of keys for hf_asset_type_features
-} {
-    set keys_list [list asset_type_id feature_id label feature_type publish_p name details]
-    set keys [hf_keys_by $keys_list $separator]
-    return $keys
-}
 
 ad_proc -private hf_ns_keys {
     {separator ""}

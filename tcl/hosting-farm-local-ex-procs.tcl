@@ -487,6 +487,30 @@ ad_proc -private hfl_attributes_allowed_by_user {
     return $asset_type_id_list
 }
 
+ad_proc -private hfl_field_value_min_max_allowed {
+    key
+} {
+    Returns the min and max values allowed for a text based field as a list, or empty list if no limits or nothing found.
+} {
+    # Initial values are based on db definitions.
+    set min_max_list [list ]
+    # db = key min max
+    set db [list \
+                affix 1 19 \
+                backup_sys 0 199 \
+                base_sku 1 39 \
+                bia_mac_address 0 20 \
+                brand 0 79 \
+                config_uri 0 300 \
+                connection_type 0 22 \
+                daemon_ref 0 39 \
+                description 0 198 \
+                
+                      ]
+
+    return $min_max_list
+}
+
 ad_proc -private hfl_asset_field_validation {
     array_name
 } {
@@ -779,3 +803,4 @@ ad_proc -private hfl_attribute_field_validation {
     }
     return $validated_p
 }
+
