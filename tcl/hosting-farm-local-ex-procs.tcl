@@ -735,10 +735,13 @@ ad_proc -private hfl_attribute_field_validation {
         # instance_id f_id type_id sub_f_id sub_type_id sub_sort_order sub_label attribute_p trashed_p last_updated
         # ua keys
         # ua_id ua connection_type instance_id up details
+        set blank_okay_list [list f_id sub_f_id ns_id ni_id ip_id hw_id dc_id vh_id vm_id ss_id sub_sort_order last_updated name_record time_trashed time_created os_dev_ref bia_mac_address ul_mac_address ipv4_addr_range ipv6_addr_range ipv4_addr ipv6_addr ipv4_status ipv6_status backup_sys os_id description details domain_name server_type resource_path mount_union server_name service_name daemon_ref protocol port ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes ]
         set one_word_list [list sub_label affix domain_name system_name ipv4_addr ipv6_addr ipv6_addr_range ipv4_addr_range server_type resource_path mount_union server_name service_name daemon_ref protocol config_url connection_type]
         set key_list [concat [hf_${sub_type_id}_keys] [hf_sub_asset_map_keys] ]
         foreach key $key_list {
-            if { [exists_and_not_null attr_arr(${key}) ] } { 
+            if { $attr_arr(${key}) eq "" && $key in $blank_okay_list } {
+                set validated_p 1
+            } elseif { $attr_arr(${key}) ne "" } {
                 switch -exact -- $key {
                     f_id -
                     sub_f_id -
@@ -757,19 +760,19 @@ ad_proc -private hfl_attribute_field_validation {
                     sub_sort_order -
                     ua_id -
                     natural {
-                        set validated_p [qf_is_natural_number $asset_arr(${key})]
+                        set validated_p [qf_is_natural_number $attr_arr(${key})]
                         if { !$validated_p } {
                             lappend message_list "#hosting-farm.${key}#: #acs-templating.Invalid_natural_number#"
                         }
                     }
                     decimal {
-                        set validated_p [qf_is_decimal $asset_arr(${key})]
+                        set validated_p [qf_is_decimal $attr_arr(${key})]
                         if { !$validated_p } {
                             lappend message_list "#hosting-farm.${key}#: #acs-templating.Invalid_decimal_number#"
                         }
                     }
                     integer {
-                        set validated_p [qf_is_intenger $asset_arr(${key}) ]
+                        set validated_p [qf_is_intenger $attr_arr(${key}) ]
                         if { !$validated_p } {
                             lappend message_list "#hosting-farm.${key}#: #acs-tcl.lt_Value_is_not_an_integ#"
                         }
@@ -805,13 +808,13 @@ ad_proc -private hfl_attribute_field_validation {
                     time_created -
                     connection_type -
                     visible_safe {
-                        set validated_p [hf_are_safe_and_visible_characters_q $asset_arr(${key}) ]
+                        set validated_p [hf_are_safe_and_visible_characters_q $attr_arr(${key}) ]
                         if { !$validated_p } {
                             lappend message_list "#hosting-farm.${key}#: #acs-tcl.Value_has_at_least_one_character_that_is_not_allowed#"
                         }
                         if { $validated_p } {
                             if { $key in $one_word_list } {
-                                if { ![regexp -nocase {^[^[:space:]]+$} $asset_arr(${key}) scratch] } {
+                                if { ![regexp -nocase {^[^[:space:]]+$} $attr_arr(${key}) scratch] } {
                                     lappend message_list "#hosting-farm.${key}#: #hosting-farm.${key}_def#"
                                     set validated_p 0
                                 }
@@ -819,7 +822,7 @@ ad_proc -private hfl_attribute_field_validation {
                             if { $validated_p } {
                                 set min_max_list [hfl_field_value_min_max_allowed $key ]
                                 if { [llength $min_max_list ] > 0 } {
-                                    set str_len [string length $asset_arr(${key}) ]
+                                    set str_len [string length $attr_arr(${key}) ]
                                     if { $str_len < [lindex $min_max_list 0] } {
                                         #set validated_p 0
                                         lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_few_characters#"
@@ -833,13 +836,13 @@ ad_proc -private hfl_attribute_field_validation {
                     }
                     details -
                     visible {
-                        set validated_p [hf_are_visible_characters_q $asset_arr(${key}) ]
+                        set validated_p [hf_are_visible_characters_q $attr_arr(${key}) ]
                         if { !$validated_p } {
                             lappend message_list "#hosting-farm.${key}#: #acs-tcl.Value_has_at_least_one_character_that_is_not_allowed#"
                         } else {
                             set min_max_list [hfl_field_value_min_max_allowed $key ]
                             if { [llength $min_max_list ] > 0 } {
-                                set str_len [string length $asset_arr(${key}) ]
+                                set str_len [string length $attr_arr(${key}) ]
                                 if { $str_len < [lindex $min_max_list 0] } {
                                     #set validated_p 0
                                     lappend message_list "#hosting-farm.${key}#: #accounts-ledger.Text_has_too_few_characters#"
@@ -853,7 +856,7 @@ ad_proc -private hfl_attribute_field_validation {
                     type_id -
                     sub_type_id -
                     asset_type_id {
-                        if { $asset_arr(${key}) in [hf_asset_type_id_list] } {
+                        if { $attr_arr(${key}) in [hf_asset_type_id_list] } {
                             set validated_p 1
                         } else {
                             # set validated_p 0
@@ -866,7 +869,7 @@ ad_proc -private hfl_attribute_field_validation {
                     attribute_p -
                     trashed_p -
                     logical {
-                        if { $asset_arr(${key}) eq [qf_is_true $asset_arr(${key})] } {
+                        if { $attr_arr(${key}) eq [qf_is_true $attr_arr(${key})] } {
                             set validated_p 1
                         } else {
                             # set validated_p 0
