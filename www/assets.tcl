@@ -333,6 +333,12 @@ if { !$form_posted_p } {
     if { $mode eq "w" } { 
         if { $write_p || $admin_p } {
             # allowed
+            set state $input_arr(asset_type)
+            set asset_type_id $input_arr(asset_type_id)
+            if { $state eq "attr_only" } {
+                set sub_type_id $input_arr(sub_type_id)
+                set f_id [hf_f_id_of_asset_id $asset_id]
+            }
         } else {
             # does not have permission to write
             ns_log Warning "hosting-farm/assets.tcl.319: \
@@ -562,14 +568,26 @@ if { !$form_posted_p } {
                 # ad-unquotehtml values before posting to db
                 array set obj_arr [array get input_arr]
                 set form_state [hf_constructor_a obj_arr ]
-                if { $form_state eq $state } {
+                if { $form_state eq $state && $asset_type_id ne "" } {
                     if { [string match "*asset*" $state] } {
-                        set asset_id [hf_asset_create obj_arr]
-                        set obj_arr(f_id) $asset_id
+                        set valid_input_p [hfl_asset_field_validation obj_arr]
+                        if { !$valid_input_p } {
+                            set mode_next "e"
+                            ns_log Notice "hosting-farm/assets.tcl.450: asset input validation issues. set mode_next '${mode_next}'"
+                        } else {
+                            set asset_id [hf_asset_create obj_arr]
+                            set obj_arr(f_id) $asset_id
+                        }
                     }
                     if { [string match "*attr*" $state] } {
-                        set sub_type_id $obj_arr(sub_type_id)
-                        set attr_id [hf_${sub_type_id}_write obj_arr]
+                        set valid_input_p [hfl_attribute_field_validation obj_arr]
+                        if { !$valid_input_p } {
+                            set mode_next "e"
+                            ns_log Notice "hosting-farm/assets.tcl.455: asset input validation issues. set mode_next '${mode_next}'"
+                        } else {
+                            set sub_type_id $obj_arr(sub_type_id)
+                            set attr_id [hf_${sub_type_id}_write obj_arr]
+                        }
                     }
                     set mode $mode_next
                 } else {
