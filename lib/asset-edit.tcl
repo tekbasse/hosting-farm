@@ -182,11 +182,9 @@ if { [string match "*asset*" $asset_type ] } {
                                           [list label "#acs-kernel.common_no#" value 0 selected $0_selected_p ] ]
                     qf_choice type radio name $key value $choices_list
                 } else {
-                    if { $1_selected_p } {
-                        qf_input type submit value "#accounts-finance.untrash#" name "zTvo${asset_id}" class button
-                    } else {
-                        qf_input type submit value "#accounts-finance.trash#" name "ztl${asset_id}" class button
-                    }
+
+                    qf_append html "<span>#hosting-farm.${key}#${separator}${val}</span>"
+                    qf_input type hidden value $val name $key
                 }
             } else {
                 qf_input type text value $val_unquoted name $key label "#hosting-farm.${key}#${separator}" size 40 maxlength 80

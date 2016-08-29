@@ -135,9 +135,9 @@ if { !$form_posted_p } {
     if { $modes_idx > -1 && $mode eq "p" } {
         set modes [lindex $input_arr_idx_list $modes_idx]
         set test [string range $modes 0 3]
-        if { [string match {z[aev]*} $test] } {
+        if { [string match {z[aevtD]*} $test] } {
             set asset_id [string range $modes 3 end]
-            if { [string match "za*" $test] } {
+            if { [string match {z[aTt]*} $test] } {
                 set state $input_arr(state)
                 set asset_type_id $input_arr(asset_type_id)
             }
@@ -240,6 +240,13 @@ if { !$form_posted_p } {
     if { $asset_type_id ne "" &&  $asset_type_id ni [hf_asset_type_id_list ] } {
         set asset_type_id ""
     }
+
+    if { $asset_type ni [list "" asset_primary_attr asset_attr attr_only asset_only] } {
+        set asset_type ""
+    }         
+    if { $state ni [list "" asset_primary_attr asset_attr attr_only asset_only] } {
+        set state ""
+    }         
 
     # special cases require special permissions
     # Re-checking permissions in context of input.
