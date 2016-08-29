@@ -554,6 +554,11 @@ ad_proc -private hfl_asset_field_validation {
 } {
     upvar 1 instance_id instance_id
     upvar 1 $array_name asset_arr
+    upvar 1 read_p read_p
+    upvar 1 create_p create_p
+    upvar 1 write_p write_p
+    upvar 1 admin_p admin_p
+    upvar 1 pkg_admin_p pkg_admin_p
     # asset_id  label  name  asset_type_id  trashed_p  trashed_by  template_p  templated_p  publish_p  monitor_p  popularity  triage_priority  op_status  qal_product_id  qal_customer_id  instance_id  user_id  last_modified  created  flags  template_id  f_id
     # some possibly useful input messages
     #acs-templating.required#  "required"
@@ -737,7 +742,7 @@ ad_proc -private hfl_asset_field_validation {
             }
         }
         # next brace ends foreach
-        set asset_validated_p [expr { $attr_validated_p && $validated_p } ]
+        set asset_validated_p [expr { $asset_validated_p && $validated_p } ]
     }
     if { [llength $message_list] > 1 } {
         set validated_p 0
@@ -765,7 +770,12 @@ ad_proc -private hfl_attribute_field_validation {
 } {
     upvar 1 instance_id instance_id
     upvar 1 $array_name attr_arr
-    set validated_p 0
+    upvar 1 read_p read_p
+    upvar 1 create_p create_p
+    upvar 1 write_p write_p
+    upvar 1 admin_p admin_p
+    upvar 1 pkg_admin_p pkg_admin_p
+
     set sub_type_id [value_if_exists $attr_arr(sub_type_id) ]
     if { $sub_type_id ne "" } {
         
