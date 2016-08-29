@@ -241,6 +241,10 @@ if { !$form_posted_p } {
         set asset_type_id ""
     }
 
+    if { $sub_type_id ne "" &&  $sub_type_id ni [hf_asset_type_id_list ] } {
+        set sub_type_id ""
+    }
+
     if { $asset_type ni [list "" asset_primary_attr asset_attr attr_only asset_only] } {
         set asset_type ""
     }         
@@ -268,6 +272,11 @@ if { !$form_posted_p } {
     ns_log Notice "hosting-farm/assets.tcl.250: read_p '${read_p}' \
  create_p ${create_p} write_p ${write_p} admin_p ${admin_p} \
  pkg_admin_p '${pkg_admin_p}'"
+
+    ns_log Notice "hosting-farm/assets.tcl.256. Validated as: \
+ asset_id '${asset_id}' sub_asset_id '${sub_asset_id}' f_id '${f_id}' \
+ sub_f_id '${sub_f_id}' asset_type_id '${asset_type_id}' sub_type_id '${sub_type_id}' \
+ asset_type '${asset_type}' state '${state}'"
 
     set referrer_url [get_referrer]
     set http_header_method [ad_conn method]
@@ -462,6 +471,10 @@ if { !$form_posted_p } {
 
         if { [string match -nocase "t" $mode] } {
             set processed_p 0
+            if { $asset_type eq "" } {
+                array set obj_arr [array get input_arr]
+                set asset_type [hf_constructor_a obj_arr]
+            }
             if { $mode eq "T" } {
                 if { [string match "*asset*" $asset_type] && $asset_id ne "" } {
                     set processed_p [hf_asset_untrash $asset_id]
