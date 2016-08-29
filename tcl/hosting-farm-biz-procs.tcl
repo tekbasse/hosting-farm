@@ -170,7 +170,7 @@ ad_proc -public hf_constructor_a {
     } else {
         if { $arg1 eq "default" } {
             if { $state eq "" } {
-                if { $arg2 in [list asst_primary_attr asset_attr attr_only asset_only] } {
+                if { $arg2 in [list asset_primary_attr asset_attr attr_only asset_only] } {
                     set state $arg2
                     ns_log Notice "hf_constructor_a.156: using default asset_type arg2 '${arg2}'"
                     if { $asset_type_id eq "" } {
