@@ -162,7 +162,7 @@ if { $item_count > 0 } {
         set items_per_page 12
     }
 
-    if { $pagination_bar_p && ( $item_count > $items_per_page ) } {
+    if { $pagination_bar_p && ( $item_count > [expr { $items_per_page * 1.6 } ] ) } {
         if { ![info exists show_page_num_p ] } {
             set show_page_num_p 0
         }
