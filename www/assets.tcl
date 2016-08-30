@@ -101,7 +101,7 @@ if { !$form_posted_p } {
     qf_array_to_vars input_arr \
         [list \
              asset_id \
-             asset_type "" \
+             asset_type \
              asset_type_id \
              customer_id \
              f_id \
@@ -127,9 +127,9 @@ if { !$form_posted_p } {
     # key,value is passed as a single name, with first letter z for asset_id or Z for sub_f_id.
     set input_arr_idx_list [array names input_arr]
     # add required defaults not passed by form
+
+
     set asset_type ""
-
-
     ##code update this regexp?
     set modes_idx [lsearch -regexp $input_arr_idx_list {[Zz][avpsSrnwctTdel][ivcrl][0-9]*}]
     if { $modes_idx > -1 && $mode eq "p" } {
@@ -138,8 +138,7 @@ if { !$form_posted_p } {
         if { [string match {z[aevtD]*} $test] } {
             set asset_id [string range $modes 3 end]
             if { [string match {z[aTt]*} $test] } {
-                set state $input_arr(state)
-                set asset_type_id $input_arr(asset_type_id)
+                #set asset_type_id $input_arr(asset_type_id)
             }
             ns_log Notice "hosting-farm/www/assets.tcl.141: asset_id '${asset_id}'"
         }
@@ -150,7 +149,6 @@ if { !$form_posted_p } {
         if { [string match "Z*" $test] } {
             # attr_only
             set asset_type "attr_only"
-            set asset_type_id $input_arr(asset_type_id)
             if { [string match {Z[vewtTdl]*} $test] } {
                 set sub_f_id [string range $modes 3 end]
                 # set asset_id for permissions, and make rest of map record available. sub_type_id etc.
@@ -160,8 +158,7 @@ if { !$form_posted_p } {
                 set f_id [hf_asset_f_id_of_sub_f_id $sub_f_id]
                 set asset_id [hf_asset_id_current_of_f_id $f_id]
             } elseif { [string match "Za*" $test] } {
-                set state $input_arr(state)
-                set sub_type_id $input_arr(sub_type_id)
+                #set sub_type_id $input_arr(sub_type_id)
                 set asset_id [string range $modes 3 end]
                 set f_id [hf_f_id_of_asset_id $asset_id]
             }
@@ -174,10 +171,35 @@ if { !$form_posted_p } {
 
     }
 
+    # Validate input for specific modes
+
+    # Modes are views, or one of these compound action/views
+    #   d   delete (d x) then view as before (where x = l, r or v)
+    #   t   trash (d x) then view as before (where x = l, r or v)
+    #   w   write (d x) , then view asset_id (v)
+    
+    # Actions
+    #   d  = delete asset_id or sub_asset_id
+    #   D  = delete f_id or sub_f_id 
+    #   t  = trash asset_id or sub_asset_id
+    #   T  = untrash asset_id
+    #   c  = create asset/attr asset_type_id
+    #   w  = write asset_id/sub_asset_id asset_type_id
+    #   s  = publish
+    #   S  = Unpublish
+
+    # Views
+    #   a  = add asset/attribute (this allows more control over adding than using edit form allows)
+    #   e  = edit asset_id/sub_asset_id or attribute, presents defaults if no prior data
+    #   v  = view asset_id or sub_asset_id (attribute_id or asset_id)
+    #   l  = list assets
+    #   r  = view revision history (can only delete if pkg admin)
+    #   "" = view list of role oriented summaries
+    #          such as many customers and assets as possible etc.
+
     # Validate input
 
-    # possibilities are: d, t, w, e, v, l, r, "" where "" is invalid input or unreconcilable error condition.
-    # options include    d, D, l, r, t, e, "", w, v, a
+
     if { [string length $mode] != 1 } {
         set mode "v"
         set mode_next ""
@@ -185,7 +207,7 @@ if { !$form_posted_p } {
     if { [string length $mode_next] > 1 } {
         set mode_next ""
     }
-    if { [string first $mode "dt"] > -1 \
+    if { [string first $mode "dDtT"] > -1 \
              && [string first $mode_next "lrv"] == -1 } {
         set mode_next "v"
     }
@@ -209,6 +231,7 @@ if { !$form_posted_p } {
     } else {
         set asset_id ""
     }
+    
     if { [qf_is_natural_number $sub_asset_id] } {
         if { [hf_asset_id_exists_q $sub_asset_id ] } {
             # Probably valid sub_asset_id
@@ -250,7 +273,17 @@ if { !$form_posted_p } {
     }         
     if { $state ni [list "" asset_primary_attr asset_attr attr_only asset_only] } {
         set state ""
-    }         
+    } 
+
+    # maybe blank out any invalid inputs at the source?
+    foreach key [list asset_id sub_asset_id f_id sub_f_id asset_type_id sub_type_id asset_type state] {
+        if { ![exists_and_not_null $key] } {
+            if { $input_arr(${key}) ne "" } {
+                ns_log Notice "hosting-farm/assets.tcl.216: key '${key}' is blank. Blank out input_arr(${key}) '$input_arr(${key})'?"
+                #set input_arr(${key}) ""
+            }
+        }
+    }
 
     # special cases require special permissions
     # Re-checking permissions in context of input.
@@ -293,42 +326,13 @@ if { !$form_posted_p } {
     }
 
     set validated_p 1
-    # Validate input for specific modes
-
-    # Modes are views, or one of these compound action/views
-    #   d   delete (d x) then view as before (where x = l, r or v)
-    #   t   trash (d x) then view as before (where x = l, r or v)
-    #   w   write (d x) , then view asset_id (v)
-    
-    # Actions
-    #   d  = delete asset_id or sub_asset_id
-    #   D  = delete f_id or sub_f_id 
-    #   t  = trash asset_id or sub_asset_id
-    #   T  = untrash asset_id
-    #   c  = create asset/attr
-    #   w  = write asset_id/sub_asset_id asset_type_id
-    #   a  = add asset_type_id
-    #   s  = publish
-    #   S  = Unpublish
-
-    # Views
-    #   a  = add asset/attribute (this allows more control over adding than using edit form allows)
-    #   e  = edit asset_id/sub_asset_id or attribute, presents defaults if no prior data
-    #   v  = view asset_id or sub_asset_id (attribute_id or asset_id)
-    #   l  = list assets
-    #   r  = view history (can only delete if pkg admin)
-    #   "" = view list of role oriented summaries
-    #          such as many customers and assets as possible etc.
 
     # keeping the logic simple in this section
     # Using IF instead of SWITCH to allow mode to be modified successively
     if { $mode eq "c" } { 
         if { $write_p || $create_p || $admin_p } {
             # allowed
-            set state $input_arr(asset_type)
-            set asset_type_id $input_arr(asset_type_id)
             if { $state eq "attr_only" } {
-                set sub_type_id $input_arr(sub_type_id)
                 set f_id [hf_f_id_of_asset_id $asset_id]
             }
         } else {
@@ -349,10 +353,7 @@ if { !$form_posted_p } {
     if { $mode eq "w" } { 
         if { $write_p || $admin_p } {
             # allowed
-            set state $input_arr(asset_type)
-            set asset_type_id $input_arr(asset_type_id)
             if { $state eq "attr_only" } {
-                set sub_type_id $input_arr(sub_type_id)
                 set f_id [hf_f_id_of_asset_id $asset_id]
             }
         } else {
@@ -524,15 +525,16 @@ if { !$form_posted_p } {
                 set sub_asset_id ""
                 set input_arr(sub_asset_id) ""
                 set sub_f_id ""
-                set input_arr(sub_f_id) ""
-                
+                set input_arr(sub_f_id) ""                
                 array set obj_arr [array get input_arr]
                 set form_state [hf_constructor_a obj_arr ]
-                # ad-unquotehtml values before posting to db
-                foreach key [array names obj_arr] {
-                    set obj_arr(${key}) [ad_unquotehtml $obj_arr(${key})]
-                }
                 if { $form_state eq $state && $asset_type_id ne "" } {
+                    set asset_type $form_state
+                    # ad-unquotehtml values before posting to db or a form
+                    foreach key [array names obj_arr] {
+                        set obj_arr(${key}) [ad_unquotehtml $obj_arr(${key})]
+                    }
+
                     if { [string match "*asset*" $state] } {
 
                         set valid_input_p [hfl_asset_field_validation obj_arr]
@@ -589,13 +591,19 @@ if { !$form_posted_p } {
                 array set obj_arr [array get input_arr]
                 set form_state [hf_constructor_a obj_arr ]
                 if { $form_state eq $state && $asset_type_id ne "" } {
+                    set asset_type $form_state
+                    # ad-unquotehtml values before posting to db or a form
+                    foreach key [array names obj_arr] {
+                        set obj_arr(${key}) [ad_unquotehtml $obj_arr(${key})]
+                    }
+
                     if { [string match "*asset*" $state] } {
                         set valid_input_p [hfl_asset_field_validation obj_arr]
                         if { !$valid_input_p } {
                             set mode_next "e"
                             ns_log Notice "hosting-farm/assets.tcl.450: asset input validation issues. set mode_next '${mode_next}'"
                         } else {
-                            set asset_id [hf_asset_create obj_arr]
+                            set asset_id [hf_asset_write obj_arr]
                             set obj_arr(f_id) $asset_id
                         }
                     }
@@ -666,21 +674,16 @@ switch -exact -- $mode {
             # If context already exists, use most recent/active case
             # for default values.
             ns_log Notice "hosting-farm/assets.tcl.616: mode = add"
-            if { $state ne "" && $asset_type eq "" } {
-                set asset_type $state
-            } elseif { $asset_type ne "" && $state eq "" } {
-                set state $asset_type
-            }
             
-            if { $asset_type eq "attr_only" } {
-                hf_constructor_a obj_arr force $state $sub_type_id
+            if { $state eq "attr_only" } {
+                set asset_type [hf_constructor_a obj_arr force $state $sub_type_id]
                 array set obj_arr [array get sam_arr]
                 set obj_arr(f_id) $f_id
                 ns_log Notice "hosting-farm/assets.tcl.627: array get obj_arr [array get obj_arr]"
                 set include_add_attr_p 1
                 append title " #hosting-farm.Attribute#"
-            } elseif { $asset_type ne "" } {
-                hf_constructor_a obj_arr force $state $asset_type_id
+            } elseif { $state ne "" } {
+                set asset_type [ hf_constructor_a obj_arr force $state $asset_type_id]
                 set include_add_one_p 1
                 set publish_p [hf_ui_go_ahead_q write "" published 0]
                 append title " #hosting-farm.Asset#"

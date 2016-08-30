@@ -120,7 +120,7 @@ qf_form action $base_url method post id 20160818 hash_check 1
 qf_input type hidden value c name mode
 qf_input type hidden value v name mode_next
 qf_input type hidden value $sub_f_id name sub_f_id
-qf_input type hidden value $asset_type name asset_type
+qf_input type hidden value $asset_type name state
 #qf_append html "<div style=\"width: 70%; text-align: right;\">"
 
 foreach key [hf_key_order_for_display [array names attr_arr]] {
