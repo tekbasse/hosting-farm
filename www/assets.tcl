@@ -330,10 +330,58 @@ if { !$form_posted_p } {
     # keeping the logic simple in this section
     # Using IF instead of SWITCH to allow mode to be modified successively
     if { $mode eq "c" } { 
-        if { $write_p || $create_p || $admin_p } {
+        if { $create_p || $admin_p } {
             # allowed
             if { $state eq "attr_only" } {
                 set f_id [hf_f_id_of_asset_id $asset_id]
+            }
+            # Any existing revision references must be for establishing hierarchical relationship only
+            # Choose the most specific f_id.
+            set f_id_of_asset_id ""
+            set mapped_f_id ""
+            if { $asset_id ne "" } {
+                set f_id_of_asset_id [hf_f_id_of_asset_id $asset_id]
+            }
+            set mapped_f_id [qal_first_nonempty_in_list [list $sub_f_id $f_id $f_id_of_asset_id]]
+            if { $mapped_f_id ne "" } {
+                set mapped_type_id [hf_asset_type_id_of_f_id $mapped_f_id]
+                if { $mapped_type_id eq "" } {
+                    set mapped_f_id "" 
+                }
+            } else {
+                set mapped_type_id [qal_first_nonempty_in_list [list $sub_type_id $type_id $asset_type_id]]
+            }
+            if { $mapped_type_id ni [hf_types_allowed_by $mapped_type_id] } {
+                set $mapped_type_id ""
+            }
+            set asset_id ""
+            set input_arr(asset_id) ""
+            set sub_asset_id ""
+            set input_arr(sub_asset_id) ""
+            set sub_f_id ""
+            set input_arr(sub_f_id) ""                
+
+            array set obj_arr [array get input_arr]
+            set form_state [hf_constructor_a obj_arr ]
+            if { $form_state eq $state && $asset_type_id ne "" } {
+                set asset_type $form_state
+                # validate data entry 
+                set valid_input_p 0
+                if { [string match "*asset*" $state] } {
+                    set valid_input_p [hfl_asset_field_validation obj_arr]
+                }
+                if { [string match "*attr*" $state] && $valid_input_p } {
+                    set valid_input_p [hfl_attribute_field_validation obj_arr]
+                }
+            } else {
+                set valid_input_p 0
+            }
+            if { !$valid_input_p } {
+                set mode_next "a"
+                ns_log Notice "hosting-farm/assets.tcl.300: \
+ asset/attr input validation issues. \
+ form_state '${form_state}' state '${state}' \
+ asset_type_id '${asset_type_id}'. set mode_next '${mode_next}'"
             }
         } else {
             # does not have permission to create
@@ -503,84 +551,41 @@ if { !$form_posted_p } {
         if { $mode eq "c" } {
             if { $create_p } {
                 # create only. 
-                # Any existing revision references must be for establishing hierarchical relationship only
-                # Choose the most specific f_id.
-                set f_id_of_asset_id ""
-                set mapped_f_id ""
-                if { $asset_id ne "" } {
-                    set f_id_of_asset_id [hf_f_id_of_asset_id $asset_id]
+
+                # ad-unquotehtml values before posting to db or a form
+                foreach key [array names obj_arr] {
+                    set obj_arr(${key}) [ad_unquotehtml $obj_arr(${key})]
                 }
-                set mapped_f_id [qal_first_nonempty_in_list [list $sub_f_id $f_id $f_id_of_asset_id]]
-                if { $mapped_f_id ne "" } {
-                    set mapped_type_id [hf_asset_type_id_of_f_id $mapped_f_id]
-                    if { $mapped_type_id eq "" } {
-                        set mapped_f_id "" 
+
+                if { [string match "*asset*" $asset_type ] } {
+                    # first asset_id is f_id
+                    set asset_id [hf_asset_create obj_arr]
+                    set obj_arr(f_id) $asset_id
+                    if { $mapped_f_id ne "" } {
+                        # link asset to asset
+                        hf_sub_asset_map_update $mapped_f_id $mapped_type_id $obj_arr(label) $asset_id $obj_arr(asset_type_id) 0
+                    }
+                }
+                if { [string match "*attr*" $asset_type ] } {
+                    if { ![string match "*asset*" $state ] } {
+                        # attr_only
+                        set obj_arr(f_id) $mapped_f_id
+                        set obj_arr(sub_type_id) $mapped_type_id
+                        if { $obj_arr(f_id) ne "" && $mapped_type_id ne "" } {
+                            set sub_type_id $mapped_type_id
+                        }
+                    }
+                    set attr_id ""
+                    if { $sub_type_id ne "" } {
+                        set attr_id [hf_${sub_type_id}_write obj_arr]
+                    }
+                    if { $attr_id eq "" } {
+                        ns_log Warning "hosting-farm/assets.tcl.462: attribute not created. attr_id '' array get obj_arr '[array get obj_arr]'"
                     }
                 } else {
-                    set mapped_type_id [qal_first_nonempty_in_list [list $sub_type_id $type_id $asset_type_id]]
+                    ns_log Warning "hosting-farm/assets.tcl.465: attribute not created. obj_arr(f_id) '$obj_arr(f_id)' mapped_type_id '${mapped_type_id}'  array get obj_arr '[array get obj_arr]'"
                 }
-                
-                set asset_id ""
-                set input_arr(asset_id) ""
-                set sub_asset_id ""
-                set input_arr(sub_asset_id) ""
-                set sub_f_id ""
-                set input_arr(sub_f_id) ""                
-                array set obj_arr [array get input_arr]
-                set form_state [hf_constructor_a obj_arr ]
-                if { $form_state eq $state && $asset_type_id ne "" } {
-                    set asset_type $form_state
-                    # ad-unquotehtml values before posting to db or a form
-                    foreach key [array names obj_arr] {
-                        set obj_arr(${key}) [ad_unquotehtml $obj_arr(${key})]
-                    }
-                    # validate data entry 
-                    set valid_input_p 0
-                    if { [string match "*asset*" $state] } {
-                        set valid_input_p [hfl_asset_field_validation obj_arr]
-                    }
-                    if { [string match "*attr*" $state] && $valid_input_p } {
-                        set valid_input_p [hfl_attribute_field_validation obj_arr]
-                    }
-
-                    if { !$valid_input_p } {
-                        set mode_next "a"
-                        ns_log Notice "hosting-farm/assets.tcl.450: asset/attr input validation issues. set mode_next '${mode_next}'"
-                    } else {
-                        if { [string match "*asset*" $asset_type ] } {
-                            # first asset_id is f_id
-                            set asset_id [hf_asset_create obj_arr]
-                            set obj_arr(f_id) $asset_id
-                            if { $mapped_f_id ne "" } {
-                                # link asset to asset
-                                hf_sub_asset_map_update $mapped_f_id $mapped_type_id $obj_arr(label) $asset_id $obj_arr(asset_type_id) 0
-                            }
-                        }
-                        if { [string match "*attr*" $asset_type ] } {
-                            if { ![string match "*asset*" $state ] } {
-                                # attr_only
-                                if { $mapped_f_id ne "" } {
-                                    set obj_arr(f_id) $mapped_f_id
-                                    set obj_arr(type_id) $mapped_type_id
-                                }
-                                if { [exists_and_not_null obj_arr(f_id)] && $obj_arr(sub_type_id) in [hf_types_allowed_by $mapped_type_id] } {
-                                    set sub_type_id $obj_arr(sub_type_id)
-                                    set attr_id [hf_${sub_type_id}_write obj_arr]
-                                    if { $attr_id eq "" } {
-                                        ns_log Warning "hosting-farm/assets.tcl.462: attribute not created. attr_id '' array get obj_arr '[array get obj_arr]'"
-                                    }
-                                }
-                            }
-                        } else {
-                            ns_log Warning "hosting-farm/assets.tcl.465: attribute not created. obj_arr(f_id) '' mapped_type_id '${mapped_type_id}'  array get obj_arr '[array get obj_arr]'"
-                        }
-                        set mode $mode_next
-                    } else {
-                        set mode ""
-                        ns_log Warning "hosting-farm/assets.tcl.470: form_state '${form_state}' ne state '${state}'. form input ignored."
-                } 
-                # end section of create
-                set mode_next ""
+                set mode $mode_next
             }
         }
 

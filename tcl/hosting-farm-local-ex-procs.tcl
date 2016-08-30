@@ -776,6 +776,16 @@ ad_proc -private hfl_attribute_field_validation {
     upvar 1 admin_p admin_p
     upvar 1 pkg_admin_p pkg_admin_p
 
+    set message_list [list ]
+    util_get_user_messages -keep -multirow temp_list
+    set first_msg "#acs-tcl.lt_Problem_with_your_inp#"
+    # may already exist from hfl_asset_field_validation
+    if { first_msg ni $temp_list } {
+        lappend message_list $first_msg
+        set no_prior_p 1
+    } else {
+        set no_prior_p 0
+    }
     set sub_type_id [value_if_exists $attr_arr(sub_type_id) ]
     if { $sub_type_id ne "" } {
         
@@ -1006,7 +1016,7 @@ ad_proc -private hfl_attribute_field_validation {
     } else {
         ns_log Warning "hfl_attribute_field_validation.1000: No sub_type_id in array. Unable to validate attribute."
     }
-    if { [llength $message_list] > 1 } {
+    if { [llength $message_list] > $no_prior_p } {
         set validated_p 0
         foreach message $message_list {
             util_user_message -message $message
