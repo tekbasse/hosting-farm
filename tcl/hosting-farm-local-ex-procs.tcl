@@ -789,8 +789,10 @@ ad_proc -private hfl_attribute_field_validation {
         set no_prior_p 0
     }
     set sub_type_id [value_if_exists $attr_arr(sub_type_id) ]
-    if { $sub_type_id ne "" } {
-        
+    if { $sub_type_id eq "" } {
+        ns_log Warning "hfl_attribute_field_validation.1000: No sub_type_id in array. Unable to validate attribute."
+        set attr_validated_p 0
+    } else {
         # ns keys 
         # instance_id ns_id active_p name_record time_trashed time_created
         # ni keys 
@@ -911,7 +913,7 @@ ad_proc -private hfl_attribute_field_validation {
                             if { $key in $one_word_list } {
                                 if { ![regexp -nocase {^[^[:space:]]+$} $attr_arr(${key}) scratch] } {
                                     if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
-                                        lappend message_list "#hosting-farm.label#: #hosting-farm.label_def#"
+                                        lappend message_list "#hosting-farm.${key}#: #hosting-farm.${key}_def#"
                                     } else {
                                         ns_log Warning "hfl_attribute_field_validation.890:  key '${key}' value may have space(s): value '$attr_arr(${key})'"
                                     }
@@ -1014,10 +1016,7 @@ ad_proc -private hfl_attribute_field_validation {
             # next brace is end foreach
             set attr_validated_p [expr { $attr_validated_p && $validated_p } ]
         }
-    } else {
-        ns_log Warning "hfl_attribute_field_validation.1000: No sub_type_id in array. Unable to validate attribute."
-        set attr_validated_p 0
-    }
+    } 
     if { [llength $message_list] > $no_prior_p } {
         set validated_p 0
         foreach message $message_list {

@@ -363,19 +363,20 @@ if { !$form_posted_p } {
 
             array set obj_arr [array get input_arr]
             set form_state [hf_constructor_a obj_arr ]
+            set valid_input_p 0
             if { $form_state eq $state && $asset_type_id ne "" } {
                 set asset_type $form_state
-                # validate data entry 
-                set valid_input_p 1
+                # validate data input
+                set v_asset_input_p 1
+                set v_attr_input_p 1
                 if { [string match "*asset*" $state] } {
-                    set valid_input_p [hfl_asset_field_validation obj_arr]
+                    set v_asset_input_p [hfl_asset_field_validation obj_arr]
                 }
                 if { [string match "*attr*" $state] && $valid_input_p } {
-                    set valid_input_p [hfl_attribute_field_validation obj_arr]
+                    set v_attr_input_p [hfl_attribute_field_validation obj_arr]
                 }
-            } else {
-                set valid_input_p 0
-            }
+                set valid_input_p [expr { $v_asset_input_p && $v_attr_input_p} ]
+            } 
             if { !$valid_input_p } {
                 set mode_next "a"
                 ns_log Notice "hosting-farm/assets.tcl.300: \
