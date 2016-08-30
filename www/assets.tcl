@@ -534,31 +534,31 @@ if { !$form_posted_p } {
                     foreach key [array names obj_arr] {
                         set obj_arr(${key}) [ad_unquotehtml $obj_arr(${key})]
                     }
-
+                    # validate data entry 
+                    set valid_input_p 0
                     if { [string match "*asset*" $state] } {
-
                         set valid_input_p [hfl_asset_field_validation obj_arr]
-                        if { !$valid_input_p } {
-                            set mode_next "a"
-                            ns_log Notice "hosting-farm/assets.tcl.450: asset input validation issues. set mode_next '${mode_next}'"
-                        } else {
+                    }
+                    if { [string match "*attr*" $state] && $valid_input_p } {
+                        set valid_input_p [hfl_attribute_field_validation obj_arr]
+                    }
+
+                    if { !$valid_input_p } {
+                        set mode_next "a"
+                        ns_log Notice "hosting-farm/assets.tcl.450: asset/attr input validation issues. set mode_next '${mode_next}'"
+                    } else {
+                        if { [string match "*asset*" $asset_type ] } {
                             # first asset_id is f_id
                             set asset_id [hf_asset_create obj_arr]
                             set obj_arr(f_id) $asset_id
                             if { $mapped_f_id ne "" } {
-                                # asset to asset
+                                # link asset to asset
                                 hf_sub_asset_map_update $mapped_f_id $mapped_type_id $obj_arr(label) $asset_id $obj_arr(asset_type_id) 0
                             }
                         }
-                    }
-                    if { [string match "*attr*" $state] && $valid_input_p } {
-                        if { ![string match "*asset*" $state ] } {
-                            # attr_only
-                            set valid_input_p [hfl_attribute_field_validation obj_arr]
-                            if { !$valid_input_p } {
-                                set mode_next "a"
-                                ns_log Notice "hosting-farm/assets.tcl.455: asset input validation issues. set mode_next '${mode_next}'"
-                            } else {
+                        if { [string match "*attr*" $asset_type ] } {
+                            if { ![string match "*asset*" $state ] } {
+                                # attr_only
                                 if { $mapped_f_id ne "" } {
                                     set obj_arr(f_id) $mapped_f_id
                                     set obj_arr(type_id) $mapped_type_id
@@ -574,11 +574,10 @@ if { !$form_posted_p } {
                         } else {
                             ns_log Warning "hosting-farm/assets.tcl.465: attribute not created. obj_arr(f_id) '' mapped_type_id '${mapped_type_id}'  array get obj_arr '[array get obj_arr]'"
                         }
-                    }
-                    set mode $mode_next
-                } else {
-                    set mode ""
-                    ns_log Warning "hosting-farm/assets.tcl.470: form_state '${form_state}' ne state '${state}'. form input ignored."
+                        set mode $mode_next
+                    } else {
+                        set mode ""
+                        ns_log Warning "hosting-farm/assets.tcl.470: form_state '${form_state}' ne state '${state}'. form input ignored."
                 } 
                 # end section of create
                 set mode_next ""
