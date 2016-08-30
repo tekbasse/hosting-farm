@@ -776,11 +776,13 @@ ad_proc -private hfl_attribute_field_validation {
     upvar 1 admin_p admin_p
     upvar 1 pkg_admin_p pkg_admin_p
 
+    set attr_validated_p 1
     set message_list [list ]
-    util_get_user_messages -keep -multirow temp_list
+    set prior_messages_list [list ]
+    util_get_user_messages -keep -multirow prior_messages_list
     set first_msg "#acs-tcl.lt_Problem_with_your_inp#"
     # may already exist from hfl_asset_field_validation
-    if { first_msg ni $temp_list } {
+    if { $first_msg ni $prior_messages_list } {
         lappend message_list $first_msg
         set no_prior_p 1
     } else {
@@ -812,7 +814,6 @@ ad_proc -private hfl_attribute_field_validation {
         set blank_okay_list [list f_id sub_f_id ns_id ni_id ip_id hw_id dc_id vh_id vm_id ss_id sub_sort_order last_updated name_record time_trashed time_created os_dev_ref bia_mac_address ul_mac_address ipv4_addr_range ipv6_addr_range ipv4_addr ipv6_addr ipv4_status ipv6_status backup_sys os_id description details domain_name server_type resource_path mount_union server_name service_name daemon_ref protocol port ss_type ss_subtype ss_undersubtype ss_ultrasubtype config_uri memory_bytes ]
         set one_word_list [list sub_label affix domain_name system_name ipv4_addr ipv6_addr ipv6_addr_range ipv4_addr_range server_type resource_path mount_union server_name service_name daemon_ref protocol config_url connection_type]
         set key_list [concat [hf_${sub_type_id}_keys] [hf_sub_asset_map_keys] ]
-        set attr_validated_p 1
         foreach key $key_list {
             set validated_p 0
             if { $attr_arr(${key}) eq "" && $key in $blank_okay_list } {
@@ -1015,6 +1016,7 @@ ad_proc -private hfl_attribute_field_validation {
         }
     } else {
         ns_log Warning "hfl_attribute_field_validation.1000: No sub_type_id in array. Unable to validate attribute."
+        set attr_validated_p 0
     }
     if { [llength $message_list] > $no_prior_p } {
         set validated_p 0

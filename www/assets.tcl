@@ -366,7 +366,7 @@ if { !$form_posted_p } {
             if { $form_state eq $state && $asset_type_id ne "" } {
                 set asset_type $form_state
                 # validate data entry 
-                set valid_input_p 0
+                set valid_input_p 1
                 if { [string match "*asset*" $state] } {
                     set valid_input_p [hfl_asset_field_validation obj_arr]
                 }
