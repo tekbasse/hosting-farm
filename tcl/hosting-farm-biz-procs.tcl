@@ -186,7 +186,7 @@ ad_proc -public hf_constructor_a {
         } elseif { $an_type_id_p } {
             set state "asset_only" 
         } elseif { $an_sub_type_id_p } {
-            set state "asset_only"
+            set state "attr_only"
         } elseif { $state eq "" } {
             ns_log Warning "hf_constructor_a.174: array type_id and/or sub_type_id not valid. \
  type_id '${an_type_id}' sub_type_id '${an_sub_type_id}'. Both set to ''"
@@ -355,7 +355,7 @@ ad_proc -public hf_constructor_b {
     upvar 1 user_id user_id
 
     set asset_type [hf_constructor_a yan_arr $arg1 $arg2 $arg3]
-    
+    ns_log Notice "hf_constructor_b.358: asset_type '${asset_type}'"
     if { $asset_id ne "" && $f_id ne "" } {
         set asset_id_old $asset_id
         set asset_id [hf_asset_id_of_f_id_if_untrashed $f_id]
@@ -378,14 +378,22 @@ ad_proc -public hf_constructor_b {
  array get: '[array get yan_arr]'"
 
     }
+    if { $sub_f_id eq "" && [exists_and_not_null yan_arr(sub_f_id) ] } {
+        set sub_f_id $yan_arr(sub_f_id)
+    }
     if { $sub_f_id ne "" } {
+        if { $f_id eq "" && [exists_and_not_null yan_arr(f_id) ] } {
+            set f_id $yan_arr(f_id)
+        }
         set sub_asset_map_list [hf_sub_asset $sub_f_id $f_id]
         qf_lists_to_array yan_arr $sub_asset_map_list [hf_sub_asset_map_keys]
         if { $sub_type_id in [hf_asset_type_id_list] } {
             set sub_asset_list [hf_${sub_type_id}_read $sub_f_id]
             qf_lists_to_array yan_arr $sub_asset_list [hf_${sub_type_id}_keys]
+        } else {
+            ns_log Warning "hf_constructor_b.296: sub_type_id not valid '${sub_type_id}'"
         }
-    } 
+    }
     if { [string match "*attr*" $asset_type ] && ![exists_and_not_null yan_arr(sub_f_id) ] } {
         ns_log Warning "hf_constructor_b.303: sub_f_id '${sub_f_id}' not set in ${a_array_name}.\
  array get: '[array get yan_arr]'"

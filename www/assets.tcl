@@ -578,15 +578,15 @@ if { !$form_posted_p } {
                             set sub_type_id $mapped_type_id
                         }
                     }
-                    set attr_id ""
+                    set sub_f_id ""
                     if { $sub_type_id ne "" } {
-                        set attr_id [hf_${sub_type_id}_write obj_arr]
-                        set obj_arr(sub_f_id) $attr_id
+                        set sub_f_id [hf_${sub_type_id}_write obj_arr]
+                        set obj_arr(sub_f_id) $sub_f_id
                     } else {
                         ns_log Warning "hosting-farm/assets.tcl.455 sub_type_id ''"
                     }
-                    if { $attr_id eq "" } {
-                        ns_log Warning "hosting-farm/assets.tcl.462: attribute not created. attr_id '' array get obj_arr '[array get obj_arr]'"
+                    if { $sub_f_id eq "" } {
+                        ns_log Warning "hosting-farm/assets.tcl.462: attribute not created. sub_f_id '' array get obj_arr '[array get obj_arr]'"
                     }
                 } else {
                     ns_log Warning "hosting-farm/assets.tcl.465: attribute not created. obj_arr(f_id) '$obj_arr(f_id)' mapped_type_id '${mapped_type_id}'  array get obj_arr '[array get obj_arr]'"
@@ -626,7 +626,7 @@ if { !$form_posted_p } {
                             ns_log Notice "hosting-farm/assets.tcl.455: asset input validation issues. set mode_next '${mode_next}'"
                         } else {
                             set sub_type_id $obj_arr(sub_type_id)
-                            set attr_id [hf_${sub_type_id}_write obj_arr]
+                            set sub_f_id [hf_${sub_type_id}_write obj_arr]
                         }
                     }
                     set mode $mode_next
