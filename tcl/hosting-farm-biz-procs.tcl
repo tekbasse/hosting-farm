@@ -167,6 +167,32 @@ ad_proc -public hf_constructor_a {
             # create a blank asset_primary_attr
             set state "asset_primary_attr"
         }
+    } elseif { [info exists an_arr(sub_type_id)] || [info exists_an_arr(type_id) ] } {
+        set an_type_id [value_if_exists an_arr(type_id)]
+        set an_sub_type_id [value_if_exists an_arr(sub_type_id)]
+        set an_type_id_p 0
+        set an_sub_type_id_p 0
+        if { $an_type_id in [hf_asset_type_id_list] } {
+            set an_type_id_p 1
+        }
+        if { $an_sub_type_id in [hf_asset_type_id_list] } {
+            set an_sub_type_id_p 1
+        }
+        if { $an_type_id_p && $an_sub_type_id_p && $an_type_id eq $an_sub_type_id } {
+            # must be new, so primary
+            set state "asset_primary_attr"
+        } elseif { $an_type_id_p && $an_sub_type_id } {
+            set state "asset_attr"
+        } elseif { $an_type_id_p } {
+            set state "asset_only" 
+        } elseif { $an_sub_type_id_p } {
+            set state "asset_only"
+        } elseif { $state eq "" } {
+            ns_log Warning "hf_constructor_a.174: array type_id and/or sub_type_id not valid. \
+ type_id '${an_type_id}' sub_type_id '${an_sub_type_id}'. Both set to ''"
+            set an_arr(sub_type_id) ""
+            set an_arr(type_id) ""
+        }
     } else {
         if { $arg1 eq "default" } {
             if { $state eq "" } {
