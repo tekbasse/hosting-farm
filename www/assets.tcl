@@ -363,6 +363,7 @@ if { !$form_posted_p } {
 
             array set obj_arr [array get input_arr]
             set form_state [hf_constructor_a obj_arr ]
+            ns_log Notice "hosting-farm/assets.tcl.290: form_state '${form_state}' state '${state}' array get obj_arr '[array get obj_arr]'"
             set valid_input_p 0
             if { $form_state eq $state && $asset_type_id ne "" } {
                 set asset_type $form_state
@@ -568,7 +569,8 @@ if { !$form_posted_p } {
                     }
                 }
                 if { [string match "*attr*" $asset_type ] } {
-                    if { ![string match "*asset*" $state ] } {
+                    set sub_type_id $obj_arr(sub_type_id)
+                    if { $asset_type eq "attr_only" } {
                         # attr_only
                         set obj_arr(f_id) $mapped_f_id
                         set obj_arr(sub_type_id) $mapped_type_id
@@ -579,6 +581,9 @@ if { !$form_posted_p } {
                     set attr_id ""
                     if { $sub_type_id ne "" } {
                         set attr_id [hf_${sub_type_id}_write obj_arr]
+                        set obj_arr(sub_f_id) $attr_id
+                    } else {
+                        ns_log Warning "hosting-farm/assets.tcl.455 sub_type_id ''"
                     }
                     if { $attr_id eq "" } {
                         ns_log Warning "hosting-farm/assets.tcl.462: attribute not created. attr_id '' array get obj_arr '[array get obj_arr]'"
@@ -587,6 +592,8 @@ if { !$form_posted_p } {
                     ns_log Warning "hosting-farm/assets.tcl.465: attribute not created. obj_arr(f_id) '$obj_arr(f_id)' mapped_type_id '${mapped_type_id}'  array get obj_arr '[array get obj_arr]'"
                 }
                 set mode $mode_next
+            } else {
+                ns_log Warning "hosting-farm/assets.tcl.468: mode c, create_p 0 should not happen"
             }
         }
 
