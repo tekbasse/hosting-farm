@@ -95,6 +95,12 @@ ad_proc -public hf_constructor_a {
         }
     }
 
+    # determine primary_attr_id
+    set primary_attr_id ""
+    if { $asset_id_p } {
+        set primary_attr_id [hf_asset_primary_attr $asset_id]
+    }
+
     # determine sub_asset_id_p
     if { $sub_f_id ne "" } {
         set sub_f_id_supplied_p 1
@@ -121,12 +127,10 @@ ad_proc -public hf_constructor_a {
         }
     }
 
+
     # determine sub_is_primary_p
-    if { $sub_asset_id_p && $asset_id_p } {
-        set sub_f_id_primary [hf_asset_primary_attr $asset_id]
-        if { $sub_f_id_primary eq $sub_f_id } {
-            set sub_f_id_is_primary_p 1
-        }
+    if { $sub_asset_id_p && $asset_id_p && $primary_attr_id eq $sub_f_id } {
+        set sub_f_id_is_primary_p 1
     }
 
     # determine asset_type_id_p
@@ -172,10 +176,11 @@ ad_proc -public hf_constructor_a {
     if { $an_type_id_p && $asset_type_id_p } {
         if { $an_type_id ne $asset_type_id } {
             ns_log Warning "hf_constructor_a.153: an_type_id '${an_type_id} != asset_type_id '${asset_type_id}'. \
- state must be attr_only'"
-            set state 'attr_only'
+ state must be 'attr_only'"
+            set state "attr_only"
         }
     }
+
     if { $state eq "" } {
         if { $sub_f_id_is_primary_p } {
             set state "asset_primary_attr"

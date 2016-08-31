@@ -278,6 +278,7 @@ ad_proc -private hf_primary_sub_f_id {
 } {
     Returns the primary sub_f_id of f_id, if one exists. Otherwise returns an empty string.
 } {
+    upvar 1 instance_id instance_id
     # A stricter version of hf_asset_primary_attr
     set sub_f_id ""
     db_0or1row hf_sub_asset_id_prime_get {select sub_f_id 
