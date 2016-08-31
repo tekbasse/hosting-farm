@@ -131,95 +131,128 @@ ad_proc -public hf_constructor_a {
 
     # determine asset_type_id_p
     if { $sub_asset_id_p == 0 && $asset_id_p == 0 } {
-        if { $asset_type_id ne "" } {
+        if { $asset_type_id in [hf_asset_type_id_list] } {
             set asset_type_id_p 1
         } 
+    }
+    # determine type_id_p
+    set an_type_id ""
+    set an_type_id_p [info exists an_arr(type_id) ]
+    if { $an_type_id_p } {
+        if { $an_arr(type_id) in [hf_asset_type_id_list] } {
+            set an_type_id $an_arr(type_id)
+        } else {
+            #  set an_type_id ""
+            set an_type_id_p 0
+        }
+    }
+    if { !$an_type_id_p && $asset_type_id_p } {
+        set an_type_id $asset_type_id
+        set an_type_id_p 1
+    }
+
+    # determine sub_type_id_p
+    set an_sub_type_id ""
+    set an_sub_type_id_p [info exists an_arr(sub_type_id)]
+    if { $an_sub_type_id_p } {
+        if { $an_arr(sub_type_id) in [hf_asset_type_id_list] } {
+            set an_sub_type $an_arr(sub_type_id)
+        } else {
+            #   set an_sub_type ""
+            set an_sub_type_id_p 0
+            set an_arr(sub_type_id) ""
+        }
     }
 
     # Default to most specific case.
     set state ""
     set state_old $state
 
-    if { $sub_f_id_is_primary_p } {
-        set state "asset_primary_attr"
-    } elseif { $sub_asset_id_p && $asset_id_p } {
-        set state "asset_attr"
-    } elseif { $sub_asset_id_p } {
-        set state "attr_only" 
-    } elseif { $asset_id_p } {
-        # see *_supplied_p vars for intention.
-        if { $sub_f_id_supplied_p && $asset_type_id_p } {
-            # assume there was a problem with sub_f_id
-            # offer a new attribute of same type
-            set state "asset_attr"
-        } else {
-            set state "asset_only"
-        }
-    } elseif { $asset_type_id_p } {
-        # see *_supplied_p vars for intention.
-        if { $asset_id_supplied_p && $sub_f_id_supplied_p } {
-            set state "asset_attr"
-        } elseif { $sub_f_id_supplied_p } {
-            set state "attr_only"
-        } elseif { $asset_id_supplied_p } {
-            set state "asset_only"
-        } else {
-            # create a blank asset_primary_attr
-            set state "asset_primary_attr"
-        }
-    } elseif { [info exists an_arr(sub_type_id)] || [info exists_an_arr(type_id) ] } {
-        set an_type_id [value_if_exists an_arr(type_id)]
-        set an_sub_type_id [value_if_exists an_arr(sub_type_id)]
-        set an_type_id_p 0
-        set an_sub_type_id_p 0
-        if { $an_type_id in [hf_asset_type_id_list] } {
-            set an_type_id_p 1
-        }
-        if { $an_sub_type_id in [hf_asset_type_id_list] } {
-            set an_sub_type_id_p 1
-        }
-        if { $an_type_id_p && $an_sub_type_id_p && $an_type_id eq $an_sub_type_id } {
-            # must be new, so primary
-            set state "asset_primary_attr"
-        } elseif { $an_type_id_p && $an_sub_type_id } {
-            set state "asset_attr"
-        } elseif { $an_type_id_p } {
-            set state "asset_only" 
-        } elseif { $an_sub_type_id_p } {
-            set state "attr_only"
-        } elseif { $state eq "" } {
-            ns_log Warning "hf_constructor_a.174: array type_id and/or sub_type_id not valid. \
- type_id '${an_type_id}' sub_type_id '${an_sub_type_id}'. Both set to ''"
-            set an_arr(sub_type_id) ""
-            set an_arr(type_id) ""
-        }
-    } else {
-        if { $arg1 eq "default" } {
-            if { $state eq "" } {
-                if { $arg2 in [list asset_primary_attr asset_attr attr_only asset_only] } {
-                    set state $arg2
-                    ns_log Notice "hf_constructor_a.156: using default asset_type arg2 '${arg2}'"
-                    if { $asset_type_id eq "" } {
-                        if { $arg3 in [hf_asset_type_id_list] } {
-                            ns_log Notice "hf_constructor_a.177: using default asset_type_id/arg3 '${arg3}'"
-                            set asset_type_id $arg3
-                        } elseif { $arg3 ne "" } {
-                            ns_log Warning "hf_constructor_a.183: arg3 '${arg3}' not valid."
-                            set arg3 ""
-                        }
-                    }
-                } else {
-                    ns_log Warning "hf_constructor_a.178: arg2 '${arg2}' not valid"
-                }
-            }
-        } 
-        # provide default default
-        if { $state eq "" } {
-            set state "attr_only"
-            ns_log Notice "hf_constructor_a.164: using default default ie asset_type 'attr_only'"
+    # sanity check
+    if { $an_type_id_p && $asset_type_id_p } {
+        if { $an_type_id ne $asset_type_id } {
+            ns_log Warning "hf_constructor_a.153: an_type_id '${an_type_id} != asset_type_id '${asset_type_id}'. \
+ state must be attr_only'"
+            set state 'attr_only'
         }
     }
-
+    if { $state eq "" } {
+        if { $sub_f_id_is_primary_p } {
+            set state "asset_primary_attr"
+        } elseif { $sub_asset_id_p && $asset_id_p } {
+            set state "asset_attr"
+        } elseif { $sub_asset_id_p } {
+            set state "attr_only" 
+        } elseif { $asset_id_p } {
+            # see *_supplied_p vars for intention.
+            if { $sub_f_id_supplied_p && $asset_type_id_p } {
+                # assume there was a problem with sub_f_id
+                # offer a new attribute of same type
+                set state "asset_attr"
+            } else {
+                set state "asset_only"
+            }
+        } elseif { $asset_type_id_p && ( $asset_id_supplied_p || $sub_f_id_supplied_p ) } {
+            # see *_supplied_p vars for intention.
+            if { $asset_id_supplied_p && $sub_f_id_supplied_p } {
+                if { $an_sub_type_id_p && $an_type_id_p } {
+                    if { $an_sub_type_id eq $an_type_id } {
+                        set state "asset_primary_attr"
+                    } else {
+                        set state "asset_attr"
+                    }
+                }
+            } elseif { $sub_f_id_supplied_p } {
+                set state "attr_only"
+            } elseif { $asset_id_supplied_p } {
+                set state "asset_only"
+            } else {
+                # create a blank asset_primary_attr
+                set state "asset_primary_attr"
+            }
+        } elseif { $an_type_id_p || $an_sub_type_id_p  } {
+            if { $an_type_id_p && $an_sub_type_id_p && $an_type_id eq $an_sub_type_id } {
+                # must be new, so primary
+                set state "asset_primary_attr"
+            } elseif { $an_type_id_p && $an_sub_type_id } {
+                set state "asset_attr"
+            } elseif { $an_type_id_p } {
+                set state "asset_only" 
+            } elseif { $an_sub_type_id_p } {
+                set state "attr_only"
+            } elseif { $state eq "" } {
+                ns_log Warning "hf_constructor_a.174: array type_id and/or sub_type_id not valid. \
+ type_id '${an_type_id}' sub_type_id '${an_sub_type_id}'. Both set to ''"
+                set an_arr(sub_type_id) ""
+                set an_arr(type_id) ""
+            }
+        } else {
+            if { $arg1 eq "default" } {
+                if { $state eq "" } {
+                    if { $arg2 in [list asset_primary_attr asset_attr attr_only asset_only] } {
+                        set state $arg2
+                        ns_log Notice "hf_constructor_a.156: using default asset_type arg2 '${arg2}'"
+                        if { $asset_type_id eq "" } {
+                            if { $arg3 in [hf_asset_type_id_list] } {
+                                ns_log Notice "hf_constructor_a.177: using default asset_type_id/arg3 '${arg3}'"
+                                set asset_type_id $arg3
+                            } elseif { $arg3 ne "" } {
+                                ns_log Warning "hf_constructor_a.183: arg3 '${arg3}' not valid."
+                                set arg3 ""
+                            }
+                        }
+                    } else {
+                        ns_log Warning "hf_constructor_a.178: arg2 '${arg2}' not valid"
+                    }
+                }
+            } 
+            # provide default default
+            if { $state eq "" } {
+                set state "attr_only"
+                ns_log Notice "hf_constructor_a.164: using default default ie asset_type 'attr_only'"
+            }
+        }
+    }
     if { $arg1 eq "force" } {
         # only makes sense when asset_only, attr_only, or asset_primary_attr
         if { $state ne $arg2 } {
@@ -281,7 +314,7 @@ ad_proc -public hf_constructor_a {
                 set keys_list [set_union $keys_list [hf_sub_asset_map_keys]]
                 
             } else {
-            
+                
                 ns_log Warning "hf_constructor_a.193: unknown asset_type_id '${asset_type_id}', sub_type_id '${sub_type_id}'  ad_script_abort"
                 ad_script_abort
             }
