@@ -195,7 +195,17 @@ ad_proc -public hf_constructor_a {
                 # offer a new attribute of same type
                 set state "asset_attr"
             } else {
-                set state "asset_only"
+                if { $primary_attr_id ne "" } {
+                    ns_log Notice "hf_constructor_a.160 asset info supplied as asset_only, but has primary attribute. set state 'asset_primary_attr'"
+                    set state "asset_primary_attr"
+                    set sub_f_id $primary_attr_id
+                    set f_id $f_id_of_asset_id
+                    set an_arr(f_id) $f_id
+                    set an_arr(sub_f_id) $primary_attr_id
+                    set an_arr(sub_type_id) $asset_type_id
+                } else {
+                    set state "asset_only"
+                }
             }
         } elseif { $asset_type_id_p && ( $asset_id_supplied_p || $sub_f_id_supplied_p ) } {
             # see *_supplied_p vars for intention.
@@ -216,7 +226,7 @@ ad_proc -public hf_constructor_a {
                 set state "asset_primary_attr"
             }
         } elseif { $an_type_id_p || $an_sub_type_id_p } {
-            ns_log Notice "hf_constructor_a.165: an_type_id_p '${an_type_id_p}' an_sub_type_id_p '${an_sub_type_id_p}' an_type_id '${an_type_id}' an_sub_type_id '${an_sub_type_id}' "
+            #ns_log Notice "hf_constructor_a.165: an_type_id_p '${an_type_id_p}' an_sub_type_id_p '${an_sub_type_id_p}' an_type_id '${an_type_id}' an_sub_type_id '${an_sub_type_id}' "
             if { $an_type_id_p && $an_sub_type_id_p } {
                 if { $an_type_id eq $an_sub_type_id } {
                     # must be new, so primary
@@ -396,7 +406,7 @@ ad_proc -public hf_constructor_b {
     upvar 1 user_id user_id
 
     set asset_type [hf_constructor_a yan_arr $arg1 $arg2 $arg3]
-    ns_log Notice "hf_constructor_b.358: asset_type '${asset_type}'"
+    #ns_log Notice "hf_constructor_b.358: asset_type '${asset_type}'"
     if { $asset_id ne "" && $f_id ne "" } {
         set asset_id_old $asset_id
         set asset_id [hf_asset_id_of_f_id_if_untrashed $f_id]
@@ -428,6 +438,7 @@ ad_proc -public hf_constructor_b {
         }
         set sub_asset_map_list [hf_sub_asset $sub_f_id $f_id]
         qf_lists_to_array yan_arr $sub_asset_map_list [hf_sub_asset_map_keys]
+        set sub_type_id $yan_arr(sub_type_id)
         if { $sub_type_id in [hf_asset_type_id_list] } {
             set sub_asset_list [hf_${sub_type_id}_read $sub_f_id]
             qf_lists_to_array yan_arr $sub_asset_list [hf_${sub_type_id}_keys]
