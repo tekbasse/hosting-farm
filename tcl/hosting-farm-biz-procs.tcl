@@ -129,7 +129,7 @@ ad_proc -public hf_constructor_a {
 
 
     # determine sub_is_primary_p
-    if { $sub_asset_id_p && $asset_id_p && $primary_attr_id eq $sub_f_id } {
+    if { $sub_asset_id_p && $asset_id_p && ( $primary_attr_id eq $sub_f_id ) } {
         set sub_f_id_is_primary_p 1
     }
 
@@ -215,12 +215,15 @@ ad_proc -public hf_constructor_a {
                 # create a blank asset_primary_attr
                 set state "asset_primary_attr"
             }
-        } elseif { $an_type_id_p || $an_sub_type_id_p  } {
-            if { $an_type_id_p && $an_sub_type_id_p && $an_type_id eq $an_sub_type_id } {
-                # must be new, so primary
-                set state "asset_primary_attr"
-            } elseif { $an_type_id_p && $an_sub_type_id } {
-                set state "asset_attr"
+        } elseif { $an_type_id_p || $an_sub_type_id_p } {
+            ns_log Notice "hf_constructor_a.165: an_type_id_p '${an_type_id_p}' an_sub_type_id_p '${an_sub_type_id_p}' an_type_id '${an_type_id}' an_sub_type_id '${an_sub_type_id}' "
+            if { $an_type_id_p && $an_sub_type_id_p } {
+                if { $an_type_id eq $an_sub_type_id } {
+                    # must be new, so primary
+                    set state "asset_primary_attr"
+                } else { 
+                    set state "asset_attr"
+                }
             } elseif { $an_type_id_p } {
                 set state "asset_only" 
             } elseif { $an_sub_type_id_p } {
