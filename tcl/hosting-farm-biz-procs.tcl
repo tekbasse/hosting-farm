@@ -104,27 +104,30 @@ ad_proc -public hf_constructor_a {
     # determine sub_asset_id_p
     if { $sub_f_id ne "" || $primary_attr_id ne "" } {
         set sub_f_id_supplied_p 1
-        set sub_f_id [qal_first_nonempty_in_list [list $primary_attr_id $sub_f_id]]
+        set sub_f_id [qal_first_nonempty_in_list [list $sub_f_id $primary_attr_id]]
         set sub_list [hf_sub_asset $sub_f_id $f_id]
-        qf_lists_to_array sub_arr $sub_list [hf_sub_asset_map_keys]
-        if { $sub_arr(trashed_p) } {
-            # sub_f_id is not current 
-            # do not use.
-            ns_log Warning "hf_constructor_a.112: sub_f_id '${sub_f_id}' is trashed. Setting sub_f_id ''"
-            set sub_f_id ""
-        }
-        if { ![qf_is_true $sub_arr(trashed_p) ] } {
-            if { $f_id ne "" } {
-                set asset_f_id [hf_asset_f_id_of_sub_f_id $sub_f_id]
-                if { $sub_arr(f_id) eq $f_id || $asset_f_id eq $f_id } {
-                    set sub_asset_id_p 1
-                    array set an_arr [array get sub_arr]
-                } else {
-                    ns_log Warning "hf_constructor_a.122: Unexpected f_id '${f_id}' s/b '${asset_f_id}' or '$sub_arr(f_id)' Setting to ''"
-                    set f_id ""
-                    set sub_f_id ""
+        if { [llength $sub_list] > 0 } {
+            qf_lists_to_array sub_arr $sub_list [hf_sub_asset_map_keys]
+            if { [qf_is_true $sub_arr(trashed_p)] } {
+                # sub_f_id is not current 
+                # do not use.
+                ns_log Warning "hf_constructor_a.112: sub_f_id '${sub_f_id}' is trashed. Setting sub_f_id ''"
+                set sub_f_id ""
+            } else {
+                if { $f_id ne "" } {
+                    set asset_f_id [hf_asset_f_id_of_sub_f_id $sub_f_id]
+                    if { $sub_arr(f_id) eq $f_id || $asset_f_id eq $f_id } {
+                        set sub_asset_id_p 1
+                        array set an_arr [array get sub_arr]
+                    } else {
+                        ns_log Warning "hf_constructor_a.122: Unexpected f_id '${f_id}' s/b '${asset_f_id}' or '$sub_arr(f_id)' Setting to ''"
+                        set f_id ""
+                        set sub_f_id ""
+                    }
                 }
             }
+        } else {
+            ns_log Warning "hf_constructor_a.130: hf_sub_asset sub_f_id '${sub_f_id}' f_id '${f_id}' not found, but expected."
         }
     }
 
@@ -164,6 +167,7 @@ ad_proc -public hf_constructor_a {
             set an_sub_type_id $an_arr(sub_type_id)
         } else {
             #   set an_sub_type_id ""
+            ns_log Warning "hf_constructor_a.172: an_arr(sub_type_id) '$an_arr(sub_type_id)' setting to ''."
             set an_sub_type_id_p 0
             set an_arr(sub_type_id) ""
         }
@@ -185,10 +189,13 @@ ad_proc -public hf_constructor_a {
     if { $state eq "" } {
         if { $sub_f_id_is_primary_p } {
             set state "asset_primary_attr"
+            ns_log Notice "hf_constructor_a.188"
         } elseif { $sub_asset_id_p && $asset_id_p } {
             set state "asset_attr"
+            ns_log Notice "hf_constructor_a.191"
         } elseif { $sub_asset_id_p } {
             set state "attr_only" 
+            ns_log Notice "hf_constructor_a.194"
         } elseif { $asset_id_p } {
             # see *_supplied_p vars for intention.
             if { $sub_f_id_supplied_p && $asset_type_id_p } {
@@ -218,18 +225,22 @@ ad_proc -public hf_constructor_a {
                 if { $an_sub_type_id_p && $an_type_id_p } {
                     if { $an_sub_type_id eq $an_type_id } {
                         set state "asset_primary_attr"
+                        ns_log Notice "hf_constructor_a.210"
                     } else {
                         set state "asset_attr"
-ns_log Notice "hf_constructor_a.220"
+                        ns_log Notice "hf_constructor_a.220"
                     }
                 }
             } elseif { $sub_f_id_supplied_p } {
                 set state "attr_only"
+                ns_log Notice "hf_constructor_a.232"
             } elseif { $asset_id_supplied_p } {
                 set state "asset_only"
+                ns_log Notice "hf_constructor_a.235"
             } else {
                 # create a blank asset_primary_attr
                 set state "asset_primary_attr"
+                ns_log Notice "hf_constructor_a.239"
             }
         } elseif { $an_type_id_p || $an_sub_type_id_p } {
             #ns_log Notice "hf_constructor_a.232: an_type_id_p '${an_type_id_p}' an_sub_type_id_p '${an_sub_type_id_p}' an_type_id '${an_type_id}' an_sub_type_id '${an_sub_type_id}' "
@@ -237,14 +248,17 @@ ns_log Notice "hf_constructor_a.220"
                 if { $an_type_id eq $an_sub_type_id } {
                     # must be new, so primary
                     set state "asset_primary_attr"
+                ns_log Notice "hf_constructor_a.247"
                 } else { 
                     set state "asset_attr"
                     ns_log Notice "hf_constructor_a.239: an_type_id '${an_type_id}' an_sub_type_id '${an_sub_type_id}'"
                 }
             } elseif { $an_type_id_p } {
                 set state "asset_only" 
+                ns_log Notice "hf_constructor_a.241"
             } elseif { $an_sub_type_id_p } {
                 set state "attr_only"
+                ns_log Notice "hf_constructor_a.243"
             } elseif { $state eq "" } {
                 ns_log Warning "hf_constructor_a.246: array type_id and/or sub_type_id not valid. \
  type_id '${an_type_id}' sub_type_id '${an_sub_type_id}'. Both set to ''"

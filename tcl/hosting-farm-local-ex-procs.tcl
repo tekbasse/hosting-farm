@@ -788,11 +788,15 @@ ad_proc -private hfl_attribute_field_validation {
     } else {
         set no_prior_p 0
     }
-    set sub_type_id [value_if_exists $attr_arr(sub_type_id) ]
-    if { $sub_type_id eq "" } {
+    if { [info exists attr_arr(sub_type_id) ] } {
+        set sub_type_id $attr_arr(sub_type_id)
+    } else {
+        set sub_type_id ""
         ns_log Warning "hfl_attribute_field_validation.1000: No sub_type_id in array. Unable to validate attribute."
         set attr_validated_p 0
-    } else {
+    }
+
+    if { $sub_type_id ne "" } {
         # ns keys 
         # instance_id ns_id active_p name_record time_trashed time_created
         # ni keys 
