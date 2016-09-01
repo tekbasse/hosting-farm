@@ -598,7 +598,7 @@ if { !$form_posted_p } {
         }
 
         if { $mode eq "w" } {
-            if { $write_p } {
+            if { $write_p || $adnib_p } {
                 # ad-unquotehtml values before posting to db
                 array set obj_arr [array get input_arr]
                 set form_state [hf_constructor_a obj_arr ]
@@ -613,7 +613,7 @@ if { !$form_posted_p } {
                         set valid_input_p [hfl_asset_field_validation obj_arr]
                         if { !$valid_input_p } {
                             set mode_next "e"
-                            ns_log Notice "hosting-farm/assets.tcl.450: asset input validation issues. set mode_next '${mode_next}'"
+                            ns_log Notice "hosting-farm/assets.tcl.470: asset input validation issues. set mode_next '${mode_next}'"
                         } else {
                             set asset_id [hf_asset_write obj_arr]
                             set obj_arr(f_id) $asset_id
@@ -623,7 +623,7 @@ if { !$form_posted_p } {
                         set valid_input_p [hfl_attribute_field_validation obj_arr]
                         if { !$valid_input_p } {
                             set mode_next "e"
-                            ns_log Notice "hosting-farm/assets.tcl.455: asset input validation issues. set mode_next '${mode_next}'"
+                            ns_log Notice "hosting-farm/assets.tcl.475: asset input validation issues. set mode_next '${mode_next}'"
                         } else {
                             set sub_type_id $obj_arr(sub_type_id)
                             set sub_f_id [hf_${sub_type_id}_write obj_arr]

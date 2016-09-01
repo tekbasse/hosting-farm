@@ -102,8 +102,9 @@ ad_proc -public hf_constructor_a {
     }
 
     # determine sub_asset_id_p
-    if { $sub_f_id ne "" } {
+    if { $sub_f_id ne "" || $primary_attr_id ne "" } {
         set sub_f_id_supplied_p 1
+        set sub_f_id [qal_first_nonempty_in_list [list $primary_attr_id $sub_f_id]]
         set sub_list [hf_sub_asset $sub_f_id $f_id]
         qf_lists_to_array sub_arr $sub_list [hf_sub_asset_map_keys]
         if { $sub_arr(trashed_p) } {
@@ -201,9 +202,11 @@ ad_proc -public hf_constructor_a {
                     set state "asset_primary_attr"
                     set sub_f_id $primary_attr_id
                     set f_id $f_id_of_asset_id
-                    set an_arr(f_id) $f_id
+                    set an_arr(f_id) $sub_arr(f_id)
                     set an_arr(sub_f_id) $primary_attr_id
+                    set asset_type_id  $sub_arr(sub_type_id)
                     set an_arr(sub_type_id) $asset_type_id
+                    set an_arr(type_id) $asset_type_id
                 } else {
                     set state "asset_only"
                     ns_log Notice "hf_constructor_a.209"
@@ -322,6 +325,9 @@ ns_log Notice "hf_constructor_a.220"
         } else {
             # attr_only
             set sub_type_id ""
+            if { $an_sub_type_id_p } {
+                set sub_type_id $an_arr(sub_type_id)
+            }
             if { [info exists sub_arr(sub_type_id) ] } {
                 set sub_type_id $sub_arr(sub_type_id)
             }
