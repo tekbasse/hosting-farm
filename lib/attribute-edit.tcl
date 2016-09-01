@@ -106,9 +106,7 @@ if { [exists_and_not_null sub_type_id] } {
 
 
 # output
-foreach key [array names attr_arr] {
-    set attr_arr(${key}) [qf_unquote $attr_arr(${key}) ]
-}
+
 
 set cancel_link_html "<a href=\"${base_url}\">#acs-kernel.common_Cancel#</a>"
 

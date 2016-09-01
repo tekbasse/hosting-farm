@@ -139,9 +139,6 @@ set has_icon_p [file exists [file join $acs_root packages hosting-farm www $icon
 set has_bg_image_p [file exists [file join $acs_root packages hosting-farm www $bg_image_url]]
 
 # output
-foreach key [array names asset_arr] {
-    set asset_arr(${key}) [qf_unquote $asset_arr(${key}) ]
-}
 
 set cancel_link_html "<a href=\"${base_url}\">#acs-kernel.common_Cancel#</a>"
 
