@@ -556,7 +556,7 @@ ad_proc -private hf_attribute_map_update {
     }
     # update existing attrbute maps
     set nowts [dt_systime -gmt 1]
-    ns_log Notice "hf_attribute_map_update.551: old_id '${old_id}' new_id '${new_id}'"
+    ns_log Notice "hf_attribute_map_update.551: inputs: old_id '${old_id}' new_id '${new_id}' to: sub_f_id_new '${sub_f_id_new}'"
     db_transaction {
         db_dml hf_attribute_map_sub_f_id_update { 
             update hf_sub_asset_map
