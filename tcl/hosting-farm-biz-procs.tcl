@@ -109,7 +109,7 @@ ad_proc -public hf_constructor_a {
         if { $sub_arr(trashed_p) } {
             # sub_f_id is not current 
             # do not use.
-            ns_log Warning "hf_constructor_a.106: sub_f_id '${sub_f_id}' is trashed. Setting sub_f_id ''"
+            ns_log Warning "hf_constructor_a.112: sub_f_id '${sub_f_id}' is trashed. Setting sub_f_id ''"
             set sub_f_id ""
         }
         if { ![qf_is_true $sub_arr(trashed_p) ] } {
@@ -119,7 +119,7 @@ ad_proc -public hf_constructor_a {
                     set sub_asset_id_p 1
                     array set an_arr [array get sub_arr]
                 } else {
-                    ns_log Warning "hf_constructor_a.114: Unexpected f_id '${f_id}' s/b '${asset_f_id}' or '$sub_arr(f_id)' Setting to ''"
+                    ns_log Warning "hf_constructor_a.122: Unexpected f_id '${f_id}' s/b '${asset_f_id}' or '$sub_arr(f_id)' Setting to ''"
                     set f_id ""
                     set sub_f_id ""
                 }
@@ -160,9 +160,9 @@ ad_proc -public hf_constructor_a {
     set an_sub_type_id_p [info exists an_arr(sub_type_id)]
     if { $an_sub_type_id_p } {
         if { $an_arr(sub_type_id) in [hf_asset_type_id_list] } {
-            set an_sub_type $an_arr(sub_type_id)
+            set an_sub_type_id $an_arr(sub_type_id)
         } else {
-            #   set an_sub_type ""
+            #   set an_sub_type_id ""
             set an_sub_type_id_p 0
             set an_arr(sub_type_id) ""
         }
@@ -175,7 +175,7 @@ ad_proc -public hf_constructor_a {
     # sanity check
     if { $an_type_id_p && $asset_type_id_p } {
         if { $an_type_id ne $asset_type_id } {
-            ns_log Warning "hf_constructor_a.153: an_type_id '${an_type_id} != asset_type_id '${asset_type_id}'. \
+            ns_log Warning "hf_constructor_a.178: an_type_id '${an_type_id} != asset_type_id '${asset_type_id}'. \
  state must be 'attr_only'"
             set state "attr_only"
         }
@@ -194,6 +194,7 @@ ad_proc -public hf_constructor_a {
                 # assume there was a problem with sub_f_id
                 # offer a new attribute of same type
                 set state "asset_attr"
+                ns_log Notice "hf_constructor_a.197"
             } else {
                 if { $primary_attr_id ne "" } {
                     ns_log Notice "hf_constructor_a.160 asset info supplied as asset_only, but has primary attribute. set state 'asset_primary_attr'"
@@ -205,6 +206,7 @@ ad_proc -public hf_constructor_a {
                     set an_arr(sub_type_id) $asset_type_id
                 } else {
                     set state "asset_only"
+                    ns_log Notice "hf_constructor_a.209"
                 }
             }
         } elseif { $asset_type_id_p && ( $asset_id_supplied_p || $sub_f_id_supplied_p ) } {
@@ -215,6 +217,7 @@ ad_proc -public hf_constructor_a {
                         set state "asset_primary_attr"
                     } else {
                         set state "asset_attr"
+ns_log Notice "hf_constructor_a.220"
                     }
                 }
             } elseif { $sub_f_id_supplied_p } {
@@ -226,20 +229,21 @@ ad_proc -public hf_constructor_a {
                 set state "asset_primary_attr"
             }
         } elseif { $an_type_id_p || $an_sub_type_id_p } {
-            #ns_log Notice "hf_constructor_a.165: an_type_id_p '${an_type_id_p}' an_sub_type_id_p '${an_sub_type_id_p}' an_type_id '${an_type_id}' an_sub_type_id '${an_sub_type_id}' "
+            #ns_log Notice "hf_constructor_a.232: an_type_id_p '${an_type_id_p}' an_sub_type_id_p '${an_sub_type_id_p}' an_type_id '${an_type_id}' an_sub_type_id '${an_sub_type_id}' "
             if { $an_type_id_p && $an_sub_type_id_p } {
                 if { $an_type_id eq $an_sub_type_id } {
                     # must be new, so primary
                     set state "asset_primary_attr"
                 } else { 
                     set state "asset_attr"
+                    ns_log Notice "hf_constructor_a.239: an_type_id '${an_type_id}' an_sub_type_id '${an_sub_type_id}'"
                 }
             } elseif { $an_type_id_p } {
                 set state "asset_only" 
             } elseif { $an_sub_type_id_p } {
                 set state "attr_only"
             } elseif { $state eq "" } {
-                ns_log Warning "hf_constructor_a.174: array type_id and/or sub_type_id not valid. \
+                ns_log Warning "hf_constructor_a.246: array type_id and/or sub_type_id not valid. \
  type_id '${an_type_id}' sub_type_id '${an_sub_type_id}'. Both set to ''"
                 set an_arr(sub_type_id) ""
                 set an_arr(type_id) ""
@@ -249,25 +253,25 @@ ad_proc -public hf_constructor_a {
                 if { $state eq "" } {
                     if { $arg2 in [list asset_primary_attr asset_attr attr_only asset_only] } {
                         set state $arg2
-                        ns_log Notice "hf_constructor_a.156: using default asset_type arg2 '${arg2}'"
+                        ns_log Notice "hf_constructor_a.256: using default asset_type arg2 '${arg2}'"
                         if { $asset_type_id eq "" } {
                             if { $arg3 in [hf_asset_type_id_list] } {
-                                ns_log Notice "hf_constructor_a.177: using default asset_type_id/arg3 '${arg3}'"
+                                ns_log Notice "hf_constructor_a.259: using default asset_type_id/arg3 '${arg3}'"
                                 set asset_type_id $arg3
                             } elseif { $arg3 ne "" } {
-                                ns_log Warning "hf_constructor_a.183: arg3 '${arg3}' not valid."
+                                ns_log Warning "hf_constructor_a.262: arg3 '${arg3}' not valid."
                                 set arg3 ""
                             }
                         }
                     } else {
-                        ns_log Warning "hf_constructor_a.178: arg2 '${arg2}' not valid"
+                        ns_log Warning "hf_constructor_a.267: arg2 '${arg2}' not valid"
                     }
                 }
             } 
             # provide default default
             if { $state eq "" } {
                 set state "attr_only"
-                ns_log Notice "hf_constructor_a.164: using default default ie asset_type 'attr_only'"
+                ns_log Notice "hf_constructor_a.274: using default default ie asset_type 'attr_only'"
             }
         }
     }
@@ -276,16 +280,16 @@ ad_proc -public hf_constructor_a {
         if { $state ne $arg2 } {
             set state_old $state
             set state $arg2
-            ns_log Notice "hf_constructor_a.189: state forced from '${state_old}' to '${arg2}'"
+            ns_log Notice "hf_constructor_a.283: state forced from '${state_old}' to '${arg2}'"
             # set state_forced_p 1
         }
         if { $asset_type_id ne $arg3 } {
             if { $arg3 in [hf_asset_type_id_list] } {
                 set asset_type_id_old $asset_type_id
                 set asset_type_id $arg3
-                ns_log Notice "hf_constructor_a.194: asset_type_id forced from '${asset_type_id_old}' to '${arg3}'"
+                ns_log Notice "hf_constructor_a.290: asset_type_id forced from '${asset_type_id_old}' to '${arg3}'"
             } elseif { $arg3 ne "" } {
-                ns_log Warning "hf_constructor_a.199: asset_type_id supplied by force '${arg3}' is not valid"
+                ns_log Warning "hf_constructor_a.292: asset_type_id supplied by force '${arg3}' is not valid"
                 set arg3 ""
             }
             # set asset_type_id_forced_p 1
@@ -333,7 +337,7 @@ ad_proc -public hf_constructor_a {
                 
             } else {
                 
-                ns_log Warning "hf_constructor_a.193: unknown asset_type_id '${asset_type_id}', sub_type_id '${sub_type_id}'  ad_script_abort"
+                ns_log Warning "hf_constructor_a.340: unknown asset_type_id '${asset_type_id}', sub_type_id '${sub_type_id}'  ad_script_abort"
                 ad_script_abort
             }
         }
@@ -350,7 +354,7 @@ ad_proc -public hf_constructor_a {
         # maybe save a trip to db to get f_id
         set f_id $f_id_of_asset_id
     }
-    #ns_log Notice "hf_constructor_a.227: array get ${a_arr_name} '[array get an_arr]'"
+    #ns_log Notice "hf_constructor_a.357: array get ${a_arr_name} '[array get an_arr]'"
     return $state
 }
 
@@ -406,26 +410,26 @@ ad_proc -public hf_constructor_b {
     upvar 1 user_id user_id
 
     set asset_type [hf_constructor_a yan_arr $arg1 $arg2 $arg3]
-    #ns_log Notice "hf_constructor_b.358: asset_type '${asset_type}'"
+    #ns_log Notice "hf_constructor_b.413: asset_type '${asset_type}'"
     if { $asset_id ne "" && $f_id ne "" } {
         set asset_id_old $asset_id
         set asset_id [hf_asset_id_of_f_id_if_untrashed $f_id]
         if { $asset_id ne $asset_id_old } {
-            ns_log Warning "hf_constructor_b.282: asset_id changed from '${asset_id_old}' to '${asset_id}'"
+            ns_log Warning "hf_constructor_b.418: asset_id changed from '${asset_id_old}' to '${asset_id}'"
         }
     }
     if { $asset_id ne "" } {
         set asset_list [hf_asset_read $asset_id]
-        #ns_log Notice "hf_constructor_b.292: asset_list '${asset_list}'"
+        ns_log Notice "hf_constructor_b.423: asset_list '${asset_list}'"
         set hf_asset_keys_list [hf_asset_keys]
         set result_list [qf_lists_to_array yan_arr $asset_list $hf_asset_keys_list]
         if { [llength $asset_list] != [llength $hf_asset_keys_list] || [llength $result_list] > 0 } {
-            ns_log Warning "hf_constructor_b.295: asset_list length differs from hf_asset_keys"
+            ns_log Warning "hf_constructor_b.427: asset_list length differs from hf_asset_keys"
         }
         #array set yan_arr \[array get yan2_arr\]
     } 
     if { [string match "*asset*" $asset_type] && ![exists_and_not_null yan_arr(asset_id) ] } {
-        ns_log Warning "hf_constructor_b.293: asset_id '${asset_id}' not set in ${a_array_name}.\
+        ns_log Warning "hf_constructor_b.432: asset_id '${asset_id}' not set in ${a_array_name}.\
  array get: '[array get yan_arr]'"
 
     }
@@ -443,11 +447,11 @@ ad_proc -public hf_constructor_b {
             set sub_asset_list [hf_${sub_type_id}_read $sub_f_id]
             qf_lists_to_array yan_arr $sub_asset_list [hf_${sub_type_id}_keys]
         } else {
-            ns_log Warning "hf_constructor_b.296: sub_type_id not valid '${sub_type_id}'"
+            ns_log Warning "hf_constructor_b.450: sub_type_id not valid '${sub_type_id}'"
         }
     }
     if { [string match "*attr*" $asset_type ] && ![exists_and_not_null yan_arr(sub_f_id) ] } {
-        ns_log Warning "hf_constructor_b.303: sub_f_id '${sub_f_id}' not set in ${a_array_name}.\
+        ns_log Warning "hf_constructor_b.454: sub_f_id '${sub_f_id}' not set in ${a_array_name}.\
  array get: '[array get yan_arr]'"
     }
     return $asset_type
