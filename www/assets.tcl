@@ -554,11 +554,6 @@ if { !$form_posted_p } {
             if { $create_p } {
                 # create only. 
 
-                # ad-unquotehtml values before posting to db or a form
-                foreach key [array names obj_arr] {
-                    set obj_arr(${key}) [ad_unquotehtml $obj_arr(${key})]
-                }
-
                 if { [string match "*asset*" $asset_type ] } {
                     # first asset_id is f_id
                     set asset_id [hf_asset_create obj_arr]
@@ -599,15 +594,12 @@ if { !$form_posted_p } {
 
         if { $mode eq "w" } {
             if { $write_p || $adnib_p } {
-                # ad-unquotehtml values before posting to db
+
                 array set obj_arr [array get input_arr]
                 set form_state [hf_constructor_a obj_arr ]
                 if { $form_state eq $state && $asset_type_id ne "" } {
                     set asset_type $form_state
-                    # ad-unquotehtml values before posting to db or a form
-                    foreach key [array names obj_arr] {
-                        set obj_arr(${key}) [ad_unquotehtml $obj_arr(${key})]
-                    }
+
 
                     if { [string match "*asset*" $state] } {
                         set valid_input_p [hfl_asset_field_validation obj_arr]
@@ -617,6 +609,8 @@ if { !$form_posted_p } {
                         } else {
                             set asset_id [hf_asset_write obj_arr]
                             set obj_arr(f_id) $asset_id
+                            set f_id $asset_id
+                            set asset_type_id $obj_arr(asset_type_id)
                         }
                     }
                     if { [string match "*attr*" $state] } {
@@ -627,6 +621,9 @@ if { !$form_posted_p } {
                         } else {
                             set sub_type_id $obj_arr(sub_type_id)
                             set sub_f_id [hf_${sub_type_id}_write obj_arr]
+                            set obj_arr(sub_f_id) $sub_f_id
+                            set type_id $obj_arr(type_id)
+                            set f_id $obj_arr(f_id)
                         }
                     }
                     set mode $mode_next
@@ -816,9 +813,9 @@ switch -exact -- $mode {
             set title "#hosting-farm.Asset#"
 
             # ignore inputs from forms
-            # retrieve from db
-            array unset obj_arr
+            # retrieve data from db
             if { $asset_type eq "attr_only" } {
+                array unset obj_arr
                 array set obj_arr [array get sam_arr]
                 if { $sub_type_id in [hf_asset_type_id_list] } {
                     set sub_asset_list [hf_${sub_type_id}_read $sub_f_id]
