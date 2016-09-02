@@ -607,10 +607,14 @@ if { !$form_posted_p } {
                             set mode_next "e"
                             ns_log Notice "hosting-farm/assets.tcl.470: asset input validation issues. set mode_next '${mode_next}'"
                         } else {
+                            set asset_id_old $asset_id
                             set asset_id [hf_asset_write obj_arr]
-                            set obj_arr(f_id) $asset_id
-                            set f_id $asset_id
-                            set asset_type_id $obj_arr(asset_type_id)
+                            if { $asset_id ne "" } {
+                                set obj_arr(asset_id) $asset_id
+                                set asset_type_id $obj_arr(asset_type_id)
+                            } else {
+                                ns_log Warning "hosting-farm/assets.tcl.473: hf_asset_write returned '' for asset_id '${asset_id_old}' array get obj_arr '[array get obj_arr]'"
+                            }
                         }
                     }
                     if { [string match "*attr*" $state] } {
@@ -620,10 +624,15 @@ if { !$form_posted_p } {
                             ns_log Notice "hosting-farm/assets.tcl.475: asset input validation issues. set mode_next '${mode_next}'"
                         } else {
                             set sub_type_id $obj_arr(sub_type_id)
+                            set sub_f_id_old $sub_f_id
                             set sub_f_id [hf_${sub_type_id}_write obj_arr]
-                            set obj_arr(sub_f_id) $sub_f_id
-                            set type_id $obj_arr(type_id)
-                            set f_id $obj_arr(f_id)
+                            if { $sub_f_id ne "" } {
+                                set obj_arr(sub_f_id) $sub_f_id
+                                set type_id $obj_arr(type_id)
+                                set f_id $obj_arr(f_id)
+                            } else {
+                                ns_log Warning "hosting-farm/assets.tcl.483: hf_${sub_type_id}_write returned '' for sub_f_id '${sub_f_id_old}' array get obj_arr '[array get obj_arr]'"
+                            }
                         }
                     }
                     set mode $mode_next

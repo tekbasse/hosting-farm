@@ -246,6 +246,7 @@ id '${asset_id}' f_id '${f_id}' name '${name}' instance_id '${instance_id}' \
 user_id '${user_id}'"
                 ns_log Error "hf_asset_write: general db error during db_dml"
             }
+            set new_asset_id $asset_id
         } 
     } 
     return $new_asset_id
