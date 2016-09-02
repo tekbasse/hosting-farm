@@ -678,10 +678,10 @@ ad_proc -private hf_attributes_map_create {
     set sam_list [hf_sub_asset $f_id]
     if { [llength $sam_list ] > 0 } {
         qf_lists_to_vars $sam_list [hf_sub_asset_map_keys]
-        set sub_type_id $sub_asset_type_id
         if { $sub_label ne "" && $sub_label ne $sub_label_new } {
             set allowed_sub_type_id_list [hf_types_allowed_by $type_id]
             if { $sub_asset_type_id in $allowed_sub_type_id_list } {
+                set sub_type_id $sub_asset_type_id
                 set nowts [dt_systime -gmt 1]
                 set sub_f_id [db_nextval hf_id_seq]
                 set sub_sort_order [expr { [hf_asset_cascade_count $f_id ] * 20 } ]
@@ -767,7 +767,7 @@ ad_proc -private hf_attribute_asset_map_create {
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
             }
         } else {
-            ns_log Warning "hf_attribute_asset_map_create.741: sub_f_id '${sub_f_id}' sub_asset_type_id '${sub_asset_type_id}' cannot be dependent of f_id '${f_id}' type_id '${type_id}'. "
+            ns_log Warning "hf_attribute_asset_map_create.743: asset_type_id '${asset_type_id}' not in '${allowed_sub_type_id_list}'. sub_f_id '${sub_f_id}' f_id '${f_id}' sub_label '${sub_label}'. "
         }
     }
     return $success_p

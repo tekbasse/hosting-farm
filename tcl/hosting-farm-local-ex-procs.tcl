@@ -559,6 +559,18 @@ ad_proc -private hfl_asset_field_validation {
     upvar 1 write_p write_p
     upvar 1 admin_p admin_p
     upvar 1 pkg_admin_p pkg_admin_p
+    upvar 1 __hfl_afv_prior_error_p __hfl_afv_prior_error_p
+    if { ![info exists __hfl_afv_prior_error_p] } {
+        set __hfl_afv_prior_error_p 0
+    }
+    set message_list [list ]
+    set first_msg "#acs-tcl.lt_Problem_with_your_inp#"
+    # may already exist from hfl_asset_field_validation
+    if { $__hfl_afv_prior_error_p == 0 } {
+        lappend message_list $first_msg
+    }
+
+
     # asset_id  label  name  asset_type_id  trashed_p  trashed_by  template_p  templated_p  publish_p  monitor_p  popularity  triage_priority  op_status  qal_product_id  qal_customer_id  instance_id  user_id  last_modified  created  flags  template_id  f_id
     # some possibly useful input messages
     #acs-templating.required#  "required"
@@ -579,8 +591,7 @@ ad_proc -private hfl_asset_field_validation {
     # qf_is_natural_number
     # qf_is_integer
     set blank_okay_list [list user_id last_modified created asset_id popularity triage_priority op_status qal_product_id qal_customer_id flags template_id f_id last_modified trashed_by]
-    set message_list [list ]
-    lappend message_list "#acs-tcl.lt_Problem_with_your_inp#"
+
     set asset_validated_p 1
     foreach key [hf_asset_keys] {
         set validated_p 0
@@ -744,12 +755,13 @@ ad_proc -private hfl_asset_field_validation {
         # next brace ends foreach
         set asset_validated_p [expr { $asset_validated_p && $validated_p } ]
     }
-    if { [llength $message_list] > 1 } {
+    if { [llength $message_list] > $__hfl_afv_prior_error_p } {
         set validated_p 0
         foreach message $message_list {
             util_user_message -message $message
             ns_log Notice "hfl_asset_field_validation.693. message '${message}'"
         }
+        set __hfl_afv_prior_error_p 1
     } else {
         set validated_p 1
     }
@@ -775,19 +787,20 @@ ad_proc -private hfl_attribute_field_validation {
     upvar 1 write_p write_p
     upvar 1 admin_p admin_p
     upvar 1 pkg_admin_p pkg_admin_p
+    upvar 1 __hfl_afv_prior_error_p __hfl_afv_prior_error_p
 
-    set attr_validated_p 1
+    if { ![info exists __hfl_afv_prior_error_p] } {
+        set __hfl_afv_prior_error_p 0
+    }
     set message_list [list ]
-    set prior_messages_list [list ]
-    util_get_user_messages -keep -multirow prior_messages_list
     set first_msg "#acs-tcl.lt_Problem_with_your_inp#"
     # may already exist from hfl_asset_field_validation
-    if { $first_msg ni $prior_messages_list } {
+    if { $__hfl_afv_prior_error_p == 0 } {
         lappend message_list $first_msg
-        set no_prior_p 1
-    } else {
-        set no_prior_p 0
     }
+
+    set attr_validated_p 1
+
     if { [info exists attr_arr(sub_type_id) ] } {
         set sub_type_id $attr_arr(sub_type_id)
     } else {
@@ -1021,12 +1034,13 @@ ad_proc -private hfl_attribute_field_validation {
             set attr_validated_p [expr { $attr_validated_p && $validated_p } ]
         }
     } 
-    if { [llength $message_list] > $no_prior_p } {
+    if { [llength $message_list] > $__hfl_afv_prior_error_p } {
         set validated_p 0
         foreach message $message_list {
             util_user_message -message $message
             ns_log Notice "hfl_attribute_field_validation.1100. message '${message}'"
         }
+        set __hfl_afv_prior_error_p 1
     } else {
         set validated_p 1
     }
