@@ -238,6 +238,7 @@ ad_proc -public hf_asset_write {
                 ([hf_asset_keys ","])
                 values ([hf_asset_keys ",:"])"
                 hf_asset_rev_map_update $label $f_id $asset_id $trashed_p
+                hf_asset_trash $old_asset_id
                 ns_log Notice "hf_asset_write: \
  asset_id '${asset_id}' old_asset_id '${old_asset_id}'"
             } on_error {
@@ -407,6 +408,7 @@ ad_proc -public hf_asset_trash {
     asset_id
 } {
     Trashes an asset revision ie asset_id. Returns 1 if succeeds, else returns 0.
+    Trashed all revisionsif asset_id is current revision. 
     @param asset_id
     @return 1 or 0
 
@@ -429,7 +431,7 @@ ad_proc -public hf_asset_trash {
                 set last_modified $nowts
                 db_transaction {
                     db_dml hf_asset_trash {update hf_assets
-                        set trashed_p='1' 
+                        set trashed_p='1', trashed_by=:user_id, last_modified=current_timestamp
                         where asset_id=:asset_id 
                         and instance_id=:instance_id}
                     if { [hf_asset_id_current_q $asset_id ] } {

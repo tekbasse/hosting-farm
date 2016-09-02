@@ -551,13 +551,19 @@ ad_proc -private hf_attribute_map_update {
             set sub_f_id_new $new_id
         }
     } 
+
     if { $sub_f_id_new eq "" } {
         set sub_f_id_new [db_nextval hf_id_seq]
     }
+
+    set sam_list [hf_sub_asset $old_id]
+    qf_lists_to_vars $sam_list [hf_sub_asset_map_keys] [list sub_type_id]
+
     # update existing attrbute maps
     set nowts [dt_systime -gmt 1]
     ns_log Notice "hf_attribute_map_update.551: inputs: old_id '${old_id}' new_id '${new_id}' to: sub_f_id_new '${sub_f_id_new}'"
     db_transaction {
+        hf_${sub_type_id}_trash $old_id
         db_dml hf_attribute_map_sub_f_id_update { 
             update hf_sub_asset_map
             set sub_f_id=:sub_f_id_new,
