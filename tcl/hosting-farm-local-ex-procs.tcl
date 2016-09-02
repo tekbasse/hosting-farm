@@ -560,16 +560,14 @@ ad_proc -private hfl_asset_field_validation {
     upvar 1 admin_p admin_p
     upvar 1 pkg_admin_p pkg_admin_p
     upvar 1 __hfl_afv_prior_error_p __hfl_afv_prior_error_p
+
+
     if { ![info exists __hfl_afv_prior_error_p] } {
+    # may already exist from hfl_asset_field_validation
         set __hfl_afv_prior_error_p 0
     }
     set message_list [list ]
     set first_msg "#acs-tcl.lt_Problem_with_your_inp#"
-    # may already exist from hfl_asset_field_validation
-    if { $__hfl_afv_prior_error_p == 0 } {
-        lappend message_list $first_msg
-    }
-
 
     # asset_id  label  name  asset_type_id  trashed_p  trashed_by  template_p  templated_p  publish_p  monitor_p  popularity  triage_priority  op_status  qal_product_id  qal_customer_id  instance_id  user_id  last_modified  created  flags  template_id  f_id
     # some possibly useful input messages
@@ -755,8 +753,14 @@ ad_proc -private hfl_asset_field_validation {
         # next brace ends foreach
         set asset_validated_p [expr { $asset_validated_p && $validated_p } ]
     }
-    if { [llength $message_list] > $__hfl_afv_prior_error_p } {
+    if { [llength $message_list] > 0 } {
         set validated_p 0
+        if { $__hfl_afv_prior_error_p == 0 } {
+            # There have been no prior error messages
+            # Create a context intro message, just in case
+            util_user_message -message $first_msg
+            set __hfl_afv_prior_error_p 1
+        }
         foreach message $message_list {
             util_user_message -message $message
             ns_log Notice "hfl_asset_field_validation.693. message '${message}'"
@@ -790,13 +794,16 @@ ad_proc -private hfl_attribute_field_validation {
     upvar 1 __hfl_afv_prior_error_p __hfl_afv_prior_error_p
 
     if { ![info exists __hfl_afv_prior_error_p] } {
+    # may already exist from hfl_asset_field_validation
         set __hfl_afv_prior_error_p 0
     }
     set message_list [list ]
     set first_msg "#acs-tcl.lt_Problem_with_your_inp#"
-    # may already exist from hfl_asset_field_validation
     if { $__hfl_afv_prior_error_p == 0 } {
+        # There have been no prior error messages
+        # Create a context intro message, just in case
         lappend message_list $first_msg
+        set __hfl_afv_prior_error_p 1
     }
 
     set attr_validated_p 1
@@ -1034,8 +1041,14 @@ ad_proc -private hfl_attribute_field_validation {
             set attr_validated_p [expr { $attr_validated_p && $validated_p } ]
         }
     } 
-    if { [llength $message_list] > $__hfl_afv_prior_error_p } {
+    if { [llength $message_list] > 0} {
         set validated_p 0
+        if { $__hfl_afv_prior_error_p == 0 } {
+            # There have been no prior error messages
+            # Create a context intro message, just in case
+            util_user_message -message $first_msg
+            set __hfl_afv_prior_error_p 1
+        }
         foreach message $message_list {
             util_user_message -message $message
             ns_log Notice "hfl_attribute_field_validation.1100. message '${message}'"

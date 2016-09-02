@@ -208,10 +208,14 @@ ad_proc -public hf_constructor_a {
                     ns_log Notice "hf_constructor_a.160 asset info supplied as asset_only, but has primary attribute. set state 'asset_primary_attr'"
                     set state "asset_primary_attr"
                     set sub_f_id $primary_attr_id
-                    set f_id $f_id_of_asset_id
-                    set an_arr(f_id) $sub_arr(f_id)
                     set an_arr(sub_f_id) $primary_attr_id
-                    set asset_type_id  $sub_arr(sub_type_id)
+                    set f_id $f_id_of_asset_id
+                    if { [info exists sub_arr(f_id)] } {
+                        set an_arr(f_id) $sub_arr(f_id)
+                    }
+                    if { [info exists sub_arr(sub_type_id) ] } {
+                        set asset_type_id $sub_arr(sub_type_id)
+                    }
                     set an_arr(sub_type_id) $asset_type_id
                     set an_arr(type_id) $asset_type_id
                 } else {
