@@ -814,8 +814,10 @@ switch -exact -- $mode {
             ns_log Notice "hosting-farm/assets.tcl.750: view mode '${mode}' asset_id '${asset_id}' sub_f_id '${sub_f_id}' asset_type '${asset_type}'"
 
             set title "#hosting-farm.Asset#"
-            # add default, to convert attr_only to include asset?
-            #set asset_type \[hf_constructor_a asset_arr default asset_attr\]
+
+            # ignore inputs from forms
+            # retrieve from db
+            array unset obj_arr
             if { $asset_type eq "attr_only" } {
                 array set obj_arr [array get sam_arr]
                 if { $sub_type_id in [hf_asset_type_id_list] } {
