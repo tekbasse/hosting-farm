@@ -59,7 +59,7 @@ ad_proc -private hf_ua_delete {
                 } on_error {
                     set success_p 0
                 }
-            } else{
+            } else {
                 set success_p 0
             }
         }
@@ -103,7 +103,7 @@ ad_proc -private hf_ns_delete {
                 } on_error {
                     set success_p 0
                 }
-            } else{
+            } else {
                 set success_p 0
             }
         }
@@ -147,7 +147,7 @@ ad_proc -private hf_ip_delete {
                 } on_error {
                     set success_p 0
                 }
-            } else{
+            } else {
                 set success_p 0
             }
         }
@@ -193,7 +193,7 @@ ad_proc -private hf_ni_delete {
                 } on_error {
                     set success_p 0
                 }
-            } else{
+            } else {
                 set success_p 0
             }
         }
@@ -238,7 +238,7 @@ ad_proc -private hf_ss_delete {
                 } on_error {
                     set success_p 0
                 }
-            } else{
+            } else {
                 set success_p 0
             }
         }
@@ -282,7 +282,7 @@ ad_proc -private hf_vh_delete {
                 } on_error {
                     set success_p 0
                 }
-            } else{
+            } else {
                 set success_p 0
             }
         }
@@ -327,7 +327,7 @@ ad_proc -private hf_vm_delete {
                 } on_error {
                     set success_p 0
                 }
-            } else{
+            } else {
                 set success_p 0
             }
         }
@@ -372,7 +372,7 @@ ad_proc -private hf_hw_delete {
                 } on_error {
                     set success_p 0
                 }
-            } else{
+            } else {
                 set success_p 0
             }
         }
@@ -417,7 +417,7 @@ ad_proc -private hf_dc_delete {
                 } on_error {
                     set success_p 0
                 }
-            } else{
+            } else {
                 set success_p 0
             }
         }
@@ -481,7 +481,7 @@ ad_proc -private hf_monitor_delete {
                 } on_error {
                     set success_p 0
                 }
-            } else{
+            } else {
                 set success_p 0
             }
         }
