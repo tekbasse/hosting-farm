@@ -563,7 +563,7 @@ ad_proc -private hfl_asset_field_validation {
 
 
     if { ![info exists __hfl_afv_prior_error_p] } {
-    # may already exist from hfl_asset_field_validation
+        # may already exist from hfl_asset_field_validation
         set __hfl_afv_prior_error_p 0
     }
     set message_list [list ]
@@ -794,7 +794,7 @@ ad_proc -private hfl_attribute_field_validation {
     upvar 1 __hfl_afv_prior_error_p __hfl_afv_prior_error_p
 
     if { ![info exists __hfl_afv_prior_error_p] } {
-    # may already exist from hfl_asset_field_validation
+        # may already exist from hfl_asset_field_validation
         set __hfl_afv_prior_error_p 0
     }
     set message_list [list ]
@@ -1038,6 +1038,7 @@ ad_proc -private hfl_attribute_field_validation {
                 set validated_p 1
             }
             # next brace is end foreach
+            ns_log Notice "hf_attribute_field_validation.1041. key '${key}' validated_p '${validated_p}' attr_validated_p '${attr_validated_p}'"
             set attr_validated_p [expr { $attr_validated_p && $validated_p } ]
         }
     } 

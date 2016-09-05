@@ -188,9 +188,11 @@ if { [string match "*asset*" $asset_type ] } {
         } elseif { $detail_p || $tech_p } {
             qf_append html "<br>"
             qf_append html "<span>#hosting-farm.${key}#${separator}${val}</span>"
-            qf_input type hidden value $val name $key
+            qf_bypass name $key value $val
+            #qf_input type hidden value $val name $key
         } else {
-            qf_input type hidden value $val name $key
+            qf_bypass name $key value $val
+            #qf_input type hidden value $val name $key
         }
     }
 }
