@@ -125,7 +125,6 @@ foreach key [hf_key_order_for_display [array names attr_arr]] {
     # was  ( $detail_p || $tech_p ) || !\[hf_key_hidden_q $key\] && \[privilege_on_key_allowed_q write $key\]
     if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
         qf_append html "<br>"
-        set val_unquoted [qf_unquote $val]
         set key_def "#hosting-farm."
         append key_def $key "_def#"
         if { [string match "*_p" $key] } {
@@ -137,7 +136,7 @@ foreach key [hf_key_order_for_display [array names attr_arr]] {
                 set 0_selected_p 1
             }
             if { $key eq "details" || $key eq "description" } {
-                qf_textarea value $val_unquoted name $key label "#hosting-farm.${key}#${separator}" title $key_def cols 40 rows 3
+                qf_textarea value $val name $key label "#hosting-farm.${key}#${separator}" title $key_def cols 40 rows 3
             } elseif { $key ne "trashed_p" } {
                 qf_append html "#hosting-farm.${key}#${separator}"
                 set choices_list [list \
@@ -148,7 +147,7 @@ foreach key [hf_key_order_for_display [array names attr_arr]] {
                 qf_append html "<span>#hosting-farm.${key}#${separator}${val}</span>"
             }
         } else {
-            qf_input type text value $val_unquoted name $key label "#hosting-farm.${key}#${separator}" title $key_def size 40 maxlength 80
+            qf_input type text value $val name $key label "#hosting-farm.${key}#${separator}" title $key_def size 40 maxlength 80
         }
     } elseif { $detail_p || $tech_p } {
         qf_append html "<br>"
@@ -168,4 +167,26 @@ qf_input type submit value "#acs-kernel.common_Save#"
 qf_append html " &nbsp; &nbsp; &nbsp; ${cancel_link_html}"
 qf_close
 append content [qf_read]
+
+
+if { [string match "*attr*" $asset_type ] } {
+    if { [exists_and_not_null sub_type_id] } {
+        # get sub_type_id info
+        #    asset_label asset_title asset_description
+        # changed to sub_asset_label sub_asset_title sub_asset_description
+        set sub_asset_type_list [lindex [hf_asset_type_read $sub_type_id $instance_id] 0]
+        if { [llength $sub_asset_type_list ] > 0 } {
+            set sub_asset_label [lindex $sub_asset_type_list 0]
+            set sub_asset_title [lindex $sub_asset_type_list 1]
+            set sub_asset_description [lindex $sub_asset_type_list 2]
+        } else {
+            set sub_asset_label ""
+            set sub_asset_title ""
+            set sub_asset_description ""
+        }
+    } else {
+        ns_log Warning "hosting-farm/lib/asset-add.tcl: sub_type_id is null or does not exist."
+        set sub_type_id ""
+    }
+}
 

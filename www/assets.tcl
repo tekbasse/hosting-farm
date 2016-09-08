@@ -416,6 +416,27 @@ if { !$form_posted_p } {
             if { $state eq "attr_only" } {
                 set f_id [hf_f_id_of_asset_id $asset_id]
             }
+            array set obj_arr [array get input_arr]
+            set form_state [hf_constructor_a obj_arr ]
+            # validate data input
+            set valid_input_p 0
+            set v_asset_input_p 1
+            set v_attr_input_p 1
+            if { [string match "*asset*" $state] } {
+                set v_asset_input_p [hfl_asset_field_validation obj_arr]
+            }
+            if { [string match "*attr*" $state] && $valid_input_p } {
+                set v_attr_input_p [hfl_attribute_field_validation obj_arr]
+            }
+            set valid_input_p [expr { $v_asset_input_p && $v_attr_input_p} ]
+            if { !$valid_input_p } {
+                set mode_next "e"
+                set keep_user_input_p 1
+                ns_log Notice "hosting-farm/assets.tcl.432: \
+ asset/attr input validation issues. \
+ form_state '${form_state}' state '${state}' \
+ asset_type_id '${asset_type_id}'. set mode_next '${mode_next}'"
+            }
         } else {
             # does not have permission to write
             ns_log Warning "hosting-farm/assets.tcl.319: \
@@ -563,38 +584,39 @@ if { !$form_posted_p } {
         if { $mode eq "c" } {
             if { $create_p } {
                 # create only. 
-
-                if { [string match "*asset*" $asset_type ] } {
-                    # first asset_id is f_id
-                    set asset_id [hf_asset_create obj_arr]
-                    set obj_arr(f_id) $asset_id
-                    if { $mapped_f_id ne "" } {
-                        # link asset to asset
-                        hf_sub_asset_map_update $mapped_f_id $mapped_type_id $obj_arr(label) $asset_id $obj_arr(asset_type_id) 0
-                    }
-                }
-                if { [string match "*attr*" $asset_type ] } {
-                    set sub_type_id $obj_arr(sub_type_id)
-                    if { $asset_type eq "attr_only" } {
-                        # attr_only
-                        set obj_arr(f_id) $mapped_f_id
-                        set obj_arr(sub_type_id) $mapped_type_id
-                        if { $obj_arr(f_id) ne "" && $mapped_type_id ne "" } {
-                            set sub_type_id $mapped_type_id
+                if { $valid_input_p } {
+                    if { [string match "*asset*" $asset_type ] } {
+                        # first asset_id is f_id
+                        set asset_id [hf_asset_create obj_arr]
+                        set obj_arr(f_id) $asset_id
+                        if { $mapped_f_id ne "" } {
+                            # link asset to asset
+                            hf_sub_asset_map_update $mapped_f_id $mapped_type_id $obj_arr(label) $asset_id $obj_arr(asset_type_id) 0
                         }
                     }
-                    set sub_f_id ""
-                    if { $sub_type_id ne "" } {
-                        set sub_f_id [hf_${sub_type_id}_write obj_arr]
-                        set obj_arr(sub_f_id) $sub_f_id
+                    if { [string match "*attr*" $asset_type ] } {
+                        set sub_type_id $obj_arr(sub_type_id)
+                        if { $asset_type eq "attr_only" } {
+                            # attr_only
+                            set obj_arr(f_id) $mapped_f_id
+                            set obj_arr(sub_type_id) $mapped_type_id
+                            if { $obj_arr(f_id) ne "" && $mapped_type_id ne "" } {
+                                set sub_type_id $mapped_type_id
+                            }
+                        }
+                        set sub_f_id ""
+                        if { $sub_type_id ne "" } {
+                            set sub_f_id [hf_${sub_type_id}_write obj_arr]
+                            set obj_arr(sub_f_id) $sub_f_id
+                        } else {
+                            ns_log Warning "hosting-farm/assets.tcl.455 sub_type_id ''"
+                        }
+                        if { $sub_f_id eq "" } {
+                            ns_log Warning "hosting-farm/assets.tcl.462: attribute not created. sub_f_id '' array get obj_arr '[array get obj_arr]'"
+                        }
                     } else {
-                        ns_log Warning "hosting-farm/assets.tcl.455 sub_type_id ''"
+                        ns_log Warning "hosting-farm/assets.tcl.465: attribute not created. obj_arr(f_id) '$obj_arr(f_id)' mapped_type_id '${mapped_type_id}'  array get obj_arr '[array get obj_arr]'"
                     }
-                    if { $sub_f_id eq "" } {
-                        ns_log Warning "hosting-farm/assets.tcl.462: attribute not created. sub_f_id '' array get obj_arr '[array get obj_arr]'"
-                    }
-                } else {
-                    ns_log Warning "hosting-farm/assets.tcl.465: attribute not created. obj_arr(f_id) '$obj_arr(f_id)' mapped_type_id '${mapped_type_id}'  array get obj_arr '[array get obj_arr]'"
                 }
                 set mode $mode_next
             } else {
@@ -604,46 +626,28 @@ if { !$form_posted_p } {
 
         if { $mode eq "w" } {
             if { $write_p || $adnib_p } {
-
-                array set obj_arr [array get input_arr]
-                set form_state [hf_constructor_a obj_arr ]
                 if { $form_state eq $state && $asset_type_id ne "" } {
                     set asset_type $form_state
-
-
                     if { [string match "*asset*" $state] } {
-                        set valid_input_p [hfl_asset_field_validation obj_arr]
-                        if { !$valid_input_p } {
-                            set mode_next "e"
-                            ns_log Notice "hosting-farm/assets.tcl.470: asset input validation issues. set mode_next '${mode_next}'"
+                        set asset_id_old $asset_id
+                        set asset_id [hf_asset_write obj_arr]
+                        if { $asset_id ne "" } {
+                            set obj_arr(asset_id) $asset_id
+                            set asset_type_id $obj_arr(asset_type_id)
                         } else {
-                            set asset_id_old $asset_id
-                            set asset_id [hf_asset_write obj_arr]
-                            if { $asset_id ne "" } {
-                                set obj_arr(asset_id) $asset_id
-                                set asset_type_id $obj_arr(asset_type_id)
-                            } else {
-                                ns_log Warning "hosting-farm/assets.tcl.473: hf_asset_write returned '' for asset_id '${asset_id_old}' array get obj_arr '[array get obj_arr]'"
-                            }
+                            ns_log Warning "hosting-farm/assets.tcl.473: hf_asset_write returned '' for asset_id '${asset_id_old}' array get obj_arr '[array get obj_arr]'"
                         }
                     }
                     if { [string match "*attr*" $state] } {
-                        set valid_input_p [hfl_attribute_field_validation obj_arr]
-                        if { !$valid_input_p } {
-                            set mode_next "e"
-                            set keep_user_input_p 1
-                            ns_log Notice "hosting-farm/assets.tcl.475: asset input validation issues. set mode_next '${mode_next}'"
+                        set sub_type_id $obj_arr(sub_type_id)
+                        set sub_f_id_old $sub_f_id
+                        set sub_f_id [hf_${sub_type_id}_write obj_arr]
+                        if { $sub_f_id ne "" } {
+                            set obj_arr(sub_f_id) $sub_f_id
+                            set type_id $obj_arr(type_id)
+                            set f_id $obj_arr(f_id)
                         } else {
-                            set sub_type_id $obj_arr(sub_type_id)
-                            set sub_f_id_old $sub_f_id
-                            set sub_f_id [hf_${sub_type_id}_write obj_arr]
-                            if { $sub_f_id ne "" } {
-                                set obj_arr(sub_f_id) $sub_f_id
-                                set type_id $obj_arr(type_id)
-                                set f_id $obj_arr(f_id)
-                            } else {
-                                ns_log Warning "hosting-farm/assets.tcl.483: hf_${sub_type_id}_write returned '' for sub_f_id '${sub_f_id_old}' array get obj_arr '[array get obj_arr]'"
-                            }
+                            ns_log Warning "hosting-farm/assets.tcl.483: hf_${sub_type_id}_write returned '' for sub_f_id '${sub_f_id_old}' array get obj_arr '[array get obj_arr]'"
                         }
                     }
                     set mode $mode_next
@@ -777,17 +781,19 @@ switch -exact -- $mode {
             # edit the attribute.
             # set include_view_one_p 1
             if { $asset_type eq "attr_only" } {
-                array set obj_arr [array get sam_arr]
-                if { $sub_type_id in [hf_asset_type_id_list] } {
-                    set sub_asset_list [hf_${sub_type_id}_read $sub_f_id]
-                    qf_lists_to_array obj_arr $sub_asset_list [hf_${sub_type_id}_keys]
-                    ns_log Notice "hosting-farm/assets.tcl.700: array get obj_arr [array get obj_arr]"
+                if { !$keep_user_input_p } {
+                    array set obj_arr [array get sam_arr]
+                    if { $sub_type_id in [hf_asset_type_id_list] } {
+                        set sub_asset_list [hf_${sub_type_id}_read $sub_f_id]
+                        qf_lists_to_array obj_arr $sub_asset_list [hf_${sub_type_id}_keys]
+                        ns_log Notice "hosting-farm/assets.tcl.700: array get obj_arr [array get obj_arr]"
+                    }
                 }
                 set include_edit_attr_p 1
                 
             } else {
                 if { $keep_user_input_p } {
-                    set asset_type [hf_constrcutor_a obj_arr]
+                    set asset_type [hf_constructor_a obj_arr]
                 } else {
                     set asset_type [hf_constructor_b obj_arr]
                 }

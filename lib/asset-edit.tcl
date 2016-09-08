@@ -162,9 +162,8 @@ if { [string match "*asset*" $asset_type ] } {
         # was  ( $detail_p || $tech_p ) || !\[hf_key_hidden_q $key\] && \[privilege_on_key_allowed_q write $key\]
         if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
             qf_append html "<br>"
-            set val_unquoted [qf_unquote $val]
             if { $key eq "details" || $key eq "description" } {
-                qf_textarea value $val_unquoted name $key label "#hosting-farm.${key}#${separator}" cols 40 rows 3
+                qf_textarea value $val name $key label "#hosting-farm.${key}#${separator}" cols 40 rows 3
             } elseif { [string match "*_p" $key] } {
                 if { [qf_is_true $val] } {
                     set 1_selected_p 1
@@ -182,10 +181,11 @@ if { [string match "*asset*" $asset_type ] } {
                 } else {
 
                     qf_append html "<span>#hosting-farm.${key}#${separator}${val}</span>"
-                    qf_input type hidden value $val name $key
+                    #qf_input type hidden value $val name $key
+                    qf_bypass name $key value $val
                 }
             } else {
-                qf_input type text value $val_unquoted name $key label "#hosting-farm.${key}#${separator}" size 40 maxlength 80
+                qf_input type text value $val name $key label "#hosting-farm.${key}#${separator}" size 40 maxlength 80
             }
         } elseif { $detail_p || $tech_p } {
             qf_append html "<br>"
