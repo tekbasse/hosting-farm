@@ -62,6 +62,7 @@ set include_edit_one_p 0
 set include_edit_attr_p 0
 set include_add_one_p 0
 set include_add_attr_p 0
+set keep_user_input_p 0
 array set input_arr \
     [list \
          asset_id "" \
@@ -121,7 +122,10 @@ if { !$form_posted_p } {
     # x,y elements in input_arr holds position of image-based submit
     array unset input_arr x
     array unset input_arr y
-
+    ns_log Notice "hosting-farm/assets.tcl.125. Values posted as: \
+ asset_id '${asset_id}' sub_asset_id '${sub_asset_id}' f_id '${f_id}' \
+ sub_f_id '${sub_f_id}' asset_type_id '${asset_type_id}' sub_type_id '${sub_type_id}' \
+ asset_type '${asset_type}' state '${state}' mode '${mode}' mode_next '${mode_next}'"
 
     # following is part of dynamic menu processing using form tags instead of url/GET
     # key,value is passed as a single name, with first letter z for asset_id or Z for sub_f_id.
@@ -129,16 +133,19 @@ if { !$form_posted_p } {
     # add required defaults not passed by form
 
 
-    set asset_type ""
+    set mapped_asset_id ""
+    set mapped_f_id_of_asset_id ""
     ##code update this regexp?
     set modes_idx [lsearch -regexp $input_arr_idx_list {[Zz][avpsSrnwctTdel][ivcrl][0-9]*}]
     if { $modes_idx > -1 && $mode eq "p" } {
         set modes [lindex $input_arr_idx_list $modes_idx]
         set test [string range $modes 0 3]
         if { [string match {z[aevtD]*} $test] } {
-            set asset_id [string range $modes 3 end]
-            if { [string match {z[aTt]*} $test] } {
-                #set asset_type_id $input_arr(asset_type_id)
+            if { [string match {za*} $test] } {
+                set mapped_asset_id [string range $modes 3 end]
+                set mapped_f_id_of_asset_id [hf_f_id_of_asset_id $mapped_asset_id]
+            } else {
+                set asset_id [string range $modes 3 end]
             }
             ns_log Notice "hosting-farm/www/assets.tcl.141: asset_id '${asset_id}'"
         }
@@ -159,8 +166,8 @@ if { !$form_posted_p } {
                 set asset_id [hf_asset_id_current_of_f_id $f_id]
             } elseif { [string match "Za*" $test] } {
                 #set sub_type_id $input_arr(sub_type_id)
-                set asset_id [string range $modes 3 end]
-                set f_id [hf_f_id_of_asset_id $asset_id]
+                set mapped_asset_id [string range $modes 3 end]
+                set mapped_f_id_of_asset_id [hf_f_id_of_asset_id $mapped_asset_id]
             }
             ns_log Notice "hosting-farm/www/assets.tcl.149: f_id '${f_id}' sub_f_id '${sub_f_id}'"
         }
@@ -261,17 +268,21 @@ if { !$form_posted_p } {
     }
 
     if { $asset_type_id ne "" &&  $asset_type_id ni [hf_asset_type_id_list ] } {
+        ns_log Notice "hosting-farm/assets.tcl.265: asset_type_id '${asset_type_id}' not in hf_asset_type_id_list. Setting to ''."
         set asset_type_id ""
     }
 
     if { $sub_type_id ne "" &&  $sub_type_id ni [hf_asset_type_id_list ] } {
+        ns_log Notice "hosting-farm/assets.tcl.270: sub_type_id '${sub_type_id}' not in hf_asset_type_id_list. Setting to ''."
         set sub_type_id ""
     }
 
     if { $asset_type ni [list "" asset_primary_attr asset_attr attr_only asset_only] } {
+        ns_log Notice "hosting-farm/assets.tcl.275: asset_type '${asset_type}' not recognized. Setting to ''."
         set asset_type ""
     }         
     if { $state ni [list "" asset_primary_attr asset_attr attr_only asset_only] } {
+        ns_log Notice "hosting-farm/assets.tcl.275: state '${state}' not recognized. Setting to ''."
         set state ""
     } 
 
@@ -309,7 +320,7 @@ if { !$form_posted_p } {
     ns_log Notice "hosting-farm/assets.tcl.256. Validated as: \
  asset_id '${asset_id}' sub_asset_id '${sub_asset_id}' f_id '${f_id}' \
  sub_f_id '${sub_f_id}' asset_type_id '${asset_type_id}' sub_type_id '${sub_type_id}' \
- asset_type '${asset_type}' state '${state}'"
+ asset_type '${asset_type}' state '${state}' mode '${mode}' mode_next '${mode_next}'"
 
     set referrer_url [get_referrer]
     set http_header_method [ad_conn method]
@@ -338,11 +349,10 @@ if { !$form_posted_p } {
             # Any existing revision references must be for establishing hierarchical relationship only
             # Choose the most specific f_id.
             set f_id_of_asset_id ""
-            set mapped_f_id ""
             if { $asset_id ne "" } {
                 set f_id_of_asset_id [hf_f_id_of_asset_id $asset_id]
             }
-            set mapped_f_id [qal_first_nonempty_in_list [list $sub_f_id $f_id $f_id_of_asset_id]]
+            set mapped_f_id [qal_first_nonempty_in_list [list $mapped_f_id_of_asset_id $sub_f_id $f_id $f_id_of_asset_id]]
             if { $mapped_f_id ne "" } {
                 set mapped_type_id [hf_asset_type_id_of_f_id $mapped_f_id]
                 if { $mapped_type_id eq "" } {
@@ -621,6 +631,7 @@ if { !$form_posted_p } {
                         set valid_input_p [hfl_attribute_field_validation obj_arr]
                         if { !$valid_input_p } {
                             set mode_next "e"
+                            set keep_user_input_p 1
                             ns_log Notice "hosting-farm/assets.tcl.475: asset input validation issues. set mode_next '${mode_next}'"
                         } else {
                             set sub_type_id $obj_arr(sub_type_id)
@@ -775,7 +786,11 @@ switch -exact -- $mode {
                 set include_edit_attr_p 1
                 
             } else {
-                set asset_type [hf_constructor_b obj_arr]
+                if { $keep_user_input_p } {
+                    set asset_type [hf_constrcutor_a obj_arr]
+                } else {
+                    set asset_type [hf_constructor_b obj_arr]
+                }
                 set include_edit_one_p 1
                 set publish_p [hf_ui_go_ahead_q write "" published 0]
                 ns_log Notice "hosting-farm/assets.tcl.710 publish_p '${publish_p}' asset_id '${asset_id}'"
