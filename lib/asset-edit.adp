@@ -17,9 +17,9 @@
     </if>
 
   <div style="background-color: white ; padding: 0 ; margin: 0 ; padding: 1%; margin: 1%;">    
-    <ul>
+
       @content;noquote@
-    </ul>  
+
   </div>
 <if @has_bg_image_p@ true>
   </div>

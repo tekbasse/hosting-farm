@@ -15,9 +15,11 @@
     <if @label@ not nil>
       <h3>@label@</h3>
     </if>
-    
-  <div style="background-color: white ; padding: 0 ; margin: 0 ; padding: 1%; margin: 1%;">
+
+  <div style="background-color: white ; padding: 0 ; margin: 0 ; padding: 1%; margin: 1%;">    
+
       @content;noquote@
+
   </div>
 <if @has_bg_image_p@ true>
   </div>
