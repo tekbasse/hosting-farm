@@ -191,12 +191,28 @@ if { !$form_posted_p } {
     #   t  = trash asset_id or sub_asset_id
     #   T  = untrash asset_id
     #   c  = create asset/attr asset_type_id
+    #           Requires:
+    #              mapped_f_id  (for permissions and mapping)
+    #              asset_type_id
     #   w  = write asset_id/sub_asset_id asset_type_id
+    #           Requires for asset:
+    #               asset_id
+    #               f_id (found via asset_id)
+    #           Requires for asset_attr:
+    #               asset_id
+    #               sub_f_id
+    #               f_id (found via asset_id)
+    #           Requires for attr:
+    #               mapped_asset_id (for permissions)
+    #               sub_f_id
+    #               f_id  (for mapping, found via sub_f_id)
     #   s  = publish
     #   S  = Unpublish
 
     # Views
     #   a  = add asset/attribute (this allows more control over adding than using edit form allows)
+
+    #
     #   e  = edit asset_id/sub_asset_id or attribute, presents defaults if no prior data
     #   v  = view asset_id or sub_asset_id (attribute_id or asset_id)
     #   l  = list assets
