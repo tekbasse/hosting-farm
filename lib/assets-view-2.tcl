@@ -1,10 +1,32 @@
 # hosting-farm/lib/assets-view-2.tcl
 # show a list of hf assets as form submit buttons.
 #
-# requires:
+
+# REQUIRED:
 # assets_lists  As if from a db_lists_of_lists query hf_assets
 #               where elements are returned in order of hf_asset_keys
-# 
+# perms_arr     containing privileges for mapped_f_id, 
+#               or general assets if empty string
+# mapped_f_id (to pass to create asset requests
+
+
+# OPTIONAL:
+#  s              for sort order
+#  p              for pagination
+#  this_start_row for pagination, defaults to 1
+#  items_per_page      number of items per page
+#  base_url             url for building page links
+#  separator            html used between page numbers, defaults to &nbsp;
+#  list_limit           limits the list to that many items.
+#  list_offset          offset the list to start at some point other than the first item.
+#  columns              splits the list into $columns number of columns.
+#  before_columns_html  inserts html that goes between each column
+#  after_columns_html   ditto
+#  show_page_num_p           Answers Q: Use the page number in pagniation bar?
+#                             If not, uses the first value of the left-most (primary sort) column
+#  show_titles_p        (defaults to 1)
+#  pagination_bar_p               Allow pagination_bar ? defaults to 1
+
 
 
 # to pass array (or lists) via include: /doc/acs-templating/tagref/include
@@ -14,47 +36,13 @@
 
 
 # all_types combined in the element "all"
-
-
-# This allows sql in calling page to easily scope and limit list
-# using pagination-bar
-
-# @see hosting-farm/lib/pagination-bar.tcl for lists pagination menu
-# @param base_url is url for page (required)
-# @param item_count (required)
-# @param items_per_page (required)
-# @param this_start_row (required) the start row for this page
-# @param separator is html used between page numbers, defaults to &nbsp;
-
-
-
 # assets_lists \[hf_asset_ids_for_user $user_id\]
 # output is page_html 
 # nav_bar:  prev_bar current_bar next_bar
 
-# following from:
-# hosting-farm/lib/assets-view-2.tcl
-# Returns summary list of assets with status, highest scores first
 # This version requires the entire table to be loaded for processing.
 # TODO: make another version that uses pg's select limit and offset.. to scale well.
 
-# REQUIRED:
-# @param this_start_row      start row (item number) for this page
-
-
-# OPTIONAL:
-# @param items_per_page      number of items per page
-# @param base_url             url for building page links
-# @param separator            html used between page numbers, defaults to &nbsp;
-# @param list_limit           limits the list to that many items.
-# @param list_offset          offset the list to start at some point other than the first item.
-# @param columns              splits the list into $columns number of columns.
-# @param before_columns_html  inserts html that goes between each column
-# @param after_columns_html   ditto
-# @param show_page_num_p           Answers Q: Use the page number in pagniation bar?
-#                             If not, uses the first value of the left-most (primary sort) column
-# @param show_titles_p        (defaults to 1)
-# @pagination_bar_p               Allow pagination_bar ? defaults to 1
 
 # General process flow:
 # 1. Get table as list_of_lists
@@ -316,7 +304,8 @@ if { $admin_p } {
     if { [llength $at_limited_lists] > 0 } {
         set at_sorted_lists [lsort -index 2 -dictionary $at_limited_lists]
         qf_append html "<br><br>#hosting-farm.Asset# #acs-subsite.create#${separator}"
-        qf_input type hidden name "state" value "asset_primary_attr"
+        qf_bypass name "asset_type" value "asset_primary_attr"
+        qf_bypass name "mapped_f_id" value $f_id
         set choices_list [list ]
         set selected 1
         foreach at_list $at_sorted_lists {
