@@ -365,7 +365,7 @@ if { !$form_posted_p } {
     if { $mode eq "c" } { 
         if { $create_p || $admin_p } {
             # allowed
-            if { $state eq "attr_only" } {
+            if { $asset_type eq "attr_only" } {
                 set f_id [hf_f_id_of_asset_id $asset_id]
             }
             # Any existing revision references must be for establishing hierarchical relationship only
@@ -394,11 +394,13 @@ if { !$form_posted_p } {
             set input_arr(sub_f_id) ""                
 
             array set obj_arr [array get input_arr]
-            set form_state [hf_constructor_a obj_arr ]
-            ns_log Notice "hosting-farm/assets.tcl.290: form_state '${form_state}' state '${state}' array get obj_arr '[array get obj_arr]'"
             set valid_input_p 0
-            if { $form_state eq $state && $asset_type_id ne "" } {
-                set asset_type $form_state
+            if { $asset_type_id ne "" } {
+                set state [hf_constructor_a obj_arr ]
+                ns_log Notice "hosting-farm/assets.tcl.290: state '${state}' asset_type '${asset_type}' array get obj_arr '[array get obj_arr]'"
+                if { $asset_type ne $state } {
+                    ns_log Warning "hosting-farm/assets.tcl.295 state '${state}' from hf_constructor_a ne asset_type '${asset_type}'. Using supplied asset_type"
+                }
                 # validate data input
                 set v_asset_input_p 1
                 set v_attr_input_p 1
@@ -414,7 +416,7 @@ if { !$form_posted_p } {
                 set mode_next "a"
                 ns_log Notice "hosting-farm/assets.tcl.300: \
  asset/attr input validation issues. \
- form_state '${form_state}' state '${state}' \
+ state '${state}' state '${state}' \
  asset_type_id '${asset_type_id}'. set mode_next '${mode_next}'"
             }
         } else {
@@ -435,19 +437,22 @@ if { !$form_posted_p } {
     if { $mode eq "w" } { 
         if { $write_p || $admin_p } {
             # allowed
-            if { $state eq "attr_only" } {
+            if { $asset_type eq "attr_only" } {
                 set f_id [hf_f_id_of_asset_id $asset_id]
             }
             array set obj_arr [array get input_arr]
-            set form_state [hf_constructor_a obj_arr ]
+            set state [hf_constructor_a obj_arr ]
+            if { $asset_type ne $state } {
+                ns_log Warning "hosting-farm/assets.tcl.400 state '${state}' from hf_constructor_a ne asset_type '${asset_type}'. Using supplied asset_type"
+            }
             # validate data input
             set valid_input_p 0
             set v_asset_input_p 1
             set v_attr_input_p 1
-            if { [string match "*asset*" $state] } {
+            if { [string match "*asset*" $asset_type] } {
                 set v_asset_input_p [hfl_asset_field_validation obj_arr]
             }
-            if { [string match "*attr*" $state] && $valid_input_p } {
+            if { [string match "*attr*" $asset_type] && $valid_input_p } {
                 set v_attr_input_p [hfl_attribute_field_validation obj_arr]
             }
             set valid_input_p [expr { $v_asset_input_p && $v_attr_input_p} ]
@@ -456,7 +461,7 @@ if { !$form_posted_p } {
                 set keep_user_input_p 1
                 ns_log Notice "hosting-farm/assets.tcl.432: \
  asset/attr input validation issues. \
- form_state '${form_state}' state '${state}' \
+ state '${state}' asset_type '${asset_type}' \
  asset_type_id '${asset_type_id}'. set mode_next '${mode_next}'"
             }
         } else {
@@ -518,11 +523,11 @@ if { !$form_posted_p } {
 
     if { $mode eq "a" } {
         if { $create_p || $admin_p } {
-            if { ( $state in [list asset_attr asset_only asset_primary_attr] && $asset_type_id ne "") || ( $state eq "attr_only" && $sub_type_id ne "" ) } {
+            if { ( $asset_type in [list asset_attr asset_only asset_primary_attr] && $asset_type_id ne "") || ( $asset_type eq "attr_only" && $sub_type_id ne "" ) } {
                 # allowed
             } else {
                 ns_log Notice "hosting-farm/assets.tcl.367: incomplete new \
- asset or attribute request. state '${state}' asset_type_id '${asset_type_id}'"
+ asset or attribute request. asset_type '${asset_type}' asset_type_id '${asset_type_id}'"
                 set mode "l"
                 set mode_next ""
             }
@@ -647,10 +652,10 @@ if { !$form_posted_p } {
         }
 
         if { $mode eq "w" } {
-            if { $write_p || $adnib_p } {
-                if { $form_state eq $state && $asset_type_id ne "" } {
-                    set asset_type $form_state
-                    if { [string match "*asset*" $state] } {
+            if { $write_p || $admin_p } {
+                if { $asset_type_id ne "" } {
+                    set asset_type $state
+                    if { [string match "*asset*" $asset_type] } {
                         set asset_id_old $asset_id
                         set asset_id [hf_asset_write obj_arr]
                         if { $asset_id ne "" } {
@@ -660,7 +665,7 @@ if { !$form_posted_p } {
                             ns_log Warning "hosting-farm/assets.tcl.473: hf_asset_write returned '' for asset_id '${asset_id_old}' array get obj_arr '[array get obj_arr]'"
                         }
                     }
-                    if { [string match "*attr*" $state] } {
+                    if { [string match "*attr*" $asset_type] } {
                         set sub_type_id $obj_arr(sub_type_id)
                         set sub_f_id_old $sub_f_id
                         set sub_f_id [hf_${sub_type_id}_write obj_arr]
@@ -675,7 +680,7 @@ if { !$form_posted_p } {
                     set mode $mode_next
                 } else {
                     set mode ""
-                    ns_log Warning "hosting-farm/assets.tcl.570: form_state '${form_state}' ne state '${state}'. form input ignored. array get obj_arr '[array get obj_arr]'"
+                    ns_log Warning "hosting-farm/assets.tcl.570: state '${state}' ne asset_type '${asset_type}'. form input ignored. array get obj_arr '[array get obj_arr]'"
                 } 
                 # end section of write
                 set mode_next ""
@@ -730,15 +735,15 @@ switch -exact -- $mode {
             # for default values.
             ns_log Notice "hosting-farm/assets.tcl.616: mode = add"
             
-            if { $state eq "attr_only" } {
-                set asset_type [hf_constructor_a obj_arr force $state $sub_type_id]
+            if { $asset_type eq "attr_only" } {
+                set asset_type [hf_constructor_a obj_arr force $asset_type $sub_type_id]
                 array set obj_arr [array get sam_arr]
                 set obj_arr(f_id) $f_id
                 ns_log Notice "hosting-farm/assets.tcl.627: array get obj_arr [array get obj_arr]"
                 set include_add_attr_p 1
                 append title " #hosting-farm.Attribute#"
-            } elseif { $state ne "" } {
-                set asset_type [ hf_constructor_a obj_arr force $state $asset_type_id]
+            } elseif { $asset_type ne "" } {
+                set asset_type [ hf_constructor_a obj_arr force $asset_type $asset_type_id]
                 set include_add_one_p 1
                 set publish_p [hf_ui_go_ahead_q write "" published 0]
                 append title " #hosting-farm.Asset#"
