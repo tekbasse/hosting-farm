@@ -305,7 +305,7 @@ if { $admin_p } {
         set at_sorted_lists [lsort -index 2 -dictionary $at_limited_lists]
         qf_append html "<br><br>#hosting-farm.Asset# #acs-subsite.create#${separator}"
         qf_bypass name "asset_type" value "asset_primary_attr"
-        qf_bypass name "mapped_f_id" value $f_id
+        qf_bypass name "mapped_f_id" value $mapped_f_id
         set choices_list [list ]
         set selected 1
         foreach at_list $at_sorted_lists {

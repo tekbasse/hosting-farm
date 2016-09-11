@@ -70,22 +70,24 @@ array set input_arr \
          asset_type_id "" \
          customer_id "" \
          f_id "" \
-         name "" \
+         interval_remaining "" \
+         mapped_asset_id "" \
+         mapped_f_id "" \
          mode "l" \
          mode_next "" \
+         name "" \
+         p "" \
          page_title $title \
          reset "" \
+         s "" \
          state "" \
          sub_asset_id "" \
          sub_f_id "" \
          sub_type_id "" \
          submit "" \
-         s "" \
-         p "" \
          this_start_row "" \
-         type_id "" \
-         interval_remaining "" \
-         top_level_p "0"]
+         top_level_p "0" \
+         type_id "" ]
 
 # INPUTS
 
@@ -106,19 +108,21 @@ if { !$form_posted_p } {
              asset_type_id \
              customer_id \
              f_id \
+             interval_remaining \
+             mapped_asset_id \
+             mapped_f_id \
              mode \
              mode_next \
+             p \
              page_title \
+             s \
              state \
              sub_asset_id \
-             s \
-             p \
              sub_f_id \
              sub_type_id \
              this_start_row \
              top_level_p \
-             type_id \
-             interval_remaining ]
+             type_id ]
     # x,y elements in input_arr holds position of image-based submit
     array unset input_arr x
     array unset input_arr y
