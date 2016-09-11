@@ -38,7 +38,6 @@ if { ![array exists asset_arr] } {
 array unset asset_arr asset_type
 
 template::util::array_to_vars asset_arr
-set asset_type $asset_type_orig
 
 if { ![info exists separator] } {
     set separator ": "
@@ -97,7 +96,7 @@ if { ![info exists tech_p] } {
 }
 
 
-if { $asset_type eq "asset_primary_attr" && } {
+if { $asset_type eq "asset_primary_attr" } {
     set theme [value_if_exists asset_type_id]
 } else {
     set theme [value_if_exists sub_type_id]
@@ -123,7 +122,7 @@ if { $theme ne "" } {
 
     # get sub_type_id info
     #    asset_label asset_title asset_description
-    set theme_type_list [lindex [hf_asset_type_read $theme_id $instance_id] 0]
+    set theme_type_list [lindex [hf_asset_type_read $theme $instance_id] 0]
     if { [llength $theme_type_list ] > 0 } {
         set theme_label [lindex $theme_type_list 0]
         set theme_title [lindex $theme_type_list 1]
