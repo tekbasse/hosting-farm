@@ -248,8 +248,12 @@ user_id '${user_id}'"
                 ns_log Error "hf_asset_write: general db error during db_dml"
             }
             set new_asset_id $asset_id
-        } 
-    } 
+        } else {
+            ns_log Notice "hf_asset_write.250: f_id '${f_id}' does not exist. Cannot write."
+        }
+    } else {
+        ns_log Notice "hf_asset_write.253: write_p '${write_p}' for user_id '${user_id}' Did not write."
+    }
     return $new_asset_id
 }
 

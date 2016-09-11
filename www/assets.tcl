@@ -404,10 +404,10 @@ if { !$form_posted_p } {
                 # validate data input
                 set v_asset_input_p 1
                 set v_attr_input_p 1
-                if { [string match "*asset*" $state] } {
+                if { [string match "*asset*" $asset_type] } {
                     set v_asset_input_p [hfl_asset_field_validation obj_arr]
                 }
-                if { [string match "*attr*" $state] && $valid_input_p } {
+                if { [string match "*attr*" $asset_type] && $valid_input_p } {
                     set v_attr_input_p [hfl_attribute_field_validation obj_arr]
                 }
                 set valid_input_p [expr { $v_asset_input_p && $v_attr_input_p} ]
@@ -654,7 +654,6 @@ if { !$form_posted_p } {
         if { $mode eq "w" } {
             if { $write_p || $admin_p } {
                 if { $asset_type_id ne "" } {
-                    set asset_type $state
                     if { [string match "*asset*" $asset_type] } {
                         set asset_id_old $asset_id
                         set asset_id [hf_asset_write obj_arr]
@@ -680,7 +679,7 @@ if { !$form_posted_p } {
                     set mode $mode_next
                 } else {
                     set mode ""
-                    ns_log Warning "hosting-farm/assets.tcl.570: state '${state}' ne asset_type '${asset_type}'. form input ignored. array get obj_arr '[array get obj_arr]'"
+                    ns_log Warning "hosting-farm/assets.tcl.570: asset_type_id '${asset_type_id}'. form input ignored. array get obj_arr '[array get obj_arr]'"
                 } 
                 # end section of write
                 set mode_next ""
