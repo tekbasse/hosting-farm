@@ -1,49 +1,22 @@
 # hosting-farm/lib/asset-view.tcl
-# show an hf asset record
-# for editing, see asset-input.tcl
 
 # requires:
-# @param array with elements of hf_asset_keys
+#   asset_arr array of asset/attribute key values
+#   asset_type
+#   asset_id (or mapped_asset_id if attr_only)
+#   sub_f_id (if asset_type includes attribute)
+
 # optional:
 #  detail_p      If detail_p is 1, flags to show record detail
 #  tech_p        If is 1, flags to show technical info (for admins)
-# asset_type     as determined by hf_constructor_a
-# separator      Used to separate key from value in list.
+#  separator     Used to separate key from value in list.
+#  base_url      Where to post form to.
 
 # if admin assets, show edit asset button and  show all detail
 # if write published  show button to change state of publish_p
 # if write assets, show:, button to change state of monitor_p, trashed_p
 
-
-# provides variables of each element:
-# from hf_asset_keys:
-#  asset_id
-#  label
-#  name
-#  asset_type_id
-#  trashed_p
-#  trashed_by
-#  template_p
-#  templated_p
-#  publish_p
-#  monitor_p
-#  popularity
-#  triage_priority
-#  op_status
-#  qal_product_id
-#  qal_customer_id
-#  instance_id
-#  user_id
-#  last_modified
-#  created
-#  flags
-#  template_id
-#  f_id
-
-
-#   and related:
-#    asset_label asset_title asset_description
-
+# 
 # to pass array via include, see: /doc/acs-templating/tagref/include
 # ie: &asset_arr="calling_page_arr_name"
 #
@@ -51,11 +24,30 @@
 if { ![info exists detail_p] } {
     set detail_p 0
 }
-if { ![info exists asset_type] } {
-    set asset_type [hf_constructor_a $asset_arr]
+if { ![exists_and_not_null asset_type ] } {
+    ns_log Warning "hosting-farm/lib/asset-edit.tcl.55: asset_type not defined"
+    # lets guess it instead of fail
+    set asset_type [hf_constructor_a asset_arr]
 }
+
+# Make sure any asset_arr(asset_type) does not overwrite asset_type
+array unset asset_arr asset_type
+
+template::util::array_to_vars asset_arr
+
 if { ![info exists separator] } {
     set separator ": "
+}
+
+if { [exists_and_not_null perms_arr(create_p)] } {
+    set create_p $perms_arr(create_p)
+} else {
+    set create_p 0
+}
+if { [exists_and_not_null perms_arr(read_p)] } {
+    set read_p $perms_arr(read_p)
+} else {
+    set read_p 0
 }
 if { [exists_and_not_null perms_arr(write_p)] } {
     set write_p $perms_arr(write_p)
@@ -66,6 +58,11 @@ if { [exists_and_not_null perms_arr(admin_p)] } {
     set admin_p $perms_arr(admin_p)
 } else {
     set admin_p 0
+}
+if { [exists_and_not_null perms_arr(pkg_admin_p)] } {
+    set pkg_admin_p $perms_arr(pkg_admin_p)
+} else {
+    set pkg_admin_p 0
 }
 if { [exists_and_not_null perms_arr(publish_p) ] } {
     set pub_p [qf_is_true $perms_arr(publish_p) ]
@@ -94,12 +91,14 @@ if { ![info exists tech_p] } {
     } 
 }
 
-if { [array exists asset_arr] } {
-    template::util::array_to_vars asset_arr
+
+if { $asset_type eq "asset_primary_attr" } {
+    set theme [value_if_exists asset_type_id]
+} else {
+    set theme [value_if_exists sub_type_id]
 }
 
-if { [exists_and_not_null asset_type_id] } {
-    # get asset_type_id info
+if { $theme ne "" } {
     #    asset_label asset_title asset_description
     set asset_type_list [lindex [hf_asset_type_read $asset_type_id $instance_id] 0]
     if { [llength $asset_type_list ] > 0 } {
@@ -109,18 +108,29 @@ if { [exists_and_not_null asset_type_id] } {
         set asset_title ""
         set asset_description ""
     }
+    set icon_url [file join resources icons $theme]
+    set bg_image_url $icon_url
+    append icon_url ".png"
+    append bg_image_url "-background.png"
+    set acs_root [acs_root_dir]
+    set has_icon_p [file exists [file join $acs_root packages hosting-farm www $icon_url]]
+    set has_bg_image_p [file exists [file join $acs_root packages hosting-farm www $bg_image_url]]
+
+    # get sub_type_id info
+    #    asset_label asset_title asset_description
+    set theme_type_list [lindex [hf_asset_type_read $theme $instance_id] 0]
+    if { [llength $theme_type_list ] > 0 } {
+        set theme_label [lindex $theme_type_list 0]
+        set theme_title [lindex $theme_type_list 1]
+        set theme_description [lindex $theme_type_list 2]
+    }
 } else {
-    ns_log Warning "hosting-farm/lib/asset-view.tcl: asset_type_id is null or does not exist."
-    set asset_type_id ""
+    ns_log Warning "hosting-farm/lib/asset-edit.tcl: theme '${theme}'."
+    set theme_label ""
+    set theme_title ""
+    set theme_description ""
 }
 
-set icon_url [file join resources icons $asset_type_id]
-set bg_image_url $icon_url
-append icon_url ".png"
-append bg_image_url "-background.png"
-set acs_root [acs_root_dir]
-set has_icon_p [file exists [file join $acs_root packages hosting-farm www $icon_url]]
-set has_bg_image_p [file exists [file join $acs_root packages hosting-farm www $bg_image_url]]
 
 # output
 set content_list [list ]
