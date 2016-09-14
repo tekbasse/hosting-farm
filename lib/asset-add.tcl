@@ -145,7 +145,7 @@ set cancel_link_html "<a href=\"${base_url}\">#acs-kernel.common_Cancel#</a>"
 
 
 qf_form action $base_url method post id 20160811 hash_check 1
-qf_bypass_nv_list [list mode w mode_next v asset_type $asset_type]
+qf_bypass_nv_list [list mode c mode_next v asset_type $asset_type]
 
 if { [string match "*asset*" $asset_type ] } {
     foreach key [hf_key_order_for_display [array names asset_arr]] {
