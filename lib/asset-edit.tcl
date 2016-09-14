@@ -39,6 +39,13 @@ array unset asset_arr asset_type
 
 template::util::array_to_vars asset_arr
 
+if { ![exists_and_not_null sub_type_id] } {
+    set $sub_type_id ""
+}
+if { ![exists_and_not_null asset_type_id] } {
+    set asset_type_id $sub_type_id
+}
+
 if { ![info exists separator] } {
     set separator ": "
 }
@@ -96,10 +103,9 @@ if { ![info exists tech_p] } {
 }
 
 
-if { $asset_type eq "asset_primary_attr" } {
-    set theme [value_if_exists asset_type_id]
-} else {
-    set theme [value_if_exists sub_type_id]
+set theme $sub_type_id
+if { $theme eq "" } {
+    set theme $asset_type_id
 }
 
 if { $theme ne "" } {
@@ -147,45 +153,78 @@ set cancel_link_html "<a href=\"${base_url}\">#acs-kernel.common_Cancel#</a>"
 qf_form action $base_url method post id 20160811 hash_check 1
 qf_bypass_nv_list [list mode w mode_next v asset_type $asset_type]
 
+set key_list [list ]
+set asset_key_list [list ]
 if { [string match "*asset*" $asset_type ] } {
-    foreach key [hf_key_order_for_display [array names asset_arr]] {
-        set val $asset_arr(${key})
-
-        if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
-            qf_append html "<br>"
-            if { $key eq "details" || $key eq "description" } {
-                qf_textarea value $val name $key label "#hosting-farm.${key}#${separator}" cols 40 rows 3
-            } elseif { [string match "*_p" $key] } {
-                if { [qf_is_true $val] } {
-                    set 1_selected_p 1
-                    set 0_selected_p 0
-                } else {
-                    set 1_selected_p 0
-                    set 0_selected_p 1
-                }
-                if { $key ne "trashed_p" } {
-                    qf_append html "#hosting-farm.${key}#${separator}"
-                    set choices_list [list \
-                                          [list label "#acs-kernel.common_yes#" value 1 selected $1_selected_p ] \
-                                          [list label "#acs-kernel.common_no#" value 0 selected $0_selected_p ] ]
-                    qf_choice type radio name $key value $choices_list
-                } else {
-
-                    qf_append html "<span>#hosting-farm.${key}#${separator}${val}</span>"
-                    qf_bypass name $key value $val
-                }
-            } else {
-                qf_input type text value $val name $key label "#hosting-farm.${key}#${separator}" size 40 maxlength 80
-            }
-        } elseif { $detail_p || $tech_p } {
-            qf_append html "<br>"
-            qf_append html "<span>#hosting-farm.${key}#${separator}${val}</span>"
-            qf_bypass name $key value $val
-        } else {
-            qf_bypass name $key value $val
-        }
+    set key_list [hf_key_order_for_display [hf_asset_keys]]
+    set asset_key_list $key_list
+    
+}
+set attr_key_list [list ]
+if { [string match "*attr*" $asset_type ] } {
+    if { $sub_type_id in [hf_asset_type_id_list] } {
+        set attr_key_list [concat [hf_${sub_type_id}_keys] [hf_sub_asset_map_keys] ]
+        # remove duplicates
+        set attr_key_list [lsort -unique $attr_key_list]
+        set attr_key_list [hf_key_order_for_display $attr_key_list]
+        set key_list [concat $key_list $attr_key_list ]
+    } else {
+        ns_log Warning "hosting-farm/lib/asset-edit.tcl.164: asset_type '${asset_type}' sub_type_id '${sub_type_id}' not valid"
     }
 }
+
+set edit_asset_p 0
+if { $asset_type eq "asset_primary_attr" || $asset_type eq "asset_only" } {
+    set edit_asset_p 1
+}
+
+set edit_attr_p 0
+if { [string match "*asset*" $asset_type] } {
+    set edit_attr_p 1
+}
+
+foreach key $key_list {
+    set val $asset_arr(${key})
+    if { ( $edit_asset_p && $key in $asset_key_list ) || ( $edit_attr_p && $key in $attr_key_list ) } {
+        set edit_key_p 1
+    } else {
+        set edit_key_p 0
+    }
+    if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] && $edit_key_p } {
+        qf_append html "<br>"
+        if { $key eq "details" || $key eq "description" } {
+            qf_textarea value $val name $key label "#hosting-farm.${key}#${separator}" cols 40 rows 3
+        } elseif { [string match "*_p" $key] } {
+            if { [qf_is_true $val] } {
+                set 1_selected_p 1
+                set 0_selected_p 0
+            } else {
+                set 1_selected_p 0
+                set 0_selected_p 1
+            }
+            if { $key ne "trashed_p" } {
+                qf_append html "#hosting-farm.${key}#${separator}"
+                set choices_list [list \
+                                      [list label "#acs-kernel.common_yes#" value 1 selected $1_selected_p ] \
+                                      [list label "#acs-kernel.common_no#" value 0 selected $0_selected_p ] ]
+                qf_choice type radio name $key value $choices_list
+            } else {
+
+                qf_append html "<span>#hosting-farm.${key}#${separator}${val}</span>"
+                qf_bypass name $key value $val
+            }
+        } else {
+            qf_input type text value $val name $key label "#hosting-farm.${key}#${separator}" size 40 maxlength 80
+        }
+    } elseif { $detail_p || $tech_p } {
+        qf_append html "<br>"
+        qf_append html "<span>#hosting-farm.${key}#${separator}${val}</span>"
+        qf_bypass name $key value $val
+    } else {
+        qf_bypass name $key value $val
+    }
+}
+
 
 qf_input type submit value "#acs-kernel.common_Save#"
 qf_append html " &nbsp; &nbsp; &nbsp; ${cancel_link_html}"
