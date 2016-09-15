@@ -35,6 +35,13 @@ array unset asset_arr asset_type
 
 template::util::array_to_vars asset_arr
 
+if { ![exists_and_not_null sub_type_id] } {
+    set $sub_type_id ""
+}
+if { ![exists_and_not_null asset_type_id] } {
+    set asset_type_id $sub_type_id
+}
+
 if { ![info exists separator] } {
     set separator ": "
 }
@@ -52,7 +59,7 @@ if { [exists_and_not_null perms_arr(read_p)] } {
 if { [exists_and_not_null perms_arr(write_p)] } {
     set write_p $perms_arr(write_p)
 } else {
-    set write_p 0
+p    set write_p 0
 }
 if { [exists_and_not_null perms_arr(admin_p)] } {
     set admin_p $perms_arr(admin_p)
@@ -92,10 +99,9 @@ if { ![info exists tech_p] } {
 }
 
 
-if { $asset_type eq "asset_primary_attr" } {
-    set theme [value_if_exists asset_type_id]
-} else {
-    set theme [value_if_exists sub_type_id]
+set theme $sub_type_id
+if { $theme eq "" } {
+    set theme $asset_type_id
 }
 
 if { $theme ne "" } {
@@ -134,17 +140,30 @@ if { $theme ne "" } {
 
 # output
 set content_list [list ]
-foreach key [hf_key_order_for_display [hf_asset_keys]] {
-    if { ( $detail_p || $tech_p ) || ![hf_key_hidden_q $key] } {
-        set element ""
-        append element "#hosting-farm.${key}#" $separator $asset_arr(${key})
-        lappend content_list $element
-    } 
+if { [string match "*asset*" $asset_type] } {
+    foreach key [hf_key_order_for_display [hf_asset_keys]] {
+        if { ( $detail_p || $tech_p ) || ![hf_key_hidden_q $key] } {
+            set element ""
+            append element "#hosting-farm.${key}#" $separator $asset_arr(${key})
+            lappend content_list $element
+        } 
+    }
 }
 
 
 if { [string match "*attr*" $asset_type] } {
-    if { [exists_and_not_null sub_type_id] } {
+    if { $sub_type_id in [hf_asset_type_id_list] } {
+        if { $sub_type_id ne "" } {
+            set keys_list [concat [hf_${sub_type_id}_keys] [hf_sub_asset_map_keys]]
+            foreach key [hf_key_order_for_display $keys_list] {
+                if { ( $tech_p ) || ![hf_key_hidden_q $key] } {
+                    set element ""
+                    append element "#hosting-farm.${key}#" $separator $asset_arr(${key})
+                    lappend content_list $element
+                } 
+            }
+        }
+
         # get sub_type_id info
         #    asset_label asset_title asset_description
         # changed to sub_asset_label sub_asset_title sub_asset_description
@@ -159,21 +178,8 @@ if { [string match "*attr*" $asset_type] } {
             set sub_asset_description ""
         }
     } else {
-        ns_log Warning "hosting-farm/lib/asset-view.tcl: sub_type_id is null or does not exist."
-        set sub_type_id ""
+        ns_log Warning "hosting-farm/lib/asset-view.tcl: sub_type_id '${sub_type_id}' is not valid"
     }
-
-    if { $sub_type_id ne "" } {
-        set keys_list [concat [hf_${sub_type_id}_keys] [hf_sub_asset_map_keys]]
-        foreach key [hf_key_order_for_display $keys_list] {
-            if { ( $tech_p ) || ![hf_key_hidden_q $key] } {
-                set element ""
-                append element "#hosting-farm.${key}#" $separator $asset_arr(${key})
-                lappend content_list $element
-            } 
-        }
-    }
-
 }
 
 
@@ -184,8 +190,8 @@ foreach element $content_list {
 }
 
 set form_id [qf_form action $base_url method post id 20160809 hash_check 1]
-qf_input type "hidden" name "mode" value "p"
-qf_input type hidden name asset_type value $asset_type
+qf_bypass name mode value "p"
+qf_bypass name asset_type value $asset_type
 qf_input type submit value "#accounts-ledger.edit#" name "zev${asset_id}" class button
 qf_append html "<br>"
 if { $write_p && [exists_and_not_null asset_arr(trashed_p) ] } {
