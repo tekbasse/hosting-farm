@@ -189,25 +189,32 @@ foreach element $content_list {
     append content "</li>"
 }
 
+if { $asset_type eq "attr_only" } {
+    set ref_id $sub_f_id
+    set z "Z"
+} else {
+    set z "z"
+    set ref_id $asset_id
+}
 set form_id [qf_form action $base_url method post id 20160809 hash_check 1]
 qf_bypass name mode value "p"
 qf_bypass name asset_type value $asset_type
-qf_input type submit value "#accounts-ledger.edit#" name "zev${asset_id}" class button
+qf_input type submit value "#accounts-ledger.edit#" name "${z}ev${sub_f_id}" class button
 qf_append html "<br>"
 if { $write_p && [exists_and_not_null asset_arr(trashed_p) ] } {
     if { [qf_is_true $asset_arr(trashed_p) ] } {
-        qf_input type submit value "#accounts-finance.untrash#" name "zTvo${asset_id}" class button
+        qf_input type submit value "#accounts-finance.untrash#" name "${z}Tvo${ref_id}" class button
     } else {
-        qf_input type submit value "#accounts-finance.trash#" name "ztl${asset_id}" class button
+        qf_input type submit value "#accounts-finance.trash#" name "${z}tl${ref_id}" class button
     }
     qf_append html "<br>"
 }
 #ns_log Notice "asset-view.tcl pub_p '${pub_p}' admin_p '${admin_p}'"
 if { ( $pub_p || $admin_p ) && [exists_and_not_null asset_arr(publish_p) ] } {
     if { [qf_is_true $asset_arr(publish_p) ] } {
-        qf_input type submit value "#hosting-farm.Unpublish#" name "zsv${asset_id}" class button
+        qf_input type submit value "#hosting-farm.Unpublish#" name "${z}sv${ref_id}" class button
     } else {
-        qf_input type submit value "#hosting-farm.Publish#" name "zSv${asset_id}" class button
+        qf_input type submit value "#hosting-farm.Publish#" name "${z}Sv${ref_id}" class button
     }
     qf_append html "<br>"
 }

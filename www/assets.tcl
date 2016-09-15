@@ -55,13 +55,10 @@ set base_url "assets"
 #flags
 set include_view_assets_p 0
 set include_view_one_p 0
-set include_view_attr_p 0
 set include_view_attrs_p 0
 set include_view_sub_assets_p 0
 set include_edit_one_p 0
-set include_edit_attr_p 0
 set include_add_one_p 0
-set include_add_attr_p 0
 set keep_user_input_p 0
 array set input_arr \
     [list \
@@ -699,7 +696,7 @@ ns_log Notice "hosting-farm/assets.tcl.578: OUTPUT mode ${mode}"
 set include_assets_p 0
 set include_attrs_p 0
 set include_asset_p 0
-set include_attr_p 0
+
 set url "assets"
 
 switch -exact -- $mode {
@@ -739,7 +736,7 @@ switch -exact -- $mode {
                 array set obj_arr [array get sam_arr]
                 set obj_arr(f_id) $f_id
                 ns_log Notice "hosting-farm/assets.tcl.627: array get obj_arr [array get obj_arr]"
-                set include_add_attr_p 1
+                set include_add_one_p 1
                 append title " #hosting-farm.Attribute#"
             } elseif { $asset_type ne "" } {
                 set asset_type [ hf_constructor_a obj_arr force $asset_type $asset_type_id]
@@ -810,12 +807,13 @@ switch -exact -- $mode {
                 if { !$keep_user_input_p } {
                     array set obj_arr [array get sam_arr]
                     if { $sub_type_id in [hf_asset_type_id_list] } {
+                        set obj_arr(sub_type_id) $sub_type_id
                         set sub_asset_list [hf_${sub_type_id}_read $sub_f_id]
                         qf_lists_to_array obj_arr $sub_asset_list [hf_${sub_type_id}_keys]
                         ns_log Notice "hosting-farm/assets.tcl.700: array get obj_arr [array get obj_arr]"
                     }
                 }
-                set include_edit_attr_p 1
+                set include_edit_one_p 1
                 
             } else {
                 if { $keep_user_input_p } {
@@ -878,7 +876,7 @@ switch -exact -- $mode {
                     qf_lists_to_array obj_arr $sub_asset_list [hf_${sub_type_id}_keys]
                     ns_log Notice "hosting-farm/assets.tcl.760: array get obj_arr [array get obj_arr]"
                 }
-                set include_view_attr_p 1
+                set include_view_one_p 1
 
                 set attrs_list [hf_asset_attributes $sub_f_id]
                 if { [llength $attrs_list ] > 0 } {
