@@ -40,7 +40,7 @@ array unset asset_arr asset_type
 template::util::array_to_vars asset_arr
 
 if { ![exists_and_not_null sub_type_id] } {
-    set $sub_type_id ""
+    set sub_type_id ""
 }
 if { ![exists_and_not_null asset_type_id] } {
     set asset_type_id $sub_type_id
@@ -179,7 +179,7 @@ if { $asset_type eq "asset_primary_attr" || $asset_type eq "asset_only" } {
 }
 
 set edit_attr_p 0
-if { [string match "*asset*" $asset_type] } {
+if { [string match "*attr*" $asset_type] } {
     set edit_attr_p 1
 }
 

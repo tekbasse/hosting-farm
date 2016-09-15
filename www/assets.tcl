@@ -395,7 +395,7 @@ if { !$form_posted_p } {
             if { $asset_type_id ne "" } {
                 set state [hf_constructor_a obj_arr ]
                 ns_log Notice "hosting-farm/assets.tcl.290: state '${state}' asset_type '${asset_type}' array get obj_arr '[array get obj_arr]'"
-                if { $asset_type ne $state } {
+                if { $asset_type ne $state && $asset_type ne "attr_only" } {
                     ns_log Warning "hosting-farm/assets.tcl.295 state '${state}' from hf_constructor_a ne asset_type '${asset_type}'. Using supplied asset_type"
                 }
                 # validate data input
@@ -439,7 +439,7 @@ if { !$form_posted_p } {
             }
             array set obj_arr [array get input_arr]
             set state [hf_constructor_a obj_arr ]
-            if { $asset_type ne $state } {
+            if { $asset_type ne $state && $asset_type ne "attr_only" } {
                 ns_log Warning "hosting-farm/assets.tcl.400 state '${state}' from hf_constructor_a ne asset_type '${asset_type}'. Using supplied asset_type"
             }
             # validate data input
@@ -650,7 +650,7 @@ if { !$form_posted_p } {
 
         if { $mode eq "w" } {
             if { $write_p || $admin_p } {
-                if { $asset_type_id ne "" } {
+                if { $asset_type_id ne "" || $sub_type_id ne "" } {
                     if { [string match "*asset*" $asset_type] } {
                         set asset_id_old $asset_id
                         set asset_id [hf_asset_write obj_arr]
