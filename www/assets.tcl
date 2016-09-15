@@ -169,6 +169,7 @@ if { !$form_posted_p } {
                 #set sub_type_id $input_arr(sub_type_id)
                 set mapped_asset_id [string range $modes 3 end]
                 set mapped_f_id_of_asset_id [hf_f_id_of_asset_id $mapped_asset_id]
+                # mapped_f_id is where sub_f_id is mapped to.
             }
             ns_log Notice "hosting-farm/www/assets.tcl.149: f_id '${f_id}' sub_f_id '${sub_f_id}'"
         }
