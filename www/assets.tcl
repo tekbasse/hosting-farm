@@ -88,6 +88,48 @@ array set input_arr \
 
 # INPUTS
 
+# Given permutations of asset_types:
+#  A. asset_only
+#  B. asset_primary_attr
+#  C. attr_only 
+#  D. asset_attr 
+# and that D is a case of A-C,
+# and that C is dependent on A (or B).
+# These permutations must be considered for form input, 
+# where focus for change/addition is on the right most (lower) member.
+# and permissions are derived from asset_id associated with an A or B.
+# Here, '=' means 'reduces to'
+# A
+# B (expected to be common)
+# A-C (expected to be common, where A is part of a B )
+# A-B = B
+# A-A = A
+# B-A = A
+# B-B = B (expected to be common)
+# B-C (expected to be common)
+# A-A-A = A 
+# A-A-B = B
+# A-A-C = A-C
+# A-B-A = A
+# A-B-B = B
+# A-B-C = B-C
+# A-C-A = A
+# A-C-B = B
+# A-C-C *
+# B-A-A = A
+# B-A-B = B
+# B-A-C = A-C
+# B-B-A = A
+# B-B-B = B
+# B-B-C = B-C
+# B-C-A = A
+# B-C-B = B
+# B-C-C *
+# * References must consider that an attribute may be dependent of other attribute
+# and ultimately to an asset; Because an attribute requires an asset.
+# In summary:
+
+
 
 # Get form inputs if they exist
 set form_posted_p [qf_get_inputs_as_array input_arr hash_check 1]
