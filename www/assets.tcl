@@ -107,6 +107,7 @@ if { !$form_posted_p } {
              f_id \
              interval_remaining \
              mapped_asset_id \
+             mapped_f_id_of_asset_id \
              mapped_f_id \
              mode \
              mode_next \
@@ -134,8 +135,7 @@ if { !$form_posted_p } {
     # add required defaults not passed by form
 
 
-    set mapped_asset_id ""
-    set mapped_f_id_of_asset_id ""
+
     ##code update this regexp?
     set modes_idx [lsearch -regexp $input_arr_idx_list {[Zz][avpsSrnwctTdel][ivcrl][0-9]*} ]
     if { $modes_idx > -1 && $mode eq "p" } {
@@ -370,43 +370,16 @@ if { !$form_posted_p } {
     # Using IF instead of SWITCH to allow mode to be modified successively
     if { $mode eq "c" } { 
         if { $create_p || $admin_p } {
-            # allowed
-            if { $asset_type eq "attr_only" } {
-                set f_id [hf_f_id_of_asset_id $asset_id]
+            # validate data input
+            set v_asset_input_p 1
+            set v_attr_input_p 1
+            if { [string match "*asset*" $asset_type] } {
+                set v_asset_input_p [hfl_asset_field_validation obj_arr]
             }
-            # Any existing revision references must be for establishing hierarchical relationship only
-            # Choose the most specific f_id.
-            set f_id_of_asset_id ""
-            if { $asset_id ne "" } {
-                set f_id_of_asset_id [hf_f_id_of_asset_id $asset_id]
+            if { [string match "*attr*" $asset_type] && $valid_input_p } {
+                set v_attr_input_p [hfl_attribute_field_validation obj_arr]
             }
-            set mapped_f_id [qal_first_nonempty_in_list [list $mapped_f_id_of_asset_id $sub_f_id $f_id $f_id_of_asset_id]]
-            set asset_id ""
-            set input_arr(asset_id) ""
-            set sub_asset_id ""
-            set input_arr(sub_asset_id) ""
-            set sub_f_id ""
-            set input_arr(sub_f_id) ""                
-
-            array set obj_arr [array get input_arr]
-            set valid_input_p 0
-            if { $asset_type_id ne "" } {
-                set state [hf_constructor_a obj_arr ]
-                ns_log Notice "hosting-farm/assets.tcl.290: state '${state}' asset_type '${asset_type}' array get obj_arr '[array get obj_arr]'"
-                if { $asset_type ne $state && $asset_type ne "attr_only" } {
-                    ns_log Warning "hosting-farm/assets.tcl.295 state '${state}' from hf_constructor_a ne asset_type '${asset_type}'. Using supplied asset_type"
-                }
-                # validate data input
-                set v_asset_input_p 1
-                set v_attr_input_p 1
-                if { [string match "*asset*" $asset_type] } {
-                    set v_asset_input_p [hfl_asset_field_validation obj_arr]
-                }
-                if { [string match "*attr*" $asset_type] && $valid_input_p } {
-                    set v_attr_input_p [hfl_attribute_field_validation obj_arr]
-                }
-                set valid_input_p [expr { $v_asset_input_p && $v_attr_input_p} ]
-            } 
+            set valid_input_p [expr { $v_asset_input_p && $v_attr_input_p} ]
             if { !$valid_input_p } {
                 set mode_next "a"
                 ns_log Notice "hosting-farm/assets.tcl.300: \
@@ -432,9 +405,6 @@ if { !$form_posted_p } {
     if { $mode eq "w" } { 
         if { $write_p || $admin_p } {
             # allowed
-            if { $asset_type eq "attr_only" } {
-                set f_id [hf_f_id_of_asset_id $asset_id]
-            }
             array set obj_arr [array get input_arr]
             set state [hf_constructor_a obj_arr ]
             if { $asset_type ne $state && $asset_type ne "attr_only" } {
@@ -618,15 +588,13 @@ if { !$form_posted_p } {
                     }
                     if { [string match "*attr*" $asset_type ] } {
                         set sub_type_id $obj_arr(sub_type_id)
-                        if { $asset_type eq "attr_only" } {
+                        #if { $asset_type eq "attr_only" } {
                             # attr_only
-                            set obj_arr(f_id) $mapped_f_id
-                            set obj_arr(sub_type_id) $mapped_type_id
-                            if { $obj_arr(f_id) ne "" && $mapped_type_id ne "" } {
-                                set sub_type_id $mapped_type_id
-                            }
-                        }
-                        set sub_f_id ""
+                        #    set obj_arr(f_id) \[qal_first_nonempty_in_list \[list $obj_arr(f_id) $mapped_f_id\]\]
+                        #    set obj_arr(sub_type_id) \[qal_first_nonempty_in_list \[list $obj_arr(sub_type_id)  $mapped_type_id\]\]
+                        #    set sub_type_id $mapped_type_id
+                        #}
+                        #set sub_f_id ""
                         if { $sub_type_id ne "" } {
                             set sub_f_id [hf_${sub_type_id}_write obj_arr]
                             set obj_arr(sub_f_id) $sub_f_id
