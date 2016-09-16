@@ -322,7 +322,7 @@ if { !$form_posted_p } {
     # Re-checking permissions in context of input.
 
     set asset_id_varnam [qal_first_nonempty_in_list [list $asset_id $mapped_asset_id]]
-    set ati_varnam [qal_first_nonempty_in_list [list $sub_type_id $type_id $asset_type_id ]
+    set ati_varnam [qal_first_nonempty_in_list [list $sub_type_id $type_id $asset_type_id ]]
 
     set read_p [hf_ui_go_ahead_q read $asset_id_varnam $ati_varnam 0]
     set create_p [hf_ui_go_ahead_q create $asset_id_varnam $ati_varnam 0]
@@ -381,17 +381,6 @@ if { !$form_posted_p } {
                 set f_id_of_asset_id [hf_f_id_of_asset_id $asset_id]
             }
             set mapped_f_id [qal_first_nonempty_in_list [list $mapped_f_id_of_asset_id $sub_f_id $f_id $f_id_of_asset_id]]
-            if { $mapped_f_id ne "" } {
-                set mapped_type_id [hf_asset_type_id_of_f_id $mapped_f_id]
-                if { $mapped_type_id eq "" } {
-                    set mapped_f_id "" 
-                }
-            } else {
-                set mapped_type_id [qal_first_nonempty_in_list [list $sub_type_id $type_id $asset_type_id]]
-            }
-            if { $mapped_type_id ni [hf_types_allowed_by $mapped_type_id] } {
-                set $mapped_type_id ""
-            }
             set asset_id ""
             set input_arr(asset_id) ""
             set sub_asset_id ""
@@ -624,7 +613,7 @@ if { !$form_posted_p } {
                         set obj_arr(f_id) $asset_id
                         if { $mapped_f_id ne "" } {
                             # link asset to asset
-                            hf_sub_asset_map_update $mapped_f_id $mapped_type_id $obj_arr(label) $asset_id $obj_arr(asset_type_id) 0
+                            hf_sub_asset_map_update $mapped_f_id $obj_arr(type_id) $obj_arr(label) $asset_id $obj_arr(asset_type_id) 0
                         }
                     }
                     if { [string match "*attr*" $asset_type ] } {
