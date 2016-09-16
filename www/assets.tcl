@@ -88,58 +88,6 @@ array set input_arr \
 
 # INPUTS
 
-# Given permutations of asset_types:
-#  A. asset_only
-#  B. asset_primary_attr
-#  C. attr_only 
-#  D. asset_attr 
-# and that D is a case of A-C,
-# and that C is dependent on A (or B).
-# These permutations must be considered for form input, 
-# where focus for change/addition is on the right most (lower) member.
-# and permissions are derived from asset_id associated with an A or B.
-# Here, '=' means 'reduces to'
-# A
-# B (expected to be common)
-# A-C (expected to be common, where A is part of a B )
-# A-B = B
-# A-A = A
-# B-A = A
-# B-B = B (expected to be common)
-# B-C (expected to be common)
-# A-A-A = A 
-# A-A-B = B
-# A-A-C = A-C
-# A-B-A = A
-# A-B-B = B
-# A-B-C = B-C
-# A-C-A = A
-# A-C-B = B
-# A-C-C *
-# B-A-A = A
-# B-A-B = B
-# B-A-C = A-C
-# B-B-A = A
-# B-B-B = B
-# B-B-C = B-C
-# B-C-A = A
-# B-C-B = B
-# B-C-C *
-# * References must consider that an attribute may be dependent of other attribute
-# and ultimately to an asset; Because an attribute requires an asset.
-
-# In summary, these literal asset_type combos:
-#  A
-#  B
-#  A-C
-#  B-C
-#  A-C-C *
-#  B-C-C *
-#  A-C-..C *
-#  B-C-..C *
-#  * only the last C is in focus (edited/added).
-
-
 
 # Get form inputs if they exist
 set form_posted_p [qf_get_inputs_as_array input_arr hash_check 1]
@@ -149,92 +97,80 @@ if { !$form_posted_p } {
     template::util::array_to_vars input_arr
 } else {
 
-    # Convert input_array to variables
-    qf_array_to_vars input_arr \
-        [list \
-             asset_id \
-             asset_type \
-             asset_type_id \
-             customer_id \
-             f_id \
-             interval_remaining \
-             mapped_asset_id \
-             mapped_f_id_of_asset_id \
-             mapped_f_id \
-             mode \
-             mode_next \
-             p \
-             page_title \
-             s \
-             state \
-             sub_asset_id \
-             sub_f_id \
-             sub_type_id \
-             this_start_row \
-             top_level_p \
-             type_id ]
-    # x,y elements in input_arr holds position of image-based submit
-    array unset input_arr x
-    array unset input_arr y
-    ns_log Notice "hosting-farm/assets.tcl.125. Values posted as: \
- asset_id '${asset_id}' sub_asset_id '${sub_asset_id}' f_id '${f_id}' \
- sub_f_id '${sub_f_id}' asset_type_id '${asset_type_id}' sub_type_id '${sub_type_id}' \
- asset_type '${asset_type}' state '${state}' mode '${mode}' mode_next '${mode_next}'"
+    # Given permutations of asset_types:
+    #  A. asset_only
+    #  B. asset_primary_attr
+    #  C. attr_only 
+    #  D. asset_attr 
+    # and that D is a case of A-C,
+    # and that C is dependent on A (or B).
+    # These permutations must be considered for form input, 
+    # where focus for change/addition is on the right most (lower) member.
+    # and permissions are derived from asset_id associated with an A or B.
+    # Here, '=' means 'reduces to'
+    # A
+    # B (expected to be common)
+    # A-C (expected to be common, where A is part of a B )
+    # A-B = B
+    # A-A = A
+    # B-A = A
+    # B-B = B (expected to be common)
+    # B-C (expected to be common)
+    # A-A-A = A 
+    # A-A-B = B
+    # A-A-C = A-C
+    # A-B-A = A
+    # A-B-B = B
+    # A-B-C = B-C
+    # A-C-A = A
+    # A-C-B = B
+    # A-C-C *
+    # B-A-A = A
+    # B-A-B = B
+    # B-A-C = A-C
+    # B-B-A = A
+    # B-B-B = B
+    # B-B-C = B-C
+    # B-C-A = A
+    # B-C-B = B
+    # B-C-C *
+    # * References must consider that an attribute may be dependent of other attribute
+    # and ultimately to an asset; Because an attribute requires an asset.
 
-    # following is part of dynamic menu processing using form tags instead of url/GET
-    # key,value is passed as a single name, with first letter z for asset_id or Z for sub_f_id.
-    set input_arr_idx_list [array names input_arr]
-    # add required defaults not passed by form
+    # In summary, these literal asset_type combos:
+    #  A
+    #  B = A+C
+    #  A-C *
+    #  B-C *
+    #  A-C-C * 
+    #  B-C-C * = A-C-C-C * 
+    #  A-C-..C *
+    #  B-C-..C * = A-C-C..C *
+    #  * only the last C is in focus (edited/added).
 
-
-
-    ##code update this regexp?
-    set modes_idx [lsearch -regexp $input_arr_idx_list {[Zz][avpsSrnwctTdel][ivcrl][0-9]*} ]
-    if { $modes_idx > -1 && $mode eq "p" } {
-        set modes [lindex $input_arr_idx_list $modes_idx]
-        set test [string range $modes 0 3]
-        if { [string match "z*" $test] } {
-            if { [string match {za*} $test] } {
-                set mapped_asset_id [string range $modes 3 end]
-                set mapped_f_id_of_asset_id [hf_f_id_of_asset_id $mapped_asset_id]
-            } else {
-                set asset_id [string range $modes 3 end]
-            }
-            ns_log Notice "hosting-farm/www/assets.tcl.141: asset_id '${asset_id}'"
-            if { [string match "zl*" $test] } {
-                set this_start_row [string range $modes 3 end]
-                ns_log Notice "hosting-farm/www/assets.tcl.145: this_start_row '${this_start_row}'"
-            }
-        }
-        if { [string match "Z*" $test] } {
-            # attr_only
-            set asset_type "attr_only"
-            if { [string match {Z[vewtTdl]*} $test] } {
-                set sub_f_id [string range $modes 3 end]
-                # set asset_id for permissions, and make rest of map record available. sub_type_id etc.
-                if { $sub_f_id > 0 } {
-                    set sam_list [hf_sub_asset $sub_f_id]
-                    qf_lists_to_array sam_arr $sam_list [hf_sub_asset_map_keys]
-                    set sub_type_id $sam_arr(sub_type_id)
-                    set f_id $sam_arr(f_id)
-                }
-                set mapped_asset_id [hf_asset_id_current_of_f_id $f_id]
-            } elseif { [string match "Za*" $test] } {
-                set mapped_asset_id [string range $modes 3 end]
-            }
-            if { $mapped_asset_id ne "" } {
-                set mapped_f_id_of_asset_id [hf_f_id_of_asset_id $mapped_asset_id]
-            }
-            ns_log Notice "hosting-farm/www/assets.tcl.149: f_id '${f_id}' sub_f_id '${sub_f_id}'"
-        }
-        
-        # modes 0 0 is z or Z
-        set mode [string range $modes 1 1]
-        set mode_next [string range $modes 2 2]
-
-    }
-
-    # Validate input for specific modes
+    #  C view requires:
+    #           sub_f_id
+    #  C edit requires:
+    #           mapped_asset_id,
+    #           sub_f_id
+    #  C add requires:
+    #           mapped_asset_id, 
+    #           mapped_f_id (which is f_id in sub map, sub_f_id is empty)
+    #           sub_type_id
+    #  A view requries:
+    #           asset_id
+    #  A add requires:
+    #           mapped_asset_id if any, 
+    #           asset_type_id
+    #  A edit requires:
+    #           asset_id
+    #  B view requires:
+    #           asset_id
+    #  B edit requires:
+    #           asset_id
+    #  B add requires:
+    #           mapped_asset_id if any,
+    #           asset_type_id
 
     # Modes are views, or one of these compound action/views
     #   d   delete (d x) then view as before (where x = l, r or v)
@@ -269,8 +205,6 @@ if { !$form_posted_p } {
 
     # Views
     #   a  = add asset/attribute (this allows more control over adding than using edit form allows)
-
-    #
     #   e  = edit asset_id/sub_asset_id or attribute, presents defaults if no prior data
     #   v  = view asset_id or sub_asset_id (attribute_id or asset_id)
     #   l  = list assets
@@ -278,8 +212,92 @@ if { !$form_posted_p } {
     #   "" = view list of role oriented summaries
     #          such as many customers and assets as possible etc.
 
-    # Validate input
 
+    # Convert input_array to variables
+    qf_array_to_vars input_arr \
+        [list \
+             asset_id \
+             asset_type \
+             asset_type_id \
+             customer_id \
+             f_id \
+             interval_remaining \
+             mapped_asset_id \
+             mapped_f_id \
+             mode \
+             mode_next \
+             p \
+             page_title \
+             s \
+             state \
+             sub_asset_id \
+             sub_f_id \
+             sub_type_id \
+             this_start_row \
+             top_level_p \
+             type_id ]
+    # x,y elements in input_arr holds position of image-based submit
+    array unset input_arr x
+    array unset input_arr y
+    ns_log Notice "hosting-farm/assets.tcl.125. Values posted as: \
+ asset_id '${asset_id}' sub_asset_id '${sub_asset_id}' f_id '${f_id}' \
+ sub_f_id '${sub_f_id}' asset_type_id '${asset_type_id}' sub_type_id '${sub_type_id}' \
+ asset_type '${asset_type}' state '${state}' mode '${mode}' mode_next '${mode_next}'"
+
+    # following is part of dynamic menu processing using form tags instead of url/GET
+    # key,value is passed as a single name, with first letter z for asset_id or Z for sub_f_id.
+    set input_arr_idx_list [array names input_arr]
+    # add required defaults not passed by form
+
+
+    ##code update this regexp?
+    set modes_idx [lsearch -regexp $input_arr_idx_list {[Zz][avpsSrnwctTdel][ivcrl][0-9]*} ]
+    if { $modes_idx > -1 && $mode eq "p" } {
+        set modes [lindex $input_arr_idx_list $modes_idx]
+        set test [string range $modes 0 3]
+        if { [string match "z*" $test] } {
+            # all asset_type except attr_only
+            if { [string match {za*} $test] } {
+                set mapped_f_id [string range $modes 3 end]
+                ns_log Notice "hosting-farm/www/assets.tcl.139: mapped_f_id '${mapped_f_id}'"
+            } else {
+                set asset_id [string range $modes 3 end]
+                ns_log Notice "hosting-farm/www/assets.tcl.141: asset_id '${asset_id}'"
+            }
+
+            if { [string match "zl*" $test] } {
+                set this_start_row [string range $modes 3 end]
+                ns_log Notice "hosting-farm/www/assets.tcl.145: this_start_row '${this_start_row}'"
+            }
+        }
+        if { [string match "Z*" $test] } {
+            # attr_only
+            set asset_type "attr_only"
+            if { [string match {Z[vewtTdl]*} $test] } {
+                set sub_f_id [string range $modes 3 end]
+                #  asset_id required for permissions, and make rest of map record available. sub_type_id etc.
+                if { $sub_f_id > 0 } {
+                    set sam_list [hf_sub_asset $sub_f_id]
+                    qf_lists_to_array sam_arr $sam_list [hf_sub_asset_map_keys]
+                    set sub_type_id $sam_arr(sub_type_id)
+                    set f_id $sam_arr(f_id)
+                }
+                #set mapped_asset_id [hf_asset_id_current_of_f_id $f_id]
+            } elseif { [string match "Za*" $test] } {
+                set mapped_f_id [string range $modes 3 end]
+            }
+            ns_log Notice "hosting-farm/www/assets.tcl.149: f_id '${f_id}' sub_f_id '${sub_f_id}' mapped_asset_id '${mapped_asset_id}'"
+        }
+        
+        # modes 0 0 is z or Z
+        set mode [string range $modes 1 1]
+        set mode_next [string range $modes 2 2]
+
+    }
+
+    # Validate input for specific modes
+    # Validate input
+    set validated_p 0
 
     if { [string length $mode] != 1 } {
         set mode "v"
@@ -295,8 +313,6 @@ if { !$form_posted_p } {
 
     ns_log Notice "hosting-farm/www/assets.tcl.182: \
  mode '${mode}' mode_next ${mode_next}"
-
-    set validated_p 0
     ns_log Notice "hosting-farm/assets.tcl.186: user_id '${user_id}' \
  customer_id '${customer_id}' asset_id '${asset_id}' "
 
@@ -381,7 +397,7 @@ if { !$form_posted_p } {
     set write_p [hf_ui_go_ahead_q write $asset_id_varnam $ati_varnam 0]
     set admin_p [hf_ui_go_ahead_q admin $asset_id_varnam $ati_varnam 0]
 
-        
+    
 
     if { $customer_id ne "" && [qf_is_natural_number $customer_id ] } {
         set customer_ids_list [hf_customer_ids_for_user $user_id $instance_id]
@@ -641,7 +657,7 @@ if { !$form_posted_p } {
                     if { [string match "*attr*" $asset_type ] } {
                         set sub_type_id $obj_arr(sub_type_id)
                         #if { $asset_type eq "attr_only" } {
-                            # attr_only
+                        # attr_only
                         #    set obj_arr(f_id) \[qal_first_nonempty_in_list \[list $obj_arr(f_id) $mapped_f_id\]\]
                         #    set obj_arr(sub_type_id) \[qal_first_nonempty_in_list \[list $obj_arr(sub_type_id)  $mapped_type_id\]\]
                         #    set sub_type_id $mapped_type_id
