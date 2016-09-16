@@ -127,7 +127,17 @@ array set input_arr \
 # B-C-C *
 # * References must consider that an attribute may be dependent of other attribute
 # and ultimately to an asset; Because an attribute requires an asset.
-# In summary:
+
+# In summary, these literal asset_type combos:
+#  A
+#  B
+#  A-C
+#  B-C
+#  A-C-C *
+#  B-C-C *
+#  A-C-..C *
+#  B-C-..C *
+#  * only the last C is in focus (edited/added).
 
 
 
