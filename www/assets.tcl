@@ -137,11 +137,11 @@ if { !$form_posted_p } {
     set mapped_asset_id ""
     set mapped_f_id_of_asset_id ""
     ##code update this regexp?
-    set modes_idx [lsearch -regexp $input_arr_idx_list {[Zz][avpsSrnwctTdel][ivcrl][0-9]*}]
+    set modes_idx [lsearch -regexp $input_arr_idx_list {[Zz][avpsSrnwctTdel][ivcrl][0-9]*} ]
     if { $modes_idx > -1 && $mode eq "p" } {
         set modes [lindex $input_arr_idx_list $modes_idx]
         set test [string range $modes 0 3]
-        if { [string match {z[aevtD]*} $test] } {
+        if { [string match "z*" $test] } {
             if { [string match {za*} $test] } {
                 set mapped_asset_id [string range $modes 3 end]
                 set mapped_f_id_of_asset_id [hf_f_id_of_asset_id $mapped_asset_id]
@@ -149,10 +149,10 @@ if { !$form_posted_p } {
                 set asset_id [string range $modes 3 end]
             }
             ns_log Notice "hosting-farm/www/assets.tcl.141: asset_id '${asset_id}'"
-        }
-        if { [string match "zl*" $test] } {
-            set this_start_row [string range $modes 3 end]
-            ns_log Notice "hosting-farm/www/assets.tcl.145: this_start_row '${this_start_row}'"
+            if { [string match "zl*" $test] } {
+                set this_start_row [string range $modes 3 end]
+                ns_log Notice "hosting-farm/www/assets.tcl.145: this_start_row '${this_start_row}'"
+            }
         }
         if { [string match "Z*" $test] } {
             # attr_only
@@ -160,16 +160,18 @@ if { !$form_posted_p } {
             if { [string match {Z[vewtTdl]*} $test] } {
                 set sub_f_id [string range $modes 3 end]
                 # set asset_id for permissions, and make rest of map record available. sub_type_id etc.
-                set sam_list [hf_sub_asset $sub_f_id]
-                qf_lists_to_array sam_arr $sam_list [hf_sub_asset_map_keys]
-                set sub_type_id $sam_arr(sub_type_id)
-                set f_id [hf_asset_f_id_of_sub_f_id $sub_f_id]
-                set asset_id [hf_asset_id_current_of_f_id $f_id]
+                if { $sub_f_id > 0 } {
+                    set sam_list [hf_sub_asset $sub_f_id]
+                    qf_lists_to_array sam_arr $sam_list [hf_sub_asset_map_keys]
+                    set sub_type_id $sam_arr(sub_type_id)
+                    set f_id $sam_arr(f_id)
+                }
+                set mapped_asset_id [hf_asset_id_current_of_f_id $f_id]
             } elseif { [string match "Za*" $test] } {
-                #set sub_type_id $input_arr(sub_type_id)
                 set mapped_asset_id [string range $modes 3 end]
+            }
+            if { $mapped_asset_id ne "" } {
                 set mapped_f_id_of_asset_id [hf_f_id_of_asset_id $mapped_asset_id]
-                # mapped_f_id is where sub_f_id is mapped to.
             }
             ns_log Notice "hosting-farm/www/assets.tcl.149: f_id '${f_id}' sub_f_id '${sub_f_id}'"
         }
@@ -318,10 +320,16 @@ if { !$form_posted_p } {
 
     # special cases require special permissions
     # Re-checking permissions in context of input.
-    set read_p [hf_ui_go_ahead_q read "" "" 0]
-    set create_p [hf_ui_go_ahead_q create "" "" 0]
-    set write_p [hf_ui_go_ahead_q write "" "" 0]
-    set admin_p [hf_ui_go_ahead_q admin "" "" 0]
+
+    set asset_id_varnam [qal_first_nonempty_in_list [list $asset_id $mapped_asset_id]]
+    set ati_varnam [qal_first_nonempty_in_list [list $sub_type_id $type_id $asset_type_id ]
+
+    set read_p [hf_ui_go_ahead_q read $asset_id_varnam $ati_varnam 0]
+    set create_p [hf_ui_go_ahead_q create $asset_id_varnam $ati_varnam 0]
+    set write_p [hf_ui_go_ahead_q write $asset_id_varnam $ati_varnam 0]
+    set admin_p [hf_ui_go_ahead_q admin $asset_id_varnam $ati_varnam 0]
+
+        
 
     if { $customer_id ne "" && [qf_is_natural_number $customer_id ] } {
         set customer_ids_list [hf_customer_ids_for_user $user_id $instance_id]
