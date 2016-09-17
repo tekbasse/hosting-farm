@@ -156,7 +156,7 @@ qf_bypass_nv_list [list mode c mode_next v asset_type $asset_type]
 set key_list [list ]
 set asset_key_list [list ]
 if { [string match "*asset*" $asset_type ] } {
-    set key_list [hf_key_order_for_display [hf_asset_keys]]
+    set key_list [hf_key_sort_for_display [hf_asset_keys]]
     set asset_key_list $key_list
     
 }
@@ -166,7 +166,7 @@ if { [string match "*attr*" $asset_type ] } {
         set attr_key_list [concat [hf_${sub_type_id}_keys] [hf_sub_asset_map_keys] ]
         # remove duplicates
         set attr_key_list [lsort -unique $attr_key_list]
-        set attr_key_list [hf_key_order_for_display $attr_key_list]
+        set attr_key_list [hf_key_sort_for_display $attr_key_list]
         set key_list [concat $key_list $attr_key_list ]
     } else {
         ns_log Warning "hosting-farm/lib/asset-add.tcl.164: asset_type '${asset_type}' sub_type_id '${sub_type_id}' not valid"

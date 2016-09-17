@@ -309,10 +309,11 @@ ad_proc -private privilege_on_key_allowed_q {
     return $allowed_p
 }
 
-ad_proc -private hf_key_order_for_display {
+ad_proc -private hf_key_sort_for_display {
     names_list
+    {unique_p "1"}
 } {
-    Returns fieldnames in sequence for display or editing.
+    Returns fieldnames in sequence for display or editing. If unique_p, removes duplicate fields.
 } {
     set f_lists [list ]
     foreach f $names_list {
@@ -321,7 +322,11 @@ ad_proc -private hf_key_order_for_display {
     }
     # using ascii sort, so that capitalized names are first.
     # use dictionary instead to alphabetize all of them.
-    set f2_lists [lsort -index 1 -ascii -increasing $f_lists]
+    if { $unique_p } {
+        set f2_lists [lsort -unique -index 1 -ascii -increasing $f_lists]
+    } else {
+        set f2_lists [lsort -index 1 -ascii -increasing $f_lists]
+    }
     set names_list_new [list ]
     foreach row_list $f2_lists {
         lappend names_list_new [lindex $row_list 0]
