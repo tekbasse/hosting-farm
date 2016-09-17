@@ -211,7 +211,7 @@ foreach key $key_list {
             } else {
 
                 qf_append html "<span>#hosting-farm.${key}#${separator}${val}</span>"
-                qf_bypass name $key value $val
+                qf_input type hidden name $key value $val
             }
         } else {
             qf_input type text value $val name $key label "#hosting-farm.${key}#${separator}" size 40 maxlength 80
@@ -219,9 +219,9 @@ foreach key $key_list {
     } elseif { $detail_p || $tech_p } {
         qf_append html "<br>"
         qf_append html "<span>#hosting-farm.${key}#${separator}${val}</span>"
-        qf_bypass name $key value $val
+        qf_input type hidden name $key value $val
     } else {
-        qf_bypass name $key value $val
+        qf_input type hidden name $key value $val
     }
 }
 

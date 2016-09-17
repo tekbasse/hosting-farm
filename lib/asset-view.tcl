@@ -201,10 +201,10 @@ if { $asset_type eq "attr_only" } {
     set mapped_f_id ""
 }
 set form_id [qf_form action $base_url method post id 20160809 hash_check 1]
-qf_bypass name mode value "p"
-qf_bypass name asset_type value $asset_type
-qf_bypass name mapped_asset_id value $mapped_asset_id
-qf_bypass name mapped_f_id value $mapped_f_id
+qf_input type hidden name mode value "p"
+qf_input type hidden name asset_type value $asset_type
+qf_input type hidden name mapped_asset_id value $mapped_asset_id
+qf_input type hidden name mapped_f_id value $mapped_f_id
 qf_input type submit value "#accounts-ledger.edit#" name "${z}ev${sub_f_id}" class button
 qf_append html "<br>"
 if { $write_p && [exists_and_not_null asset_arr(trashed_p) ] } {

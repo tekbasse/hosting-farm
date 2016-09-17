@@ -473,10 +473,6 @@ if { !$form_posted_p } {
         if { $write_p || $admin_p } {
             # allowed
             array set obj_arr [array get input_arr]
-            set state [hf_constructor_a obj_arr ]
-            if { $asset_type ne $state && $asset_type ne "attr_only" } {
-                ns_log Warning "hosting-farm/assets.tcl.400 state '${state}' from hf_constructor_a ne asset_type '${asset_type}'. Using supplied asset_type"
-            }
             # validate data input
             set valid_input_p 0
             set v_asset_input_p 1
@@ -683,6 +679,11 @@ if { !$form_posted_p } {
 
         if { $mode eq "w" } {
             if { $write_p || $admin_p } {
+                if { $f_id eq "" } {
+                    set f_id_of_asset_id [hf_f_id_of_asset_id $asset_id]
+                    set f_id [qal_first_nonempty_in_list [list $mapped_f_id $f_id_of_asset_id]]
+                              ns_log Warning "hosting-farm/assets.tcl.470: f_id is ''. Changed to '${f_id}. mapped_f_id '${mapped_f_id}' f_id_of_asst_id '${f_id_of_asset_id}'"
+                }
                 if { $asset_type_id ne "" || $sub_type_id ne "" } {
                     if { [string match "*asset*" $asset_type] } {
                         set asset_id_old $asset_id
