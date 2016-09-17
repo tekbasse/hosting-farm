@@ -267,7 +267,6 @@ if { !$form_posted_p } {
                 set asset_id [string range $modes 3 end]
                 ns_log Notice "hosting-farm/www/assets.tcl.141: asset_id '${asset_id}'"
             }
-
             if { [string match "zl*" $test] } {
                 set this_start_row [string range $modes 3 end]
                 ns_log Notice "hosting-farm/www/assets.tcl.145: this_start_row '${this_start_row}'"
@@ -284,11 +283,14 @@ if { !$form_posted_p } {
                     qf_lists_to_array sam_arr $sam_list [hf_sub_asset_map_keys]
                     set sub_type_id $sam_arr(sub_type_id)
                     set f_id $sam_arr(f_id)
+                    set mapped_f_id $f_id
                 }
-                #set mapped_asset_id [hf_asset_id_current_of_f_id $f_id]
             } elseif { [string match "Za*" $test] } {
                 set mapped_f_id [string range $modes 3 end]
             }
+            set mapped_f_id_of_asset_id [hf_asset_f_id_of_sub_f_id $mapped_f_id]
+            set mapped_asset_id [hf_asset_id_of_f_id_if_untrashed $mapped_f_id_of_asset_id]
+
             ns_log Notice "hosting-farm/www/assets.tcl.149: f_id '${f_id}' sub_f_id '${sub_f_id}' mapped_asset_id '${mapped_asset_id}'"
         }
         
@@ -322,42 +324,40 @@ if { !$form_posted_p } {
     # Cleanse data, verify values for consistency
     # Determine input completeness
 
-    if { [qf_is_natural_number $asset_id] } {
-        if { [hf_asset_id_exists_q $asset_id ] || $asset_type eq "attr_only" } {
+    if { $asset_id ne "" } {
+        if { [hf_asset_id_exists_q $asset_id ] } {
             # Probably valid asset_id
         } else {
+            ns_log Warning "hosting-farm/assets.tcl.225: asset_id '${asset_id}' not valid. Set to ''"
             set asset_id ""
         }
-    } else {
-        set asset_id ""
     }
-    
-    if { [qf_is_natural_number $sub_asset_id] } {
+
+    if { $sub_asset_id ne "" } {
         if { [hf_asset_id_exists_q $sub_asset_id ] } {
             # Probably valid sub_asset_id
         } else {
+            ns_log Warning "hosting-farm/assets.tcl.230: sub_asset_id '${sub_asset_id}' not valid. Set to ''"
             set sub_asset_id ""
         }
-    } else {
-        set sub_asset_id ""
-    }
-    if { [qf_is_natural_number $f_id] } {
-        if { [hf_asset_id_exists_q $f_id ] || $asset_type eq "attr_only" } {
+    } 
+
+    if { $f_id ne "" } {
+        if { [hf_asset_id_exists_q $f_id ] } {
             # Probably valid f_id
         } else {
+            ns_log Warning "hosting-farm/assets.tcl.235: f_id '${f_id}' not valid. Set to ''"
             set f_id ""
         }
-    } else {
-        set f_id ""
-    }
-    if { [qf_is_natural_number $sub_f_id] } {
+    } 
+
+    if { $sub_f_id ne "" } {
         if { [hf_sub_f_id_exists_q $sub_f_id ] } {
             # Probably valid sub_f_id
         } else {
+            ns_log Warning "hosting-farm/assets.tcl.240: sub_f_id '${sub_f_id}' not valid. Set to ''"
             set sub_f_id ""
         }
-    } else {
-        set sub_f_id ""
     }
 
     if { $asset_type_id ne "" &&  $asset_type_id ni [hf_asset_type_id_list ] } {
@@ -374,17 +374,13 @@ if { !$form_posted_p } {
         ns_log Notice "hosting-farm/assets.tcl.275: asset_type '${asset_type}' not recognized. Setting to ''."
         set asset_type ""
     }         
-    if { $state ni [list "" asset_primary_attr asset_attr attr_only asset_only] } {
-        ns_log Notice "hosting-farm/assets.tcl.275: state '${state}' not recognized. Setting to ''."
-        set state ""
-    } 
 
-    # maybe blank out any invalid inputs at the source?
-    foreach key [list asset_id sub_asset_id f_id sub_f_id asset_type_id sub_type_id asset_type state] {
+    # blank out any invalid inputs from above at the source, if they exist.
+    foreach key [list asset_id sub_asset_id f_id sub_f_id asset_type_id sub_type_id asset_type] {
         if { ![exists_and_not_null $key] } {
             if { $input_arr(${key}) ne "" } {
-                ns_log Notice "hosting-farm/assets.tcl.216: key '${key}' is blank. Blank out input_arr(${key}) '$input_arr(${key})'?"
-                #set input_arr(${key}) ""
+                ns_log Notice "hosting-farm/assets.tcl.277: key '${key}' is blank. Subsequently blanked out input_arr(${key}) '$input_arr(${key})'"
+                set input_arr(${key}) ""
             }
         }
     }
