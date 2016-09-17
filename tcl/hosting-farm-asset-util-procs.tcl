@@ -362,7 +362,7 @@ ad_proc -private hf_f_id_of_asset_id {
 ad_proc -private hf_asset_id_current_of_f_id { 
     f_id
 } {
-    Returns current asset_id mapped to the label and f_id, otherwise returns empty string.
+    Returns current asset_id mapped to f_id in hf_asset_rev_map, otherwise returns empty string.
 
     @param f_id  hf_asset.f_id for an asset.
 
