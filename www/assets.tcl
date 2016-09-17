@@ -170,7 +170,8 @@ if { !$form_posted_p } {
     #           asset_id
     #  B add requires:
     #           mapped_asset_id if any,
-    #           asset_type_id
+    #           asset_type_id = sub_type_id
+    #           (sub_type_id)
 
     # Modes are views, or one of these compound action/views
     #   d   delete (d x) then view as before (where x = l, r or v)
@@ -205,7 +206,9 @@ if { !$form_posted_p } {
 
     # Views
     #   a  = add asset/attribute (this allows more control over adding than using edit form allows)
+    #        An add button is presented in context of a view
     #   e  = edit asset_id/sub_asset_id or attribute, presents defaults if no prior data
+    #        An edit is preceded by view, in order to collected relevant input requirements.
     #   v  = view asset_id or sub_asset_id (attribute_id or asset_id)
     #   l  = list assets
     #   r  = view revision history (can only delete if pkg admin)
