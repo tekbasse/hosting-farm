@@ -799,12 +799,6 @@ ad_proc -private hfl_attribute_field_validation {
     }
     set message_list [list ]
     set first_msg "#acs-tcl.lt_Problem_with_your_inp#"
-    if { $__hfl_afv_prior_error_p == 0 } {
-        # There have been no prior error messages
-        # Create a context intro message, just in case
-        lappend message_list $first_msg
-        set __hfl_afv_prior_error_p 1
-    }
 
     set attr_validated_p 1
 
@@ -1042,7 +1036,7 @@ ad_proc -private hfl_attribute_field_validation {
             set attr_validated_p [expr { $attr_validated_p && $validated_p } ]
         }
     } 
-    if { [llength $message_list] > 0} {
+    if { [llength $message_list] > 0 } {
         set validated_p 0
         if { $__hfl_afv_prior_error_p == 0 } {
             # There have been no prior error messages
