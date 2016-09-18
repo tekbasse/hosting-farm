@@ -64,7 +64,7 @@ ad_proc -public hf_constructor_a {
 
 
     # This is a paradigm of combining an asset and/or attribute
-    # Consider creating an hf_constructor_b etc. if you
+    # Consider creating an hf_constructor_c etc. if you
     # want a different way of combining an total asset object.
     # See also the hf_asset_properties for another paradigm
     # used by non UI hf_nc_* system.
@@ -98,7 +98,8 @@ ad_proc -public hf_constructor_a {
     # determine primary_attr_id
     set primary_attr_id ""
     if { $asset_id_p } {
-        set primary_attr_id [hf_asset_primary_attr $asset_id]
+        set primary_attr_id [hf_primary_sub_f_id $f_id_of_asset_id]
+        #set primary_attr_id \[hf_asset_primary_attr $asset_id\]
     }
 
     # determine sub_asset_id_p
@@ -435,6 +436,9 @@ ad_proc -public hf_constructor_b {
 
     set asset_type [hf_constructor_a yan_arr $arg1 $arg2 $arg3]
     #ns_log Notice "hf_constructor_b.413: asset_type '${asset_type}'"
+    if { $asset_id ne "" && $f_id eq "" } {
+        set f_id [hf_f_id_of_asset_id $asset_id]
+    } 
     if { $asset_id ne "" && $f_id ne "" } {
         set asset_id_old $asset_id
         set asset_id [hf_asset_id_of_f_id_if_untrashed $f_id]
