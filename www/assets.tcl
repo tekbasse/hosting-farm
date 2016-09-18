@@ -263,13 +263,13 @@ if { !$form_posted_p } {
             if { [string match {za*} $test] } {
                 set mapped_f_id [string range $modes 3 end]
                 ns_log Notice "hosting-farm/www/assets.tcl.139: mapped_f_id '${mapped_f_id}'"
-            } else {
-                set asset_id [string range $modes 3 end]
-                ns_log Notice "hosting-farm/www/assets.tcl.141: asset_id '${asset_id}'"
-            }
-            if { [string match "zl*" $test] } {
+            } elseif { [string match {zl*} $test] } {
                 set this_start_row [string range $modes 3 end]
                 ns_log Notice "hosting-farm/www/assets.tcl.145: this_start_row '${this_start_row}'"
+            } else {
+                set asset_id [string range $modes 3 end]
+                set f_id [hf_f_id_of_asset_id $asset_id]
+                ns_log Notice "hosting-farm/www/assets.tcl.141: asset_id '${asset_id}'"
             }
         }
         if { [string match "Z*" $test] } {
@@ -343,7 +343,7 @@ if { !$form_posted_p } {
     } 
 
     if { $f_id ne "" } {
-        if { [hf_asset_id_exists_q $f_id ] } {
+        if { [hf_f_id_exists_q $f_id ] || [hf_sub_f_id_exists_q $f_id] } {
             # Probably valid f_id
         } else {
             ns_log Warning "hosting-farm/assets.tcl.235: f_id '${f_id}' not valid. Set to ''"
@@ -377,7 +377,7 @@ if { !$form_posted_p } {
 
     # blank out any invalid inputs from above at the source, if they exist.
     foreach key [list asset_id sub_asset_id f_id sub_f_id asset_type_id sub_type_id asset_type] {
-        if { ![exists_and_not_null $key] } {
+        if { ![info exists $key] } {
             if { $input_arr(${key}) ne "" } {
                 ns_log Notice "hosting-farm/assets.tcl.277: key '${key}' is blank. Subsequently blanked out input_arr(${key}) '$input_arr(${key})'"
                 set input_arr(${key}) ""
@@ -441,9 +441,16 @@ if { !$form_posted_p } {
             set v_asset_input_p 1
             set v_attr_input_p 1
             if { [string match "*asset*" $asset_type] } {
+                foreach key [hf_asset_keys] {
+                    set obj_arr(${key}) $input_arr(${key})
+                }
                 set v_asset_input_p [hfl_asset_field_validation obj_arr]
             }
-            if { [string match "*attr*" $asset_type] && $valid_input_p } {
+            if { [string match "*attr*" $asset_type] && $v_asset_input_p } {
+### code 
+                foreach key [concat hf_$_keys] {
+                    set obj_arr(${key}) $input_arr(${key})
+                }
                 set v_attr_input_p [hfl_attribute_field_validation obj_arr]
             }
             set valid_input_p [expr { $v_asset_input_p && $v_attr_input_p} ]
@@ -696,7 +703,7 @@ if { !$form_posted_p } {
                         }
                     }
                     if { [string match "*attr*" $asset_type] } {
-                        set sub_type_id $obj_arr(sub_type_id)
+                        #set sub_type_id $obj_arr(sub_type_id)
                         set sub_f_id_old $sub_f_id
                         set sub_f_id [hf_${sub_type_id}_write obj_arr]
                         if { $sub_f_id ne "" } {
@@ -903,41 +910,22 @@ switch -exact -- $mode {
             # ignore inputs from forms
             # retrieve data from db
             if { $asset_type eq "attr_only" } {
-                array unset obj_arr
-                array set obj_arr [array get sam_arr]
                 if { $sub_type_id in [hf_asset_type_id_list] } {
                     set sub_asset_list [hf_${sub_type_id}_read $sub_f_id]
                     qf_lists_to_array obj_arr $sub_asset_list [hf_${sub_type_id}_keys]
+                    if { [array exists sam_arr] } {
+                        array set obj_arr [array get sam_arr]
+                    } else {
+                        set sam_list [hf_sub_asset $sub_f_id]
+                        qf_lists_to_array obj_arr $sam_list [hf_sub_asset_map_keys]
+                    }
                     ns_log Notice "hosting-farm/assets.tcl.760: array get obj_arr [array get obj_arr]"
                 }
                 set include_view_one_p 1
-
-                set attrs_list [hf_asset_attributes $sub_f_id]
-                if { [llength $attrs_list ] > 0 } {
-                    set include_view_attrs_p 1
-                }
-                
-                set asset_ids_list [hf_asset_subassets $sub_f_id]
-                if { [llength $asset_ids_list ] > 0 } {
-                    set assets_lists [hf_assets_read $asset_ids_list]
-                    set include_view_sub_assets_p 1
-                }
             } else {
                 set asset_type [hf_constructor_b obj_arr]
                 set include_view_one_p 1
                 set publish_p [hf_ui_go_ahead_q write "" published 0]
-                if { $f_id ne "" } {
-                    set attrs_list [hf_asset_attributes $f_id]
-                    if { [llength $attrs_list ] > 0 } {
-                        set include_view_attrs_p 1
-                    }
-                    
-                    set asset_ids_list [hf_asset_subassets $f_id]
-                    if { [llength $asset_ids_list ] > 0 } {
-                        set assets_lists [hf_assets_read $asset_ids_list]
-                        set include_view_sub_assets_p 1
-                    }
-                }
             }
             ns_log Notice "hosting-farm/assets.tcl.790: publish_p '${publish_p}' asset_id '${asset_id}'"
             array set perms_arr [list read_p $read_p create_p $create_p write_p $write_p admin_p $admin_p pkg_admin_p $pkg_admin_p publish_p $publish_p ]
