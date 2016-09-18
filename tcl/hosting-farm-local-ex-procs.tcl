@@ -908,10 +908,10 @@ ad_proc -private hfl_attribute_field_validation {
                     backup_sys -
                     ipv4_addr -
                     ipv6_addr -
-                    bia_mac_addresss -
+                    bia_mac_address -
                     ul_mac_address -
                     ipv4_addr_range -
-                    ipv5_addr_range -
+                    ipv6_addr_range -
                     os_dev_ref -
                     name_record -
                     last_updated -
