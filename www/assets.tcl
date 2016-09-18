@@ -436,7 +436,7 @@ if { !$form_posted_p } {
     # keeping the logic simple in this section
     # Using IF instead of SWITCH to allow mode to be modified successively
     if { $mode eq "c" } { 
-        if { $create_p || $admin_p } {
+        if { $create_p || $pkg_admin_p } {
             # validate data input
             set v_asset_input_p 1
             set v_attr_input_p 1
@@ -446,9 +446,10 @@ if { !$form_posted_p } {
                 }
                 set v_asset_input_p [hfl_asset_field_validation obj_arr]
             }
-            if { [string match "*attr*" $asset_type] && $v_asset_input_p } {
-### code 
-                foreach key [concat hf_$_keys] {
+            if { [string match "*attr*" $asset_type] } {
+                set sti $input_arr(sub_type_id)
+                set keys_list [concat [hf_${sti}_keys] [hf_sub_asset_map_keys]]
+                foreach key $keys_list {
                     set obj_arr(${key}) $input_arr(${key})
                 }
                 set v_attr_input_p [hfl_attribute_field_validation obj_arr]
@@ -477,7 +478,7 @@ if { !$form_posted_p } {
         }
     }
     if { $mode eq "w" } { 
-        if { $write_p || $admin_p } {
+        if { $write_p || $pkg_admin_p } {
             # allowed
             array set obj_arr [array get input_arr]
             # validate data input
@@ -517,7 +518,7 @@ if { !$form_posted_p } {
 
     if { $mode eq "t" || $mode eq "T" } {
         # (t)rash un(T)rash
-        if { $write_p || $admin_p } {
+        if { $write_p || $pkg_admin_p } {
             # allowed
         } else {
             ns_log Warning "hosting-farm/assets.tcl.321: \
@@ -543,7 +544,7 @@ if { !$form_posted_p } {
     }
 
     if { $mode eq "e" } {
-        if { $write_p || $admin_p } {
+        if { $write_p || $pkg_admin_p } {
             # allowed
             
         } elseif { $read_p } {
@@ -557,7 +558,7 @@ if { !$form_posted_p } {
     }
 
     if { $mode eq "a" } {
-        if { $create_p || $admin_p } {
+        if { $create_p || $pkg_admin_p } {
             if { ( $asset_type in [list asset_attr asset_only asset_primary_attr] && $asset_type_id ne "") || ( $asset_type eq "attr_only" && $sub_type_id ne "" ) } {
                 # allowed
             } else {
@@ -644,7 +645,7 @@ if { !$form_posted_p } {
             set mode_next ""
         }
         if { $mode eq "c" } {
-            if { $create_p } {
+            if { $create_p || $pkg_admin_p } {
                 # create only. 
                 if { $valid_input_p } {
                     if { [string match "*asset*" $asset_type ] } {
@@ -658,13 +659,7 @@ if { !$form_posted_p } {
                     }
                     if { [string match "*attr*" $asset_type ] } {
                         set sub_type_id $obj_arr(sub_type_id)
-                        #if { $asset_type eq "attr_only" } {
-                        # attr_only
-                        #    set obj_arr(f_id) \[qal_first_nonempty_in_list \[list $obj_arr(f_id) $mapped_f_id\]\]
-                        #    set obj_arr(sub_type_id) \[qal_first_nonempty_in_list \[list $obj_arr(sub_type_id)  $mapped_type_id\]\]
-                        #    set sub_type_id $mapped_type_id
-                        #}
-                        #set sub_f_id ""
+                        set obj_arr(f_id) [qal_first_nonempty_in_list [list $obj_arr(f_id) $mapped_f_id]]
                         if { $sub_type_id ne "" } {
                             set sub_f_id [hf_${sub_type_id}_write obj_arr]
                             set obj_arr(sub_f_id) $sub_f_id
@@ -685,7 +680,7 @@ if { !$form_posted_p } {
         }
 
         if { $mode eq "w" } {
-            if { $write_p || $admin_p } {
+            if { $write_p || $pkg_admin_p } {
                 if { $f_id eq "" } {
                     set f_id_of_asset_id [hf_f_id_of_asset_id $asset_id]
                     set f_id [qal_first_nonempty_in_list [list $mapped_f_id $f_id_of_asset_id]]

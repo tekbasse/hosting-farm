@@ -111,6 +111,7 @@ if { ![info exists tech_p] } {
 
 set theme $sub_type_id
 set has_icon_p 0
+set has_bg_image_p 0
 if { $theme eq "" } {
     set theme $asset_type_id
 }
@@ -164,16 +165,15 @@ if { [string match "*asset*" $asset_type] } {
 
 if { [string match "*attr*" $asset_type] } {
     if { $sub_type_id in [hf_asset_type_id_list] } {
-        if { $sub_type_id ne "" } {
-            set keys_list [concat [hf_${sub_type_id}_keys] [hf_sub_asset_map_keys]]
-            foreach key [hf_key_sort_for_display $keys_list] {
-                if { ( $tech_p ) || ![hf_key_hidden_q $key] } {
-                    set element ""
-                    append element "#hosting-farm.${key}#" $separator $asset_arr(${key})
-                    lappend content_list $element
-                } 
-            }
+        set keys_list [concat [hf_${sub_type_id}_keys] [hf_sub_asset_map_keys]]
+        foreach key [hf_key_sort_for_display $keys_list] {
+            if { ( $tech_p ) || ![hf_key_hidden_q $key] } {
+                set element ""
+                append element "#hosting-farm.${key}#" $separator $asset_arr(${key})
+                lappend content_list $element
+            } 
         }
+
 
         # get sub_type_id info
         #    asset_label asset_title asset_description
@@ -200,22 +200,21 @@ foreach element $content_list {
     append content "</li>"
 }
 
+set mapped_asset_id $asset_id
+set mapped_f_id $f_id
 if { $asset_type eq "attr_only" } {
-    set mapped_f_id $f_id
-    set mapped_asset_id $asset_id
     set ref_id $sub_f_id
     set z "Z"
 } else {
     set z "z"
     set ref_id $asset_id
-    set mapped_asset_id ""
-    set mapped_f_id ""
 }
-set form_id [qf_form action $base_url method post id 20160809 hash_check 1]
+set form_id [qf_form action $base_url method post id 20160918 hash_check 1]
 qf_input type hidden name mode value "p"
 qf_input type hidden name asset_type value $asset_type
 qf_input type hidden name mapped_asset_id value $mapped_asset_id
 qf_input type hidden name mapped_f_id value $mapped_f_id
+
 qf_input type submit value "#accounts-ledger.edit#" name "${z}ev${sub_f_id}" class button
 qf_append html "<br>"
 if { $write_p && [exists_and_not_null asset_arr(trashed_p) ] } {

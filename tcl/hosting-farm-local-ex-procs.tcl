@@ -1032,7 +1032,7 @@ ad_proc -private hfl_attribute_field_validation {
                 set validated_p 1
             }
             # next brace is end foreach
-            ns_log Notice "hf_attribute_field_validation.1041. key '${key}' validated_p '${validated_p}' attr_validated_p '${attr_validated_p}'"
+            #ns_log Notice "hf_attribute_field_validation.1041. key '${key}' validated_p '${validated_p}' attr_validated_p '${attr_validated_p}'"
             set attr_validated_p [expr { $attr_validated_p && $validated_p } ]
         }
     } 
