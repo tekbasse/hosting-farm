@@ -110,6 +110,7 @@ if { ![info exists tech_p] } {
 
 
 set theme $sub_type_id
+set has_icon_p 0
 if { $theme eq "" } {
     set theme $asset_type_id
 }
