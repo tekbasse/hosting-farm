@@ -287,6 +287,8 @@ if { !$form_posted_p } {
                 }
             } elseif { [string match "Za*" $test] } {
                 set mapped_f_id [string range $modes 3 end]
+                set input_arr(mapped_f_id) $mapped_f_id
+                set input_arr(f_id) $mapped_f_id
             }
             set mapped_f_id_of_asset_id [hf_asset_f_id_of_sub_f_id $mapped_f_id]
             set mapped_asset_id [hf_asset_id_of_f_id_if_untrashed $mapped_f_id_of_asset_id]

@@ -863,6 +863,11 @@ ad_proc -private hf_sub_asset_map_update {
         set sub_f_id_attr_new_p 1
         set sub_f_id_attr_p 1
     }
+    if { $sub_f_id eq "" } {
+        # 20160918. Is there any other case than for a new attr?
+        # If sub_f_id were an asset, the f_id already exists.
+        set sub_f_id_attr_new_p 1
+    }
     set sub_f_id_new ""
     # Call the appropriate proc from the cases above.
     if { $f_id_asset_p && $sub_f_id_attr_new_p } {

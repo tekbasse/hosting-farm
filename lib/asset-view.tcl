@@ -26,7 +26,7 @@ if { ![info exists detail_p] } {
     set detail_p 0
 }
 if { ![exists_and_not_null asset_type ] } {
-    ns_log Warning "hosting-farm/lib/asset-edit.tcl.55: asset_type not defined"
+    ns_log Warning "hosting-farm/lib/asset-view.tcl.55: asset_type not defined"
     # lets guess it instead of fail
     set asset_type [hf_constructor_a asset_arr]
 }
@@ -143,7 +143,7 @@ if { $theme ne "" } {
         set theme_description [lindex $theme_type_list 2]
     }
 } else {
-    ns_log Warning "hosting-farm/lib/asset-edit.tcl: theme '${theme}'."
+    ns_log Warning "hosting-farm/lib/asset-view.tcl: theme '${theme}'."
     set theme_label ""
     set theme_title ""
     set theme_description ""
