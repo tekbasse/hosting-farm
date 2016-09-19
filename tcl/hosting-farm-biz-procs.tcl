@@ -190,26 +190,28 @@ ad_proc -public hf_constructor_a {
     if { $state eq "" } {
         if { $sub_f_id_is_primary_p } {
             set state "asset_primary_attr"
-            ns_log Notice "hf_constructor_a.188"
+            ns_log Notice "hf_constructor_a.188: state '${state}'"
         } elseif { $sub_asset_id_p && $asset_id_p } {
             set state "asset_attr"
-            ns_log Notice "hf_constructor_a.191"
+            ns_log Notice "hf_constructor_a.191: state '${state}'"
         } elseif { $sub_asset_id_p } {
             set state "attr_only" 
-            ns_log Notice "hf_constructor_a.194"
+            ns_log Notice "hf_constructor_a.194: state '${state}'"
         } elseif { $asset_id_p } {
             # see *_supplied_p vars for intention.
             if { $sub_f_id_supplied_p && $asset_type_id_p } {
                 # assume there was a problem with sub_f_id
                 # offer a new attribute of same type
                 set state "asset_attr"
-                ns_log Notice "hf_constructor_a.197"
+                ns_log Notice "hf_constructor_a.197: state '${state}'"
             } else {
                 if { $primary_attr_id ne "" } {
-                    ns_log Notice "hf_constructor_a.160 asset info supplied as asset_only, but has primary attribute. set state 'asset_primary_attr'"
+                    ns_log Notice "hf_constructor_a.160: asset info supplied as asset_only, but has primary attribute. set state 'asset_primary_attr'"
                     set state "asset_primary_attr"
+                    ns_log Notice "hf_constructor_a.162: set sub_f_id '${sub_f_id}' becomes '${primary_attr_id}'"
                     set sub_f_id $primary_attr_id
                     set an_arr(sub_f_id) $primary_attr_id
+                    ns_log Notice "hf_constructor_a.164: set f_id '${f_id}' becomes '${f_id_of_asset_id}'"
                     set f_id $f_id_of_asset_id
                     if { [info exists sub_arr(f_id)] } {
                         set an_arr(f_id) $sub_arr(f_id)
@@ -221,7 +223,7 @@ ad_proc -public hf_constructor_a {
                     set an_arr(type_id) $asset_type_id
                 } else {
                     set state "asset_only"
-                    ns_log Notice "hf_constructor_a.209"
+                    ns_log Notice "hf_constructor_a.209: state '${state}'"
                 }
             }
         } elseif { $asset_type_id_p && ( $asset_id_supplied_p || $sub_f_id_supplied_p ) } {
@@ -230,22 +232,22 @@ ad_proc -public hf_constructor_a {
                 if { $an_sub_type_id_p && $an_type_id_p } {
                     if { $an_sub_type_id eq $an_type_id } {
                         set state "asset_primary_attr"
-                        ns_log Notice "hf_constructor_a.210"
+                        ns_log Notice "hf_constructor_a.210: state '${state}'"
                     } else {
                         set state "asset_attr"
-                        ns_log Notice "hf_constructor_a.220"
+                        ns_log Notice "hf_constructor_a.220: state '${state}'"
                     }
                 }
             } elseif { $sub_f_id_supplied_p } {
                 set state "attr_only"
-                ns_log Notice "hf_constructor_a.232"
+                ns_log Notice "hf_constructor_a.232: state '${state}'"
             } elseif { $asset_id_supplied_p } {
                 set state "asset_only"
-                ns_log Notice "hf_constructor_a.235"
+                ns_log Notice "hf_constructor_a.235: state '${state}'"
             } else {
                 # create a blank asset_primary_attr
                 set state "asset_primary_attr"
-                ns_log Notice "hf_constructor_a.239"
+                ns_log Notice "hf_constructor_a.239: state '${state}'"
             }
         } elseif { $an_type_id_p || $an_sub_type_id_p } {
             #ns_log Notice "hf_constructor_a.232: an_type_id_p '${an_type_id_p}' an_sub_type_id_p '${an_sub_type_id_p}' an_type_id '${an_type_id}' an_sub_type_id '${an_sub_type_id}' "
@@ -253,17 +255,17 @@ ad_proc -public hf_constructor_a {
                 if { $an_type_id eq $an_sub_type_id } {
                     # must be new, so primary
                     set state "asset_primary_attr"
-                ns_log Notice "hf_constructor_a.247"
+                ns_log Notice "hf_constructor_a.247: state '${state}'"
                 } else { 
                     set state "asset_attr"
-                    ns_log Notice "hf_constructor_a.239: an_type_id '${an_type_id}' an_sub_type_id '${an_sub_type_id}'"
+                    ns_log Notice "hf_constructor_a.239: state '${state}' an_type_id '${an_type_id}' an_sub_type_id '${an_sub_type_id}'"
                 }
             } elseif { $an_type_id_p } {
                 set state "asset_only" 
-                ns_log Notice "hf_constructor_a.241"
+                ns_log Notice "hf_constructor_a.241: state '${state}'"
             } elseif { $an_sub_type_id_p } {
                 set state "attr_only"
-                ns_log Notice "hf_constructor_a.243"
+                ns_log Notice "hf_constructor_a.243: state '${state}'"
             } elseif { $state eq "" } {
                 ns_log Warning "hf_constructor_a.246: array type_id and/or sub_type_id not valid. \
  type_id '${an_type_id}' sub_type_id '${an_sub_type_id}'. Both set to ''"
