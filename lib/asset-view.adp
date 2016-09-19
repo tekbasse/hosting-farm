@@ -6,8 +6,10 @@
       <div style="padding: 10%; margin: 10%;">
 </if>
 
+<div style="background-color: white ; padding: 0 ; margin: 0 ; padding: 1%; margin: 1%;">
+
 <if @has_icon_p@ true>
-  <img src="@icon_url@" title="@asset_title;noquote@" alt="@asset_title;noquote@">
+  <img src="@icon_url@" title="@asset_title;noquote@" alt="@asset_title;noquote@" style="width: .5in; height: .5in;">
   <if @asset_label@ not nil>
     <p>@asset_label@ - @asset_description@</p>
     <h2>@asset_title;noquote@</h2>
@@ -18,7 +20,6 @@
   <h3>@label@</h3>
 </if>
 
-<div style="background-color: white ; padding: 0 ; margin: 0 ; padding: 1%; margin: 1%;">
   <ul>
     @content;noquote@
   </ul>  
