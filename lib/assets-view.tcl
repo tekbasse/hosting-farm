@@ -1,4 +1,5 @@
 # hosting-farm/lib/assets-view.tcl
+ ns_log Notice "hosting-farm/lib/assets-view.tcl start"
 # show a list of hf assets
 #
 # requires:

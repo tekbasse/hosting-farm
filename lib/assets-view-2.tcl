@@ -1,4 +1,5 @@
 # hosting-farm/lib/assets-view-2.tcl
+ns_log Notice "hosting-farm/lib/assets-view-2.tcl start"
 # show a list of hf assets as form submit buttons.
 #
 

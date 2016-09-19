@@ -1,5 +1,5 @@
 # hosting-farm/lib/asset-edit.tcl
-
+ns_log Notice "hosting-farm/lib/asset-edit.tcl start"
 # requires:
 #   asset_arr array of asset/attribute key values
 #   asset_type

@@ -289,11 +289,15 @@ if { !$form_posted_p } {
                 set mapped_f_id [string range $modes 3 end]
                 set input_arr(mapped_f_id) $mapped_f_id
                 set input_arr(f_id) $mapped_f_id
+                set f_id $input_arr(f_id)
+                set asset_type $state
+                set input_arr(asset_type) $asset_type
             }
             set mapped_f_id_of_asset_id [hf_asset_f_id_of_sub_f_id $mapped_f_id]
             set mapped_asset_id [hf_asset_id_of_f_id_if_untrashed $mapped_f_id_of_asset_id]
 
             ns_log Notice "hosting-farm/www/assets.tcl.149: f_id '${f_id}' sub_f_id '${sub_f_id}' mapped_asset_id '${mapped_asset_id}'"
+            ns_log Notice "hosting-farm/www/assets.tcl.150: input_arr(f_id) '$input_arr(f_id)' input_arr(sub_f_id) '$input_arr(sub_f_id)' mapped_f_id '${mapped_f_id}'"
         }
         
         # modes 0 0 is z or Z
@@ -739,7 +743,7 @@ set url "assets"
 
 switch -exact -- $mode {
     l {
-        if { $read_p } {
+        if { $read_p || $pkg_admin_p } {
             if { $redirect_before_v_p } {
                 ns_log Notice "hosting-farm/assets.tcl.590: redirecting to url ${url} for clean url view"
                 ad_returnredirect "${url}?mode=l"
@@ -756,14 +760,14 @@ switch -exact -- $mode {
     }
     r {
         #  revisions. presents a list of revisions of asset and/or attributes
-        if { $admin_p } {
+        if { $admin_p || $pkg_admin_p } {
             ns_log Notice "hosting-farm/assets.tcl.606: mode = ${mode} ie. revisions"
             # sort by date
             ##code later, in /www/admin
         }
     }
     a {
-        if { $create_p } {
+        if { $create_p || $pkg_admin_p } {
             #  add...... add/form mode of current context
             # If context already exists, use most recent/active case
             # for default values.
@@ -771,9 +775,9 @@ switch -exact -- $mode {
             
             if { $asset_type eq "attr_only" } {
                 set asset_type [hf_constructor_a obj_arr force $asset_type $sub_type_id]
-                array set obj_arr [array get sam_arr]
+                # add f_id again
                 set obj_arr(f_id) $f_id
-                ns_log Notice "hosting-farm/assets.tcl.627: array get obj_arr [array get obj_arr]"
+                ns_log Notice "hosting-farm/assets.tcl.627: array get obj_arr '[array get obj_arr]'"
                 set include_add_one_p 1
                 append title " #hosting-farm.Attribute#"
             } elseif { $asset_type ne "" } {
@@ -818,7 +822,7 @@ switch -exact -- $mode {
         }
     }
     e {
-        if { $write_p } {
+        if { $write_p || $pkg_admin_p } {
             #  edit...... edit/form mode of current context
             # If context already exists, use most recent/active case
             # for default values.
@@ -893,7 +897,7 @@ switch -exact -- $mode {
     }
     v {
         #  view page(s) (standard, html page document/report)
-        if { $read_p } {
+        if { $read_p || $pkg_admin_p } {
             # if $url is different than ad_conn url stem, 303/305 redirect to asset_id's primary url
             if { $redirect_before_v_p } {
                 ns_log Notice "hosting-farm/assets.tcl.743: redirecting to url ${url} for clean url view"

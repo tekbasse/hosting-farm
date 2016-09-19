@@ -1,5 +1,5 @@
 # hosting-farm/lib/asset-add.tcl
-
+ns_log Notice "hosting-farm/lib/asset-add.tcl start"
 # requires:
 #   asset_arr array of asset/attribute key values
 #   asset_type
@@ -39,10 +39,10 @@ array unset asset_arr asset_type
 
 template::util::array_to_vars asset_arr
 
-if { ![exists_and_not_null sub_type_id] } {
+if { ![info exists sub_type_id] } {
     set sub_type_id ""
 }
-if { ![exists_and_not_null asset_type_id] } {
+if { ![info exists asset_type_id] } {
     set asset_type_id $sub_type_id
 }
 
@@ -80,7 +80,7 @@ if { [exists_and_not_null perms_arr(publish_p) ] } {
 } else {
     set pub_p 0
 }
-if { ![exists_and_not_null base_url] } {
+if { ![info exists base_url] } {
     set base_url [ad_conn url]
 }
 
