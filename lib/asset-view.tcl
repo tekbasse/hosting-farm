@@ -271,18 +271,25 @@ if { $ref_id ne "" } {
             qf_append html "</div>"
         }
         # Anything else?
-        if { $admin_p } {
+        if { $create_p || $admin_p || $pkg_admin_p } {
+
+            # hf_asset_type_id_list
+            # hf_types_allowed_by 
+            # hfl_assets_allowed_by_user 
+            # hfl_attributes_allowed_by_user
+
             set asset_types_lists [hf_asset_types]
-            if { $pkg_admin_p } {
-                set at_limited_lists $asset_types_lists
+            set pre_id_list [hf_types_allowed_by [qal_first_nonempty_in_list [list $sub_type_id $type_id $asset_type_id]]]
+            if { $admin_p || $pkg_admin_p } {
+                set id_list $pre_id_list
             } else {
-                set id_list [hfl_attributes_allowed_by_user]
-                # at is abbrev for asset_type
-                set at_limited_lists [list ]
-                foreach at_list $asset_types_lists {
-                    if { [lindex $at_list 0] in $id_list } {
-                        lappend at_limited_lists $at_list
-                    }
+                set id_list [set_intersection [hfl_attributes_allowed_by_user] $pre_id_list]
+            }
+            # at is abbrev for asset_type
+            set at_limited_lists [list ]
+            foreach at_list $asset_types_lists {
+                if { [lindex $at_list 0] in $id_list } {
+                    lappend at_limited_lists $at_list
                 }
             }
             if { [llength $at_limited_lists] > 0 } {
