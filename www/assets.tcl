@@ -27,6 +27,8 @@ set create_p 0
 set write_p 0
 set admin_p 0
 set publish_p 0
+set pkg_admin_p 0
+
 if { $read_p } {
     set read_p [hf_ui_go_ahead_q read "" "" 0]
     set create_p [hf_ui_go_ahead_q create "" "" 0]

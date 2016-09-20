@@ -10,6 +10,10 @@
   <a href="c">#accounts-ledger.Customers#</a>
 </if>
 
+<if @customer_id@ nil>
+ <p>Your account is not associated with a hosting account.</p>
+</if>
+
 <if @assets_read_p@>
   <a href="assets">#accounts-ledger.Assets#</a>
 </if>
