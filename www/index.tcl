@@ -1,77 +1,70 @@
-set title "#hosting-farm.Hosting_Farm#"
-set context [list $title]
-
-# adp flags: gt1_customer_p and (role labels_p) site_developer_p for example.
-
-set instance_id [ad_conn package_id]
+# Initial permissions
 set user_id [ad_conn user_id]
-# min perms is app_read_p
-set app_read_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege read]
-if { !$app_read_p } {
+set instance_id [ad_conn package_id]
+set read_p [permission::permission_p \
+                -party_id $user_id \
+                -object_id $instance_id \
+                -privilege read]
+if { !$read_p } {
     ad_redirect_for_registration
     ad_script_abort
 }
-set site_developer_p 0
 
-set app_admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
+# Initializations
+
+set assets_create_p 0
+set assets_write_p 0
+set assets_admin_p 0
+set assets_publish_p 0
+set nonassets_create_p 0
+set nonassets_write_p 0
+set nonassets_admin_p 0
+set nonassets_publish_p 0
+set pkg_admin_p 0
+
+if { $read_p } {
+    set assets_read_p [hf_ui_go_ahead_q read "" assets 0]
+    if { $assets_read_p } {
+        set assets_create_p [hf_ui_go_ahead_q create "" assets 0]
+        set assets_write_p [hf_ui_go_ahead_q write "" assets 0]
+        set assets_admin_p [hf_ui_go_ahead_q admin "" assets 0]
+    }
+}
+if { $read_p } {
+    set non_assets_read_p [hf_ui_go_ahead_q read "" non_assets 0]
+    if { $non_assets_read_p } {
+        set non_assets_create_p [hf_ui_go_ahead_q create "" non_assets 0]
+        set non_assets_write_p [hf_ui_go_ahead_q write "" non_assets 0]
+        set non_assets_admin_p [hf_ui_go_ahead_q admin "" non_assets 0]
+    }
+}
+
+
 set customer_id ""
 set customer_id_list [hf_customer_ids_for_user $user_id $instance_id]
 if { [llength $customer_id_list] > 1 } {
-
+    
     set gt1_customer_p 1
 } else {
     set customer_id [lindex $customer_id_list 0]
     set gt1_customer_p 0
 }
 
-set app_roles_list [list ]
-set roles_lists [hf_roles $instance_id]
-foreach role_list $roles_lists {
-    set label [lindex $role_list 0]
-    lappend app_roles_list $label
-}
-if { $app_admin_p } {
-    set admin_p 1
-    set write_p 1
-    set read_p 1
-    set create_p 1
-    set user_roles_list $app_roles_list
-} else {
-    set user_roles_list [hf_roles_of_user $user_id $customer_id]
-}
-if { "site_developer" in $user_roles_list } {
-    set site_developer_p 1
-} 
-
-ns_log Notice "index.tcl user_roles_list '${user_roles_list}' app_roles_list '${app_roles_list}'"
- 
-# create more flags for conditional adp content
-foreach app_role $app_roles_list {
-    if { $app_role in $user_roles_list } {
-        set ${app_role}_p 1
-    } else {
-        set ${app_role}_p 0
-    }
-}
-
-if { $main_admin_p || $main_manager_p || $main_staff_p } {
-    set main_p 1
-} else {
-    set main_p 0
-}
-
-if { $technical_admin_p || $technical_manager_p || $technical_staff_p } {
-    set technical_p 1
-} else {
-    set technical_p 0
-}
 
 
-if { $billing_admin_p || $billing_manager_p || $billing_staff_p } {
-    set billing_p 1
-} else {
-    set billing_p 0
+if { $assets_admin_p } {
+    # check package admin for extras
+    set pkg_admin_p [permission::permission_p \
+                         -party_id $user_id \
+                         -object_id $instance_id \
+                         -privilege admin]
 }
+
+set title "#hosting-farm.Hosting_Farm#"
+set context [list $title]
+
+
+# example 1st page plan:
 
 #if user can read assets, link to assets with flex sort
 
