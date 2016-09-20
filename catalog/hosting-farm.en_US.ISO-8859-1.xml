@@ -221,8 +221,12 @@
   <msg key="portions_count_def">Maximum number of data points to use in frequency distribution curve</msg>
   <msg key="private_vps">Private VPS</msg>
   <msg key="private_vps_def">If this is an unpublished VPS, then subtype reference</msg>
+  <msg key="privilege">Privilege</msg>
+  <msg key="privilege_def">Usually, one of read, create, write, delete, or admin.</msg>
   <msg key="proc_name">Procedure name</msg>
   <msg key="proc_name_def">The name of a system procedure. See /doc-api</msg>
+  <msg key="property">Property</msg>
+  <msg key="property_def">Something used in an activity.</msg>
   <msg key="protocol">Protocol</msg>
   <msg key="protocol_def">Protocol of service: HTTP, HTTPS, FTP etc.</msg>
   <msg key="publish_p">Publish?</msg>
@@ -249,6 +253,8 @@
   <msg key="requires_upgrade_p_def">Answers question. Does this need an upgrade?</msg>
   <msg key="resource_path">Resource path</msg>
   <msg key="resource_path_def">URL pathname of resource</msg>
+  <msg key="role">Role</msg>
+  <msg key="role_def">An activity assigned to a user.</msg>
   <msg key="sample_count">Sample count</msg>
   <msg key="sample_count_def">Number of points in the sample.</msg>
   <msg key="server_farm">server farm</msg>
