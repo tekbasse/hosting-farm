@@ -35,6 +35,7 @@ unset roles_lists
 # 
 # initialize table
 append content "<table>"
+append content "<th>#hosting-farm.role#</th><th>#hosting-farm.property#</th><th>#hosting-farm.privilege#</th>\n"
 set role_prev ""
 foreach role $roles_list {
     # at_id = asset_type_id
