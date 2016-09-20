@@ -206,7 +206,7 @@ ad_proc -private hf_key_hidden_q {
 }
 
 
-ad_proc -private privilege_on_key_allowed_q {
+ad_proc -private hf_privilege_on_key_allowed_q {
     privilege
     fieldname
     {asset_type_id ""}

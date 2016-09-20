@@ -122,8 +122,8 @@ qf_input type hidden value $asset_type name asset_type
 
 foreach key [hf_key_sort_for_display [array names attr_arr]] {
     set val $attr_arr(${key})
-    # was  ( $detail_p || $tech_p ) || !\[hf_key_hidden_q $key\] && \[privilege_on_key_allowed_q write $key\]
-    if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] } {
+    # was  ( $detail_p || $tech_p ) || !\[hf_key_hidden_q $key\] && \[hf_privilege_on_key_allowed_q write $key\]
+    if { ![hf_key_hidden_q $key] && [hf_privilege_on_key_allowed_q write $key] } {
         qf_append html "<br>"
         set key_def "#hosting-farm."
         append key_def $key "_def#"

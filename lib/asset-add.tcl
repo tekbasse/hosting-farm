@@ -190,7 +190,7 @@ foreach key $key_list {
     } else {
         set edit_key_p 0
     }
-    if { ![hf_key_hidden_q $key] && [privilege_on_key_allowed_q write $key] && $edit_key_p } {
+    if { ![hf_key_hidden_q $key] && [hf_privilege_on_key_allowed_q write $key] && $edit_key_p } {
         qf_append html "<br>"
         if { $key eq "details" || $key eq "description" } {
             qf_textarea value $val name $key label "#hosting-farm.${key}#${separator}" cols 40 rows 3
