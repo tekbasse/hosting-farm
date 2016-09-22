@@ -29,6 +29,15 @@ set admin_p 0
 set publish_p 0
 set pkg_admin_p 0
 
+set customer_id ""
+set customer_id_list [hf_customer_ids_for_user $user_id $instance_id]
+if { [llength $customer_id_list] > 1 } {
+     set gt1_customer_p 1
+} else {
+    set customer_id [lindex $customer_id_list 0]
+    set gt1_customer_p 0
+}
+
 if { $read_p } {
     set read_p [hf_ui_go_ahead_q read "" "" 0]
     set create_p [hf_ui_go_ahead_q create "" "" 0]
