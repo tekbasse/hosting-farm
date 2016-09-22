@@ -84,15 +84,25 @@ array set input_arr \
 
 # INPUTS
 
+set customer_id ""
+set customer_id_list [hf_customer_ids_for_user $user_id $instance_id]
+if { [llength $customer_id_list] > 1 } {
+     set gt1_customer_p 1
+} else {
+    set customer_id [lindex $customer_id_list 0]
+    set gt1_customer_p 0
+}
 
 # Get form inputs if they exist
 set form_posted_p [qf_get_inputs_as_array input_arr hash_check 1]
-
 if { !$form_posted_p } {
     # form not posted. Get defaults.
     template::util::array_to_vars input_arr
 } else {
 
+    if { [qf_is_natural_number $input_arr(customer_id) ] } {
+        set customer_id $input_arr(customer_id)
+    }
 
 }
 
