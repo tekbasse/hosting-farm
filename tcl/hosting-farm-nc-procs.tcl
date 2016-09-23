@@ -15,9 +15,9 @@ ad_library {
 # using standard namespace to avoid caching of data that can happen in separate namespaces
 ad_proc -private hf_nc_go_ahead {
     {asset_id_varnam "asset_id"}
-    {asset_type_id "assets"}
+    {property "assets"}
 } {
-    Confirms process is not run via connection, or is run by an admin
+    Confirms process is not run via connection, or is run by an admin. 
 } {
     if { $asset_id_varnam eq "" } {
         set asset_id_varnam "asset_id"
@@ -30,12 +30,12 @@ ad_proc -private hf_nc_go_ahead {
         set customer_id [hf_customer_id_of_asset_id $asset_id]
         # Make sure asset_id is consistent to asset_type_id
         set asset_type_id [hf_nc_asset_type_id $asset_id]
-        if { $asset_type_id eq "" } {
-            set asset_type_id "assets"
+        if { $property eq "" || $property eq "assets" } {
+            set property $asset_type_id
         }
-        set go_ahead [hf_permission_p $user_id $customer_id $asset_type_id admin $instance_id]
+        set go_ahead [hf_permission_p $user_id $customer_id $property admin $instance_id]
         if { !$go_ahead } {
-            ns_log Warning "hf_nc_go_head failed. Called by user_id '${user_id}' args: asset_id_varnam '${asset_id_varnam}' instance_id '${instance_id}' asset_id '${asset_id}' asset_type_id '${asset_type_id}'"
+            ns_log Warning "hf_nc_go_head failed. Called by user_id '${user_id}' args: asset_id_varnam '${asset_id_varnam}' instance_id '${instance_id}' asset_id '${asset_id}' asset_type_id '${asset_type_id}' property '${property}'"
         }
     } else {
                 #if { ![string match {hf_*} $argv0 ] && ![string match {hfl_*} $argv0 ] } {

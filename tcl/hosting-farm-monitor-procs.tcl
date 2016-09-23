@@ -651,10 +651,12 @@ ad_proc -private hf::monitor::list {
 ad_proc -private hf_ui_go_ahead_q {
     privilege
     {asset_id_varnam "asset_id"}
-    {asset_type_id "assets"}
+    {property "assets"}
     {break_p "1"}
 } {
-    Confirms process is not run via connection, or is run by user with privilege and in scope of customer_id_list if defined.
+    Confirms process is not run via connection, or 
+    is run by connected user with privilege and in scope of customer_id_list. 
+    Defines customer_id_list if asset_id and customer_id_list are undefined.
 } {
     if { $asset_id_varnam eq "" } {
         set asset_id_varnam "asset_id"
@@ -665,6 +667,7 @@ ad_proc -private hf_ui_go_ahead_q {
     upvar 1 customer_id proc_customer_id
     upvar 1 customer_id_list proc_customer_id_list
     if { [ns_conn isconnected] } {
+        set asset_type_id ""
         set user_id [ad_conn user_id]
         set instance_id [ad_conn package_id]
         #set go_ahead \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin\]
@@ -675,6 +678,9 @@ ad_proc -private hf_ui_go_ahead_q {
             # No existing asset_id to check.
             # Vet an existing customer_id, or set it if there is only 1.
             set customer_id_list [hf_customer_ids_for_user $user_id $instance_id]
+            if { ![info exists proc_customer_id_list] } {
+                set proc_customer_id_list $customer_id_list
+            }
             set cid_list_len [llength $customer_id_list]
             if { ![info exists proc_customer_id] } {
                 set proc_customer_id ""
@@ -709,16 +715,16 @@ ad_proc -private hf_ui_go_ahead_q {
             } else {
                 # Make sure asset_id is consistent to asset_type_id
                 set asset_type_id [hf_nc_asset_type_id $asset_id]
-                if { $asset_type_id eq "" } {
-                    set asset_type_id "assets"
+                if { $property eq "" || $property eq "assets" } {
+                    set property $asset_type_id
                 }
             }
         }
         if { ![exists_and_not_null go_ahead] } {
-            set go_ahead [hf_permission_p $user_id $customer_id $asset_type_id $privilege $instance_id]
+            set go_ahead [hf_permission_p $user_id $customer_id $property $privilege $instance_id]
         }
         if { !$go_ahead } {
-            ns_log Warning "hf_ui_go_head.700: failed. Called by user_id '${user_id}' args: asset_id_varnam '${asset_id_varnam}' instance_id '${instance_id}' asset_id '${asset_id}' asset_type_id '${asset_type_id}'"
+            ns_log Warning "hf_ui_go_head_q.700: failed. Called by user_id '${user_id}' args: asset_id_varnam '${asset_id_varnam}' instance_id '${instance_id}' asset_id '${asset_id}' asset_type_id '${asset_type_id}' property '${property}'"
         } else {
             if { ![exists_and_not_null proc_user_id] } {
                 set proc_user_id $user_id
@@ -728,6 +734,7 @@ ad_proc -private hf_ui_go_ahead_q {
             }
         }
     } else {
+        # no connection
         if { ![info exists user_id] } {
             set user_id ""
         }
@@ -759,13 +766,13 @@ ad_proc -private hf_ui_go_ahead_q {
             if { ![info exists $asset_id_varnam] } {
                 set asset_id "does *not* exist"
             }
-            ns_log Warning "hf_ui_go_head.734: failed. args: privilege '${privilege}' asset_id_varnam '${asset_id_varnam}' asset_id '${asset_id}' asset_type_id '${asset_type_id}' ${msg_extra}"
+            ns_log Warning "hf_ui_go_head_q.734: failed. args: privilege '${privilege}' asset_id_varnam '${asset_id_varnam}' asset_id '${asset_id}' property '${property}' ${msg_extra}"
         } else {
             set go_ahead 1
         }
     }
     if { $go_ahead ne 1 && $go_ahead ne 0 } {
-        ns_log Warning "hf_ui_go_ahead.771: Returned non logical 0/1 go_ahead '${go_ahead}' given privilege '${privilege}' asset_id_varnam '${asset_id_varnam}' asset_type_id '${asset_type_id}' break_p '${break_p}'"
+        ns_log Warning "hf_ui_go_ahead_q.771: Returned non logical 0/1 go_ahead '${go_ahead}' given privilege '${privilege}' asset_id_varnam '${asset_id_varnam}' property '${property}' break_p '${break_p}'"
     }
     if { !$go_ahead && $break_p } {
         ad_script_abort
