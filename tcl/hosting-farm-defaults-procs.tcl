@@ -608,7 +608,7 @@ ad_proc -private hf_privilege_init {
     # techs to have write privileges on tech stuff, 
     # admins to have write privileges on contact stuff
     # write includes trash, admin includes create where appropriate
-    set exists_p [db_0or1row hf_property_role_privilege_map_exists_q "select property_id from hf_property_role_privilege_map where instance_id=:instance_id"]
+    set exists_p [qc_property_id_exists_q "assets"]
     if { !$exists_p } {
         # only package system admin has delete privilege
         set privs_larr(admin) [list "create" "read" "write" "admin"]
@@ -652,7 +652,8 @@ ad_proc -private hf_privilege_init {
                     # Add privileges for the role_id
                     if { $role_level ne "" } {
                         foreach priv $privs_larr($role_level) {
-                            set exists_p [db_0or1row default_privileges_check { select property_id as test from hf_property_role_privilege_map where property_id=:property_id and role_id=:role_id and privilege=:priv } ]
+                            set exists_p [qc_property_role_privilege_map_exists_q $property_id $role_id $priv]
+                            set exists_p [db_0or1row default_privileges_check { select property_id as test from hf_property_role_privilege_map where property_id=:property_id and role_id=:role_id and privilege=:priv limit 1 } ]
                             if { !$exists_p } {
                                 db_dml default_privileges_cr {
                                     insert into hf_property_role_privilege_map

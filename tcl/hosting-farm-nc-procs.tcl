@@ -81,7 +81,7 @@ ad_proc -private hf_nc_users_of_asset_id {
             if { $property_id_exists_p } {
                 # property_id_exists_p should be true. It is looked up in a table.
                 
-                set role_ids_list [db_list hf_roles_ids_of_prop_priv_r "select role_id from hf_property_role_privilege_map where property_id=:property_id and privilege=:privilege"]
+                set role_ids_list [qc_roles_of_prop_priv $property_id $privilege]
 
             } 
 
@@ -104,8 +104,8 @@ ad_proc -private hf_nc_users_of_asset_id {
 
         } else {
             # privilege and role not specified
+            set role_ids_list [qc_roles_of_prop_priv $property_id]
 
-            set role_ids_list [db_list hf_roles_ids_of_property_r "select role_id from hf_property_role_privilege_map where property_id=:property_id"]
         }
 
         if { $success_p && [llength $role_ids_list] > 0 } {
