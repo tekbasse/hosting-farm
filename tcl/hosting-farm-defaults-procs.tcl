@@ -555,8 +555,9 @@ ad_proc -private hf_property_init {
     # but maybe we give it special permissions 
     # or other asset-like qualities for now.
     # p_d_lists is abbrev for props_defaults_lists
-    set exists_p [db_0or1row hf_property_exists_q "select id from hf_property where instance_id=:instance_id limit 1"]
-    if { !$exists_p } {
+    set prop_id [qc_property_id vm $instance_id]
+    if { $prop_id eq "" } {
+        # properties do not exist yet.
         set p_d_lists \
             [list \
                  [list main_contact_record "Main Contact Record"] \
@@ -578,17 +579,8 @@ ad_proc -private hf_property_init {
         foreach def_prop_list $p_d_lists {
             set asset_type_id [lindex $def_prop_list 0]
             set title [lindex $def_prop_list 1]
-            db_dml default_props_cr {
-                insert into hf_property
-                (asset_type_id,title)
-                values (:asset_type_id,:title)
-            }
-            
-            db_dml default_props_cr_i {
-                insert into hf_property
-                (asset_type_id,title,instance_id)
-                values (:asset_type_id,:title,:instance_id)
-            }
+            qc_property_create $asset_type_id $title $instance_id
+            qc_property_create $asset_type_id $title ""
         }
     }
     return 1
@@ -623,9 +615,8 @@ ad_proc -private hf_privilege_init {
         set props_larr(main) [list main_contact_record admin_contact_record non_assets tech_contact_record assets non_assets published]
         set props_larr(site) [list non_assets published]
         # perimissions_* are for special cases where tech admins need access to set special case permissions.
-        
-        set roles_lists [db_list_of_lists hf_roles_n { select id,label,title,description from hf_role where instance_id=:instance_id } ]
-        set props_lists [db_list_of_lists hf_property_n { select asset_type_id,id from hf_property where instance_id=:instance_id } ]
+        set roles_lists [qc_roles $intance_id 1]
+        set props_lists [qc_properties $instance_id 1]
         foreach role_list $roles_lists {
             set role_id [lindex $role_list 0]
             set role_label [lindex $role_list 1]
@@ -638,8 +629,8 @@ ad_proc -private hf_privilege_init {
                 set division "tech"
             }
             foreach prop_list $props_lists {
-                set asset_type_id [lindex $prop_list 0]
-                set property_id [lindex $prop_list 1]
+                set asset_type_id [lindex $prop_list 1]
+                set property_id [lindex $prop_list 0]
                 # For each role_id and property_id create privileges
                 # Privileges are base on 
                 #     $privs_larr($role) and props_larr(asset_type_id)

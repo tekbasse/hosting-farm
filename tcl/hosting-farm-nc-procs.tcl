@@ -76,7 +76,7 @@ ad_proc -private hf_nc_users_of_asset_id {
             
             # Get asset_type_id
             set asset_type_id [hf_nc_asset_type_id $asset_id]
-            set property_id_exists_p [db_0or1row hf_assets_type_users_r "select property_id from hf_property where asset_type_id=:asset_type_id"]
+            set property_id_exists_p [qc_property_id_exists_p $property_id $instance_id]
 
             if { $property_id_exists_p } {
                 # property_id_exists_p should be true. It is looked up in a table.
