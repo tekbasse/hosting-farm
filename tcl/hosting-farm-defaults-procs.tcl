@@ -652,21 +652,8 @@ ad_proc -private hf_privilege_init {
                     # Add privileges for the role_id
                     if { $role_level ne "" } {
                         foreach priv $privs_larr($role_level) {
-                            set exists_p [qc_property_role_privilege_map_exists_q $property_id $role_id $priv]
-                            set exists_p [db_0or1row default_privileges_check { select property_id as test from hf_property_role_privilege_map where property_id=:property_id and role_id=:role_id and privilege=:priv limit 1 } ]
-                            if { !$exists_p } {
-                                db_dml default_privileges_cr {
-                                    insert into hf_property_role_privilege_map
-                                    (property_id,role_id,privilege)
-                                    values (:property_id,:role_id,:priv)
-                                }
-                                db_dml default_privileges_cr_i {
-                                    insert into hf_property_role_privilege_map
-                                    (property_id,role_id,privilege,instance_id)
-                                    values (:property_id,:role_id,:priv,:instance_id)
-                                }
-                            }
-                            ns_log Notice "hosting-farm/tcl/hosting-farm-init.tcl.127: Added privilege '${priv}' to role '${division}' role_id '${role_id}' role_label '${role_label}'"
+                            qc_property-role_privilege_map_create $property_id $role_id $priv
+                            qc_property-role_privilege_map_create $property_id $role_id $priv $instance_id
                         }
                     } else {
                         ns_log Notice "hosting-farm/tcl/hosting-farm-init.tcl.130: No role_level (admin/manager/staff) for role_id '${role_id}' role_label '${role_label}'"

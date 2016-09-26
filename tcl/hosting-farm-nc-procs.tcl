@@ -93,8 +93,7 @@ ad_proc -private hf_nc_users_of_asset_id {
             }
 
         } elseif { $role ne "" } {
-
-            set role_exists_p [db_0or1row hf_role_id_of_label_r "select id from hf_role where label=:role"]
+            set role_exists_p [qc_role_id_of_label $role $instance_id]
             if { $role_exists_p } {
                 set role_ids_list [list $id]
             } else {
