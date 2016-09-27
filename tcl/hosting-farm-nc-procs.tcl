@@ -25,7 +25,7 @@ ad_proc -private hf_nc_go_ahead {
     upvar 1 $asset_id_varnam asset_id
     if { [ns_conn isconnected] } {
         set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
+        set instance_id [qc_set_instance_id]
         #set go_ahead \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin\]
         set customer_id [hf_customer_id_of_asset_id $asset_id]
         # Make sure asset_id is consistent to asset_type_id

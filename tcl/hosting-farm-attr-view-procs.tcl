@@ -27,7 +27,7 @@ ad_proc -private hf_oses {
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
-        set instance_id [ad_conn package_id]
+        set instance_id [qc_set_instance_id]
     }
     # no permissions needed     set user_id \[ad_conn user_id\]
     # build sql_extra
@@ -65,7 +65,7 @@ ad_proc -private hf_asset_type_read {
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
-        set instance_id [ad_conn package_id]
+        set instance_id [qc_set_instance_id]
     }
     # validate/filter the asset_type_id_list for nonqualifying reference types
     set new_as_type_id_list [list ]
@@ -90,7 +90,7 @@ ad_proc -private hf_asset_types {
 } {
     if { $instance_id eq "" } {
         # set instance_id package_id
-        set instance_id [ad_conn package_id]
+        set instance_id [qc_set_instance_id]
     }
     set all_asset_types_list_of_lists [db_list_of_lists hf_asset_types_get {select id,label,name,details from hf_asset_type where instance_id =:instance_id} ]
     if { $label_match ne "" } {

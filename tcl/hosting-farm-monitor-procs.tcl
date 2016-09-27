@@ -49,7 +49,7 @@ ad_proc -private hf_beat_log_create {
         if { $log_entry ne "" } {
             if { ![qf_is_natural_number $instance_id] } {
                 ns_log Notice "hf_beat_log_create.451: instance_id '${instance_id}' changing.."
-                set instance_id [ad_conn package_id]
+                set instance_id [qc_set_instance_id]
             }
             if { ![qf_is_natural_number $user_id] } {
                 ns_log Notice "hf_beat_log_create.451: user_id was '${user_id}' changing.."
@@ -150,7 +150,7 @@ ad_proc -public hf_beat_log_read {
     set nowts [dt_systime -gmt 1]
     if { ![qf_is_natural_number $instance_id] } {
         ns_log Notice "hf_beat_log_create.451: instance_id '${instance_id}' changing.."
-        set instance_id [ad_conn package_id]
+        set instance_id [qc_set_instance_id]
     }
     if { ![qf_is_natural_number $user_id] } {
         ns_log Notice "hf_beat_log_create.451: user_id was '${user_id}' changing.."
@@ -214,7 +214,7 @@ ad_proc -public hf_beat_log_alert_q {
     set nowts [dt_systime -gmt 1]
     if { ![qf_is_natural_number $instance_id] } {
         ns_log Notice "hf_beat_log_create.451: instance_id '${instance_id}' changing.."
-        set instance_id [ad_conn package_id]
+        set instance_id [qc_set_instance_id]
     }
     if { ![qf_is_natural_number $user_id] } {
         ns_log Notice "hf_beat_log_create.451: user_id was '${user_id}' changing.."
@@ -508,7 +508,7 @@ ad_proc -private hf::monitor::add {
     Adds a process to be "batched" in a process stack separate from page rendering.
 } {
     # check proc_name against allowd ones.
-    set session_package_id [ad_conn package_id]
+    set session_package_id [qc_set_instance_id]
     # We assume user has permission.. but qualify by verifying that instance_id is either user_id or package_id
     if { $instance_id eq $user_id || $instance_id eq $session_package_id } {
         set allowed_procs [parameter::get -parameter ScheduledProcsAllowed -package_id $session_package_id]
@@ -559,12 +559,12 @@ ad_proc -private hf::monitor::trash {
     # noting a process as completed in the stack keeps the proc api simple
     # Theoretically, one could create an untrash (reschedule) proc for this also..
     set session_user_id [ad_conn user_id]
-    set session_package_id [ad_conn package_id]
+    set session_package_id [qc_set_instance_id]
     set success_p 0
     #set create_p [permission::permission_p -party_id $session_user_id -object_id $session_package_id -privilege create]
     #set write_p [permission::permission_p -party_id $session_user_id -object_id $session_package_id -privilege write]
     # keep permissions simple for now
-    set admin_p [permission::permission_p -party_id $session_user_id -object_id $session_package_id -privilege admin]
+    set admin_p [permission::permission_p -party_id $session_user_id -object_id [ad_conn package_id] -privilege admin]
     # always allows a user to stop their own processes.
     if { $admin_p || ($session_user_id eq $user_id && ( $session_package_id eq $instance_id || $session_user_id eq $session_package_id ) ) } {
         set nowts [dt_systime -gmt 1]
@@ -583,8 +583,8 @@ ad_proc -private hf::monitor::read {
     Returns a list containing process status and results as: id,proc_name,proc_args,proc_out,user_id,instance_id, priority, order_time, started_time, completed_time, process_seconds.  Otherwise returns an empty list.
 } {
     set session_user_id [ad_conn user_id]
-    set session_package_id [ad_conn package_id]
-    set admin_p [permission::permission_p -party_id $session_user_id -object_id $session_package_id -privilege admin]
+    set session_package_id [qc_set_instance_id]
+    set admin_p [permission::permission_p -party_id $session_user_id -object_id [ad_conn package_id] -privilege admin]
     set process_stats_list [list ]
     if { $admin_p || ($session_user_id eq $user_id && ( $session_package_id eq $instance_id || $session_user_id eq $session_package_id ) ) } {
         set process_stats_list [db_list_of_lists hf_beat_stack_read { select id,proc_name,proc_args,proc_out,user_id,instance_id, priority, order_time, started_time, completed_time, process_seconds from hf_beat_stack where id =:sched_id and user_id=:user_id and instance_id=:instance_id } ]
@@ -610,8 +610,8 @@ ad_proc -private hf::monitor::list {
     
     if { [ns_conn isconnected] && [qf_is_natural_number $user_id] && $user_id > 0 } {
         set session_user_id [ad_conn user_id]
-        set session_package_id [ad_conn package_id]
-        set admin_p [permission::permission_p -party_id $session_user_id -object_id $session_package_id -privilege admin]
+        set session_package_id [qc_set_instance_id]
+        set admin_p [permission::permission_p -party_id $session_user_id -object_id [ad_conn package_id] -privilege admin]
     } 
 
     if { $admin_p || ($session_user_id eq $user_id && ( $session_package_id eq $instance_id || $session_user_id eq $session_package_id ) ) } {
@@ -669,7 +669,7 @@ ad_proc -private hf_ui_go_ahead_q {
     if { [ns_conn isconnected] } {
         set asset_type_id ""
         set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
+        set instance_id [qc_set_instance_id]
         #set go_ahead \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin\]
         if { ![info exists asset_id] } {
             set asset_id ""
@@ -695,7 +695,7 @@ ad_proc -private hf_ui_go_ahead_q {
                 set proc_customer_id $customer_id
             } else {
                 set customer_id ""
-                set admin_p [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
+                set admin_p [permission::permission_p -party_id $user_id -object_id [ad_conn package_id] -privilege admin]
                 if { $admin_p } {
                     # A sys admin doesn't need a customer_id
                     set go_ahead 1
@@ -1752,7 +1752,7 @@ ad_proc -public hf_monitors_inactivate {
         # try and make it work
         if { $instance_id eq "" } {
             # set instance_id package_id
-            set instance_id [ad_conn package_id]
+            set instance_id [qc_set_instance_id]
         }
         set admin_p [hf_permission_p $user_id "" assets admin $instance_id]
     }

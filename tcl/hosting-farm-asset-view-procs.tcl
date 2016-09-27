@@ -118,7 +118,7 @@ ad_proc -public hf_active_asset_ids_of_customer {
     upvar instance_id instance_id
     if { $instance_id eq "" } {
         # set instance_id package_id
-        set instance_id [ad_conn package_id]
+        set instance_id [qc_set_instance_id]
     }
     set user_id [ad_conn user_id]
     set read_p [hf_permission_p $user_id $customer_id assets read $instance_id]

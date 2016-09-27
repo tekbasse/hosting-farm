@@ -47,8 +47,8 @@ ad_proc -private hfl_allow_q {
     #  not run via connection, or is run by an admin
     if { [ns_conn isconnected] } {
         set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
-        set go_ahead [permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin]
+        set instance_id [qc_set_instance_id]
+        set go_ahead [permission::permission_p -party_id $user_id -object_id [ad_conn package_id] -privilege admin]
         if { !$go_ahead } {
             ns_log Warning "hfl_go_head(24). failed. Called by user_id ${user_id}, instance_id ${instance_id}"
             ad_script_abort

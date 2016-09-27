@@ -318,8 +318,8 @@ ad_proc -public hf_f_id_delete {
 } {
     upvar 1 instance_id instance_id
     set user_id [ad_conn user_id]
-    set instance_id [ad_conn package_id]
-    set admin_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege admin]
+    set instance_id [qc_set_instance_id]
+    set admin_p [permission::permission_p -party_id $user_id -object_id [ad_conn package_id] -privilege admin]
     set success_p 0
     
     set asset_id [hf_asset_id_of_f_id_if_untrashed $f_id]

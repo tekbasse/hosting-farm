@@ -24,9 +24,9 @@ ad_proc -private hf_ua_delete {
     set success_p 1
     if { $ua_id_list ne "" } {
         set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
+        set instance_id [qc_set_instance_id]
         set admin_p [permission::permission_p -party_id $user_id -object_id \
-                         $package_id -privilege admin]
+                         [ad_conn package_id] -privilege admin]
         set success_p $admin_p
         if { $admin_p } {
             if { [llength $ua_id_list] > 0 } {
@@ -77,9 +77,9 @@ ad_proc -private hf_ns_delete {
     set sucess_p 1
     if { $ns_id_list ne "" } {
         set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
+        set instance_id [qc_set_instance_id]
         set admin_p [permission::permission_p -party_id $user_id \
-                         -object_id $package_id -privilege admin]
+                         -object_id [ad_conn package_id] -privilege admin]
         set success_p $admin_p
         if { $admin_p } {
             if { [llength $ns_id_list] > 0 } {
@@ -121,9 +121,9 @@ ad_proc -private hf_ip_delete {
     set success_p 1
     if { $ip_id_list ne "" } {
         set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
+        set instance_id [qc_set_instance_id]
         set admin_p [permission::permission_p -party_id $user_id \
-                         -object_id $package_id -privilege admin]
+                         -object_id [ad_conn package_id] -privilege admin]
         set success_p $admin_p
         if { $admin_p } {
             if { [llength $ip_id_list] > 0 } {
@@ -167,9 +167,9 @@ ad_proc -private hf_ni_delete {
     set success_p 1
     if { $ni_id_list ne "" } {
         set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
+        set instance_id [qc_set_instance_id]
         set admin_p [permission::permission_p -party_id $user_id \
-                         -object_id $package_id -privilege admin]
+                         -object_id [ad_conn package_id] -privilege admin]
         set success_p $admin_p
         if { $admin_p } {
             if { [llength $ni_id_list] > 0 } {
@@ -212,9 +212,9 @@ ad_proc -private hf_ss_delete {
     set success_p 1
     if { $ss_id_list ne "" } {
         set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
+        set instance_id [qc_set_instance_id]
         set admin_p [permission::permission_p -party_id $user_id \
-                         -object_id $package_id -privilege admin]
+                         -object_id [ad_conn package_id] -privilege admin]
         set success_p $admin_p
         if { $admin_p } {
             if { [llength $ss_id_list] > 0 } {
@@ -256,9 +256,9 @@ ad_proc -private hf_vh_delete {
     set success_p 1
     if { $vh_id_list ne "" } {
         set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
+        set instance_id [qc_set_instance_id]
         set admin_p [permission::permission_p -party_id $user_id \
-                         -object_id $package_id -privilege admin]
+                         -object_id [ad_conn package_id] -privilege admin]
         set success_p $admin_p
         if { $admin_p } {
             if { [llength $vh_id_list] > 0 } {
@@ -301,9 +301,9 @@ ad_proc -private hf_vm_delete {
     set success_p 1
     if { $vm_id_list ne "" } {
         set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
+        set instance_id [qc_set_instance_id]
         set admin_p [permission::permission_p -party_id $user_id \
-                         -object_id $package_id -privilege admin]
+                         -object_id [ad_conn package_id] -privilege admin]
         set success_p $admin_p
         if { $admin_p } {
             if { [llength $vm_id_list] > 0 } {
@@ -346,9 +346,9 @@ ad_proc -private hf_hw_delete {
     set success_p 1
     if { $hw_id_list ne "" } {
         set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
+        set instance_id [qc_set_instance_id]
         set admin_p [permission::permission_p -party_id $user_id \
-                         -object_id $package_id -privilege admin]
+                         -object_id [ad_conn package_id] -privilege admin]
         set success_p $admin_p
         if { $admin_p } {
             if { [llength $hw_id_list] > 0 } {
@@ -391,9 +391,9 @@ ad_proc -private hf_dc_delete {
     set success_p 1
     if { $dc_id_list ne "" } {
         set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
+        set instance_id [qc_set_instance_id]
         set admin_p [permission::permission_p -party_id $user_id \
-                         -object_id $package_id -privilege admin]
+                         -object_id [ad_conn package_id] -privilege admin]
         set success_p $admin_p
         if { $admin_p } {
             if { [llength $dc_id_list] > 0 } {
@@ -436,9 +436,9 @@ ad_proc -private hf_monitor_delete {
     set success_p 1
     if { $monitor_id_list ne "" } {
         set user_id [ad_conn user_id]
-        set instance_id [ad_conn package_id]
+        set instance_id [qc_set_instance_id]
         set admin_p [permission::permission_p -party_id $user_id \
-                         -object_id $package_id -privilege admin]
+                         -object_id [ad_conn package_id] -privilege admin]
         set success_p $admin_p
         if { $admin_p } {
             if { [llength $monitor_id_list] > 0 } {

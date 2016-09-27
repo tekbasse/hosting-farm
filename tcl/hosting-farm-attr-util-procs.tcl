@@ -88,9 +88,9 @@ ad_proc -private hf_asset_type_write {
     Returns 1 if successful. Otherwise returns 0.
 } {
     set user_id [ad_conn user_id]
-    set instance_id [ad_conn package_id]
+    set instance_id [qc_set_instance_id]
     set admin_p [permission::permission_p -party_id $user_id -object_id \
-                     $package_id -privilege admin]
+                     [ad_conn package_id] -privilege admin]
     set success_p $admin_p
     if { $admin_p } {
         set at_list [hf_asset_type_id_list]
@@ -1071,7 +1071,7 @@ ad_proc -private hf_up_ck {
             set log_p 0
             if { ![qf_is_natural_number $instance_id] && $connected_p } {
                 # set instance_id package_id
-                set instance_id [ad_conn package_id]
+                set instance_id [qc_set_instance_id]
                 if { $ua eq "" } {
                     set log_p 1
                 }
@@ -1114,7 +1114,7 @@ ad_proc -private hf_up_write {
     # validation and limits
     if { ![qf_is_natural_number $instance_id] && $instance_id ne "" } {
         # set instance_id package_id
-        set instance_id [ad_conn package_id]
+        set instance_id [qc_set_instance_id]
     }
     if { ![qf_is_natural_number $ua_id] } {
         set ua_id ""
