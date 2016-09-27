@@ -632,10 +632,10 @@ ad_proc -private hf_ua_read {
                 set success_p [db_0or1row hf_ua_id_read "select details as ua, connection_type from hf_ua where instance_id =:instance_id and ua_id=:ua_id" ]
             }
         }
-        set demystify_proc [parameter::get -package_id $instance_id -parameter DemystifyProc -default hf_demystify]
-        set demystify_key [parameter::get -package_id $instance_id -parameter DemystifyKey -default ""]
-        set decode_proc [parameter::get -package_id $instance_id -parameter DecodeProc -default hf_decode]
-        set decode_key [parameter::get -package_id $instance_id -parameter DecodeKey -default ""]
+        set demystify_proc [qc_parameter_get DemystifyProc $instance_id hf_demystify]
+        set demystify_key [qc_parameter_get DemystifyKey $instance_id ""]
+        set decode_proc [qc_parameter_get DecodeProc $instance_id hf_decode]
+        set decode_key [qc_parameter_get DecodeKey $instance_id ""]
         if { $success_p == 0 && $ua ne "" } {
             # read
             if { $r_up_p } {
