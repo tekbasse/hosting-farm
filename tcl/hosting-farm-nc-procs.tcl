@@ -110,8 +110,7 @@ ad_proc -private hf_nc_users_of_asset_id {
         if { $success_p && [llength $role_ids_list] > 0 } {
             set customer_id [hf_customer_id_of_asset_id $asset_id]
             # get user_ids limited by hf_role_id in one query
-            set user_ids_list [db_list hf_user_role_of_customer_id_r "select user_id from hf_user_roles_map where instance_id = :instance_id and qal_customer_id=:customer_id and role_id in ([template::util::tcl_to_sql_list $role_ids_list)"]
-            
+            set user_ids_list [qc_user_ids_of_contact_id $customer_id $role_ids_list]
         }
     }
     

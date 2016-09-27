@@ -102,30 +102,6 @@ ad_proc -public hf_asset_stats {
     return $return_list
 }
 
-ad_proc -public hf_customer_ids_for_user { 
-    {user_id ""}
-    {instance_id ""}
-} {
-    Returns a list of qal_customer_ids for user_id
-
-    @param user_id     Checks for user_id if not blank, otherwise checks for user_id from connection.
-    @param instance_id Checks for user_id in context of instance_id if not blank, otherwise from connection.
-
-    @return Returns qal_customer_id numbers in a list.
-
-} {
-    if { $instance_id eq "" } {
-        # set instance_id package_id
-        set instance_id [ad_conn package_id]
-    }
-    if { $user_id eq "" } {
-        set user_id [ad_conn user_id]
-    }
-    #qal_customer_id defined by qal_customer.id accounts-ledger/sql/postgresql/entities-channels-create.sql
-    set qal_customer_ids_list [db_list qal_customer_ids_get "select qal_customer_id from hf_user_roles_map where instance_id=:instance_id and user_id=:user_id"]
-    return $qal_customer_ids_list
-}
-
 
 ad_proc -public hf_active_asset_ids_of_customer {
     customer_id
