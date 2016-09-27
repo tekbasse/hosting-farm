@@ -87,7 +87,7 @@ if { ![exists_and_not_null base_url] } {
 if { ![info exists tech_p] } {
     set tech_p 0
     set user_id [ad_conn user_id]
-    set instance_id [ad_conn package_id]
+    set instance_id [qc_set_instance_id]
     if { [info exists asset_arr(asset_id) ] } {
         set asset_id $asset_arr(asset_id)
     } else {

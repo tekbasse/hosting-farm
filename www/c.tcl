@@ -11,10 +11,10 @@
 
 # Initial permissions
 set user_id [ad_conn user_id]
-set instance_id [ad_conn package_id]
+set instance_id [qc_set_instance_id]
 set read_p [permission::permission_p \
                 -party_id $user_id \
-                -object_id $instance_id \
+                -object_id [ad_conn package_id] \
                 -privilege read]
 if { !$read_p } {
     ad_redirect_for_registration
@@ -38,7 +38,7 @@ if { $read_p } {
         # check package admin for extras
         set pkg_admin_p [permission::permission_p \
                              -party_id $user_id \
-                             -object_id $instance_id \
+                             -object_id [ad_conn package_id] \
                              -privilege admin]
     }
 }

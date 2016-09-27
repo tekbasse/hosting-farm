@@ -28,7 +28,10 @@ set radio_checked_url [file join $icons_path1 radiochecked.gif]
 set radio_unchecked_url [file join $icons_path1 radio.gif]
 set redirect_before_v_p 0
 
+# this app uses parameter::get, so must be package specific.
+# If augmenting with q-control, only q-control uses qc_set_instance_id
 set package_id [ad_conn package_id]
+
 set user_id [ad_conn user_id]
 set read_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege read]
 set create_p [permission::permission_p -party_id $user_id -object_id $package_id -privilege create]

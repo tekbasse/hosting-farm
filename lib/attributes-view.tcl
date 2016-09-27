@@ -24,7 +24,7 @@
 # @param this_start_row (required) the start row for this page
 # @param separator is html used between page numbers, defaults to &nbsp;
 if { ![info exists instance_id] } {
-    set instance_id [ad_conn package_id]
+    set instance_id [qc_set_instance_id]
 }
 if { [exists_and_not_null perms_arr(create_p)] } {
     set create_p $perms_arr(create_p)

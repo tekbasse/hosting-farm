@@ -1,10 +1,10 @@
 set title "Hosting farm privilege map"
 set context [list $title]
 
-hf_pkg_admin_required
+qc_pkg_admin_required
 
 set content ""
-set instance_id [ad_conn package_id]
+set instance_id [qc_set_instance_id]
 
 # Identify and test full range of parameters
 set asset_type_ids_list [db_list hf_property_asset_type_ids_get {

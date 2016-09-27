@@ -3,7 +3,7 @@ set context [list $title]
 
 # Initial permissions
 set user_id [ad_conn user_id]
-set instance_id [ad_conn package_id]
+set instance_id [qc_set_instance_id]
 
 set pkg_admin_p 0
 # Check for read_p against minimum case, so all appropriate users see something
@@ -19,7 +19,7 @@ if { $admin_p } {
     # check package admin for extras
     set pkg_admin_p [permission::permission_p \
                          -party_id $user_id \
-                         -object_id $instance_id \
+                         -object_id [ad_conn package_id] \
                          -privilege admin]
 }
 

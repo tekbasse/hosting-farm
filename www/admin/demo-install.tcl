@@ -1,6 +1,6 @@
 set title "Hosting farm demo install"
 set context [list $title]
-hf_pkg_admin_required
+qc_pkg_admin_required
 
 ns_log Notice "demo install begin, based on: aa_register_case.12: Begin test assets_sys_build_api_check"
 #aa_log "0. Build 2 DCs with HW and some attributes"
@@ -8,7 +8,7 @@ ns_log Notice "demo install begin, based on: aa_register_case.12: Begin test ass
 # Yet, users must have read access permissions or test fails
 # Some tests will fail (predictably) in a hardened system
 
-set instance_id [ad_conn package_id]
+set instance_id [qc_set_instance_id]
 # We avoid hf_permission_p by using a sysadmin user
 # hf_roles_init $instance_id
 # hf_property_init $instance_id

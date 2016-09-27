@@ -5,7 +5,7 @@ set context [list $title]
 # User information and top level navigation links
 #
 set user_id [ad_conn user_id]
-set package_id [ad_conn package_id]
+set package_id [qc_set_instance_id]
 set untrusted_user_id [ad_conn untrusted_user_id]
 set sw_admin_p 0
 
