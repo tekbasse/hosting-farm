@@ -263,7 +263,7 @@ ad_proc -private hf::schedule::read {
 } {
     set session_user_id [ad_conn user_id]
     set session_package_id [qc_set_instance_id]
-    set admin_p [permission::permission_p -party_id $session_user_id -object_id $session_package_id -privilege admin]
+    set admin_p [permission::permission_p -party_id $session_user_id -object_id [ad_conn package_id] -privilege admin]
     set process_stats_list [list ]
     if { $admin_p || ($session_user_id eq $user_id && ( $session_package_id eq $instance_id || $session_user_id eq $session_package_id ) ) } {
         set process_stats_list [db_list_of_lists hf_sched_proc_stack_read { select id,proc_name,proc_args,proc_out,user_id,instance_id, priority, order_time, started_time, completed_time, process_seconds from hf_sched_proc_stack where id=:sched_id and user_id=:user_id and instance_id=:instance_id } ]
