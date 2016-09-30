@@ -1,5 +1,9 @@
 # hosting-farm/www/c.tcl
 # part of the hosting-farm package 
+# This presents a list of users similar to assets.tcl
+# When user chooses a customer, customer_id is passed to assets.tcl or monitors.tcl
+
+
 # depends on OpenACS website toolkit at OpenACS.org
 # copyrigh 2016 by Benjamin Brink
 # released under GPL license 2 or greater
@@ -54,6 +58,9 @@ set radio_unchecked_url [file join $icons_path1 radio.gif]
 set redirect_before_v_p 0
 set user_message_list [list ]
 set base_url "assets"
+
+
+
 #flags
 
 array set input_arr \
