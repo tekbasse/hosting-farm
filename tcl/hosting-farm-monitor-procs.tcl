@@ -723,7 +723,7 @@ ad_proc -private hf_ui_go_ahead_q {
             }
         }
         if { ![exists_and_not_null go_ahead] } {
-            set go_ahead [qc_perimission_p $user_id $customer_id $property $privilege $instance_id]
+            set go_ahead [qc_permission_p $user_id $customer_id $property $privilege $instance_id]
         }
         if { !$go_ahead } {
             ns_log Warning "hf_ui_go_head_q.700: failed. Called by user_id '${user_id}' args: asset_id_varnam '${asset_id_varnam}' instance_id '${instance_id}' asset_id '${asset_id}' asset_type_id '${asset_type_id}' property '${property}'"
@@ -895,7 +895,7 @@ ad_proc -private hf_monitor_configs_write {
             # check permissions
             set admin_p 0
             if { !$nc_p } {
-                set admin_p [qc_perimission_p $user_id "" assets admin $instance_id]
+                set admin_p [qc_permission_p $user_id "" assets admin $instance_id]
             } 
             if { ( $admin_p || $nc_p ) && $label_p && $cs_p && $active_p_p && $instance_id_p && $interval_s_p && $health_threshold_p && $hpt_p } {
 
@@ -1756,7 +1756,7 @@ ad_proc -public hf_monitors_inactivate {
             # set instance_id package_id
             set instance_id [qc_set_instance_id]
         }
-        set admin_p [qc_perimission_p $user_id "" assets admin $instance_id]
+        set admin_p [qc_permission_p $user_id "" assets admin $instance_id]
     }
 
     # if an asset_id, also force off monitor_p in hf_assets to indicate monitoring is not happening. 

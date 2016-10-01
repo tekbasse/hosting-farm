@@ -217,7 +217,7 @@ ad_proc -private hf_privilege_on_key_allowed_q {
     Privilege can be create, write.
     such as in UI forms and views.
     Refers to create_p, write_p, admin_p and pkg_admin_p as defined in calling environment.
-    Assumes these have been generated using qc_perimission_p for assets.
+    Assumes these have been generated using qc_permission_p for assets.
 
 
     If asset_type_id is included, checks for specific case, otherwise

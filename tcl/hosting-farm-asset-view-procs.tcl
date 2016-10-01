@@ -121,7 +121,7 @@ ad_proc -public hf_active_asset_ids_of_customer {
         set instance_id [qc_set_instance_id]
     }
     set user_id [ad_conn user_id]
-    set read_p [qc_perimission_p $user_id $customer_id assets read $instance_id]
+    set read_p [qc_permission_p $user_id $customer_id assets read $instance_id]
     set asset_ids_list [list ]
     if { $read_p } {
         set f_id_list [db_list f_ids_for_customer_get { select f_id from hf_assets 
