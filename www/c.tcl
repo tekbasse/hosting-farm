@@ -46,7 +46,7 @@ if { $read_p } {
                              -privilege admin]
     }
 }
-set title "#hosting-farm.Assets#"
+set title "#accounts-ledger.Customers#"
 set context [list $title]
 set icons_path1 "/resources/acs-subsite/"
 set icons_path2 "/resources/ajaxhelper/icons/"
@@ -58,47 +58,39 @@ set radio_unchecked_url [file join $icons_path1 radio.gif]
 set redirect_before_v_p 0
 set user_message_list [list ]
 set base_url "assets"
-
-
+set form_html ""
+set customer_id ""
 
 #flags
+set gt1_customer_p 0
+
 
 array set input_arr \
     [list \
-         asset_id "" \
-         asset_type "" \
-         asset_type_id "" \
          customer_id "" \
-         f_id "" \
          interval_remaining "" \
-         mapped_asset_id "" \
-         mapped_f_id "" \
          mode "l" \
          mode_next "" \
-         name "" \
          p "" \
          page_title $title \
          reset "" \
          s "" \
-         state "" \
-         sub_asset_id "" \
-         sub_f_id "" \
-         sub_type_id "" \
          submit "" \
          this_start_row "" \
-         top_level_p "0" \
-         type_id "" ]
+         top_level_p "0" ]
+
 
 # INPUTS
 
-set customer_id ""
+
 set customer_id_list [hf_customer_ids_for_user $user_id $instance_id]
 if { [llength $customer_id_list] > 1 } {
      set gt1_customer_p 1
 } else {
     set customer_id [lindex $customer_id_list 0]
-    set gt1_customer_p 0
 }
+
+#if gt1_customer_p = 0, just show link to assets and monitors
 
 # Get form inputs if they exist
 set form_posted_p [qf_get_inputs_as_array input_arr hash_check 1]
@@ -107,10 +99,7 @@ if { !$form_posted_p } {
     template::util::array_to_vars input_arr
 } else {
 
-    if { [qf_is_natural_number $input_arr(customer_id) ] } {
-        set customer_id $input_arr(customer_id)
-    }
-
+    # this is mainly for admins.. or anyone with a long list of customers
 }
 
 set doc(title) $title

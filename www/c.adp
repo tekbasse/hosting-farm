@@ -11,6 +11,15 @@
 </ul>
 </if>
 
+<if @gt1_customer_p@ true>
+
+<!-- one col on l, m, s  -->
+<div class="l-grid-whole m-grid-whole s-grid-whole padded">
+  <div class="content-box">
+  <include src="/packages/hosting-farm/lib/customers-view" &customers_lists=customers_lists &perms_arr=perms_arr s="@s;noquote@" p="@p;noquote@" this_start_row="@this_start_row;noquote@" base_url="@base_url;noquote@">
+
+  </div>
+</div>
 
 <if @form_html@ not nil>
  @form_html;noquote@
