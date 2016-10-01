@@ -9,7 +9,7 @@ ns_log Notice "demo install begin, based on: aa_register_case.12: Begin test ass
 # Some tests will fail (predictably) in a hardened system
 
 set instance_id [qc_set_instance_id]
-# We avoid hf_permission_p by using a sysadmin user
+# We avoid qf_permission_p by using a sysadmin user
 # hf_roles_init $instance_id
 # hf_property_init $instance_id
 # hf_privilege_init $instance_id

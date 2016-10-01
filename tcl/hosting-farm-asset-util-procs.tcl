@@ -66,7 +66,7 @@ ad_proc -private hf_customer_id_of_asset_id {
     returns customer_id of asset_id
 } {
     upvar 1 instance_id instance_id
-    # this is handy for helping fulfill hf_permission_p requirements
+    # this is handy for helping fulfill qc_perimission_p requirements
     # so do not create an infinite loop by referencing a permissions proc like this:
     # hf_ui_go_ahead_q read
     set f_id [hf_f_id_of_asset_id $asset_id]

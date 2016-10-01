@@ -15,7 +15,7 @@ aa_register_case -cats {db smoke} assets_attr_check {
             # Some tests will fail (predictably) in a hardened system
 
             set instance_id [ad_conn package_id]
-            # We avoid hf_permission_p by using a sysadmin user
+            # We avoid qc_permission_p by using a sysadmin user
 
             # A user with sysadmin rights and not customer
             set sysowner_email [ad_system_owner]

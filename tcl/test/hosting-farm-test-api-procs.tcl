@@ -16,7 +16,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
             # Some tests will fail (predictably) in a hardened system
 
             set instance_id [ad_conn package_id]
-            # We avoid hf_permission_p by using a sysadmin user
+            # We avoid qc_permission_p by using a sysadmin user
             # hf_roles_init $instance_id
             # hf_property_init $instance_id
             # hf_privilege_init $instance_id

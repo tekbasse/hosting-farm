@@ -33,7 +33,7 @@ ad_proc -private hf_nc_go_ahead {
         if { $property eq "" || $property eq "assets" } {
             set property $asset_type_id
         }
-        set go_ahead [hf_permission_p $user_id $customer_id $property admin $instance_id]
+        set go_ahead [qc_perimission_p $user_id $customer_id $property admin $instance_id]
         if { !$go_ahead } {
             ns_log Warning "hf_nc_go_head failed. Called by user_id '${user_id}' args: asset_id_varnam '${asset_id_varnam}' instance_id '${instance_id}' asset_id '${asset_id}' asset_type_id '${asset_type_id}' property '${property}'"
         }

@@ -254,7 +254,7 @@ aa_register_case -cats {api smoke} permissions_check {
                     foreach rpn $rpn_list {
                         set customer_id [randomRange 4]
                         incr customer_id
-                        set hp_allowed_p [hf_permission_p $sysowner_user_id $customer_id $at_id $rpn $instance_id]
+                        set hp_allowed_p [qc_permission_p $sysowner_user_id $customer_id $at_id $rpn $instance_id]
                         # syaadmin should be 1 for all tests
                         aa_equals "C1 sysadmin ${role} ${at_id} ${rpn}" $hp_allowed_p $rp_allowed_p
                     }
@@ -276,7 +276,7 @@ aa_register_case -cats {api smoke} permissions_check {
                 }
                 foreach rpn $rpn_list {
                     
-                    set hp_allowed_p [hf_permission_p $site_user_id $customer_id $at_id $rpn $instance_id]
+                    set hp_allowed_p [qc_permission_p $site_user_id $customer_id $at_id $rpn $instance_id]
                     # site_user should be 0 for all tests except read published
                     # User has no roles.
                     if { $rpn eq "read" && $at_id eq "published" } {
@@ -299,7 +299,7 @@ aa_register_case -cats {api smoke} permissions_check {
             ns_log Notice "hosting-farm-test-procs.tcl.303 c3_role_ids_list '${c3_role_ids_list}'"
             foreach at_id $asset_type_ids_list {
                 foreach rpn $rpn_list {
-                    set hp_allowed_p [hf_permission_p $mnp_user_id $customer_id $at_id $rpn $instance_id]
+                    set hp_allowed_p [qc_permission_p $mnp_user_id $customer_id $at_id $rpn $instance_id]
                     # mnp_user should be 1 for all tests except delete
                     # Because user has all roles.
                     if { $rpn eq "delete" || [string match "permission*" $at_id] } {
@@ -322,7 +322,7 @@ aa_register_case -cats {api smoke} permissions_check {
                 # at_id = asset_type_id
                 foreach at_id $asset_type_ids_list {
                     foreach rpn $rpn_list {
-                        set hp_allowed_p [hf_permission_p $c4uid $customer_id $at_id $rpn $instance_id]
+                        set hp_allowed_p [qc_permission_p $c4uid $customer_id $at_id $rpn $instance_id]
                         set role $c4urole(${c4uid})
                         if { $c4ui(${role}) eq $c4uid && [expr { $rpv_arr(${rpn}) & $priv_arr(${role},${at_id}) } ] > 0 } {
                             set rp_allowed_p 1
@@ -352,7 +352,7 @@ aa_register_case -cats {api smoke} permissions_check {
                 # at_id = asset_type_id
                 foreach at_id $asset_type_ids_list {
                     foreach rpn $rpn_list {
-                        set hp_allowed_p [hf_permission_p $c5uid $customer_id $at_id $rpn $instance_id]
+                        set hp_allowed_p [qc_permission_p $c5uid $customer_id $at_id $rpn $instance_id]
                         set rp_allowed_p 0
                         foreach role $c5uwr_larr(${c5uid}) {
                             if { [expr { $rpv_arr(${rpn}) & $priv_arr(${role},${at_id}) } ] > 0 } {
@@ -403,7 +403,7 @@ aa_register_case -cats {api smoke} permissions_check {
                 # at_id = asset_type_id
                 foreach at_id $asset_type_ids_list {
                     foreach rpn $rpn_list {
-                        set hp_allowed_p [hf_permission_p $c5uid $customer_id $at_id $rpn $instance_id]
+                        set hp_allowed_p [qc_permission_p $c5uid $customer_id $at_id $rpn $instance_id]
                         set rp_allowed_p 0
                         foreach role $c5uwr_larr(${c5uid}) {
                             if { [expr { $rpv_arr(${rpn}) & $priv_arr(${role},${at_id}) } ] > 0 } {

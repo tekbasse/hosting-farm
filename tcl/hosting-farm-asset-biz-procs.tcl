@@ -612,7 +612,7 @@ ad_proc -private hf_asset_create_from_asset_template {
 
 
     set read_p [hf_ui_go_ahead_q read "" published 0]
-    set create_p [hf_permission_p $user_id $customer_id assets create $instance_id]
+    set create_p [qc_perimission_p $user_id $customer_id assets create $instance_id]
     set status_p $create_p
 
     if { $create_p } {
