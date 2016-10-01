@@ -679,7 +679,7 @@ ad_proc -private hf_ui_go_ahead_q {
         if { $privilege eq "create" && $asset_id eq "" } {
             # No existing asset_id to check.
             # Vet an existing customer_id, or set it if there is only 1.
-            set customer_id_list [hf_customer_ids_for_user $user_id $instance_id]
+            set customer_id_list [qc_contact_ids_for_user $user_id $instance_id]
             if { ![info exists proc_customer_id_list] } {
                 set proc_customer_id_list $customer_id_list
             }

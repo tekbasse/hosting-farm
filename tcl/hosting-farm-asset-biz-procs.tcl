@@ -716,7 +716,7 @@ ad_proc -private hf_asset_templates {
     # This needs re-worked using revised api
     # scope to user_id
     set user_id [ad_conn user_id]
-    set customer_ids_list [hf_customer_ids_for_user $user_id]
+    set customer_ids_list [qc_contact_ids_for_user $user_id]
     if { $inactives_included_p } {
         set templates_list_of_lists [db_list_of_lists hf_asset_templates_select_all  "select [hf_asset_keys ","] from hf_assets where template_p =:1 and instance_id =:instance_id and asset_id in ( select asset_id from hf_asset_label_map where instance_id = :instance_id ) order by last_modified desc" ]
     } else {

@@ -46,7 +46,7 @@ ad_proc -private hf_asset_ids_for_user {
             }
 
         } else {
-            set customer_ids_list [hf_customer_ids_for_user $user_id]
+            set customer_ids_list [qc_contact_ids_for_user $user_id]
             # get asset_ids assigned to customer_ids
             foreach customer_id $customer_ids_list {
                 set assets_list [hf_active_asset_ids_of_customer $customer_id $top_level_p ]

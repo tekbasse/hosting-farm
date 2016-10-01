@@ -30,7 +30,7 @@ set publish_p 0
 set pkg_admin_p 0
 
 set customer_id ""
-set customer_id_list [hf_customer_ids_for_user $user_id $instance_id]
+set customer_id_list [qc_contact_ids_for_user $user_id $instance_id]
 if { [llength $customer_id_list] > 1 } {
      set gt1_customer_p 1
 } else {
@@ -416,7 +416,7 @@ if { !$form_posted_p } {
     
 
     if { $customer_id ne "" && [qf_is_natural_number $customer_id ] } {
-        set customer_ids_list [hf_customer_ids_for_user $user_id $instance_id]
+        set customer_ids_list [qc_contact_ids_for_user $user_id $instance_id]
         if { $customer_id ni $customer_ids_list && !$pkg_admin_p } {
             ns_log Warning "hosting-farm/assets.tcl.243: customer_id '${customer_id}' not permitted. Set to ''"
             set customer_id ""

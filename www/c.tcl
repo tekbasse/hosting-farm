@@ -83,7 +83,7 @@ array set input_arr \
 # INPUTS
 
 
-set customer_id_list [hf_customer_ids_for_user $user_id $instance_id]
+set customer_id_list [qc_contact_ids_for_user $user_id $instance_id]
 if { [llength $customer_id_list] > 1 } {
      set gt1_customer_p 1
 } else {
