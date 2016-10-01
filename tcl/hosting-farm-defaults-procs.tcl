@@ -517,7 +517,7 @@ ad_proc -private hf_roles_init {
                  [list technical_staff "Technical Staff" "Monitors asset performance etc"] \
                  [list billing_admin "Billing Admin" "Primary billing administrator"] \
                  [list billing_manager "Billing Manager" "Oversees daily billing operations"] \
-             [list billing_staff "Billing Staff" "Monitors billing, bookkeeping etc."] \
+                 [list billing_staff "Billing Staff" "Monitors billing, bookkeeping etc."] \
                  [list site_developer "Site Developer" "Builds websites etc"] ]
         
         # admin to have admin permissions, 
@@ -528,17 +528,8 @@ ad_proc -private hf_roles_init {
             set label [lindex $def_role_list 0]
             set title [lindex $def_role_list 1]
             set description [lindex $def_role_list 2]
-            db_dml default_roles_cr {
-                insert into hf_role
-                (label,title,description)
-                values (:label,:title,:description)
-            }
-            db_dml default_roles_cr_i {
-                insert into hf_role
-                (label,title,description,instance_id)
-                values (:label,:title,:description,:instance_id)
-                
-            }
+            qc_role_create $label $title $description
+            qc_role_create $label $title $description $instance_id
         }
         return 1
     }
@@ -579,7 +570,7 @@ ad_proc -private hf_property_init {
         foreach def_prop_list $p_d_lists {
             set asset_type_id [lindex $def_prop_list 0]
             set title [lindex $def_prop_list 1]
-            qc_property_create $asset_type_id $title $instance_id
+            qc_property_create $asset_type_id $title "" $instance_id
             qc_property_create $asset_type_id $title ""
         }
     }
