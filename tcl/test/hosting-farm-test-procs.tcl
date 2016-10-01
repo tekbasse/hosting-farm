@@ -295,7 +295,7 @@ aa_register_case -cats {api smoke} permissions_check {
             # Loop through each subcase
             set customer_id 3
             # at_id = asset_type_id
-            set c3_role_ids_list [db_list hf_user_roles_for_cust_get_c3 "select hf_role_id from hf_user_roles_map where instance_id=:instance_id and qal_customer_id=:customer_id and user_id=:mnp_user_id"]
+            set c3_role_ids_list [qc_roles_of_user_contact_id $nmp_user_id $customer_id $instance_id]
             ns_log Notice "hosting-farm-test-procs.tcl.303 c3_role_ids_list '${c3_role_ids_list}'"
             foreach at_id $asset_type_ids_list {
                 foreach rpn $rpn_list {
