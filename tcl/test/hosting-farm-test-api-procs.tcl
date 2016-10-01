@@ -28,7 +28,7 @@ aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
                 from hf_property } ]
             set asset_type_ids_count [llength $asset_type_ids_list]
 
-            set roles_lists [hf_roles $instance_id]
+            set roles_lists [qc_roles $instance_id]
             set roles_list [list ]
             foreach role_list $roles_lists {
                 set role [lindex $role_list 0]

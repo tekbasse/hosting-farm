@@ -26,7 +26,7 @@ if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt
 
 if { $instance_id != 0 } {
     # If this is this the first run, add some defaults.
-    if { [llength [hf_roles $instance_id]] == 0 } {
+    if { [llength [qc_roles $instance_id]] == 0 } {
         hf_roles_init $instance_id
         hf_property_init $instance_id
         hf_privilege_init $instance_id
