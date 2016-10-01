@@ -9,7 +9,7 @@
     <implements-subsite-p>f</implements-subsite-p>
     <inherit-templates-p>f</inherit-templates-p>
     
-    <version name="1.043" url="http://openacs.org/repository/download/apm/hosting-farm-1.043.apm">
+    <version name="1.197" url="http://openacs.org/repository/download/apm/hosting-farm-1.197.apm">
         <owner url="mailto:tekbasse@yahoo.com">Benjamin Brink</owner>
         <summary>Operations management system initially designed for a hosting farm using freebsd jails.</summary>
         <release-date></release-date>
@@ -19,11 +19,12 @@
         <maturity>-1</maturity>
         <package_instance_name>hosting farm</package_instance_name>
 
-        <provides url="hosting-farm" version="1.043"/>
+        <provides url="hosting-farm" version="1.197"/>
         <requires url="accounts-receivables" version="0.001"/>
         <requires url="accounts-ledger" version="0.001"/>
         <requires url="accounts-finance" version="0.001"/>
         <requires url="customer-service" version="0.001"/>
+        <requires url="q-control" version="0.020"/>
         <requires url="q-forms" version="0.048"/>
         <requires url="q-wiki" version="0.001"/>
         <requires url="acs-mail-lite" version="5.8.1"/>
