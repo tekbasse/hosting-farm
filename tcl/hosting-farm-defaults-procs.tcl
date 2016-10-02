@@ -507,6 +507,7 @@ ad_proc -private hf_roles_init {
     # role is <division>_<role_level> where role_level are privileges.
     # r_d_lists is abbrev for role_defaults_list
     if { [llength [qc_roles $instance_id] ] == 0 } { 
+        ns_log Notice "hf_roles_init: adding roles for instance_id '${instance_id}'"
         set r_d_lists \
             [list \
                  [list main_admin "Main Admin" "Primary administrator"] \
@@ -528,7 +529,6 @@ ad_proc -private hf_roles_init {
             set label [lindex $def_role_list 0]
             set title [lindex $def_role_list 1]
             set description [lindex $def_role_list 2]
-            qc_role_create "" $label $title $description
             qc_role_create "" $label $title $description $instance_id
         }
         return 1
@@ -548,6 +548,7 @@ ad_proc -private hf_property_init {
     # p_d_lists is abbrev for props_defaults_lists
     set prop_id [qc_property_id vm $instance_id]
     if { $prop_id eq "" } {
+        ns_log Notice "hf_property_init: adding properties for instance_id '${instance_id}'"
         # properties do not exist yet.
         set p_d_lists \
             [list \
@@ -591,7 +592,7 @@ ad_proc -private hf_privilege_init {
     # techs to have write privileges on tech stuff, 
     # admins to have write privileges on contact stuff
     # write includes trash, admin includes create where appropriate
-    set exists_p [qc_property_id_exists_q "assets"]
+    set exists_p [qc_property_role_privilege_maps_exist_q $instance_id]
     if { !$exists_p } {
         # only package system admin has delete privilege
         set privs_larr(admin) [list "create" "read" "write" "admin"]
@@ -634,8 +635,7 @@ ad_proc -private hf_privilege_init {
                     # Add privileges for the role_id
                     if { $role_level ne "" } {
                         foreach priv $privs_larr($role_level) {
-                            qc_property-role_privilege_map_create $property_id $role_id $priv
-                            qc_property-role_privilege_map_create $property_id $role_id $priv $instance_id
+                            qc_property_role_privilege_map_create $property_id $role_id $priv $instance_id
                         }
                     } else {
                         ns_log Notice "hosting-farm/tcl/hosting-farm-init.tcl.130: No role_level (admin/manager/staff) for role_id '${role_id}' role_label '${role_label}'"
