@@ -528,8 +528,8 @@ ad_proc -private hf_roles_init {
             set label [lindex $def_role_list 0]
             set title [lindex $def_role_list 1]
             set description [lindex $def_role_list 2]
-            qc_role_create $label $title $description
-            qc_role_create $label $title $description $instance_id
+            qc_role_create "" $label $title $description
+            qc_role_create "" $label $title $description $instance_id
         }
         return 1
     }
