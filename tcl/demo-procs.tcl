@@ -107,7 +107,7 @@ ad_proc -private hf_asset_summary_status {
             lappend random_list [expr { srand($random) } ]
             incr i
         }
-#        ns_log Notice "random_list $random_list"
+        #        ns_log Notice "random_list $random_list"
     }
 
     # following from hipsteripsum.me
@@ -135,7 +135,7 @@ ad_proc -private hf_asset_summary_status {
     foreach asr_list $as_root_lists {
         set i [lindex $asr_list 0]
         set asr_arr($i) [lreplace $asr_list 0 0]
-#        ns_log Notice "hf_asset_summary_status: asr_arr($i) '$asr_arr($i)'"
+        #        ns_log Notice "hf_asset_summary_status: asr_arr($i) '$asr_arr($i)'"
     }
     set as_type_list [list DC HW VM VH SS]
     set as_type_count [llength $as_type_list]
@@ -191,7 +191,7 @@ ad_proc -private hf_asset_summary_status {
         set as_list [list $as_label $as_name $as_type]
         lappend asset_db_lists $as_list
     }
-#    ns_log Notice "hf_asset_summary_status(196): asset_db_lists '$asset_db_lists' "
+    #    ns_log Notice "hf_asset_summary_status(196): asset_db_lists '$asset_db_lists' "
     
     
     # for the demo,  manually build a fake list instead of calling a procedure
@@ -223,11 +223,11 @@ ad_proc -private hf_asset_summary_status {
             }
             # metric1 metric2 metric..
             set metric_list $asr_arr($as_type) 
-   #         ns_log Notice "hf_asset_summary_status(221): metric_list '$metric_list' llength [llength $metric_list]"
+            #         ns_log Notice "hf_asset_summary_status(221): metric_list '$metric_list' llength [llength $metric_list]"
             foreach as_at $metric_list {
                 set as_reports_list $asset_list
-  #              ns_log Notice "hf_asset_summary_status(224): counter $debug_counter active_p $active_p as_type $as_type as_reports_list,asset_list $as_reports_list"
-#                ns_log Notice "hf_asset_summary_status(218): as_type $as_type as_at $as_at"
+                #              ns_log Notice "hf_asset_summary_status(224): counter $debug_counter active_p $active_p as_type $as_type as_reports_list,asset_list $as_reports_list"
+                #                ns_log Notice "hf_asset_summary_status(218): as_type $as_type as_at $as_at"
                 # quota_arr(as_type,metric) = quota amount
                 set iq "${as_type},${as_at}"
                 set quota [expr { wide( $quota_arr($iq) ) } ]
@@ -240,7 +240,7 @@ ad_proc -private hf_asset_summary_status {
                 }
                 set unit "B"
                 set pct_quota [expr { wide( 100. * $sample / ( $quota * 1.) ) } ]
-#                set pct_quota_html [format "%d%%" $pct_quota]
+                #                set pct_quota_html [format "%d%%" $pct_quota]
                 set pct_quota_html $pct_quota
                 if { $history_exists_p } {
                     if { $list_limit ne "" } {
@@ -253,36 +253,36 @@ ad_proc -private hf_asset_summary_status {
                     # interval_rate = units_per_week / secs_per_week * secs_per_interval_remaining
                     set interval_rate [expr { $weeks_rate * $interval_remaining_ts / 604800. } ]
                     set projected_eop [expr { $sample + $interval_rate } ]
-#ns_log Notice "hf_asset_summary_status(242): sample $sample pct_quota $pct_quota pct_quota_html $pct_quota_html weeks_rate $weeks_rate interval_rate $interval_rate projected_eop $projected_eop"
+                    #ns_log Notice "hf_asset_summary_status(242): sample $sample pct_quota $pct_quota pct_quota_html $pct_quota_html weeks_rate $weeks_rate interval_rate $interval_rate projected_eop $projected_eop"
                     set projected_eop_html $projected_eop
                     if { $as_at eq "traffic" } {
                         set sample_html $sample
-#                        set sample_html [qal_pretty_bytes_iec $sample]
-#                        set projected_eop_html [qal_pretty_bytes_iec $projected_eop]
+                        #                        set sample_html [qal_pretty_bytes_iec $sample]
+                        #                        set projected_eop_html [qal_pretty_bytes_iec $projected_eop]
                         set projected_eop_html $projected_eop
- #                       ns_log Notice "hf_asset_summary_status(247): pretty_bytes_iec calc sample_html $sample_html projected_eop_html $projected_eop_html"
+                        #                       ns_log Notice "hf_asset_summary_status(247): pretty_bytes_iec calc sample_html $sample_html projected_eop_html $projected_eop_html"
                     } else {
-#                        set sample_html [qal_pretty_bytes_dec $sample]
+                        #                        set sample_html [qal_pretty_bytes_dec $sample]
                         set sample_html $sample
-#                        set projected_eop_html [qal_pretty_bytes_dec $projected_eop]
+                        #                        set projected_eop_html [qal_pretty_bytes_dec $projected_eop]
                         set projected_eop_html $projected_eop
- #                       ns_log Notice "hf_asset_summary_status(251): pretty_bytes_dec calc sample_html $sample_html projected_eop_html $projected_eop_html"
+                        #                       ns_log Notice "hf_asset_summary_status(251): pretty_bytes_dec calc sample_html $sample_html projected_eop_html $projected_eop_html"
                     }
 
                 } else {
                     # not enough history to calculate
                     set projected_eop 0
-# These values could be set to N/A, since it is too early to make projections,
-# but that causes problems with sorting the results.
-# So, we make a projection based on existing values and assume change is negligible. 
-#                    set projected_eop_html "#accounts-ledger.N_A#"
+                    # These values could be set to N/A, since it is too early to make projections,
+                    # but that causes problems with sorting the results.
+                    # So, we make a projection based on existing values and assume change is negligible. 
+                    #                    set projected_eop_html "#accounts-ledger.N_A#"
                     # let's use e/2 just for the heck of it..
                     set projected_eop_html [expr { $sample * 1.35914 } ]
                     if { $as_at eq "traffic" } {
-#                        set sample_html [qal_pretty_bytes_iec $sample]
+                        #                        set sample_html [qal_pretty_bytes_iec $sample]
                         set sample_html $sample
                     } else {
-#                        set sample_html [qal_pretty_bytes_dec $sample]
+                        #                        set sample_html [qal_pretty_bytes_dec $sample]
                         set sample_html $sample
                     }
 
@@ -306,21 +306,21 @@ ad_proc -private hf_asset_summary_status {
                 }
                 # $as_at is metric
                 lappend as_reports_list $as_at
- #               ns_log Notice "hf_asset_summary_status(271): as_reports_list $as_reports_list"
+                #               ns_log Notice "hf_asset_summary_status(271): as_reports_list $as_reports_list"
                 lappend as_reports_list $sample_html $pct_quota_html $projected_eop_html $health_score $hs_message
-#                ns_log Notice "hf_asset_summary_status(273): as_reports_list $as_reports_list"
+                #                ns_log Notice "hf_asset_summary_status(273): as_reports_list $as_reports_list"
                 # as_label as_name as_type metric latest_sample unit percent_quota projected_eop score score_message
                 lappend asset_report_lists $as_reports_list
- #               ns_log Notice "hf_asset_summary_status(278): as_reports_list $as_reports_list"
+                #               ns_log Notice "hf_asset_summary_status(278): as_reports_list $as_reports_list"
             }
         } else {
             # asset not active
             set as_reports_list $asset_list
- #           ns_log Notice "hf_asset_summary_status(290): counter $debug_counter active_p $active_p as_type $as_type as_reports_list,asset_list $as_reports_list"
+            #           ns_log Notice "hf_asset_summary_status(290): counter $debug_counter active_p $active_p as_type $as_type as_reports_list,asset_list $as_reports_list"
             set health_score 0
             set hs_message ""
             lappend as_reports_list "#accounts-ledger.N_A#" "0" "0" "0" $health_score "inactive"
-#            ns_log Notice "hf_asset_summary_status(282): as_reports_list $as_reports_list"
+            #            ns_log Notice "hf_asset_summary_status(282): as_reports_list $as_reports_list"
             lappend asset_report_lists $as_reports_list
         }
     }
@@ -353,7 +353,7 @@ ad_proc -private hf_asset_summary_status {
     }
     set asset_db_sorted_lists [lrange $asset_db_sorted_lists $list_offset $list_limit]
     
-   # ns_log Notice "hf_asset_summary_status: asset_db_sorted_lists $asset_db_sorted_lists"
+    # ns_log Notice "hf_asset_summary_status: asset_db_sorted_lists $asset_db_sorted_lists"
     return $asset_db_sorted_lists
 }
 
@@ -1036,7 +1036,7 @@ ad_proc -public hfdt_hw_base_create {
                               ipv6_addr "2001:0db8:85a3:0000:0000:8a2e:${hwf}:${ipv6_suffix}" \
                               ipv6_status "1"]
         set ip_arr(ip_id) [hf_ip_write ip_arr]
-        if ( $ip_arr(ip_id) ne "" } {
+        if { $ip_arr(ip_id) ne "" } {
             incr audit_atc_arr(ip)
         }
         array unset ip_arr

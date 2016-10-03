@@ -673,15 +673,18 @@ ad_proc -private hf_asset_type_id_init {
             set asset_type_id [lindex $def_as_type_list 0]
             set label [lindex $def_as_type_list 1]
             set name [lindex $def_as_type_list 2]
-            db_dml default_as_types_cr {
-                insert into hf_asset_type
-                (id,label,name)
-                values (:asset_type_id,:label,:name)
-            }
-            db_dml default_as_types_cr_i {
-                insert into hf_asset_type
-                (id,label,name,instance_id)
-                values (:asset_type_id,:label,:name,:instance_id)
+            if { $instance_id eq "" } {
+                db_dml default_as_types_cr {
+                    insert into hf_asset_type
+                    (id,label,name)
+                    values (:asset_type_id,:label,:name)
+                }
+            } else {
+                db_dml default_as_types_cr_i {
+                    insert into hf_asset_type
+                    (id,label,name,instance_id)
+                    values (:asset_type_id,:label,:name,:instance_id)
+                }
             }
         }
     }

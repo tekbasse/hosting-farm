@@ -220,9 +220,10 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                                          name "${randlabel} test ${asset_type_id} $ac" \
                                          user_id $sysowner_user_id ]
                 set asset_arr(f_id) [hf_asset_create asset_arr ]
-                incr ac
-                incr audit_ac_arr(hw)
-
+                if { $asset_arr(f_id) ne "" } {
+                    incr ac
+                    incr audit_ac_arr(hw)
+                }
 
                 # Add to dc. hf_asset hierarchy is added manually
                 set dc_ref [expr { round( fmod( $ac , 2 ) ) } ]
@@ -240,7 +241,9 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                                          description "[string toupper ${asset_type_id}]${ac}" \
                                          details "This is for api test"]
                 set asset_arr(hw_id) [hf_hw_write asset_arr]
-                incr audit_atc_arr(hw)
+                if { $asset_arr(hw_id) ne "" } {
+                    incr audit_atc_arr(hw)
+                }
 
 
 
@@ -256,7 +259,9 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                                       ipv6_addr "2001:0db8:85a3:0000:0000:8a2e:0370:${ipv6_suffix}" \
                                       ipv6_status "1"]
                 set ip_arr(ip_id) [hf_ip_write ip_arr]
-                incr audit_atc_arr(ip)
+                if { $ip_arr(ip_id) ne "" } {
+                    incr audit_atc_arr(ip)
+                }
                 # delayed unset ip_arr. See below
 
 
@@ -276,7 +281,9 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                                       ipv4_addr_range "198.51.100.0/24" \
                                       ipv6_addr_range "2001:db8:1234::/48" ]
                 set ni_arr(ni_id) [hf_ni_write ni_arr]
-                incr audit_atc_arr(ni)
+                if { $ni_arr(ni_id) ne "" } {
+                    incr audit_atc_arr(ni)
+                }
                 array unset ni_arr
 
 
@@ -286,7 +293,9 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                                       active_p "0" \
                                       name_record "${domain}. A $ip_arr(ipv4_addr)" ]
                 set ns_arr(ns_id) [hf_ns_write ns_arr]
-                incr audit_atc_arr(ns)
+                if { $ns_arr(ns_id) ne "" } {
+                    incr audit_atc_arr(ns)
+                }
                 array unset ns_arr
                 # delayed unset ip_arr, so info could be used in ns_arr
                 array unset ip_arr
@@ -299,7 +308,9 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                                       ua_id "" \
                                       up "test" ]
                 set ua_arr(ua_id) [hf_user_add ua_arr]
-                incr audit_atc_arr(ua)
+                if { $ua_arr(ua_id) ne "" } {
+                    incr audit_atc_arr(ua)
+                }
                 array unset ua_arr
 
 
@@ -310,7 +321,9 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                                       ua_id "" \
                                       up "test" ]
                 set ua_arr(ua_id) [hf_user_add ua_arr]
-                incr audit_atc_arr(ua)
+                if { $ua_arr(ua_id) ne "" } {
+                    incr audit_atc_arr(ua)
+                }
                 array unset ua_arr
 
 

@@ -35,10 +35,16 @@ if { $instance_id != 0 } {
         hf_privilege_init $instance_id
         hf_asset_type_id_init $instance_id
         # add defaults for no instance_id also
-        set instance_id ""
-        hf_roles_init $instance_id
-        hf_property_init $instance_id
-        hf_privilege_init $instance_id
-        hf_asset_type_id_init $instance_id
+        hf_roles_init ""
+        hf_property_init ""
+        hf_privilege_init ""
+
     }
+}
+if { [llength [hf_asset_type_id_list]] == 0 } {
+        hf_asset_type_id_init $instance_id
+}
+set instance_id ""
+if { [llength [hf_asset_type_id_list]] == 0 } {
+        hf_asset_type_id_init $instance_id
 }
