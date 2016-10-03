@@ -3,7 +3,7 @@ ad_library {
     @creation-date 2015-03-19
 }
 
-aa_register_case -cats {db smoke} assets_attr_check {
+aa_register_case -cats {db smoke} hf_assets_attr_check {
     Simple detailed test and diagnostics of asset and attribute api
 } {
     aa_run_with_teardown \

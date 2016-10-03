@@ -3,7 +3,7 @@ ad_library {
     @creation-date 2015-03-19
 }
 
-aa_register_case -cats {api smoke} permissions_check {
+aa_register_case -cats {api smoke} hf_permissions_check {
     Test hf_permissions_p proc for all cases
 } {
     aa_run_with_teardown \

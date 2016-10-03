@@ -3,7 +3,7 @@ ad_library {
     @creation-date 2015-03-19
 }
 
-aa_register_case -cats {api smoke} assets_sys_lifecycle_api_check {
+aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
     Test assets and attributes api through system lifecycle simmulation
 } {
     aa_run_with_teardown \

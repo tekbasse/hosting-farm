@@ -4,7 +4,7 @@ ad_library {
     @creation-date 2015-03-19
 }
 
-aa_register_case -cats {api smoke} scramble_check {
+aa_register_case -cats {api smoke} hf_scramble_check {
     Test encoding decoding api
 } {
     aa_run_with_teardown \
