@@ -1231,52 +1231,65 @@ ad_proc -private hf_user_add {
         set f_id_exists_p 1
     }
     set sub_type_id "ua"
-    if { $ua_id eq "" } {
-        set ua_id $sub_f_id
-    }
-    set sub_f_id $ua_id
-    # Manually added hf_sub_asset_map_update code at this point
-    # so hf_ua_write controls db_next_val 
-    # and hf_up api handled directly.
     set sub_f_id_new ""
-    set trashed_p 0
-    set attribute_p 1
-    set sub_f_id_exists_p 0
-    if { $ua_id ne "" } {
-        set sub_type_id [hf_asset_type_id_of_f_id $sub_f_id]
-        if { $sub_type_id eq "ua" } {
-            set sub_f_id_exists_p 1
-        } else {
-            ns_log Warning "hf_user_add.963: denied. \
- attribute ref not exist. fid '${f_id} ua_id '${ua_id}'"
+    set allowed_sub_type_id_list [hf_types_allowed_by $type_id]
+    set test_sub_f_id ""
+    if { $type_id eq $sub_type_id } {
+        set test_sub_f_id [hf_primary_sub_f_id $f_id]
+    }
+    if { $sub_type_id in $allowed_sub_type_id_list || ( $type_id eq $sub_type_id && $test_sub_f_id eq "" ) } {
+        if { $ua_id eq "" } {
+            set ua_id $sub_f_id
         }
-    } 
-    if { $f_id_exists_p } {
-        set sub_f_id_new [hf_ua_write $ua $connection_type $ua_id $up]
-        if { $sub_f_id_new ne "" } {
-            set nowts [dt_systime -gmt 1]
-            if { $sub_f_id_exists_p } {
-                db_dml hfua_sub_asset_map_update { update hf_sub_asset_map
-                    set last_updated=:nowts
-                    where f_id=:f_id 
-                    and sub_f_id=:sub_f_id }
+        set sub_f_id $ua_id
+        # Manually added hf_sub_asset_map_update code at this point
+        # so hf_ua_write controls db_next_val 
+        # and hf_up api handled directly.
+        set trashed_p 0
+        set attribute_p 1
+        set sub_f_id_exists_p 0
+        if { $ua_id ne "" } {
+            set sub_type_id [hf_asset_type_id_of_f_id $sub_f_id]
+            if { $sub_type_id eq "ua" } {
+                set sub_f_id_exists_p 1
             } else {
-                #  $sub_f_id ne $sub_f_id_new 
-                set sub_f_id $sub_f_id_new
-                set ct [hf_asset_cascade_count $f_id]
-                set sub_sort_order [expr { $ct * 20 } ]
-                set last_updated $nowts
-                if { $sub_label eq "" } {
-                    if { $connection_type ne "" } {
-                        append sub_label "${connection_type}:"
+                ns_log Warning "hf_user_add.963: denied. \
+ attribute ref not exist. fid '${f_id} ua_id '${ua_id}'"
+            }
+        } 
+        if { $f_id_exists_p } {
+            set sub_f_id_new [hf_ua_write $ua $connection_type $ua_id $up]
+            if { $sub_f_id_new ne "" } {
+                set nowts [dt_systime -gmt 1]
+                if { $sub_f_id_exists_p } {
+                    db_dml hfua_sub_asset_map_update { update hf_sub_asset_map
+                        set last_updated=:nowts
+                        where f_id=:f_id 
+                        and sub_f_id=:sub_f_id }
+                } else {
+                    #  $sub_f_id ne $sub_f_id_new 
+                    set sub_f_id $sub_f_id_new
+                    set ct [hf_asset_cascade_count $f_id]
+                    set sub_sort_order [expr { $ct * 20 } ]
+                    set last_updated $nowts
+                    if { $sub_label eq "" } {
+                        if { $connection_type ne "" } {
+                            append sub_label "${connection_type}:"
+                        }
+                        append sub_label ua $ct
                     }
-                    append sub_label ua $ct
-                }
-                # translate api conventions to internal map refs
-                db_dml hfua_sub_asset_map_create "insert into hf_sub_asset_map \
+                    # translate api conventions to internal map refs
+                    db_dml hfua_sub_asset_map_create "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
-            } 
+                }
+            } else {
+                ns_log Warning "hf_user_add.1280: hf_ua_write failed. sub_f_id_new '${sub_f_id_new}'"
+            }
+        } else {
+            ns_log Warning "hf_user_add.1283: f_id '${f_id}' does not exist."
         }
+    } else {
+        ns_log Warning "hf_user_add.1288: sub_type_id 'ua' not allowed as sub of type_id '${type_id}'"
     }
     return $sub_f_id_new
 }
@@ -1319,19 +1332,19 @@ ad_proc -private hf_ua_write {
             # update
             # does ua_id exist?
             if { [qf_is_natural_number $ua_id] } {
-                set id_exists_p [db_0or1row hf_ua_id_get \
-                                     "select ua_id as ua_id_ck \
- from hf_ua where instance_id =:instance_id and ua_id =:ua_id"]
+                set id_exists_p [db_0or1row hf_ua_id_get {select ua_id as ua_id_ck 
+                    from hf_ua where instance_id=:instance_id and ua_id=:ua_id}]
             }
             if { $id_exists_p } {
                 db_dml hf_ua_update {
-                    update hf_ua 
-                        set details=:sdetail,connection_type=:connection_type
+                    update hf_ua set details=:sdetail,connection_type=:connection_type
                         where ua_id=:ua_id and instance_id=:instance_id
                 }
                 if { $up ne "" } {
                     set not_log_p [hf_up_write $ua_id $up $instance_id]
                 }
+            } else {
+                ns_log Notice "hf_ua_write.1336: ua_id '${ua_id}' does not exist. instance_id '${instance_id}'"
             }
         }
         if { !$id_exists_p } {
