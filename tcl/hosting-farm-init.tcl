@@ -13,17 +13,20 @@
 
 
 set instance_id 0
+#ns_log Notice "hosting-farm/tcl/hosting-farm-init.tcl.16: begin"
 if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt] } {
     # more than one instance exists
     set instance_id 0
+    #ns_log Notice "hosting-farm/tcl/hosting-farm-init.tcl.20: More than one instance exists. skipping."
 } elseif { $instance_id != 0 } {
     # only one instance of hosting-farm exists.
 } else {
     # package_id = 0, no instance exists
     # empty string converts to null for integers in db api
     set instance_id ""
-}
 
+}
+ns_log Notice "hosting-farm/tcl/hosting-farm-init.tcl.29: instance_id '${instance_id}' "
 if { $instance_id != 0 } {
     # If this is this the first run, add some defaults.
     if { [llength [qc_roles $instance_id]] == 0 } {

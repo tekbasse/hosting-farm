@@ -506,7 +506,8 @@ ad_proc -private hf_roles_init {
 } {
     # role is <division>_<role_level> where role_level are privileges.
     # r_d_lists is abbrev for role_defaults_list
-    if { [llength [qc_roles $instance_id] ] == 0 } { 
+    set roles_list [qc_roles $instance_id ]
+    if { [llength $roles_list ] == 0 } { 
         ns_log Notice "hf_roles_init: adding roles for instance_id '${instance_id}'"
         set r_d_lists \
             [list \
@@ -531,8 +532,8 @@ ad_proc -private hf_roles_init {
             set description [lindex $def_role_list 2]
             qc_role_create "" $label $title $description $instance_id
         }
-        return 1
     }
+    return 1
 }
 
 
@@ -546,8 +547,8 @@ ad_proc -private hf_property_init {
     # but maybe we give it special permissions 
     # or other asset-like qualities for now.
     # p_d_lists is abbrev for props_defaults_lists
-    set prop_id [qc_property_id vm $instance_id]
-    if { $prop_id eq "" } {
+    set property_list [qc_property_list $instance_id]
+    if { [llength $property_list] == 0 } {
         ns_log Notice "hf_property_init: adding properties for instance_id '${instance_id}'"
         # properties do not exist yet.
         set p_d_lists \
@@ -594,6 +595,7 @@ ad_proc -private hf_privilege_init {
     # write includes trash, admin includes create where appropriate
     set exists_p [qc_property_role_privilege_maps_exist_q $instance_id]
     if { !$exists_p } {
+        ns_log Notice "hf_privilege_init: adding privilege maps for instance_id '${instance_id}'"
         # only package system admin has delete privilege
         set privs_larr(admin) [list "create" "read" "write" "admin"]
         set privs_larr(developer) [list "create" "read" "write"]
