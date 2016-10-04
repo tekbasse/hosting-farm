@@ -7,17 +7,15 @@ set content ""
 set instance_id [qc_set_instance_id]
 
 # Identify and test full range of parameters
-set asset_type_ids_list [db_list hf_property_asset_type_ids_get {
-    select distinct on (asset_type_id) asset_type_id
-    from hf_property } ]
+set asset_type_ids_list [qc_property_list $instance_id]
 set asset_type_ids_count [llength $asset_type_ids_list]
 
-set roles_lists [hf_roles $instance_id]
+set roles_lists [qc_roles $instance_id]
 set roles_list [list ]
 foreach role_list $roles_lists {
     set role [lindex $role_list 0]
     lappend roles_list $role
-    set role_id [hf_role_id_of_label $role $instance_id]
+    set role_id [qc_role_id_of_label $role $instance_id]
     set role_id_arr(${role}) $role_id
 }
 # keep namespace clean to help prevent bugs in test code
@@ -42,9 +40,9 @@ foreach role $roles_list {
     foreach at_id $asset_type_ids_list {
         # 0 is default, no privilege
         #                    set priv_arr(${role},${at_id})  0
-        set property_id [hf_property_id $at_id $instance_id]
-        set role_id [hf_role_id_of_label $role $instance_id]
-        set priv_list [db_list test_tcl "select privilege from hf_property_role_privilege_map where property_id=:property_id and role_id=:role_id and instance_id=:instance_id"] 
+        set property_id [qc_property_id $at_id $instance_id]
+        set role_id [qc_role_id_of_label $role $instance_id]
+        set priv_list [qc_privileges_of_prop_role $property_id $role_id ]
         set priv_val 0
         foreach priv $priv_list {
             switch -exact -- $priv {
