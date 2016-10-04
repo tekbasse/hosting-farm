@@ -176,7 +176,7 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
             set dci(0) $asset_arr(f_id)
             #ns_log Notice "hosting-farm-test-api-procs.tcl.113: asset_arr(label) $asset_arr(label)"
             array set asset_arr [list \
-                                     affix [ad_generate_random_string] \
+                                     affix "dc(0)[ad_generate_random_string]" \
                                      description "[string toupper ${asset_type_id}]${ac}" \
                                      details "This is for api test"]
             #ns_log Notice "hosting-farm-test-api-procs.tcl.119: asset_arr(label) $asset_arr(label)"
@@ -199,7 +199,7 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
             incr audit_ac_arr(dc)
             set dci(1) $asset_arr(f_id)
             array set asset_arr [list \
-                                     affix [ad_generate_random_string] \
+                                     affix "dc(1)[ad_generate_random_string]" \
                                      description "[string toupper ${asset_type_id}]${ac}" \
                                      details "This is for api test"]
             set asset_arr(dc_id) [hf_dc_write asset_arr]
@@ -235,7 +235,7 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                 # add hw primary attribute
                 array set asset_arr [list \
                                          sub_label $asset_arr(label) \
-                                         system_name [ad_generate_random_string] \
+                                         system_name "hw1[ad_generate_random_string]" \
                                          backup_sys $backup_sys \
                                          os_id [randomRange $osc] \
                                          description "[string toupper ${asset_type_id}]${ac}" \
@@ -441,12 +441,12 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
             set dice_list [acc_fin::shuffle_list $dice_list]
             foreach hw_asset_id $hw_asset_id_list {
                 set dice [hf_peek_pop_stack dice_list]
-                ns_log Notice "hosting-farm-test-api-procs.tcl: starting switch '${dice}'"
+                ns_log Notice "hosting-farm-test-api-procs.tcl.444: switch start ----- dice '${dice}'"
                 switch -glob -- $dice {
                     0 {
                         set sh_id [hfdt_vm_create $hw_asset_id]
                         if { $sh_id eq "" } {
-                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 0 failed to create asset."
+                            ns_log Warning "hosting-farm-test-api-procs.tcl.449: dice= 0 failed to create asset."
                         }
 
                     }
@@ -460,7 +460,7 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                                 hfdt_shared_hosting_client_create $sh_id
                             }
                         } else {
-                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 1 failed to create asset."
+                            ns_log Warning "hosting-farm-test-api-procs.tcl.463: dice= 1 failed to create asset."
                         }
                     }
                     2 {
@@ -469,7 +469,7 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                         if { $sh_id ne "" } {
                             hfdt_shared_hosting_client_create $sh_id
                         } else {
-                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 2 failed to create vm attribute."
+                            ns_log Warning "hosting-farm-test-api-procs.tcl.472: dice= 2 failed to create vm attribute."
                         }
                     }
                     3 {
@@ -482,7 +482,7 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                             # create ss and ua asset
                             hfdt_ss_base_create $vh_id
                         } else {
-                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 3 failed to create asset."
+                            ns_log Warning "hosting-farm-test-api-procs.tcl.485. dice= 3 failed to create asset."
                         }
                     }
                     4 {
@@ -493,7 +493,7 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                             # add ss + ua attribute to a vm
                             hfdt_ss_attr_create $vm_id
                         } else {
-                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 4 failed to create asset."
+                            ns_log Warning "hosting-farm-test-api-procs.tcl.496: dice= 4 failed to create asset."
                         }
                     }
                     5 {
@@ -506,7 +506,7 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                                 hfdt_ua_asset_create $f_id
                             }
                         } else {
-                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 5 failed to create asset."
+                            ns_log Warning "hosting-farm-test-api-procs.tcl.509: dice= 5 failed to create asset."
                         }
                     }
                     6 - 
@@ -526,10 +526,10 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                                     set box_id [hfdt_hw_1u_create $f_id]
                                 }
                             } else {
-                                ns_log Warning "hosting-farm-test-api-procs.tcl dice= 6,7,8 failed to create colo assets."
+                                ns_log Warning "hosting-farm-test-api-procs.tcl.529: dice= 6,7,8 failed to create colo assets."
                             }
                         } else {
-                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 6,7,8 failed to create asset."
+                            ns_log Warning "hosting-farm-test-api-procs.tcl.532: dice= 6,7,8 failed to create asset."
                         }
                     }
                     9 {
@@ -537,7 +537,7 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                         # add ss asset as killer app
                         set f_id [hfdt_ss_base_create $hw_asset_id]
                         if { $f_id eq "" } {
-                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 9 failed to create asset."
+                            ns_log Warning "hosting-farm-test-api-procs.tcl.540: dice= 9 failed to create asset."
                         }
                     }
                     10 {
@@ -545,7 +545,7 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                         # add hw network device to dc attr
                         set f_id [hfdt_hw_base_create $hw_asset_id]
                         if { $f_id eq "" } {
-                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 10 failed to create asset."
+                            ns_log Warning "hosting-farm-test-api-procs.tcl.548: dice= 10 failed to create asset."
                         }
                     }
                     11 {
@@ -580,15 +580,15 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                                         array unset ns_arr
                                     }
                                 } else {
-                                    ns_log Warning "hosting-farm-test-api-procs.tcl dice= 11 failed hfdt_ua_asset_create"
+                                    ns_log Warning "hosting-farm-test-api-procs.tcl.583: dice= 11 failed hfdt_ua_asset_create. f_id '${f_id}'"
                                 }
                             }
                         } else {
-                            ns_log Warning "hosting-farm-test-api-procs.tcl dice= 11 failed to create vm attr."
+                            ns_log Warning "hosting-farm-test-api-procs.tcl.587: dice= 11 hfdt_vm_attr_create failed to create vm attr for hw_asset_id '${hw_asset_id}'"
                         }
                     }
                 }
-                ns_log Notice "hosting-farm-test-api-procs.tcl: end switch '${dice}'"
+                ns_log Notice "hosting-farm-test-api-procs.tcl.591: switch end -- dice '${dice}'"
                 #end switch
             }
             # end foreach
@@ -682,7 +682,7 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                 set op_type_list_len [llength $op_type_list]
                 incr op_type_list_len -1
                 set hw_asset_id_list [acc_fin::shuffle_list $hw_asset_id_list]
-                ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve cycle_nbr '${cycle_nbr}' of '${cycle_count}'"
+                ns_log Notice "hosting-farm-test-api-procs.tcl.685: starting evolve cycle_nbr '${cycle_nbr}' of '${cycle_count}'"
                 foreach hw_asset_id $hw_asset_id_list {
                     # Choose operations and target type
                     set op_type [lindex $op_type_list [randomRange $op_type_list_len]]
@@ -705,25 +705,25 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                         if { $op_type eq "trash" } {
                             hf_asset_stats $sub_asset_id [list trashed_p asset_type_id]
                             if { $trashed_p eq "" } {
-                                ns_log Warning "hosting-farm-test-api-procs.tcl: sub_asset_id '${sub_asset_id}' trashed_p '${trashed_p}'"
+                                ns_log Warning "hosting-farm-test-api-procs.tcl.708: sub_asset_id '${sub_asset_id}' trashed_p '${trashed_p}'"
                                 set op_type "create"
                             }
                         }
 
-                        ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve op_type '${op_type}' on sub_asset_id '${sub_asset_id}'"
+                        ns_log Notice "hosting-farm-test-api-procs.tcl.713: starting evolve op_type '${op_type}' on sub_asset_id '${sub_asset_id}'"
                         switch -exact -- $op_type {
                             trash {
                                 if { $trashed_p } { 
                                     if { [hf_asset_untrash $sub_asset_id] } {
                                         incr audit_ac_arr(${asset_type_id})
                                     } else {
-                                        ns_log Warning "hosting-farm-test-api-procs.tcl: failed hf_asset_untrash sub_asset_id '${sub_asset_id}' trashed_p '${trashed_p}'"
+                                        ns_log Warning "hosting-farm-test-api-procs.tcl.720: failed hf_asset_untrash sub_asset_id '${sub_asset_id}' trashed_p '${trashed_p}'"
                                     }
                                 } else {
                                     if { [hf_asset_trash $sub_asset_id] } {
                                         incr audit_ac_arr(${asset_type_id}) -1
                                     } else {
-                                        ns_log Warning "hosting-farm-test-api-procs.tcl: failed hf_asset_trash sub_asset_id '${sub_asset_id}' trashed_p '${trashed_p}'"
+                                        ns_log Warning "hosting-farm-test-api-procs.tcl.726: failed hf_asset_trash sub_asset_id '${sub_asset_id}' trashed_p '${trashed_p}'"
                                     }
                                 }
                             }
@@ -783,12 +783,12 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                         if { $attr_id eq "" || $trashed_p eq "" } {
                             set op_type "create"
                             if { $trashed_p eq "" } {
-                                ns_log Notice "hosting-farm-test-api-procs.tcl: attr_id '${attr_id}' trashed_p '${trashed_p}'"
+                                ns_log Notice "hosting-farm-test-api-procs.tcl.786: attr_id '${attr_id}' trashed_p '${trashed_p}'"
                             }
                         }
                         
                         if { $attr_id ne "" } {
-                            ns_log Notice "hosting-farm-test-api-procs.tcl: starting evolve op_type '${op_type}' on attr_id '${attr_id}'"
+                            ns_log Notice "hosting-farm-test-api-procs.tcl.791: starting evolve op_type '${op_type}' on attr_id '${attr_id}'"
                             switch -exact -- $op_type {
                                 trash {
                                     if { !$trashed_p } {
@@ -803,7 +803,7 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                                 }
                                 update {
                                     # change label?
-                                    hf_attribute_sub_label_update $attr_id [ad_generate_random_string]
+                                    hf_attribute_sub_label_update $attr_id "hf_attribute_sub_label_update"
                                 }
                             }
                         }
@@ -881,13 +881,13 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                         if { [hf_attribute_trash $attr_id ] } {
                             incr audit_atc_arr(${sub_type_id}) -1
                         } else {
-                            ns_log Warning "hosting-farm-test-api-procs.tcl: failed hf_attribute_trash attr_id '${attr_id}'"
+                            ns_log Warning "hosting-farm-test-api-procs.tcl.884: failed hf_attribute_trash attr_id '${attr_id}'"
                         }
                     }
                     if { [hf_asset_trash $sub_asset_id] } {
                         incr audit_ac_arr(${asset_type_id}) -1
                     } else {
-                        ns_log Warning "hosting-farm-test-api-procs.tcl: failed hf_asset_trash sub_asset_id '${sub_asset_id}'"
+                        ns_log Warning "hosting-farm-test-api-procs.tcl.890: failed hf_asset_trash sub_asset_id '${sub_asset_id}'"
                     }
                 }
             }
@@ -909,13 +909,13 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
                     if { [hf_attribute_trash $attr_id ] } {
                         incr audit_atc_arr(${sub_type_id}) -1
                     } else {
-                        ns_log Warning "hosting-farm-test-api-procs.tcl: failed hf_attribute_trash attr_id '${attr_id}'"
+                        ns_log Warning "hosting-farm-test-api-procs.tcl.912: failed hf_attribute_trash attr_id '${attr_id}'"
                     }
                 }
                 if { [hf_asset_trash $asset_id] } {
                     incr audit_ac_arr(${asset_type_id}) -1
                 } else {
-                    ns_log Warning "hosting-farm-test-api-procs.tcl: failed hf_asset_trash asset_id '${asset_id}'"
+                    ns_log Warning "hosting-farm-test-api-procs.tcl.918: failed hf_asset_trash asset_id '${asset_id}'"
                 }
             }                
 
@@ -937,7 +937,7 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
             array set audit_arm_3_arr $audit_arm_3_list
             foreach i $hf_asset_type_id_list {
                 set audit_arm_3_arr($i) [expr { $audit_arm_3_arr($i) - $audit_arm_d_arr($i) } ]
-                aa_equals "3. Asset revisions $i created" $audit_arm_3_arr($i) $audit_ac_arr($i)
+                aa_equals "3. Asset revisions $i net created" $audit_arm_3_arr($i) $audit_ac_arr($i)
             }
             # assets (from hf_asset_rev_map)
             db_1row hf_ast_recs_count { select count(*) as hf_ast_count_3 from hf_assets where trashed_p!='1' }
@@ -951,7 +951,7 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
             array set audit_ast_3_arr $audit_ast_3_list
             foreach i $hf_asset_type_id_list {
                 set audit_ast_3_arr($i) [expr { $audit_ast_3_arr($i) - $audit_ast_d_arr($i) } ]
-                aa_equals "3. Assets $i created" $audit_ast_3_arr($i) $audit_ac_arr($i)
+                aa_equals "3. Assets $i net created" $audit_ast_3_arr($i) $audit_ac_arr($i)
             }
             # attributes (from hf_sub_asset_map)
             db_1row hf_sam_recs_count { select count(*) as hf_sam_count_3 from hf_sub_asset_map where trashed_p!='1' and attribute_p!='0' }
@@ -965,7 +965,7 @@ aa_register_case -cats {api smoke} hf_assets_sys_lifecycle_api_check {
             array set audit_sam_3_arr $audit_sam_3_list
             foreach i $hf_asset_type_id_list {
                 set audit_sam_3_arr($i) [expr { $audit_sam_3_arr($i) - $audit_sam_d_arr($i) } ]
-                aa_equals "3. Attributes $i created" $audit_sam_3_arr($i) $audit_atc_arr($i)
+                aa_equals "3. Attributes $i net created" $audit_sam_3_arr($i) $audit_atc_arr($i)
             }
         }
 }

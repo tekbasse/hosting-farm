@@ -509,7 +509,7 @@ ad_proc -private hf_attribute_sub_label_update {
         set sub_asset_list [hf_sub_asset $sub_f_id]
         qf_lists_to_vars $sub_asset_list [hf_sub_asset_map_keys]
         if { [llength $sub_asset_list] > 0 } {
-            # trash old asset_type_id record also
+            # trash old attribute record also
             # except for ua case. It doesn't trash.
             db_transaction {
                 switch -exact -- $sub_type_id {
@@ -579,31 +579,34 @@ ad_proc -private hf_attribute_sub_label_update {
                     }
                 }
                 if { $sub_f_id_new ne "" } {
-                        # trash existing record
+                    # trash existing map record
                     set nowts [dt_systime -gmt 1]
                         db_dml hf_sub_label_trash_1 {
                             update hf_sub_asset_map
-                            set trashed_p='0',
+                            set trashed_p='1',
                             last_updated=:nowts
                             where sub_f_id=:sub_f_id 
                             and instance_id=:instance_id
                         }
-                    # make new record
+
+                    # update map dependencies
+                        db_dml hf_attribute_map_f_id_u1 { 
+                            update hf_sub_asset_map
+                            set f_id=:sub_f_id_new,
+                            last_updated=:nowts
+                            where f_id=:sub_f_id 
+                            and instance_id=:instance_id
+                            and trashed_p!='1'
+                        }
+                    }
+
+                    # make new map record
                     set sub_f_id $sub_f_id_new
                     set sub_label $new_sub_label
                     set last_updated $nowts
                     db_dml hf_attributes_sub_label_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
-                        # update dependencies
-                        db_dml hf_attribute_map_f_id_u1 { 
-                            update hf_sub_asset_map
-                            set f_id=:sub_f_id_new,
-                            last_updated=:nowts
-                            where f_id=:f_id 
-                            and instance_id=:instance_id
-                            and trashed_p!='1'
-                        }
-                    }
+
                 } on_error {
                     ns_log Warning "hf_attribute_sub_label_update.524: error '${errmsg}'"
                 }
@@ -1254,7 +1257,7 @@ ad_proc -private hf_user_add {
                 set sub_f_id_exists_p 1
             } else {
                 ns_log Warning "hf_user_add.963: denied. \
- attribute ref not exist. fid '${f_id} ua_id '${ua_id}'"
+ attribute ref sub_f_id '${sub_f_id}' does not exist. fid '${f_id} ua_id '${ua_id}'"
             }
         } 
         if { $f_id_exists_p } {
@@ -1265,7 +1268,8 @@ ad_proc -private hf_user_add {
                     db_dml hfua_sub_asset_map_update { update hf_sub_asset_map
                         set last_updated=:nowts
                         where f_id=:f_id 
-                        and sub_f_id=:sub_f_id }
+                        and sub_f_id=:sub_f_id
+                        and instance_id=:instance_id}
                 } else {
                     #  $sub_f_id ne $sub_f_id_new 
                     set sub_f_id $sub_f_id_new
