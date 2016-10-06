@@ -28,7 +28,7 @@ number of active customers
  @contents;noquote@
 </pre>
 <if @offer_demo_p;noquote@ true>
-  <p>If you have installed this package as part of a temporary system
+  <p><a href="demo-install">Install demo data</a>?  If you have installed this package as part of a temporary system
     and want to populate it with some demo data, 
     browse to the <a href="demo-install">demo-install</a> page.
     When the page has finished loading, data will be 
