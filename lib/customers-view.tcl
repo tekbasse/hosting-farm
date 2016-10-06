@@ -112,7 +112,7 @@ foreach row_list $customers_lists {
 set col2sort_wo_sign 0
 set table_sorted_lists [lsort -dictionary -index $col2sort_wo_sign -increasing $asset_stts_smmry_lists]
 
-set form_id [qf_form action $base_url method post id 20160930 hash_check 1]
+set form_id [qf_form action $base_url method post id 20161006 hash_check 1]
 qf_input type "hidden" name "mode" value "p"
 
 
@@ -287,40 +287,6 @@ if { $item_count > 0 } {
     append page_html "#acs-subsite.none#"
 }
 
-# Anything else?
-if { $admin_p } {
-    set asset_types_lists [hf_asset_types]
-    if { $pkg_admin_p } {
-        set at_limited_lists $asset_types_lists
-    } else {
-        set id_list [hfl_assets_allowed_by_user]
-        # at is abbrev for asset_type
-        set at_limited_lists [list ]
-        foreach at_list $asset_types_lists {
-            if { [lindex $at_list 0] in $id_list } {
-                lappend at_limited_lists $at_list
-            }
-        }
-    }
-    if { [llength $at_limited_lists] > 0 } {
-        set at_sorted_lists [lsort -index 2 -dictionary $at_limited_lists]
-        qf_append html "<br><br>#hosting-farm.Asset# #acs-subsite.create#${separator}"
-        qf_bypass name "asset_type" value "asset_primary_attr"
-        qf_bypass name "mapped_f_id" value $mapped_f_id
-        set choices_list [list ]
-        set selected 1
-        foreach at_list $at_sorted_lists {
-            set at_id [lindex $at_list 0]
-            set at_title [lindex $at_list 2]
-            set row_list [list label]
-            lappend row_list " ${at_title} " value $at_id selected $selected
-            lappend choices_list $row_list
-            set selected 0
-        }
-        qf_choice type radio name asset_type_id value $choices_list
-        qf_input type submit value "#acs-subsite.create#" name "zal0" class button
-    }
-}
 
 qf_close form_id $form_id
 append page_html [qf_read form_id $form_id]
