@@ -573,7 +573,6 @@ ad_proc -private hf_property_init {
             set asset_type_id [lindex $def_prop_list 0]
             set title [lindex $def_prop_list 1]
             qc_property_create $asset_type_id $title "" $instance_id
-            qc_property_create $asset_type_id $title ""
         }
     }
     return 1
@@ -631,18 +630,19 @@ ad_proc -private hf_privilege_init {
                 # For example, 
                 #     $privs_larr(manager) = list read write
                 #     $props_larr(billing) = admin_contact_record non_assets published
-                
-                if { [lsearch $props_larr($division) $asset_type_id ] > -1 } {
-                    # This division has privileges.
-                    # Add privileges for the role_id
-                    if { $role_level ne "" } {
-                        foreach priv $privs_larr($role_level) {
-                            qc_property_role_privilege_map_create $property_id $role_id $priv $instance_id
+                if { $division in $division_types_list } {
+                    if { [lsearch $props_larr(${division}) $asset_type_id ] > -1 } {
+                        # This division has privileges.
+                        # Add privileges for the role_id
+                        if { $role_level ne "" } {
+                            foreach priv $privs_larr(${role_level}) {
+                                qc_property_role_privilege_map_create $property_id $role_id $priv $instance_id
+                            }
+                        } else {
+                            ns_log Notice "hf_privilege_init.138: No role_level (admin/manager/staff) for role_id '${role_id}' role_label '${role_label}'"
                         }
-                    } else {
-                        ns_log Notice "hosting-farm/tcl/hosting-farm-init.tcl.130: No role_level (admin/manager/staff) for role_id '${role_id}' role_label '${role_label}'"
                     }
-                }
+                } 
             }
         }
     }
