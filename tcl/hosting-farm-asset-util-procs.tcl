@@ -417,7 +417,7 @@ ad_proc -private hf_asset_keys {
     Returns an ordered list of keys that is parallel to the ordered list returned by hf_asset_read.
 
     If separator is not "", returns a string joined with separator.
-    @see hf_keys_by
+    @see qal_keys_by
 } {
     set keys_list [list \
                        asset_id \
@@ -442,7 +442,7 @@ ad_proc -private hf_asset_keys {
                        flags \
                        template_id \
                        f_id]
-    set keys [hf_keys_by $keys_list $separator]
+    set keys [qal_keys_by $keys_list $separator]
     return $keys
 }
 
