@@ -21,24 +21,6 @@ ad_proc -private hf_peek_pop_stack {
     return $last_out
 }
 
-ad_proc -private hf_keys_by {
-    keys_list
-    {separator ""}
-} {
-    if { $separator ne ""} {
-        set keys ""
-        if { $separator eq ",:" } {
-            # for db
-            set keys ":"
-        }
-        append keys [join $keys_list $separator]
-    } else {
-        set keys $keys_list
-    }
-    return $keys
-}
-
-
 ad_proc -public hf_lists_filter_by_alphanum {
     user_input_list
 } {
