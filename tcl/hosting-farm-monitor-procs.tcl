@@ -1407,6 +1407,17 @@ ad_proc -private hf_monitor_statistics {
         #    -- most recent analysis_id ie at p1
         #    analysis_id_p1             varchar(19) not null DEFAULT '',
         #    -- health at p0
+
+        # A number from 0 to 100. Think of health_pN as hearth rate ie pulse
+        # -1 = undefined / inactive / off
+        #  0 = killed / crashed
+        #  1 to 15 = coma / suspended? / not responding
+        #  16 to 25 = possibly sick or just peaceful
+        # 26 to 75 = normal
+        # 76 to 85 = stressed, maybe good, maybe bad
+        # 86 to 99 = panick / fast cpu / maybe unresponsive / lots of errors 
+        # 100 = trama / cpu spin / buffer overflow etc
+
         #    health_p0                  varchar(19) not null DEFAULT '',
         #    -- for calculating differential, p1 is always 1, just as p0 is 0
         #    -- health at p1

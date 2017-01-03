@@ -222,8 +222,16 @@ hf_monitor_logs
 hf_monitors_inactivate
 
 
-A process is called to add to the monitor_log
-
+A process is called to add health value to the monitor_log.
+Think of health value as a heart rate or pulse from 0 to 100.
+       -1 = undefined / inactive / off
+        0 = killed / crashed
+  1 to 15 = coma / suspended? / not responding
+ 16 to 25 = peaceful / sleeping? / possibly sick
+ 26 to 75 = normal
+ 76 to 86 = stressed, maybe good, maybe bad
+ 86 to 99 = panick / fast cpu / maybe unresponsive / lots of errors
+      100 = trauma / cpu spin / buffer overflow etc
 
 hf_monitor_update updates table hf_monitor_log
 
