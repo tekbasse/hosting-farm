@@ -12,6 +12,9 @@
 #    @email: tekbasse@yahoo.com
 
 
+##code The scheduled_procs stacks should be checked for any existing unfinished procedures..
+#      and either mark them as interrupted, or restart..
+
 set instance_id 0
 #ns_log Notice "hosting-farm/tcl/hosting-farm-init.tcl.16: begin"
 if { [catch { set instance_id [apm_package_id_from_key hosting-farm] } error_txt] } {
