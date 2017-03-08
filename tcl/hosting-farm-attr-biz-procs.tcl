@@ -40,22 +40,18 @@ ad_proc -private hf_ua_delete {
             if { $validated_p } {
                 db_transaction {
                     set ups_list [hf_up_id_of_ua_id ]
-                    db_dml hf_uas_up_delete {
-                        delete from hf_up \
+                    db_dml hf_uas_up_delete "delete from hf_up \
                             where up_id in \
-                            ([template::util::tcl_to_sql_list $ups_list]) }
-                    db_dml hf_uas_map_delete {
-                        delete from hf_ua_up_map \
+                            ([template::util::tcl_to_sql_list $ups_list]) "
+                    db_dml hf_uas_map_delete "delete from hf_ua_up_map \
                             where instance_id=:instance_id and ua_id in \
-                            ([template::util::tcl_to_sql_list $ua_list]) }
-                    db_dml hf_uas_delete { 
-                        delete from hf_ua \
+                            ([template::util::tcl_to_sql_list $ua_list]) "
+                    db_dml hf_uas_delete "delete from hf_ua \
                             where instance_id=:instance_id and ua_id in \
-                            ([template::util::tcl_to_sql_list $ua_list]) }
-                    db_dml hf_ua_attr_map_del {
-                        delete from hf_sub_asset_map \
+                            ([template::util::tcl_to_sql_list $ua_list]) "
+                    db_dml hf_ua_attr_map_del "delete from hf_sub_asset_map \
                             where instance_id=:instance_id and sub_f_id in \
-                            ([template::util::tcl_to_sql_list $ua_list]) }
+                            ([template::util::tcl_to_sql_list $ua_list]) "
                 } on_error {
                     set success_p 0
                 }
@@ -92,14 +88,12 @@ ad_proc -private hf_ns_delete {
             }
             if { $validated_p } {
                 db_transaction {
-                    db_dml hf_ns_ids_delete {
-                        delete from hf_ns_records \
+                    db_dml hf_ns_ids_delete "delete from hf_ns_records \
                             where instance_id=:instance_id and ns_id in \
-                            ([template::util::tcl_to_sql_list $ns_list]) }
-                    db_dml hf_ns_attr_map_del {
-                        delete from hf_sub_asset_map \
+                            ([template::util::tcl_to_sql_list $ns_list]) "
+                    db_dml hf_ns_attr_map_del "delete from hf_sub_asset_map \
                             where instance_id=:instance_id and sub_f_id in \
-                            ([template::util::tcl_to_sql_list $ns_list]) }
+                            ([template::util::tcl_to_sql_list $ns_list]) "
                 } on_error {
                     set success_p 0
                 }
@@ -136,14 +130,12 @@ ad_proc -private hf_ip_delete {
             }
             if { $validated_p } {
                 db_transaction {
-                    db_dml hf_ip_ids_delete {
-                        delete from hf_ip_addresses \
+                    db_dml hf_ip_ids_delete "delete from hf_ip_addresses \
                             where instance_id=:instance_id and ip_id in \
-                            ([template::util::tcl_to_sql_list $ip_list]) }
-                    db_dml hf_ip_attr_map_del {
-                        delete from hf_sub_asset_map \
+                            ([template::util::tcl_to_sql_list $ip_list]) "
+                    db_dml hf_ip_attr_map_del "delete from hf_sub_asset_map \
                             where instance_id=:instance_id and sub_f_id in \
-                            ([template::util::tcl_to_sql_list $ip_list]) }
+                            ([template::util::tcl_to_sql_list $ip_list]) "
                 } on_error {
                     set success_p 0
                 }
@@ -182,14 +174,12 @@ ad_proc -private hf_ni_delete {
             }
             if { $validated_p } {
                 db_transaction {
-                    db_dml hf_ni_ids_delete {
-                        delete from hf_network_interfaces \
+                    db_dml hf_ni_ids_delete "delete from hf_network_interfaces \
                             where instance_id=:instance_id and ni_id in \
-                            ([template::util::tcl_to_sql_list $ni_list]) }
-                    db_dml hf_ni_attr_map_del {
-                        delete from hf_sub_asset_map \
+                            ([template::util::tcl_to_sql_list $ni_list])"
+                    db_dml hf_ni_attr_map_del "delete from hf_sub_asset_map \
                             where instance_id=:instance_id and sub_f_id in \
-                            ([template::util::tcl_to_sql_list $ni_list]) }
+                            ([template::util::tcl_to_sql_list $ni_list])"
                 } on_error {
                     set success_p 0
                 }
@@ -227,14 +217,12 @@ ad_proc -private hf_ss_delete {
             }
             if { $validated_p } {
                 db_transaction {
-                    db_dml hf_ss_ids_delete {
-                        delete from hf_services \
+                    db_dml hf_ss_ids_delete "delete from hf_services \
                             where instance_id=:instance_id and ss_id in \
-                            ([template::util::tcl_to_sql_list $ss_list]) }
-                    db_dml hf_ss_attr_map_del {
-                        delete from hf_sub_asset_map \
+                            ([template::util::tcl_to_sql_list $ss_list]) "
+                    db_dml hf_ss_attr_map_del "delete from hf_sub_asset_map \
                             where instance_id=:instance_id and sub_f_id in \
-                            ([template::util::tcl_to_sql_list $ss_list]) }
+                            ([template::util::tcl_to_sql_list $ss_list]) "
                 } on_error {
                     set success_p 0
                 }
@@ -271,14 +259,12 @@ ad_proc -private hf_vh_delete {
             }
             if { $validated_p } {
                 db_transaction {
-                    db_dml hf_vh_ids_delete {
-                        delete from hf_vhosts \
+                    db_dml hf_vh_ids_delete "delete from hf_vhosts \
                             where instance_id=:instance_id and vh_id in \
-                            ([template::util::tcl_to_sql_list $vh_list]) }
-                    db_dml hf_vh_attr_map_del {
-                        delete from hf_sub_asset_map \
+                            ([template::util::tcl_to_sql_list $vh_list]) "
+                    db_dml hf_vh_attr_map_del "delete from hf_sub_asset_map \
                             where instance_id=:instance_id and sub_f_id in \
-                            ([template::util::tcl_to_sql_list $vh_list]) }
+                            ([template::util::tcl_to_sql_list $vh_list]) "
                 } on_error {
                     set success_p 0
                 }
@@ -316,14 +302,12 @@ ad_proc -private hf_vm_delete {
             }
             if { $validated_p } {
                 db_transaction {
-                    db_dml hf_vm_ids_delete {
-                        delete from hf_virtual_machines \
+                    db_dml hf_vm_ids_delete "delete from hf_virtual_machines \
                             where instance_id=:instance_id and vm_id in \
-                            ([template::util::tcl_to_sql_list $vm_list]) }
-                    db_dml hf_vm_attr_map_del {
-                        delete from hf_sub_asset_map \
+                            ([template::util::tcl_to_sql_list $vm_list]) "
+                    db_dml hf_vm_attr_map_del "delete from hf_sub_asset_map \
                             where instance_id=:instance_id and sub_f_id in \
-                            ([template::util::tcl_to_sql_list $vm_list]) }
+                            ([template::util::tcl_to_sql_list $vm_list]) "
                 } on_error {
                     set success_p 0
                 }
@@ -361,14 +345,12 @@ ad_proc -private hf_hw_delete {
             }
             if { $validated_p } {
                 db_transaction {
-                    db_dml hf_hw_ids_delete {
-                        delete from hf_hardware \
+                    db_dml hf_hw_ids_delete "delete from hf_hardware \
                             where instance_id=:instance_id and hw_id in \
-                            ([template::util::tcl_to_sql_list $hw_list]) }
-                    db_dml hf_hw_attr_map_del {
-                        delete from hf_sub_asset_map \
+                            ([template::util::tcl_to_sql_list $hw_list]) "
+                    db_dml hf_hw_attr_map_del "delete from hf_sub_asset_map \
                             where instance_id=:instance_id and sub_f_id in \
-                            ([template::util::tcl_to_sql_list $hw_list]) }
+                            ([template::util::tcl_to_sql_list $hw_list]) "
                 } on_error {
                     set success_p 0
                 }
@@ -406,14 +388,12 @@ ad_proc -private hf_dc_delete {
             }
             if { $validated_p } {
                 db_transaction {
-                    db_dml hf_dc_ids_delete {
-                        delete from hf_data_centers \
+                    db_dml hf_dc_ids_delete "delete from hf_data_centers \
                             where instance_id=:instance_id and dc_id in \
-                            ([template::util::tcl_to_sql_list $dc_list]) }
-                    db_dml hf_dc_attr_map_del {
-                        delete from hf_sub_asset_map \
+                            ([template::util::tcl_to_sql_list $dc_list]) "
+                    db_dml hf_dc_attr_map_del "delete from hf_sub_asset_map \
                             where instance_id=:instance_id and sub_f_id in \
-                            ([template::util::tcl_to_sql_list $dc_list]) }
+                            ([template::util::tcl_to_sql_list $dc_list]) "
                 } on_error {
                     set success_p 0
                 }
@@ -451,33 +431,28 @@ ad_proc -private hf_monitor_delete {
             }
             if { $validated_p } {
                 db_transaction {
-                    db_dml hf_monitor_fdc_delete {
-                        delete from hf_monitor_freq_dist_curves \
+                    db_dml hf_monitor_fdc_delete "delete from hf_monitor_freq_dist_curves \
                             where instance_id=:instance_id and \
                             monitor_id in \
-                            ([template::util::tcl_to_sql_list $monitor_id_list])}
-                    db_dml hf_monitor_stats_delete {
-                        delete from hf_monitor_statistics \
+                            ([template::util::tcl_to_sql_list $monitor_id_list])"
+                    db_dml hf_monitor_stats_delete "delete from hf_monitor_statistics \
                             where instance_id=:instance_id and \
                             monitor_id in \
-                            ([template::util::tcl_to_sql_list $monitor_id_list])}
-                    db_dml hf_monitor_status_delete {
-                        delete from hf_monitor_status \
+                            ([template::util::tcl_to_sql_list $monitor_id_list])"
+                    db_dml hf_monitor_status_delete "delete from hf_monitor_status \
                             where instance_id=:instance_id and \
                             monitor_id in \
-                            ([template::util::tcl_to_sql_list $monitor_id_list])}
-                    db_dml hf_monitor_cnc_delete {
-                        delete from hf_monitor_config_n_control \
+                            ([template::util::tcl_to_sql_list $monitor_id_list])"
+                    db_dml hf_monitor_cnc_delete "delete from hf_monitor_config_n_control \
                             where instance_id=:instance_id and \
                             asset_id=:f_id and \
                             monitor_id in \
-                            ([template::util::tcl_to_sql_list $monitor_id_list])}
-                    db_dml hf_monitor_log_delete {
-                        delete from hf_monitor_log \
+                            ([template::util::tcl_to_sql_list $monitor_id_list])"
+                    db_dml hf_monitor_log_delete "delete from hf_monitor_log \
                             where instance_id=:instance_id and \
                             asset_id=:f_id and \
                             monitor_id in \
-                            ([template::util::tcl_to_sql_list $monitor_id_list])}
+                            ([template::util::tcl_to_sql_list $monitor_id_list])"
                 } on_error {
                     set success_p 0
                 }
