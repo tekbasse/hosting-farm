@@ -95,7 +95,6 @@ ad_proc -private hf::schedule::do {
                 lassign $sched_list id proc_name user_id instance_id priority order_time started_time
                 # package_id can vary with each entry
                 
-                #set allowed_procs \[parameter::get -parameter ScheduledProcsAllowed -package_id $instance_id\]
                 set allowed_procs [qc_parameter_get ScheduledProcsAllowed $instance_id]
                 # added comma and period to "split" to screen external/private references and poorly formatted lists
                 set allowed_procs_list [split $allowed_procs " ,."]
@@ -189,7 +188,7 @@ ad_proc -private hf::schedule::add {
     set session_package_id [qc_set_instance_id]
     # We assume user has permission.. but qualify by verifying that instance_id is either user_id or package_id
     if { $instance_id eq $user_id || $instance_id eq $session_package_id } {
-        #set allowed_procs \[parameter::get -parameter ScheduledProcsAllowed -package_id $session_package_id\]
+
         set allowed_procs [qc_parameter_get ScheduledProcsAllowed $session_package_id]
         # added comma and period to "split" to screen external/private references and poorly formatted lists
         set allowed_procs_list [split $allowed_procs " ,."]

@@ -83,7 +83,7 @@ ad_proc -private hf_asset_type_id_list {
     Returns list of all asset_type_id
 } {
     upvar 1 instance_id instance_id
-    #set as_type_list \[list dc hw vm vh ss ip ni ns ot ua\]
+    # as_type_list contains: dc hw vm vh ss ip ni ns ot ua
     if { [exists_and_not_null $instance_id] } {
         set as_type_list [db_list hf_asset_type_id_by_i {select distinct id from hf_asset_type where instance_id=:instance_id}]
     } else {

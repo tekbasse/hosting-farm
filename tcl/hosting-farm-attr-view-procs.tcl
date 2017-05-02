@@ -29,7 +29,7 @@ ad_proc -private hf_oses {
         # set instance_id package_id
         set instance_id [qc_set_instance_id]
     }
-    # no permissions needed     set user_id \[ad_conn user_id\]
+    # no permissions needed 
     # build sql_extra
     set sql_extra ""
     if { $orphaned_p ne 1 } {

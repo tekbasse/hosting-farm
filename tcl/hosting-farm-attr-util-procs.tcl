@@ -944,9 +944,9 @@ ad_proc -private hf_ua_id_of_f_id_ua {
     f_id of the asset or attribute. ua is ua input from user ie pre coded.
 } {
     upvar 1 instance_id instance_id
-    #set mystify_proc \[parameter::get -package_id $instance_id -parameter MystifyProc -default hf_mystify\]
+
     set mystify_proc [qc_parameter_get MystifyProc $instance_id hf_mystify]
-    #set mystify_key \[parameter::get -package_id $instance_id -parameter MystifyKey -default ""\]
+
     set mystify_key [qc_parameter_get MystifyKey $instance_id ""]
     set sdetail [safe_eval [list ${mystify_proc} ${mystify_key} $ua]]
     set ua_id ""
@@ -1082,13 +1082,13 @@ ad_proc -private hf_up_ck {
         if { !$log_p } {
             # validation and limits
             set connection_type [string range $connection_type 0 23]
-            #set mystify_proc \[parameter::get -package_id $instance_id -parameter MystifyProc -default hf_mystify\]
+
             set mystify_proc [qc_parameter_get MystifyProc $instance_id hf_mystify]
-            #set mystify_key \[parameter::get -package_id $instance_id -parameter MystifyKey -default ""\]
+
             set mystify_key [qc_parameter_get MystifyKey $instance_id ""]
-            #set encode_proc \[parameter::get -package_id $instance_id -parameter EncodeProc -default hf_encode\]
+
             set encode_proc [qc_parameter_get EncodeProc $instance_id hf_encode]
-            #set encode_key \[parameter::get -package_id $instance_id -parameter EncodeKey -default ""\]
+
             set encode_key [qc_parameter_get EncodeKey ""]
             set sdetail [safe_eval [list ${mystify_proc} ${mystify_key} $ua]]
             set uup [safe_eval [list ${encode_proc} ${encode_key} $up_submitted]]
@@ -1133,9 +1133,9 @@ ad_proc -private hf_up_write {
         }
     }
     if { $success_p } {
-        #set encode_proc \[parameter::get -package_id $instance_id -parameter EncodeProc -default hf_encode\]
+
         set encode_proc [qc_parameter_get EncodeProc $instance_id hf_encode]
-        #set encode_key \[parameter::get -package_id $instance_id -parameter EncodeKey -default ""\]
+
         set encode_key [qc_parameter_get EncodeKey $instance_id ""]
         set details [safe_eval [list ${encode_proc} ${encode_key} $up]]
         set up_exists_p [db_0or1row ua_id_exists_p {
@@ -1205,9 +1205,9 @@ ad_proc -private hf_up_of_ua_id {
                           where ua_id=:ua_id 
                           and instance_id=:instance_id ) } ]
         if { $success_p } {
-            #set decode_proc \[parameter::get -package_id $instance_id -parameter DecodeProc -default hf_decode\]
+
             set decode_proc [qc_parameter_get DecodeProc $instance_id hf_decode]
-            #set decode_key \[parameter::get -package_id $instance_id -parameter DecodeKey -default ""\]
+
             set decode_key [qc_parameter_get DecodeKey $instance_id ""]
             set up [safe_eval [list ${decode_proc} ${decode_key} $details]]
         }
@@ -1388,8 +1388,8 @@ ad_proc -private hf_types_allowed_by {
             ns_log Warning "hf_types_allowed_by.534: unknown asset_type_id '${asset_type_id}'"
         }
     }
-    # To use a slower, allowed unless explicitly stated, rules set:
-    # set y_list \[set_difference_named_v at_list $n_list\]
+    # To use a slower, allowed unless explicitly stated, rules set 
+    # y_list to set_difference_named_v at_list $n_list
     return $y_list
 }
 

@@ -99,7 +99,6 @@ ad_proc -public hf_constructor_a {
     set primary_attr_id ""
     if { $asset_id_p } {
         set primary_attr_id [hf_primary_sub_f_id $f_id_of_asset_id]
-        #set primary_attr_id \[hf_asset_primary_attr $asset_id\]
     }
 
     # determine sub_asset_id_p
@@ -456,7 +455,6 @@ ad_proc -public hf_constructor_b {
         if { [llength $asset_list] != [llength $hf_asset_keys_list] || [llength $result_list] > 0 } {
             ns_log Warning "hf_constructor_b.427: asset_list length differs from hf_asset_keys"
         }
-        #array set yan_arr \[array get yan2_arr\]
     } 
     if { [string match "*asset*" $asset_type] && ![exists_and_not_null yan_arr(asset_id) ] } {
         ns_log Warning "hf_constructor_b.432: asset_id '${asset_id}' not set in ${a_array_name}.\

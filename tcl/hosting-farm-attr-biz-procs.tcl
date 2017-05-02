@@ -755,8 +755,7 @@ ad_proc -private hf_attribute_trash {
                             hf_ns_trash $sub_f_id
                         }
                         ua {
-                            # Trash is reversable, otherwise 
-                            # hf_ua_delete \[list $sub_f_id\]
+                            # Trash is not reversable for ua.
                         }
                     }
                 }
@@ -1299,9 +1298,8 @@ ad_proc -private hf_ua_write {
         # validation and limits
         set connection_type [string range $connection_type 0 23]
 
-        #set mystify_proc \[parameter::get -package_id $instance_id -parameter MystifyProc -default hf_mystify\]
         set mystify_proc [qc_parameter_get MystifyProc $instance_id hf_mystify]
-        #set mystify_key \[parameter::get -package_id $instance_id -parameter MystifyKey -default ""\]
+
         set mystify_key [qc_parameter_get MystifyKey $instance_id ""]
         set sdetail [safe_eval [list ${mystify_proc} $mystify_key $ua]]
 

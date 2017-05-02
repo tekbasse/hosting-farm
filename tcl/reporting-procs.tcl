@@ -147,9 +147,9 @@ ad_proc -private hf_health_html {
             } elseif { [regexp -nocase -- ".gif" $extension match] } {
                 set wh_list [ns_gifsize $icon_name]
             } elseif { [string length $extension] > 0 } {
-                # imagemagic \[exec identify -format "%[fx:w]x%[fx:h]" image.jpg\]
+                # imagemagic form: identify -format "%[fx:w]x%[fx:h]" image.jpg
                 ns_log Notice "hf_health_html: icon_pathname '$icon_pathname' dir_work '$dir_work' icon_name '$icon_name' extension '$extension'"
-                #            set response [exec -- /usr/local/bin/gm -identify format $imagepath_name]
+
                 catch {exec -- /usr/local/bin/gm -identify format $imagepath_name} response
                 # response:
                 #zbf.jpg JPEG 289x289+0+0 DirectClass 8-bit 6.4k 0.008u 0:01
@@ -220,7 +220,7 @@ ad_proc -private hf_as_type_html {
                 } elseif { [regexp -nocase -- ".gif" $extension match] } {
                     set wh_list [ns_gifsize $icon_name]
                 } elseif { [string length $extension] > 0 } {
-                    # imagemagic \[exec identify -format "%[fx:w]x%[fx:h]" image.jpg\]
+
                     ns_log Notice "hf_as_type_html: icon_pathname '$icon_pathname' dir_work '$dir_work' icon_name '$icon_name' extension '$extension'"
                     #            set response [exec -- /usr/local/bin/gm -identify format $imagepath_name]
                     catch {exec -- /usr/local/bin/gm -identify format $imagepath_name} response
@@ -341,7 +341,7 @@ ad_proc -private hf_pagination_by_items {
 
         set current_page [expr { ( $first_item_displayed + $items_per_page - 1 ) / $items_per_page } ]
 
-        # first row of current page \[expr { (( $current_page - 1)  * $items_per_page ) + 1 } \]
+        # first row of current page is { (( $current_page - 1)  * $items_per_page ) + 1 }
 
         # create bar_list with no pages beyond end_page
 

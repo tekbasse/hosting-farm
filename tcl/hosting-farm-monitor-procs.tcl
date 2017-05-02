@@ -410,7 +410,7 @@ ad_proc -private ::hf::monitor::do {
                     set mon_list [lindex $batch_lists $bi]
                     # set proc_list lindex combo from sched_list
                     
-                    #set allowed_procs \[parameter::get -parameter MonitorProcsAllowed -package_id $instance_id\]
+
                     set allowed_procs [qc_parameter_get MonitorProcsAllowed $instance_id]
                     # added comma and period to "split" to screen external/private references and poorly formatted lists
                     set allowed_procs_list [split $allowed_procs " ,."]
@@ -512,7 +512,7 @@ ad_proc -private hf::monitor::add {
     set session_package_id [qc_set_instance_id]
     # We assume user has permission.. but qualify by verifying that instance_id is either user_id or package_id
     if { $instance_id eq $user_id || $instance_id eq $session_package_id } {
-        #set allowed_procs \[parameter::get -parameter ScheduledProcsAllowed -package_id $session_package_id\]
+
         set allowed_procs [qc_parameter_get ScheduledProcsAllowed $session_package_id]
         # added comma and period to "split" to screen external/private references and poorly formatted lists
         set allowed_procs_list [split $allowed_procs " ,."]
@@ -672,7 +672,7 @@ ad_proc -private hf_ui_go_ahead_q {
         set asset_type_id ""
         set user_id [ad_conn user_id]
         set instance_id [qc_set_instance_id]
-        #set go_ahead \[permission::permission_p -party_id $user_id -object_id \[ad_conn package_id\] -privilege admin\]
+
         if { ![info exists asset_id] } {
             set asset_id ""
         }
@@ -1228,7 +1228,7 @@ ad_proc -public hf_monitor_distribution {
         }
     }
     if { !$error_p } {
-        # set dist_lists \[list \]
+
         set i 0
         if { $sample_s_rate_p } {
             # to reduce sample by time 

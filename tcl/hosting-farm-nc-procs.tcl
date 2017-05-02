@@ -26,7 +26,7 @@ ad_proc -private hf_nc_go_ahead {
     if { [ns_conn isconnected] } {
         set user_id [ad_conn user_id]
         set instance_id [qc_set_instance_id]
-        #set go_ahead \[permission::permission_p -party_id $user_id -object_id $instance_id -privilege admin\]
+
         set customer_id [hf_customer_id_of_asset_id $asset_id]
         # Make sure asset_id is consistent to asset_type_id
         set asset_type_id [hf_nc_asset_type_id $asset_id]
@@ -801,14 +801,6 @@ ad_proc -private hf_vm_copy {
     }
     if { $ns_id ne "" } {
         set ns_id ""
-        #        set ns_list \[lindex $ns_id_lists \[hf_ns_read $ns_id\]\]
-        #        qf_lists_to_vars $ns_list \[list ns_id active_p name_record\]
-        #        set ns_id_new \[hf_ns_write "" $name_record $active_p $instance_id\]
-    }
-    if { $vm_ns_id ne "" && $vm_ns_id ne $ns_id } {
-        #        set vm_ns_list \[lindex $ns_id_lists \[hf_ns_read $ns_id\]\]
-        #        qf_lists_to_vars $ns_list \[list vm_ns_id vm_active_p vm_name_record\]
-        #        set vm_ns_id_new \[hf_ns_write "" $vm_name_record $vm_active_p $instance_id\]
     }
     if { $vm_ip_id ne "" } {
         set vm_ip_id "" 
