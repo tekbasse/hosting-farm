@@ -6,7 +6,7 @@ ad_library {
     @Copyright (c) 2014-2016 Benjamin Brink
     @license GNU General Public License 2, see project home or http://www.gnu.org/licenses/gpl-2.0.en.html
     @project home: http://github.com/tekbasse/hosting-farm
-    @address: po box 20, Marylhurst, OR 97036-0020 usa
+    @address: po box 193, Marylhurst, OR 97036-0193 usa
     @email: tekbasse@yahoo.com
 
 }
@@ -29,7 +29,7 @@ ad_proc -private hf_oses {
         # set instance_id package_id
         set instance_id [qc_set_instance_id]
     }
-    # no permissions needed     set user_id \[ad_conn user_id\]
+    # no permissions needed 
     # build sql_extra
     set sql_extra ""
     if { $orphaned_p ne 1 } {

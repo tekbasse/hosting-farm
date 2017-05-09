@@ -6,7 +6,7 @@ ad_library {
     @Copyright (c) 2014-2016 Benjamin Brink
     @license GNU General Public License 2, see project home or http://www.gnu.org/licenses/gpl-2.0.html
     @project home: http://github.com/tekbasse/hosting-farm
-    @address: po box 20, Marylhurst, OR 97036-0020 usa
+    @address: po box 193, Marylhurst, OR 97036-0193 usa
     @email: tekbasse@yahoo.com
 
 
@@ -83,7 +83,7 @@ ad_proc -private hf_asset_type_id_list {
     Returns list of all asset_type_id
 } {
     upvar 1 instance_id instance_id
-    #set as_type_list \[list dc hw vm vh ss ip ni ns ot ua\]
+    # as_type_list contains: dc hw vm vh ss ip ni ns ot ua
     if { [exists_and_not_null $instance_id] } {
         set as_type_list [db_list hf_asset_type_id_by_i {select distinct id from hf_asset_type where instance_id=:instance_id}]
     } else {

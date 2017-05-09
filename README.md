@@ -17,7 +17,7 @@ A web app built for a hosting farm system made by a system developer for system 
 license
 -------
 Copyright (c) 2013-2016 Benjamin Brink
-po box 20, Marylhurst, OR 97036-0020 usa
+po box 193, Marylhurst, OR 97036-0193 usa
 email: tekbasse@yahoo.com
 
 Hosting Farm is open source and published under the GNU General Public License, consistent with the OpenACS system: http://www.gnu.org/licenses/gpl.html
