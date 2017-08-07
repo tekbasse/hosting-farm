@@ -506,7 +506,7 @@ ad_proc -private hf::monitor::add {
     instance_id
     priority
 } {
-    Adds a process to be "batched" in a process stack separate from page rendering.
+    Adds a monitor for repeated processing at regular intervals.
 } {
     # check proc_name against allowd ones.
     set session_package_id [qc_set_instance_id]
