@@ -63,9 +63,9 @@
   <msg key="base_sku">Base SKU</msg>
   <msg key="base_sku_def">A one word SKU reference for minimum price of plan_id.</msg>
   <msg key="base_storage">Storage (base)</msg>
-  <msg key="base_storage_def">Maximum quantity measured at base rate. See storage_unit for units of quantity. A natural number. </msg>
+  <msg key="base_storage_def">Maximum quantity measured at base rate. See storage_unit for units of quantity. A natural number.</msg>
   <msg key="base_traffic">Traffic (base)</msg>
-  <msg key="base_traffic_def">Maximum quantity measured at base rate. See traffic_unit for units of quantity. A natural number. </msg>
+  <msg key="base_traffic_def">Maximum quantity measured at base rate. See traffic_unit for units of quantity. A natural number.</msg>
   <msg key="bia_mac_address">BIA MAC address</msg>
   <msg key="bia_mac_address_def">Burned In Hardware MAC address</msg>
   <msg key="brand">Brand</msg>
@@ -115,8 +115,7 @@
   <msg key="health">Health</msg>
   <msg key="health_average">Avg health</msg>
   <msg key="health_average_def">Average health number.</msg>
-  <msg key="health_def">A number that indicates the health of a process.</msg>
-  <msg key="health_def">Health number or score as determined by a monitor process</msg>
+  <msg key="health_def">A score that indicates the health of a process as determined by a monitor process.</msg>
   <msg key="health_max">Max health</msg>
   <msg key="health_max_def">Maximum recorded health number.</msg>
   <msg key="health_median">Med health</msg>
