@@ -17,10 +17,10 @@ set debug_p 0
 randomInit [clock clicks]
 
 #ns_schedule_daily -thread 4 14 hf::proc...
-hf::schedule::check
-ad_schedule_proc -thread t $frequency_base hf::schedule::do
+::hf::schedule::check
+ad_schedule_proc -thread t $frequency_base ::hf::schedule::do
 
 
 # set cycle_time:
-hf::monitor::check
-ad_schedule_proc -thread t $cycle_time hf::monitor::do
+::hf::monitor::check
+ad_schedule_proc -thread t $cycle_time ::hf::monitor::do

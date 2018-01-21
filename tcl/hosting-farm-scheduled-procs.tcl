@@ -11,7 +11,7 @@ ad_library {
 
 }
 
-namespace eval hf::schedule {}
+namespace eval ::hf::schedule {}
 
 #TABLE hf_sched_proc_stack
 #       id integer primary key,
@@ -37,7 +37,7 @@ namespace eval hf::schedule {}
 # set id [db_nextval hf_sched_id_seq]
 
 
-ad_proc -private hf::schedule::check {
+ad_proc -private ::hf::schedule::check {
 
 } {
     Returns current values from hf_stack_params table (debug_p, frequency_base)  into the calling environment
@@ -67,13 +67,13 @@ ad_proc -private hf::schedule::check {
 }
 
 
-ad_proc -private hf::schedule::do {
+ad_proc -private ::hf::schedule::do {
 
 } { 
     Process any scheduled procedures. Future batches are suspended until this process reports batch complete.
 } {
     set debug 0
-    hf::schedule::check
+    ::hf::schedule::check
     incr cycle_time -1
     set success_p 0
     set batch_lists [db_list_of_lists hf_sched_proc_stack_read_adm_p0_s { select id,proc_name,user_id,instance_id, priority, order_time, started_time from hf_sched_proc_stack where completed_time is null order by started_time asc, priority asc , order_time asc } ]
@@ -175,7 +175,7 @@ ad_proc -private hf::schedule::do {
     return $success_p
 }
 
-ad_proc -private hf::schedule::add {
+ad_proc -private ::hf::schedule::add {
     proc_name
     proc_args_list
     user_id
@@ -225,7 +225,7 @@ ad_proc -private hf::schedule::add {
     return $success_p
 }
 
-ad_proc -private hf::schedule::trash {
+ad_proc -private ::hf::schedule::trash {
     sched_id
     user_id
     instance_id
@@ -253,7 +253,7 @@ ad_proc -private hf::schedule::trash {
     return $success_p
 }
 
-ad_proc -private hf::schedule::read {
+ad_proc -private ::hf::schedule::read {
     sched_id
     user_id
     instance_id
@@ -270,7 +270,7 @@ ad_proc -private hf::schedule::read {
     return $process_stats_list
 }
 
-ad_proc -private hf::schedule::list {
+ad_proc -private ::hf::schedule::list {
     user_id
     instance_id
     {processed_p "0"}

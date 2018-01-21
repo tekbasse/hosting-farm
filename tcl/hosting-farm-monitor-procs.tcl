@@ -280,7 +280,7 @@ ad_proc -public hf_beat_log_alert_q {
     return $return_lol
 }
 
-ad_proc -private hf::monitor::check {
+ad_proc -private ::hf::monitor::check {
 
 } {
     Returns current values from hf_beat_stack_bus table (active_id, debug_p, priority_threshold, cycle_time)  into the calling environment
@@ -339,7 +339,7 @@ ad_proc -private ::hf::monitor::do {
 
     # First, check if a monitor process is running and get status of debug_p
     set debug_p 0
-    hf::monitor::check
+    ::hf::monitor::check
 
     # hf_nc_proc_that_tests_context_checking
 
@@ -499,7 +499,7 @@ ad_proc -private ::hf::monitor::do {
     return $success_p
 }
 
-ad_proc -private hf::monitor::add {
+ad_proc -private ::hf::monitor::add {
     proc_name
     proc_args_list
     user_id
@@ -549,7 +549,7 @@ ad_proc -private hf::monitor::add {
     return $success_p
 }
 
-ad_proc -private hf::monitor::trash {
+ad_proc -private ::hf::monitor::trash {
     sched_id
     user_id
     instance_id
@@ -577,7 +577,7 @@ ad_proc -private hf::monitor::trash {
     return $success_p
 }
 
-ad_proc -private hf::monitor::read {
+ad_proc -private ::hf::monitor::read {
     sched_id
     user_id
     instance_id
@@ -594,7 +594,7 @@ ad_proc -private hf::monitor::read {
     return $process_stats_list
 }
 
-ad_proc -private hf::monitor::list {
+ad_proc -private ::hf::monitor::list {
     user_id
     instance_id
     {processed_p "0"}
