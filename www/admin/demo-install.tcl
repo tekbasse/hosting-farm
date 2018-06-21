@@ -16,17 +16,15 @@ set instance_id [qc_set_instance_id]
 # hf_asset_type_id_init $instance_id
 
 # Identify and test full range of parameters
-set asset_type_ids_list [db_list hf_property_asset_type_ids_get {
-    select distinct on (asset_type_id) asset_type_id
-    from hf_property } ]
+set asset_type_ids_list [qc_property_list $instance_id]
 set asset_type_ids_count [llength $asset_type_ids_list]
 
-set roles_lists [hf_roles $instance_id]
+set roles_lists [qc_roles $instance_id]
 set roles_list [list ]
 foreach role_list $roles_lists {
     set role [lindex $role_list 0]
     lappend roles_list $role
-    set role_id [hf_role_id_of_label $role $instance_id]
+    set role_id [qc_role_id_of_label $role $instance_id]
     set role_id_arr(${role}) $role_id
 }
 # keep namespace clean to help prevent bugs in test code
