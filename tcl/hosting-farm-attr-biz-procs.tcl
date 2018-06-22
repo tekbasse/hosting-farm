@@ -552,6 +552,11 @@ ad_proc -private hf_attribute_sub_label_update {
                             where ua_id=:sub_f_id
                             and instance_id=:instance_id }
                     }
+                    default {
+                        ns_log Warning "hf_attribute_sub_label_update.456: \
+ Unknown sub_type_id '${sub_type_id}' \
+ sub_f_id '${sub_f_id} new_sub_label '${new_sub_label}'"
+                    }
                 }
                 if { $sub_f_id_new ne "" } {
                     # trash existing map record
