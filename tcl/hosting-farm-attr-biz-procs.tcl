@@ -1255,7 +1255,7 @@ ad_proc -private hf_user_add {
                     set sub_f_id $sub_f_id_new
                     set ct [hf_asset_cascade_count $f_id]
                     set sub_sort_order [expr { $ct * 20 } ]
-                    set last_updated $owts
+                    set last_updated $nowts
                     if { $sub_label eq "" } {
                         if { $connection_type ne "" } {
                             append sub_label "${connection_type}:"
