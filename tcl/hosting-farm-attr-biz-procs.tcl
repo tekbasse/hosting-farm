@@ -479,8 +479,9 @@ ad_proc -private hf_attribute_sub_label_update {
     upvar 1 instance_id instance_id
     upvar 1 user_id user_id
     set new_sub_label_len [string length $new_sub_label]
-    if { $new_sub_label_len != 0 && $new_sub_label_len < 65 } {
-        set sub_f_id_new ""
+    set sub_f_id_new ""
+    if { $new_sub_label_len != 0 && $new_sub_label_len < 65 
+     && $sub_f_id ne "" } {
         set sub_asset_list [hf_sub_asset $sub_f_id]
         qf_lists_to_vars $sub_asset_list [hf_sub_asset_map_keys]
         if { [llength $sub_asset_list] > 0 } {
@@ -540,17 +541,19 @@ ad_proc -private hf_attribute_sub_label_update {
                         # don't trash ua record.. not possible.
                         # update hf_ua and hf_ua_up_map
                         # with a new id
-                        set sub_f_id_new [db_nextval hf_id_seq]
-                        db_dml hf_ua_id_update {
-                            update hf_ua
-                            set ua_id=:sub_f_id_new
-                            where ua_id=:sub_f_id 
-                            and instance_id=:instance_id }
-                        db_dml hf_ua_up_map_update {
-                            update hf_ua_up_map
-                            set ua_id=:sub_f_id_new
-                            where ua_id=:sub_f_id
-                            and instance_id=:instance_id }
+                        if { $sub_f_id ne "" } {
+                            set sub_f_id_new [db_nextval hf_id_seq]
+                            db_dml hf_ua_id_update {
+                                update hf_ua
+                                set ua_id=:sub_f_id_new
+                                where ua_id=:sub_f_id 
+                                and instance_id=:instance_id }
+                            db_dml hf_ua_up_map_update {
+                                update hf_ua_up_map
+                                set ua_id=:sub_f_id_new
+                                where ua_id=:sub_f_id
+                                and instance_id=:instance_id }
+                        }
                     }
                     default {
                         ns_log Warning "hf_attribute_sub_label_update.456: \
@@ -559,26 +562,26 @@ ad_proc -private hf_attribute_sub_label_update {
                     }
                 }
                 set nowts [dt_systime -gmt 1]
-                if { $sub_f_id_new ne "" } {
+                set error_p 0
+                if { $sub_f_id_new ne "" && $sub_f_id ne "" } {
                     # trash existing map record
 
-                        db_dml hf_sub_label_trash_1 {
-                            update hf_sub_asset_map
-                            set trashed_p='1',
-                            last_updated=:nowts
-                            where sub_f_id=:sub_f_id 
-                            and instance_id=:instance_id
-                        }
-
+                    db_dml hf_sub_label_trash_1 {
+                        update hf_sub_asset_map
+                        set trashed_p='1',
+                        last_updated=:nowts
+                        where sub_f_id=:sub_f_id 
+                        and instance_id=:instance_id
+                    }
+                    
                     # update map dependencies
-                        db_dml hf_attribute_map_f_id_u1 { 
-                            update hf_sub_asset_map
-                            set f_id=:sub_f_id_new,
-                            last_updated=:nowts
-                            where f_id=:sub_f_id 
-                            and instance_id=:instance_id
-                            and trashed_p!='1'
-                        }
+                    db_dml hf_attribute_map_f_id_u1 { 
+                        update hf_sub_asset_map
+                        set f_id=:sub_f_id_new,
+                        last_updated=:nowts
+                        where f_id=:sub_f_id 
+                        and instance_id=:instance_id
+                        and trashed_p!='1'
                     }
 
                     # make new map record
@@ -587,12 +590,16 @@ ad_proc -private hf_attribute_sub_label_update {
                     set last_updated $nowts
                     db_dml hf_attributes_sub_label_cr "insert into hf_sub_asset_map \
  ([hf_sub_asset_map_keys ","]) values ([hf_sub_asset_map_keys ",:"])"
-
-                } on_error {
-                    ns_log Warning "hf_attribute_sub_label_update.524: error '${errmsg}'"
+                    
+                } else { 
+                    ns_log Warning "hf_attribute_sub_label_update.595: rejected sub_label '${sub_label}' sub_f_id '${sub_f_id}' f_id '${f_id}'"
                 }
+                
+            } on_error {
+                ns_log Warning "hf_attribute_sub_label_update.601: error '${errmsg}'"
             }
         }
+    }
     return $sub_f_id_new
 }
 
@@ -810,12 +817,13 @@ ad_proc -private hf_vh_write {
     
     set sub_f_id $vh_id
     set vh_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id vh $attribute_p]
-    if { $vh_id_new ne "" } {
+    if { $vh_id_new ne "" && $sub_f_id ne "" } {
         # record revision/new
         set vh_id $vh_id_new
         db_dml vh_asset_create "insert into hf_vhosts \
  ([hf_vh_keys ","]) values ([hf_vh_keys ",:"])"
     } else {
+        set vh_id_new ""
         ns_log Warning "hf_vh_write: rejected '[array get arr_name]'"
     }
     return $vh_id_new
@@ -848,12 +856,13 @@ ad_proc -private hf_dc_write {
     hf_sub_label_define_empty
     set sub_f_id $dc_id
     set dc_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
-    if { $dc_id_new ne "" } {
+    if { $dc_id_new ne "" && $sub_f_id ne "" } {
         # record revision/new
         set dc_id $dc_id_new
         db_dml dc_asset_create "insert into hf_data_centers \
  ([hf_dc_keys ","]) values ([hf_dc_keys ",:"])"
     } else {
+        set dc_id_new ""
         ns_log Warning "hf_dc_write: rejected '[array get arr_name]'"
     }
     return $dc_id_new
@@ -887,12 +896,13 @@ ad_proc -private hf_hw_write {
     hf_sub_label_define_empty
     set sub_f_id $hw_id
     set hw_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
-    if { $hw_id_new ne "" } {
+    if { $hw_id_new ne "" && $sub_f_id ne "" } {
         # record revision/new
         set hw_id $hw_id_new
         db_dml hw_asset_create "insert into hf_hardware \
  ([hf_hw_keys ","]) values ([hf_hw_keys ",:"])"
     } else {
+        set hw_id_new ""
         ns_log Warning "hf_hw_write: rejected '[array get arr_name]'"
     }
     return $hw_id_new
@@ -925,12 +935,13 @@ ad_proc -private hf_vm_write {
     hf_sub_label_define_empty
     set sub_f_id $vm_id
     set vm_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id vm $attribute_p]
-    if { $vm_id_new ne "" } {
+    if { $vm_id_new ne "" && $sub_f_id ne "" } {
         # record revision/new
         set vm_id $vm_id_new
         db_dml vm_asset_create "insert into hf_virtual_machines \
  ([hf_vm_keys ","]) values ([hf_vm_keys ",:"])"
     } else {
+        set vm_id_new ""
         ns_log Warning "hf_vm_write: rejected '[array get arr_name]'"
     }
     return $vm_id_new
@@ -963,11 +974,14 @@ ad_proc -private hf_ss_write {
     hf_sub_label_define_empty
     set sub_f_id $ss_id
     set ss_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
-    if { $ss_id_new ne "" } {
+    if { $ss_id_new ne "" && $sub_f_id ne "" } {
         # record revision/new
         set ss_id $ss_id_new
         db_dml ss_asset_create "insert into hf_services \
  ([hf_ss_keys ","]) values ([hf_ss_keys ",:"])"
+    } else {
+        set ss_id_new ""
+        ns_log Warning "hf_ss_write: rejected '[array get arr_name]'"
     }
     return $ss_id_new
 }
@@ -992,6 +1006,7 @@ ad_proc -private hf_ip_write {
     qf_array_to_vars arr_name [hf_ip_keys]
     qf_array_to_vars arr_name [hf_sub_asset_map_keys]
     qf_array_to_vars arr_name [list asset_type_id label]
+    set ip_id_new ""
     if { [string is true -strict $ipv4_status] } {
         set ipv4_status 1
     } elseif { [string is false -strict $ipv4_status] } {
@@ -1015,14 +1030,18 @@ ad_proc -private hf_ip_write {
     hf_sub_label_define_empty
     set attribute_p [qf_is_true $attribute_p 1]
     set sub_f_id $ip_id
-    set ip_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
-    if { $ip_id_new ne "" } {
-        # record revision/new
-        set ip_id $ip_id_new
-        db_dml ip_asset_create "insert into hf_ip_addresses \
+    if { $sub_f_id ne "" } {
+        set ip_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
+        if { $ip_id_new ne "" } {
+            # record revision/new
+            set ip_id $ip_id_new
+            db_dml ip_asset_create "insert into hf_ip_addresses \
  ([hf_ip_keys ","]) values ([hf_ip_keys ",:"])"
+        } else {
+            ns_log Warning "hf_ip_write.1027: rejected. '[array get arr_name]'"
+        }
     } else {
-        ns_log Warning "hf_ip_write: rejected '[array get arr_name]'"
+        ns_log Warning "hf_ip_write.1030: rejected. sub_f_id ''. '[array get arr_name]'"
     }
     return $ip_id_new
 }
@@ -1041,7 +1060,6 @@ ad_proc -private hf_ni_write {
     # requires f_id
     upvar 1 $ni_arr_name arr_name
     upvar 1 instance_id instance_id
-
     hf_ni_defaults arr_name
     hf_sub_asset_map_defaults arr_name
     qf_array_to_vars arr_name [hf_ni_keys]
@@ -1054,11 +1072,12 @@ ad_proc -private hf_ni_write {
     hf_sub_label_define_empty
     set sub_f_id $ni_id
     set ni_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
-    if { $ni_id_new ne "" } {
+    if { $ni_id_new ne "" && $sub_f_id ne "" } {
         # record revision/new
         set ni_id $ni_id_new
         db_dml ni_asset_create "insert into hf_network_interfaces ([hf_ni_keys ","]) values ([hf_ni_keys ",:"])"
     } else {
+        set ni_id_new ""
         ns_log Warning "hf_ni_write.967: rejected '[array get arr_name]'"
     }
     return $ni_id_new
@@ -1127,12 +1146,13 @@ ad_proc -private hf_ns_write {
     set attribute_p [qf_is_true $attribute_p 1]
     set sub_f_id $ns_id
     set ns_id_new [hf_sub_asset_map_update $f_id $type_id $sub_label $sub_f_id $sub_type_id $attribute_p]
-    if { $ns_id_new ne "" } {
+    if { $ns_id_new ne "" && $sub_f_id ne "" } {
         # record revision/new
         set ns_id $ns_id_new
         db_dml ns_asset_create "insert into hf_ns_records \
  ([hf_ns_keys ","]) values ([hf_ns_keys ",:"])"
     } else {
+        set ns_id_new ""
         ns_log Warning "hf_ns_write: rejected '[array get arr_name]'"
     }
     return $ns_id_new
