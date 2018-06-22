@@ -307,12 +307,12 @@ for {set i 0} {$i < $switch_options_count } {incr i} {
 set dice_list [acc_fin::shuffle_list $dice_list]
 foreach hw_asset_id $hw_asset_id_list {
     set dice [hf_peek_pop_stack dice_list]
-    ns_log Notice "hosting-farm/www/admin/demo-install.tcl: starting switch '${dice}'"
+    ns_log Notice "hosting-farm/www/admin/demo-install.tcl.310: starting switch '${dice}'"
     switch -glob -- $dice {
         0 {
             set sh_id [hfdt_vm_create $hw_asset_id]
             if { $sh_id eq "" } {
-                ns_log Warning "hosting-farm/www/admin/demo-install.tcl dice= 0 failed to create asset."
+                ns_log Warning "hosting-farm/www/admin/demo-install.tcl.315 dice= 0 failed to create asset."
             }
 
         }
@@ -326,7 +326,7 @@ foreach hw_asset_id $hw_asset_id_list {
                     hfdt_shared_hosting_client_create $sh_id
                 }
             } else {
-                ns_log Warning "hosting-farm/www/admin/demo-install.tcl dice= 1 failed to create asset."
+                ns_log Warning "hosting-farm/www/admin/demo-install.tcl.329 dice= 1 failed to create asset."
             }
         }
         2 {
@@ -335,7 +335,7 @@ foreach hw_asset_id $hw_asset_id_list {
             if { $sh_id ne "" } {
                 hfdt_shared_hosting_client_create $sh_id
             } else {
-                ns_log Warning "hosting-farm/www/admin/demo-install.tcl dice= 2 failed to create vm attribute."
+                ns_log Warning "hosting-farm/www/admin/demo-install.tcl.338 dice= 2 failed to create vm attribute."
             }
         }
         3 {
@@ -348,7 +348,7 @@ foreach hw_asset_id $hw_asset_id_list {
                 # create ss and ua asset
                 hfdt_ss_base_create $vh_id
             } else {
-                ns_log Warning "hosting-farm/www/admin/demo-install.tcl dice= 3 failed to create asset."
+                ns_log Warning "hosting-farm/www/admin/demo-install.tcl.351 dice= 3 failed to create asset."
             }
         }
         4 {
@@ -359,7 +359,7 @@ foreach hw_asset_id $hw_asset_id_list {
                 # add ss + ua attribute to a vm
                 hfdt_ss_attr_create $vm_id
             } else {
-                ns_log Warning "hosting-farm/www/admin/demo-install.tcl dice= 4 failed to create asset."
+                ns_log Warning "hosting-farm/www/admin/demo-install.tcl.362 dice= 4 failed to create asset."
             }
         }
         5 {
@@ -372,7 +372,7 @@ foreach hw_asset_id $hw_asset_id_list {
                     hfdt_ua_asset_create $f_id
                 }
             } else {
-                ns_log Warning "hosting-farm/www/admin/demo-install.tcl dice= 5 failed to create asset."
+                ns_log Warning "hosting-farm/www/admin/demo-install.tcl.375 dice= 5 failed to create asset."
             }
         }
         6 - 
@@ -392,7 +392,7 @@ foreach hw_asset_id $hw_asset_id_list {
                         set box_id [hfdt_hw_1u_create $f_id]
                     }
                 } else {
-                    ns_log Warning "hosting-farm/www/admin/demo-install.tcl dice= 6,7,8 failed to create colo assets."
+                    ns_log Warning "hosting-farm/www/admin/demo-install.tcl.395 dice= 6,7,8 failed to create colo assets."
                 }
             } else {
                 ns_log Warning "hosting-farm/www/admin/demo-install.tcl dice= 6,7,8 failed to create asset."
@@ -403,7 +403,7 @@ foreach hw_asset_id $hw_asset_id_list {
             # add ss asset as killer app
             set f_id [hfdt_ss_base_create $hw_asset_id]
             if { $f_id eq "" } {
-                ns_log Warning "hosting-farm/www/admin/demo-install.tcl dice= 9 failed to create asset."
+                ns_log Warning "hosting-farm/www/admin/demo-install.tcl.406 dice= 9 failed to create asset."
             }
         }
         10 {
@@ -411,7 +411,7 @@ foreach hw_asset_id $hw_asset_id_list {
             # add hw network device to dc attr
             set f_id [hfdt_hw_base_create $hw_asset_id]
             if { $f_id eq "" } {
-                ns_log Warning "hosting-farm/www/admin/demo-install.tcl dice= 10 failed to create asset."
+                ns_log Warning "hosting-farm/www/admin/demo-install.tcl.414 dice= 10 failed to create asset."
             }
         }
         11 {
@@ -446,15 +446,15 @@ foreach hw_asset_id $hw_asset_id_list {
                             array unset ns_arr
                         }
                     } else {
-                        ns_log Warning "hosting-farm/www/admin/demo-install.tcl dice= 11 failed hfdt_ua_asset_create"
+                        ns_log Warning "hosting-farm/www/admin/demo-install.tcl.449 dice= 11 failed hfdt_ua_asset_create"
                     }
                 }
             } else {
-                ns_log Warning "hosting-farm/www/admin/demo-install.tcl dice= 11 failed to create vm attr."
+                ns_log Warning "hosting-farm/www/admin/demo-install.tcl.453 dice= 11 failed to create vm attr."
             }
         }
     }
-    ns_log Notice "hosting-farm/www/admin/demo-install.tcl: end switch '${dice}'"
+    ns_log Notice "hosting-farm/www/admin/demo-install.tcl.457: end switch '${dice}'"
     #end switch
 }
 # end foreach
@@ -503,7 +503,7 @@ for {set cycle_nbr 0} {$cycle_nbr < $cycle_count} {incr cycle_nbr} {
     set op_type_list_len [llength $op_type_list]
     incr op_type_list_len -1
     set hw_asset_id_list [acc_fin::shuffle_list $hw_asset_id_list]
-    ns_log Notice "hosting-farm/www/admin/demo-install.tcl: starting evolve cycle_nbr '${cycle_nbr}' of '${cycle_count}'"
+    ns_log Notice "hosting-farm/www/admin/demo-install.tcl.506: starting evolve cycle_nbr '${cycle_nbr}' of '${cycle_count}'"
     foreach hw_asset_id $hw_asset_id_list {
         # Choose operations and target type
         set op_type [lindex $op_type_list [randomRange $op_type_list_len]]
@@ -526,25 +526,25 @@ for {set cycle_nbr 0} {$cycle_nbr < $cycle_count} {incr cycle_nbr} {
             if { $op_type eq "trash" } {
                 hf_asset_stats $sub_asset_id [list trashed_p asset_type_id]
                 if { $trashed_p eq "" } {
-                    ns_log Warning "hosting-farm/www/admin/demo-install.tcl: sub_asset_id '${sub_asset_id}' trashed_p '${trashed_p}'"
+                    ns_log Warning "hosting-farm/www/admin/demo-install.tcl.529: sub_asset_id '${sub_asset_id}' trashed_p '${trashed_p}'"
                     set op_type "create"
                 }
             }
 
-            ns_log Notice "hosting-farm/www/admin/demo-install.tcl: starting evolve op_type '${op_type}' on sub_asset_id '${sub_asset_id}'"
+            ns_log Notice "hosting-farm/www/admin/demo-install.tcl.534: starting evolve op_type '${op_type}' on sub_asset_id '${sub_asset_id}'"
             switch -exact -- $op_type {
                 trash {
                     if { $trashed_p } { 
                         if { [hf_asset_untrash $sub_asset_id] } {
                             incr audit_ac_arr(${asset_type_id})
                         } else {
-                            ns_log Warning "hosting-farm/www/admin/demo-install.tcl: failed hf_asset_untrash sub_asset_id '${sub_asset_id}' trashed_p '${trashed_p}'"
+                            ns_log Warning "hosting-farm/www/admin/demo-install.tcl.541: failed hf_asset_untrash sub_asset_id '${sub_asset_id}' trashed_p '${trashed_p}'"
                         }
                     } else {
                         if { [hf_asset_trash $sub_asset_id] } {
                             incr audit_ac_arr(${asset_type_id}) -1
                         } else {
-                            ns_log Warning "hosting-farm/www/admin/demo-install.tcl: failed hf_asset_trash sub_asset_id '${sub_asset_id}' trashed_p '${trashed_p}'"
+                            ns_log Warning "hosting-farm/www/admin/demo-install.tcl.547: failed hf_asset_trash sub_asset_id '${sub_asset_id}' trashed_p '${trashed_p}'"
                         }
                     }
                 }
@@ -604,12 +604,12 @@ for {set cycle_nbr 0} {$cycle_nbr < $cycle_count} {incr cycle_nbr} {
             if { $attr_id eq "" || $trashed_p eq "" } {
                 set op_type "create"
                 if { $trashed_p eq "" } {
-                    ns_log Notice "hosting-farm/www/admin/demo-install.tcl: attr_id '${attr_id}' trashed_p '${trashed_p}'"
+                    ns_log Notice "hosting-farm/www/admin/demo-install.tcl.607: attr_id '${attr_id}' trashed_p '${trashed_p}'"
                 }
             }
             
             if { $attr_id ne "" } {
-                ns_log Notice "hosting-farm/www/admin/demo-install.tcl: starting evolve op_type '${op_type}' on attr_id '${attr_id}'"
+                ns_log Notice "hosting-farm/www/admin/demo-install.tcl.612: starting evolve op_type '${op_type}' on attr_id '${attr_id}'"
                 switch -exact -- $op_type {
                     trash {
                         if { !$trashed_p } {

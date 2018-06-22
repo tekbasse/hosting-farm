@@ -558,9 +558,10 @@ ad_proc -private hf_attribute_sub_label_update {
  sub_f_id '${sub_f_id} new_sub_label '${new_sub_label}'"
                     }
                 }
+                set nowts [dt_systime -gmt 1]
                 if { $sub_f_id_new ne "" } {
                     # trash existing map record
-                    set nowts [dt_systime -gmt 1]
+
                         db_dml hf_sub_label_trash_1 {
                             update hf_sub_asset_map
                             set trashed_p='1',
@@ -1254,7 +1255,7 @@ ad_proc -private hf_user_add {
                     set sub_f_id $sub_f_id_new
                     set ct [hf_asset_cascade_count $f_id]
                     set sub_sort_order [expr { $ct * 20 } ]
-                    set last_updated $nowts
+                    set last_updated $owts
                     if { $sub_label eq "" } {
                         if { $connection_type ne "" } {
                             append sub_label "${connection_type}:"
